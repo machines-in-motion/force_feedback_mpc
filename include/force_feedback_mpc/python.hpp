@@ -5,12 +5,12 @@
 #include <boost/python.hpp>
 
 #include "force_feedback_mpc/lowpassfilter/state.hpp"
-#include "force_feedback_mpc/lowpassfilter/action.hpp"
+// #include "force_feedback_mpc/lowpassfilter/action.hpp"
 
 
 namespace force_feedback_mpc{
-    void exposeIntegratedActionLPF();
     void exposeStateLPF();
-} // namespace mim_solvers
+    // void exposeIntegratedActionModelLPF();
+} // namespace force_feedback_mpc
 
 #endif

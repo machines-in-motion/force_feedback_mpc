@@ -1,8 +1,5 @@
 set(${PY_NAME}_SOURCES
-  ddp.cpp
-  fddp.cpp
-  sqp.cpp
-  csqp.cpp
+  state.cpp
   main.cpp
   )
 

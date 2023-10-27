@@ -7,7 +7,7 @@ set(PROJECT_DESCRIPTION "Optimal control tools to achieve force feedback in MPC.
 set(PROJECT_URL https://github.com/${PROJECT_NAMESPACE}/${PROJECT_NAME})
 
 add_compile_options(--warn-no-conversion)
-
+set( CMAKE_VERBOSE_MAKEFILE on)
 # Project options
 option(BUILD_PYTHON_INTERFACE "Build the python binding" ON)
 option(SUFFIX_SO_VERSION "Suffix library name with its version" ON)
@@ -42,6 +42,7 @@ project(${PROJECT_NAME} ${PROJECT_ARGS})
 # Project dependencies
 find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 find_package(crocoddyl REQUIRED)
+find_package(OpenMP REQUIRED COMPONENTS CXX)
 
 add_project_dependency(pinocchio REQUIRED)
 add_project_dependency(crocoddyl REQUIRED)
@@ -56,8 +57,10 @@ endif()
 
 # Main Library
 set(${PROJECT_NAME}_HEADERS
+  include/${PROJECT_NAME}/python.hpp
+  include/${PROJECT_NAME}/fwd.hpp
   include/${PROJECT_NAME}/lowpassfilter/state.hpp
-  include/${PROJECT_NAME}/lowpassfilter/action.hpp
+  # include/${PROJECT_NAME}/lowpassfilter/action.hpp
   # include/${PROJECT_NAME}/fddp.hpp
   # include/${PROJECT_NAME}/sqp.hpp
   # include/${PROJECT_NAME}/csqp.hpp
@@ -65,7 +68,7 @@ set(${PROJECT_NAME}_HEADERS
 
 set(${PROJECT_NAME}_SOURCES
   src/lowpassfilter/state.hxx
-  src/lowpassfilter/action.hxx
+  # src/lowpassfilter/action.hxx
   # src/fddp.cpp
   # src/sqp.cpp
   # src/csqp.cpp
@@ -84,6 +87,7 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} pinocchio::pinocchio)
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} crocoddyl::crocoddyl)
 target_link_libraries(${PROJECT_NAMESPACE}-${PROJECT_NAME} ${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib")
+set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
 # Python Bindings
 if(BUILD_PYTHON_INTERFACE)
@@ -91,7 +95,7 @@ if(BUILD_PYTHON_INTERFACE)
 endif()
 
 # Unit tests
-add_subdirectory(tests)
+# add_subdirectory(tests)
 
 # Installation
 install(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)

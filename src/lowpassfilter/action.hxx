@@ -12,8 +12,10 @@
 
 #include "action.hpp"
 
-namespace sobec {
 using namespace crocoddyl;
+
+
+namespace force_feedback_mpc {
 template <typename Scalar>
 IntegratedActionModelLPFTpl<Scalar>::IntegratedActionModelLPFTpl(
     boost::shared_ptr<DifferentialActionModelAbstract> model,
@@ -931,4 +933,4 @@ void IntegratedActionModelLPFTpl<Scalar>::quasiStatic(
   differential_->quasiStatic(d->differential, u, x, maxiter, tol);
 }
 
-}  // namespace sobec
+}  // namespace force_feedback_mpc

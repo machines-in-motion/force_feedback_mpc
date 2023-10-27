@@ -31,13 +31,13 @@ template <typename Scalar>
 class StateLPFTpl;
 typedef StateLPFTpl<double> StateLPF;
 
-// IAM LPF
-template <typename Scalar>
-class IntegratedActionModelLPFTpl;
-typedef IntegratedActionModelLPFTpl<double> IntegratedActionModelLPF;
-template <typename Scalar>
-class IntegratedActionDataLPFTpl;
-typedef IntegratedActionDataLPFTpl<double> IntegratedActionDataLPF;
+// // IAM LPF
+// template <typename Scalar>
+// class IntegratedActionModelLPFTpl;
+// typedef IntegratedActionModelLPFTpl<double> IntegratedActionModelLPF;
+// template <typename Scalar>
+// class IntegratedActionDataLPFTpl;
+// typedef IntegratedActionDataLPFTpl<double> IntegratedActionDataLPF;
 
 // // Soft contact3D DAM  
 //     // 3D

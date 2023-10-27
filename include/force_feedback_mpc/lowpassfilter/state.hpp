@@ -6,23 +6,23 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_STATELPF_HPP_
-#define SOBEC_STATELPF_HPP_
-#include <pinocchio/multibody/model.hpp>
+#ifndef FORCE_FEEDBACK_MPC_STATELPF_HPP_
+#define FORCE_FEEDBACK_MPC_STATELPF_HPP_
 
-#include "crocoddyl/core/state-base.hpp"
-#include "sobec/fwd.hpp"
-namespace sobec {
-using namespace crocoddyl;
+#include <pinocchio/multibody/model.hpp>
+#include <crocoddyl/core/state-base.hpp>
+// #include "force_feedback_mpc/fwd.hpp"
+
+namespace force_feedback_mpc {
 
 template <typename _Scalar>
-class StateLPFTpl : public StateAbstractTpl<_Scalar> {
+class StateLPFTpl : public crocoddyl::StateAbstractTpl<_Scalar> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef _Scalar Scalar;
-  typedef MathBaseTpl<Scalar> MathBase;
-  typedef StateAbstractTpl<Scalar> Base;
+  typedef crocoddyl::MathBaseTpl<Scalar> MathBase;
+  typedef crocoddyl::StateAbstractTpl<Scalar> Base;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
 
@@ -43,18 +43,18 @@ class StateLPFTpl : public StateAbstractTpl<_Scalar> {
   virtual void Jdiff(const Eigen::Ref<const VectorXs>&,
                      const Eigen::Ref<const VectorXs>&,
                      Eigen::Ref<MatrixXs> Jfirst, Eigen::Ref<MatrixXs> Jsecond,
-                     const Jcomponent firstsecond = both) const;
+                     const crocoddyl::Jcomponent firstsecond = crocoddyl::both) const;
 
   virtual void Jintegrate(const Eigen::Ref<const VectorXs>& y,
                           const Eigen::Ref<const VectorXs>& dy,
                           Eigen::Ref<MatrixXs> Jfirst,
                           Eigen::Ref<MatrixXs> Jsecond,
-                          const Jcomponent firstsecond = both,
-                          const AssignmentOp = setto) const;
+                          const crocoddyl::Jcomponent firstsecond = crocoddyl::both,
+                          const crocoddyl::AssignmentOp = crocoddyl::setto) const;
   virtual void JintegrateTransport(const Eigen::Ref<const VectorXs>& y,
                                    const Eigen::Ref<const VectorXs>& dy,
                                    Eigen::Ref<MatrixXs> Jin,
-                                   const Jcomponent firstsecond) const;
+                                   const crocoddyl::Jcomponent firstsecond) const;
 
   const boost::shared_ptr<pinocchio::ModelTpl<Scalar> >& get_pinocchio() const;
   const std::size_t& get_ntau() const;
@@ -79,11 +79,6 @@ class StateLPFTpl : public StateAbstractTpl<_Scalar> {
   JointType joint_type_;
 };
 
-}  // namespace sobec
+}  // namespace force_feedback_mpc
 
-/* --- Details -------------------------------------------------------------- */
-/* --- Details -------------------------------------------------------------- */
-/* --- Details -------------------------------------------------------------- */
-#include "sobec/crocomplements/lowpassfilter/state.hxx"
-
-#endif  // SOBEC_STATELPF_HPP_
+#endif  // FORCE_FEEDBACK_MPC_STATELPF_HPP_

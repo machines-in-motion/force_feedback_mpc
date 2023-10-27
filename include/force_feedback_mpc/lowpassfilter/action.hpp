@@ -6,8 +6,8 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_LPF_HPP_
-#define SOBEC_LPF_HPP_
+#ifndef FORCE_FEEDBACK_MPC_LPF_HPP_
+#define FORCE_FEEDBACK_MPC_LPF_HPP_
 
 #include <crocoddyl/core/action-base.hpp>
 #include <crocoddyl/core/activations/quadratic-barrier.hpp>
@@ -18,29 +18,76 @@
 
 #include "state.hpp"
 
-namespace sobec {
-using namespace crocoddyl;
+namespace force_feedback_mpc {
+
 
 template <typename _Scalar>
-class IntegratedActionModelLPFTpl : public ActionModelAbstractTpl<_Scalar> {
+class IntegratedActionDataLPFTpl : public crocoddyl::ActionDataAbstractTpl<_Scalar> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef _Scalar Scalar;
-  typedef MathBaseTpl<Scalar> MathBase;
-  typedef ActionModelAbstractTpl<Scalar> Base;
+  typedef crocoddyl::MathBaseTpl<Scalar> MathBase;
+  typedef crocoddyl::ActionDataAbstractTpl<Scalar> Base;
+  typedef typename MathBase::VectorXs VectorXs;
+  typedef typename MathBase::MatrixXs MatrixXs;
+  typedef pinocchio::DataTpl<Scalar> PinocchioData;
+  typedef crocoddyl::DifferentialActionDataAbstractTpl<Scalar> DifferentialActionDataAbstract;
+  typedef crocoddyl::ActivationDataQuadraticBarrierTpl<Scalar> ActivationDataQuadraticBarrier; 
+
+  template <template <typename Scalar> class Model>
+  explicit IntegratedActionDataLPFTpl(Model<Scalar>* const model)
+      : Base(model), tau_tmp(model->get_nu()) {
+    tau_tmp.setZero();
+    differential = model->get_differential()->createData();
+    const std::size_t& ndy = model->get_state()->get_ndx();
+    dy = VectorXs::Zero(ndy);
+    // for wlim cost
+    activation = boost::static_pointer_cast<ActivationDataQuadraticBarrier>(
+        model->activation_model_tauLim_->createData());
+  }
+  virtual ~IntegratedActionDataLPFTpl() {}
+
+  boost::shared_ptr<DifferentialActionDataAbstract> differential;
+  VectorXs dy;
+
+  // PinocchioData pinocchio;                                       // for reg
+  // cost
+  boost::shared_ptr<ActivationDataQuadraticBarrier> activation;  // for lim cost
+
+  using Base::cost;
+  using Base::r;
+  VectorXs tau_tmp;
+  // use refs to "alias" base class member names
+  VectorXs& ynext = Base::xnext;
+  MatrixXs& Fy = Base::Fx;
+  MatrixXs& Fw = Base::Fu;
+  VectorXs& Ly = Base::Lx;
+  VectorXs& Lw = Base::Lu;
+  MatrixXs& Lyy = Base::Lxx;
+  MatrixXs& Lyw = Base::Lxu;
+  MatrixXs& Lww = Base::Luu;
+};
+
+
+template <typename _Scalar>
+class IntegratedActionModelLPFTpl : public crocoddyl::ActionModelAbstractTpl<_Scalar> {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  typedef _Scalar Scalar;
+  typedef crocoddyl::MathBaseTpl<Scalar> MathBase;
+  typedef crocoddyl::ActionModelAbstractTpl<Scalar> Base;
   typedef IntegratedActionDataLPFTpl<Scalar> Data;
-  typedef ActionDataAbstractTpl<Scalar> ActionDataAbstract;
-  typedef DifferentialActionModelAbstractTpl<Scalar>
-      DifferentialActionModelAbstract;
+  typedef crocoddyl::ActionDataAbstractTpl<Scalar> ActionDataAbstract;
+  typedef crocoddyl::DifferentialActionModelAbstractTpl<Scalar> DifferentialActionModelAbstract;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
   typedef StateLPFTpl<Scalar> StateLPF;
-  typedef StateMultibodyTpl<Scalar> StateMultibody;
+  typedef crocoddyl::StateMultibodyTpl<Scalar> StateMultibody;
   typedef pinocchio::ModelTpl<Scalar> PinocchioModel;
-  typedef ActivationModelQuadraticBarrierTpl<Scalar>
-      ActivationModelQuadraticBarrier;
-  typedef ActivationBoundsTpl<Scalar> ActivationBounds;
+  typedef crocoddyl::ActivationModelQuadraticBarrierTpl<Scalar> ActivationModelQuadraticBarrier;
+  typedef crocoddyl::ActivationBoundsTpl<Scalar> ActivationBounds;
 
   IntegratedActionModelLPFTpl(
       boost::shared_ptr<DifferentialActionModelAbstract> model,
@@ -161,61 +208,7 @@ class IntegratedActionModelLPFTpl : public ActionModelAbstractTpl<_Scalar> {
                                          //!< low-passs filtered
 };
 
-template <typename _Scalar>
-class IntegratedActionDataLPFTpl : public ActionDataAbstractTpl<_Scalar> {
- public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  typedef _Scalar Scalar;
-  typedef MathBaseTpl<Scalar> MathBase;
-  typedef ActionDataAbstractTpl<Scalar> Base;
-  typedef typename MathBase::VectorXs VectorXs;
-  typedef typename MathBase::MatrixXs MatrixXs;
-  typedef pinocchio::DataTpl<Scalar> PinocchioData;
-  typedef DifferentialActionDataAbstractTpl<Scalar>
-      DifferentialActionDataAbstract;
-  typedef ActivationDataQuadraticBarrierTpl<Scalar>
-      ActivationDataQuadraticBarrier;  // for lim cost
+}  // namespace force_feedback_mpc
 
-  template <template <typename Scalar> class Model>
-  explicit IntegratedActionDataLPFTpl(Model<Scalar>* const model)
-      : Base(model), tau_tmp(model->get_nu()) {
-    tau_tmp.setZero();
-    differential = model->get_differential()->createData();
-    const std::size_t& ndy = model->get_state()->get_ndx();
-    dy = VectorXs::Zero(ndy);
-    // for wlim cost
-    activation = boost::static_pointer_cast<ActivationDataQuadraticBarrier>(
-        model->activation_model_tauLim_->createData());
-  }
-  virtual ~IntegratedActionDataLPFTpl() {}
-
-  boost::shared_ptr<DifferentialActionDataAbstractTpl<Scalar> > differential;
-  VectorXs dy;
-
-  // PinocchioData pinocchio;                                       // for reg
-  // cost
-  boost::shared_ptr<ActivationDataQuadraticBarrier> activation;  // for lim cost
-
-  using Base::cost;
-  using Base::r;
-  VectorXs tau_tmp;
-  // use refs to "alias" base class member names
-  VectorXs& ynext = Base::xnext;
-  MatrixXs& Fy = Base::Fx;
-  MatrixXs& Fw = Base::Fu;
-  VectorXs& Ly = Base::Lx;
-  VectorXs& Lw = Base::Lu;
-  MatrixXs& Lyy = Base::Lxx;
-  MatrixXs& Lyw = Base::Lxu;
-  MatrixXs& Lww = Base::Luu;
-};
-
-}  // namespace sobec
-
-/* --- Details -------------------------------------------------------------- */
-/* --- Details -------------------------------------------------------------- */
-/* --- Details -------------------------------------------------------------- */
-#include "sobec/crocomplements/lowpassfilter/action.hxx"
-
-#endif  // SOBEC_LPF_HPP_
+#endif  // FORCE_FEEDBACK_MPC_LPF_HPP_

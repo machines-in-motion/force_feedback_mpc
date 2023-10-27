@@ -1,13 +1,12 @@
-#include "mim_solvers/python.hpp"
+#include "force_feedback_mpc/python.hpp"
 
-BOOST_PYTHON_MODULE(mim_solvers_pywrap) { 
+BOOST_PYTHON_MODULE(force_feedback_mpc_pywrap) { 
 
     namespace bp = boost::python;
 
-    bp::import("crocoddyl");
+    // bp::import("pinocchio");
+    // bp::import("crocoddyl");
 
-    mim_solvers::exposeSolverDDP(); 
-    mim_solvers::exposeSolverFDDP(); 
-    mim_solvers::exposeSolverSQP(); 
-    mim_solvers::exposeSolverCSQP(); 
+    force_feedback_mpc::exposeStateLPF(); 
+    // force_feedback_mpc::exposeIntegratedActionModelLPF(); 
 }

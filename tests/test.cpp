@@ -1,5 +1,5 @@
 #include <boost/test/unit_test.hpp>
-#include "mim_solvers/sqp.hpp"
+#include "force_feedback_mpc/sqp.hpp"
 
 BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 

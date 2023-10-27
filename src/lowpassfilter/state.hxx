@@ -11,8 +11,10 @@
 #include "crocoddyl/core/utils/exception.hpp"
 #include "state.hpp"
 
-namespace sobec {
 using namespace crocoddyl;
+
+
+namespace force_feedback_mpc {
 
 template <typename Scalar>
 StateLPFTpl<Scalar>::StateLPFTpl(
@@ -345,4 +347,4 @@ StateLPFTpl<Scalar>::get_pinocchio() const {
   return pinocchio_;
 }
 
-}  // namespace sobec
+}  // namespace force_feedback_mpc
