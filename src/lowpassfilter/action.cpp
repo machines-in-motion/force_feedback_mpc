@@ -10,17 +10,18 @@
 #include <crocoddyl/core/utils/exception.hpp>
 #include <iostream>
 
-#include "action.hpp"
+#include "force_feedback_mpc/lowpassfilter/action.hpp"
 
 using namespace crocoddyl;
 
 
 namespace force_feedback_mpc {
-template <typename Scalar>
-IntegratedActionModelLPFTpl<Scalar>::IntegratedActionModelLPFTpl(
+namespace lpf {
+
+IntegratedActionModelLPF::IntegratedActionModelLPF(
     boost::shared_ptr<DifferentialActionModelAbstract> model,
-    std::vector<std::string> lpf_joint_names, const Scalar& time_step,
-    const bool& with_cost_residual, const Scalar& fc,
+    std::vector<std::string> lpf_joint_names, const double& time_step,
+    const bool& with_cost_residual, const double& fc,
     const bool& tau_plus_integration, const int& filter)
     : Base(model->get_state(), model->get_nu(),
            model->get_nr() + 2 * lpf_joint_names.size()),
@@ -100,8 +101,8 @@ IntegratedActionModelLPFTpl<Scalar>::IntegratedActionModelLPFTpl(
   // Instantiate stateLPF using pinocchio model of DAM state
   state_ = boost::make_shared<StateLPF>(pin_model_, lpf_joint_ids_);
   // Check stuff
-  if (time_step_ < Scalar(0.)) {
-    time_step_ = Scalar(1e-3);
+  if (time_step_ < double(0.)) {
+    time_step_ = double(1e-3);
     time_step2_ = time_step_ * time_step_;
     std::cerr << "Warning: dt should be positive, set to 1e-3" << std::endl;
   }
@@ -116,17 +117,17 @@ IntegratedActionModelLPFTpl<Scalar>::IntegratedActionModelLPFTpl(
       boost::make_shared<ActivationModelQuadraticBarrier>(
           ActivationBounds(wlb, wub));
   // cost weights are zero by default
-  tauReg_weight_ = Scalar(0.);
-  tauLim_weight_ = Scalar(0.);
+  tauReg_weight_ = double(0.);
+  tauLim_weight_ = double(0.);
   tauReg_residual_.resize(ntau_);
   tauLim_residual_.resize(ntau_);
 }
 
-template <typename Scalar>
-IntegratedActionModelLPFTpl<Scalar>::~IntegratedActionModelLPFTpl() {}
 
-template <typename Scalar>
-void IntegratedActionModelLPFTpl<Scalar>::calc(
+IntegratedActionModelLPF::~IntegratedActionModelLPF() {}
+
+
+void IntegratedActionModelLPF::calc(
     const boost::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y, const Eigen::Ref<const VectorXs>& w) {
   const std::size_t& nv = differential_->get_state()->get_nv();
@@ -264,7 +265,7 @@ void IntegratedActionModelLPFTpl<Scalar>::calc(
     }
 #endif
     // add to cost
-    d->cost += Scalar(0.5 * time_step_ * tauReg_weight_ *
+    d->cost += double(0.5 * time_step_ * tauReg_weight_ *
                       tauReg_residual_.transpose() * tauReg_residual_);
   }
   // Torque LIM
@@ -281,7 +282,7 @@ void IntegratedActionModelLPFTpl<Scalar>::calc(
     activation_model_tauLim_->calc(d->activation, tauLim_residual_);
 #endif
     // add to cost
-    d->cost += Scalar(0.5 * time_step_ * tauLim_weight_ *
+    d->cost += double(0.5 * time_step_ * tauLim_weight_ *
                       d->activation->a_value);  // tau lim
   }
 
@@ -299,8 +300,8 @@ void IntegratedActionModelLPFTpl<Scalar>::calc(
   }
 }  // calc
 
-template <typename Scalar>
-void IntegratedActionModelLPFTpl<Scalar>::calc(
+
+void IntegratedActionModelLPF::calc(
     const boost::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y) {
   const std::size_t& nx = differential_->get_state()->get_nx();
@@ -327,8 +328,8 @@ void IntegratedActionModelLPFTpl<Scalar>::calc(
   }
 }  // calc
 
-template <typename Scalar>
-void IntegratedActionModelLPFTpl<Scalar>::calcDiff(
+
+void IntegratedActionModelLPF::calcDiff(
     const boost::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y, const Eigen::Ref<const VectorXs>& w) {
   const std::size_t& nv = differential_->get_state()->get_nv();
@@ -391,7 +392,7 @@ void IntegratedActionModelLPFTpl<Scalar>::calcDiff(
     // d(x+)/dy
     d->Fy.block(0, 0, nv, ndx).noalias() = da_dx * time_step2_;
     d->Fy.block(nv, 0, nv, ndx).noalias() = da_dx * time_step_;
-    d->Fy.block(0, nv, nv, nv).diagonal().array() += Scalar(time_step_);
+    d->Fy.block(0, nv, nv, nv).diagonal().array() += double(time_step_);
 
     // Partial blocks of LPF dimensions due y+ dependency on tau
 #if EIGEN_VERSION_AT_LEAST(3, 4, 0)
@@ -408,14 +409,14 @@ void IntegratedActionModelLPFTpl<Scalar>::calcDiff(
     }
 #endif
     // LPF partial block
-    d->Fy.bottomRightCorner(ntau_, ntau_).diagonal().array() = Scalar(alpha_);
+    d->Fy.bottomRightCorner(ntau_, ntau_).diagonal().array() = double(alpha_);
 
     state_->JintegrateTransport(y, d->dy, d->Fy, second);
     state_->Jintegrate(
         y, d->dy, d->Fy, d->Fy, first,
         addto);  // add identity to Fx = d(x+dx)/dx = d(q,v)/d(q,v)
     // !!! remove identity from Ftau (due to stateLPF.Jintegrate) !!!
-    d->Fy.bottomRightCorner(ntau_, ntau_).diagonal().array() -= Scalar(1.);
+    d->Fy.bottomRightCorner(ntau_, ntau_).diagonal().array() -= double(1.);
 
     // d(y+)/dw : the "non-LPF" dimensions cause the next state to depend
     // directly on the input w since in those dimensions we have tau = w . So we
@@ -427,7 +428,7 @@ void IntegratedActionModelLPFTpl<Scalar>::calcDiff(
     d->Fw.block(nv, 0, nv, nw_)(Eigen::indexing::all, non_lpf_torque_ids_).noalias() =
         da_du(Eigen::indexing::all, non_lpf_torque_ids_) * time_step_;
     d->Fw.bottomRows(ntau_)(Eigen::indexing::all, lpf_torque_ids_).diagonal().array() +=
-        Scalar(1 - alpha_);
+        double(1 - alpha_);
 #else
     for (std::size_t i = 0; i < non_lpf_torque_ids_.size(); i++) {
       d->Fw.topRows(nv).col(non_lpf_torque_ids_[i]).noalias() =
@@ -436,11 +437,11 @@ void IntegratedActionModelLPFTpl<Scalar>::calcDiff(
           da_du.col(non_lpf_torque_ids_[i]) * time_step_;
     }
     for (std::size_t i = 0; i < lpf_torque_ids_.size(); i++) {
-      d->Fw.bottomRows(ntau_)(i, lpf_torque_ids_[i]) += Scalar(1 - alpha_);
+      d->Fw.bottomRows(ntau_)(i, lpf_torque_ids_[i]) += double(1 - alpha_);
     }
 #endif
     // LPF partial
-    // d->Fw.bottomRows(ntau_).diagonal().array() += Scalar(1 - alpha_);
+    // d->Fw.bottomRows(ntau_).diagonal().array() += double(1 - alpha_);
     state_->JintegrateTransport(y, d->dy, d->Fw, second);
 
     // d(cost+)/dy
@@ -514,14 +515,14 @@ void IntegratedActionModelLPFTpl<Scalar>::calcDiff(
           time_step_ * tauReg_weight_ *
           d->r.segment(differential_->get_nr(), ntau_);  // tau reg
       d->Lww.diagonal().array()(lpf_torque_ids_) +=
-          Scalar(time_step_ * tauReg_weight_);  // tau reg
+          double(time_step_ * tauReg_weight_);  // tau reg
 #else
       for (std::size_t i = 0; i < lpf_torque_ids_.size(); i++) {
         d->Lw(lpf_torque_ids_[i]) +=
             time_step_ * tauReg_weight_ *
             d->r(differential_->get_nr() + i);  // tau reg
         d->Lww.diagonal().array()(lpf_torque_ids_[i]) +=
-            Scalar(time_step_ * tauReg_weight_);  // tau reg
+            double(time_step_ * tauReg_weight_);  // tau reg
       }
 #endif
     }  // tauReg !=0
@@ -576,12 +577,12 @@ void IntegratedActionModelLPFTpl<Scalar>::calcDiff(
   //       }
   // #endif
   //       d->Fy.block(0, nv, nv, nv).diagonal().array() +=
-  //           Scalar(time_step_);  // dt*identity top row middle col (eq.
+  //           double(time_step_);  // dt*identity top row middle col (eq.
   //                                // Jsecond = d(xnext)/d(dx))
-  //       // d->Fy.topLeftCorner(nx, nx).diagonal().array() += Scalar(1.); //
+  //       // d->Fy.topLeftCorner(nx, nx).diagonal().array() += double(1.); //
   //       // managed by Jintegrate (eq. Jsecond = d(xnext)/d(dx))
   //       d->Fy.bottomRightCorner(ntau_, ntau_).diagonal().array() =
-  //       Scalar(alpha_); d->Fw.topRows(nv).noalias() = da_du * time_step2_ *
+  //       double(alpha_); d->Fw.topRows(nv).noalias() = da_du * time_step2_ *
   //       (1 - alpha_);
   // #if EIGEN_VERSION_AT_LEAST(3, 4, 0)
   //       d->Fw.block(nv, 0, nv, ntau_).noalias() =
@@ -592,12 +593,12 @@ void IntegratedActionModelLPFTpl<Scalar>::calcDiff(
   //             da_du.col(lpf_torque_ids_[i]) * time_step_ * (1 - alpha_);
   //       }
   // #endif
-  //       d->Fw.bottomRows(nv).diagonal().array() = Scalar(1 - alpha_);
+  //       d->Fw.bottomRows(nv).diagonal().array() = double(1 - alpha_);
   //       state_->JintegrateTransport(y, d->dy, d->Fy, second);  // it this
   //       correct? state_->Jintegrate(y, d->dy, d->Fy, d->Fy, first,
   //                          addto);  // for d(x+dx)/d(x)
   //       d->Fy.bottomRightCorner(ntau_, ntau_).diagonal().array() -=
-  //           Scalar(1.);  // remove identity from Ftau (due to
+  //           double(1.);  // remove identity from Ftau (due to
   //           stateLPF.Jintegrate)
   //       state_->JintegrateTransport(y, d->dy, d->Fw, second);  // it this
   //       correct? d->Ly.head(ndx).noalias() = time_step_ *
@@ -664,7 +665,7 @@ void IntegratedActionModelLPFTpl<Scalar>::calcDiff(
   //             d->r.segment(differential_->get_nr(), nw_);  // tau reg
   //         d->Lw.noalias() +=
   //             time_step_ * tauLim_weight_ * d->activation->Ar;  // tau lim
-  //         d->Lww.diagonal().array() = Scalar(time_step_ * tauReg_weight_); //
+  //         d->Lww.diagonal().array() = double(time_step_ * tauReg_weight_); //
   //         reg d->Lww.diagonal() +=
   //             time_step_ * tauLim_weight_ * d->activation->Arr.diagonal(); //
   //             lim
@@ -725,7 +726,7 @@ void IntegratedActionModelLPFTpl<Scalar>::calcDiff(
   //                            d->r.segment(differential_->get_nr(), ntau_); //
   //                            reg
   //         d->Lw.noalias() += tauLim_weight_ * d->activation->Ar; // lim
-  //         d->Lww.diagonal().array() += Scalar(tauReg_weight_);  // tau reg
+  //         d->Lww.diagonal().array() += double(tauReg_weight_);  // tau reg
   //         d->Lww.diagonal() +=
   //             tauLim_weight_ * d->activation->Arr.diagonal();  // tau lim
   //       }
@@ -733,8 +734,8 @@ void IntegratedActionModelLPFTpl<Scalar>::calcDiff(
   //   }  // tau_plus_integration
 }
 
-template <typename Scalar>
-void IntegratedActionModelLPFTpl<Scalar>::calcDiff(
+
+void IntegratedActionModelLPF::calcDiff(
     const boost::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y) {
   const std::size_t& nx = differential_->get_state()->get_nx();
@@ -784,14 +785,14 @@ void IntegratedActionModelLPFTpl<Scalar>::calcDiff(
 #endif
 }
 
-template <typename Scalar>
-boost::shared_ptr<ActionDataAbstractTpl<Scalar> >
-IntegratedActionModelLPFTpl<Scalar>::createData() {
+
+boost::shared_ptr<ActionDataAbstractTpl<double> >
+IntegratedActionModelLPF::createData() {
   return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
-template <typename Scalar>
-bool IntegratedActionModelLPFTpl<Scalar>::checkData(
+
+bool IntegratedActionModelLPF::checkData(
     const boost::shared_ptr<ActionDataAbstract>& data) {
   boost::shared_ptr<Data> d = boost::dynamic_pointer_cast<Data>(data);
   if (data != NULL) {
@@ -801,24 +802,24 @@ bool IntegratedActionModelLPFTpl<Scalar>::checkData(
   }
 }
 
-template <typename Scalar>
-const boost::shared_ptr<DifferentialActionModelAbstractTpl<Scalar> >&
-IntegratedActionModelLPFTpl<Scalar>::get_differential() const {
+
+const boost::shared_ptr<DifferentialActionModelAbstractTpl<double> >&
+IntegratedActionModelLPF::get_differential() const {
   return differential_;
 }
 
-template <typename Scalar>
-const Scalar& IntegratedActionModelLPFTpl<Scalar>::get_dt() const {
+
+const double& IntegratedActionModelLPF::get_dt() const {
   return time_step_;
 }
 
-template <typename Scalar>
-const Scalar& IntegratedActionModelLPFTpl<Scalar>::get_fc() const {
+
+const double& IntegratedActionModelLPF::get_fc() const {
   return fc_;
 }
 
-template <typename Scalar>
-void IntegratedActionModelLPFTpl<Scalar>::set_dt(const Scalar& dt) {
+
+void IntegratedActionModelLPF::set_dt(const double& dt) {
   if (dt < 0.) {
     throw_pretty("Invalid argument: "
                  << "dt has positive value");
@@ -827,8 +828,8 @@ void IntegratedActionModelLPFTpl<Scalar>::set_dt(const Scalar& dt) {
   time_step2_ = dt * dt;
 }
 
-template <typename Scalar>
-void IntegratedActionModelLPFTpl<Scalar>::set_fc(const Scalar& fc) {
+
+void IntegratedActionModelLPF::set_fc(const double& fc) {
   // Set the cut-off frequency
   if (fc <= 0.) {
     throw_pretty("Invalid argument: "
@@ -838,8 +839,8 @@ void IntegratedActionModelLPFTpl<Scalar>::set_fc(const Scalar& fc) {
   }
 }
 
-template <typename Scalar>
-void IntegratedActionModelLPFTpl<Scalar>::set_alpha(const Scalar& alpha) {
+
+void IntegratedActionModelLPF::set_alpha(const double& alpha) {
   // Set the cut-off frequency
   if (alpha < 0. || alpha > 1) {
     throw_pretty("Invalid argument: "
@@ -849,11 +850,11 @@ void IntegratedActionModelLPFTpl<Scalar>::set_alpha(const Scalar& alpha) {
   }
 }
 
-template <typename Scalar>
-void IntegratedActionModelLPFTpl<Scalar>::compute_alpha(const Scalar& fc) {
+
+void IntegratedActionModelLPF::compute_alpha(const double& fc) {
   // Update alpha parameter
   if (fc > 0 && time_step_ != 0) {
-    const Scalar& pi = 3.14159;
+    const double& pi = 3.14159;
     // Exponential Moving Average (EMA) (IIR filter) >> quite sharp
     if (filter_ == 0) {
       alpha_ = exp(-2. * pi * fc * time_step_);
@@ -873,8 +874,8 @@ void IntegratedActionModelLPFTpl<Scalar>::compute_alpha(const Scalar& fc) {
   }
 }
 
-template <typename Scalar>
-void IntegratedActionModelLPFTpl<Scalar>::set_differential(
+
+void IntegratedActionModelLPF::set_differential(
     boost::shared_ptr<DifferentialActionModelAbstract> model) {
   const std::size_t& nu = model->get_nu();
   if (nu_ != nu) {
@@ -889,9 +890,9 @@ void IntegratedActionModelLPFTpl<Scalar>::set_differential(
   Base::set_u_ub(differential_->get_u_ub());
 }
 
-template <typename Scalar>
-void IntegratedActionModelLPFTpl<Scalar>::set_control_reg_cost(
-    const Scalar& weight, const VectorXs& ref) {
+
+void IntegratedActionModelLPF::set_control_reg_cost(
+    const double& weight, const VectorXs& ref) {
   if (weight < 0.) {
     throw_pretty("cost weight is positive ");
   }
@@ -902,20 +903,20 @@ void IntegratedActionModelLPFTpl<Scalar>::set_control_reg_cost(
   tauReg_reference_ = ref;
 }
 
-template <typename Scalar>
-void IntegratedActionModelLPFTpl<Scalar>::set_control_lim_cost(
-    const Scalar& weight) {
+
+void IntegratedActionModelLPF::set_control_lim_cost(
+    const double& weight) {
   if (weight < 0.) {
     throw_pretty("cost weight is positive ");
   }
   tauLim_weight_ = weight;
 }
 
-template <typename Scalar>
-void IntegratedActionModelLPFTpl<Scalar>::quasiStatic(
+
+void IntegratedActionModelLPF::quasiStatic(
     const boost::shared_ptr<ActionDataAbstract>& data, Eigen::Ref<VectorXs> u,
     const Eigen::Ref<const VectorXs>& x, const std::size_t maxiter,
-    const Scalar tol) {
+    const double tol) {
   if (static_cast<std::size_t>(u.size()) != nu_) {
     throw_pretty("Invalid argument: "
                  << "u has wrong dimension (it should be " +
@@ -933,4 +934,5 @@ void IntegratedActionModelLPFTpl<Scalar>::quasiStatic(
   differential_->quasiStatic(d->differential, u, x, maxiter, tol);
 }
 
+}  // namespace lpf
 }  // namespace force_feedback_mpc

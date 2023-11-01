@@ -4,9 +4,9 @@ BOOST_PYTHON_MODULE(force_feedback_mpc_pywrap) {
 
     namespace bp = boost::python;
 
-    // bp::import("pinocchio");
-    // bp::import("crocoddyl");
+    bp::import("pinocchio");
+    bp::import("crocoddyl");
 
-    force_feedback_mpc::exposeStateLPF(); 
-    // force_feedback_mpc::exposeIntegratedActionModelLPF(); 
+    force_feedback_mpc::lpf::exposeStateLPF(); 
+    force_feedback_mpc::lpf::exposeIntegratedActionModelLPF(); 
 }

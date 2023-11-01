@@ -1,5 +1,6 @@
 set(${PY_NAME}_SOURCES
-  state.cpp
+  lowpassfilter/state.cpp
+  lowpassfilter/action.cpp
   main.cpp
   )
 

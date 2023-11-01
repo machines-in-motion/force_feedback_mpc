@@ -6,7 +6,9 @@ set(PROJECT_NAME force_feedback_mpc)
 set(PROJECT_DESCRIPTION "Optimal control tools to achieve force feedback in MPC.")
 set(PROJECT_URL https://github.com/${PROJECT_NAMESPACE}/${PROJECT_NAME})
 
-add_compile_options(--warn-no-conversion)
+# add_compile_options(--warn-no-conversion)
+# add_compile_options(-Wno-undef)
+
 set( CMAKE_VERBOSE_MAKEFILE on)
 # Project options
 option(BUILD_PYTHON_INTERFACE "Build the python binding" ON)
@@ -34,17 +36,20 @@ ENDIF()
 include("${JRL_CMAKE_MODULES}/base.cmake")
 include("${JRL_CMAKE_MODULES}/boost.cmake")
 include("${JRL_CMAKE_MODULES}/python.cmake")
+include("${JRL_CMAKE_MODULES}/apple.cmake")
 
 # Project definition
 COMPUTE_PROJECT_ARGS(PROJECT_ARGS LANGUAGES CXX)
 project(${PROJECT_NAME} ${PROJECT_ARGS})
 
+add_compile_options(-Wno-error)
+
+apply_default_apple_configuration()
+
 # Project dependencies
 find_package(Boost REQUIRED COMPONENTS unit_test_framework)
-find_package(crocoddyl REQUIRED)
 find_package(OpenMP REQUIRED COMPONENTS CXX)
 
-add_project_dependency(pinocchio REQUIRED)
 add_project_dependency(crocoddyl REQUIRED)
 add_project_dependency(eigenpy 2.7.10 REQUIRED)
 
@@ -58,20 +63,14 @@ endif()
 # Main Library
 set(${PROJECT_NAME}_HEADERS
   include/${PROJECT_NAME}/python.hpp
-  include/${PROJECT_NAME}/fwd.hpp
+  # include/${PROJECT_NAME}/fwd.hpp
   include/${PROJECT_NAME}/lowpassfilter/state.hpp
-  # include/${PROJECT_NAME}/lowpassfilter/action.hpp
-  # include/${PROJECT_NAME}/fddp.hpp
-  # include/${PROJECT_NAME}/sqp.hpp
-  # include/${PROJECT_NAME}/csqp.hpp
+  include/${PROJECT_NAME}/lowpassfilter/action.hpp
   )
 
 set(${PROJECT_NAME}_SOURCES
-  src/lowpassfilter/state.hxx
-  # src/lowpassfilter/action.hxx
-  # src/fddp.cpp
-  # src/sqp.cpp
-  # src/csqp.cpp
+  src/lowpassfilter/state.cpp
+  src/lowpassfilter/action.cpp
   )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
@@ -82,10 +81,7 @@ if(SUFFIX_SO_VERSION)
 endif()
 
 # Main Executable
-add_executable(${PROJECT_NAMESPACE}-${PROJECT_NAME} src/main.cpp)
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} pinocchio::pinocchio)
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} crocoddyl::crocoddyl)
-target_link_libraries(${PROJECT_NAMESPACE}-${PROJECT_NAME} ${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib")
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
@@ -99,5 +95,4 @@ endif()
 
 # Installation
 install(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
-install(TARGETS ${PROJECT_NAMESPACE}-${PROJECT_NAME} RUNTIME DESTINATION bin)
 install(FILES package.xml DESTINATION share/${PROJECT_NAME})

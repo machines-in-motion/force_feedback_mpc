@@ -6,22 +6,24 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "force_feedback_mpc/python.hpp"
 #include "force_feedback_mpc/lowpassfilter/action.hpp"
 
 #include <crocoddyl/core/action-base.hpp>
-#include <eigenpy/eigenpy.hpp>
+// #include <eigenpy/eigenpy.hpp>
 #include <pinocchio/fwd.hpp>  // to avoid compilation error (https://github.com/loco-3d/crocoddyl/issues/205)
 
-#include "force_feedback_mpc/fwd.hpp"
+// #include "force_feedback_mpc/fwd.hpp"
+
+namespace force_feedback_mpc {
+namespace lpf {
 
 namespace bp = boost::python;
 
-namespace force_feedback_mpc {
-
 
 void exposeIntegratedActionModelLPF() {
-  bp::register_ptr_to_python<boost::shared_ptr<force_feedback_mpc::IntegratedActionModelLPF> >();
-  bp::class_<force_feedback_mpc::IntegratedActionModelLPF, bp::bases<crocoddyl::ActionModelAbstract> >(
+  bp::register_ptr_to_python<boost::shared_ptr<IntegratedActionModelLPF> >();
+  bp::class_<IntegratedActionModelLPF, bp::bases<crocoddyl::ActionModelAbstract> >(
       "IntegratedActionModelLPF",
       "Sympletic Euler integrator for differential action models.\n\n"
       "This class implements a sympletic Euler integrator (a.k.a "
@@ -46,11 +48,11 @@ void exposeIntegratedActionModelLPF() {
           "computation, or tau\n"
           ":param filter: type of low-pass filter (0 = Expo Moving Avg, 1 = "
           "Classical, 2 = Exact)"))
-      .def<void (force_feedback_mpc::IntegratedActionModelLPF::*)(
+      .def<void (IntegratedActionModelLPF::*)(
           const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
-          "calc", &force_feedback_mpc::IntegratedActionModelLPF::calc,
+          "calc", &IntegratedActionModelLPF::calc,
           bp::args("self", "data", "x", "u"),
           "Compute the time-discrete evolution of a differential action "
           "model.\n\n"
@@ -58,15 +60,15 @@ void exposeIntegratedActionModelLPF() {
           ":param data: action data\n"
           ":param x: state vector\n"
           ":param u: control input")
-      .def<void (force_feedback_mpc::IntegratedActionModelLPF::*)(
+      .def<void (IntegratedActionModelLPF::*)(
           const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &crocoddyl::ActionModelAbstract::calc, bp::args("self", "data", "x"))
-      .def<void (force_feedback_mpc::IntegratedActionModelLPF::*)(
+      .def<void (IntegratedActionModelLPF::*)(
           const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
-          "calcDiff", &force_feedback_mpc::IntegratedActionModelLPF::calcDiff,
+          "calcDiff", &IntegratedActionModelLPF::calcDiff,
           bp::args("self", "data", "x", "u"),
           "Computes the derivatives of the integrated action model wrt state "
           "and control. \n\n"
@@ -76,85 +78,85 @@ void exposeIntegratedActionModelLPF() {
           ":param data: action data\n"
           ":param x: state vector\n"
           ":param u: control input\n")
-      .def<void (force_feedback_mpc::IntegratedActionModelLPF::*)(
+      .def<void (IntegratedActionModelLPF::*)(
           const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &crocoddyl::ActionModelAbstract::calcDiff,
           bp::args("self", "data", "x"))
-      .def("createData", &force_feedback_mpc::IntegratedActionModelLPF::createData,
+      .def("createData", &IntegratedActionModelLPF::createData,
            bp::args("self"), "Create the Euler integrator data.")
       .add_property(
           "differential",
-          bp::make_function(&force_feedback_mpc::IntegratedActionModelLPF::get_differential,
+          bp::make_function(&IntegratedActionModelLPF::get_differential,
                             bp::return_value_policy<bp::return_by_value>()),
-          &force_feedback_mpc::IntegratedActionModelLPF::set_differential,
+          &IntegratedActionModelLPF::set_differential,
           "differential action model")
       .add_property(
           "dt",
-          bp::make_function(&force_feedback_mpc::IntegratedActionModelLPF::get_dt,
+          bp::make_function(&IntegratedActionModelLPF::get_dt,
                             bp::return_value_policy<bp::return_by_value>()),
-          &force_feedback_mpc::IntegratedActionModelLPF::set_dt, "step time")
+          &IntegratedActionModelLPF::set_dt, "step time")
       .add_property(
           "fc",
-          bp::make_function(&force_feedback_mpc::IntegratedActionModelLPF::get_fc,
+          bp::make_function(&IntegratedActionModelLPF::get_fc,
                             bp::return_value_policy<bp::return_by_value>()),
           &IntegratedActionModelLPF::set_fc,
           "cut-off frequency of low-pass filter")
       .add_property(
           "alpha",
-          bp::make_function(&force_feedback_mpc::IntegratedActionModelLPF::get_alpha,
+          bp::make_function(&IntegratedActionModelLPF::get_alpha,
                             bp::return_value_policy<bp::return_by_value>()),
-          &force_feedback_mpc::IntegratedActionModelLPF::set_alpha,
+          &IntegratedActionModelLPF::set_alpha,
           "discrete parameter of the low-pass filter")
 
       .add_property(
           "nw",
-          bp::make_function(&force_feedback_mpc::IntegratedActionModelLPF::get_nw,
+          bp::make_function(&IntegratedActionModelLPF::get_nw,
                             bp::return_value_policy<bp::return_by_value>()),
           "torque actuation dimension (nu)")
       .add_property(
           "ntau",
-          bp::make_function(&force_feedback_mpc::IntegratedActionModelLPF::get_ntau,
+          bp::make_function(&IntegratedActionModelLPF::get_ntau,
                             bp::return_value_policy<bp::return_by_value>()),
           "low-pass filtered actuation dimension")
       .add_property(
           "ny",
-          bp::make_function(&force_feedback_mpc::IntegratedActionModelLPF::get_ny,
+          bp::make_function(&IntegratedActionModelLPF::get_ny,
                             bp::return_value_policy<bp::return_by_value>()),
           "augmented state dimension (nx+ntau)")
 
       .add_property(
           "lpf_joint_names",
-          bp::make_function(&force_feedback_mpc::IntegratedActionModelLPF::get_lpf_joint_names,
+          bp::make_function(&IntegratedActionModelLPF::get_lpf_joint_names,
                             bp::return_value_policy<bp::return_by_value>()),
           "names of the joints that are low-pass filtered")
       .add_property(
           "lpf_torque_ids",
-          bp::make_function(&force_feedback_mpc::IntegratedActionModelLPF::get_lpf_torque_ids,
+          bp::make_function(&IntegratedActionModelLPF::get_lpf_torque_ids,
                             bp::return_value_policy<bp::return_by_value>()),
           "ids in the torque vector of dimensions that are low-pass filtered")
       .add_property(
           "non_lpf_torque_ids",
-          bp::make_function(&force_feedback_mpc::IntegratedActionModelLPF::get_non_lpf_torque_ids,
+          bp::make_function(&IntegratedActionModelLPF::get_non_lpf_torque_ids,
                             bp::return_value_policy<bp::return_by_value>()),
           "ids in the torque vector of dimensions that are NOT low-pass "
           "filtered (perfect actuators)")
 
       .def("set_control_reg_cost",
-           &force_feedback_mpc::IntegratedActionModelLPF::set_control_reg_cost,
+           &IntegratedActionModelLPF::set_control_reg_cost,
            bp::args("self", "weight", "ref"),
            "Initialize cost weight and reference for unfiltered torque "
            "regularization (2-norm residual).")
 
       .def("set_control_lim_cost",
-           &force_feedback_mpc::IntegratedActionModelLPF::set_control_lim_cost,
+           &IntegratedActionModelLPF::set_control_lim_cost,
            bp::args("self", "weight"),
            "Initialize cost weight unfiltered torque limit penalization "
            "(quadratic barrier).");
 
-  bp::register_ptr_to_python<boost::shared_ptr<force_feedback_mpc::IntegratedActionDataLPF> >();
+  bp::register_ptr_to_python<boost::shared_ptr<IntegratedActionDataLPF> >();
 
-  bp::class_<force_feedback_mpc::IntegratedActionDataLPF, bp::bases<crocoddyl::ActionDataAbstract> >(
+  bp::class_<IntegratedActionDataLPF, bp::bases<crocoddyl::ActionDataAbstract> >(
       "IntegratedActionDataLPF", "Sympletic Euler integrator data.",
       bp::init<IntegratedActionModelLPF*>(
           bp::args("self", "model"),
@@ -162,13 +164,14 @@ void exposeIntegratedActionModelLPF() {
           ":param model: sympletic Euler integrator model"))
       .add_property(
           "differential",
-          bp::make_getter(&force_feedback_mpc::IntegratedActionDataLPF::differential,
+          bp::make_getter(&IntegratedActionDataLPF::differential,
                           bp::return_value_policy<bp::return_by_value>()),
           "differential action data")
       .add_property("dy",
-                    bp::make_getter(&force_feedback_mpc::IntegratedActionDataLPF::dy,
+                    bp::make_getter(&IntegratedActionDataLPF::dy,
                                     bp::return_internal_reference<>()),
                     "state rate.");
 }
 
+}  // namespace lpf
 }  // namespace force_feedback_mpc

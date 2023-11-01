@@ -10,27 +10,25 @@
 #define FORCE_FEEDBACK_MPC_STATELPF_HPP_
 
 #include <pinocchio/multibody/model.hpp>
-#include <crocoddyl/core/state-base.hpp>
-// #include "force_feedback_mpc/fwd.hpp"
+#include <crocoddyl/multibody/states/multibody.hpp>
 
 namespace force_feedback_mpc {
+namespace lpf{
 
-template <typename _Scalar>
-class StateLPFTpl : public crocoddyl::StateAbstractTpl<_Scalar> {
+class StateLPF : public crocoddyl::StateAbstract {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  typedef _Scalar Scalar;
-  typedef crocoddyl::MathBaseTpl<Scalar> MathBase;
-  typedef crocoddyl::StateAbstractTpl<Scalar> Base;
+  typedef crocoddyl::MathBaseTpl<double> MathBase;
+  typedef crocoddyl::StateAbstractTpl<double> Base;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
 
   enum JointType { FreeFlyer = 0, Spherical, Simple };
 
-  explicit StateLPFTpl(boost::shared_ptr<pinocchio::ModelTpl<Scalar> > model,
+  explicit StateLPF(boost::shared_ptr<pinocchio::ModelTpl<double> > model,
                        std::vector<int> lpf_joint_ids);
-  virtual ~StateLPFTpl();
+  virtual ~StateLPF();
 
   virtual VectorXs zero() const;
   virtual VectorXs rand() const;
@@ -56,7 +54,7 @@ class StateLPFTpl : public crocoddyl::StateAbstractTpl<_Scalar> {
                                    Eigen::Ref<MatrixXs> Jin,
                                    const crocoddyl::Jcomponent firstsecond) const;
 
-  const boost::shared_ptr<pinocchio::ModelTpl<Scalar> >& get_pinocchio() const;
+  const boost::shared_ptr<pinocchio::ModelTpl<double> >& get_pinocchio() const;
   const std::size_t& get_ntau() const;
   const std::size_t& get_ny() const;
   const std::size_t& get_ndy() const;
@@ -74,11 +72,13 @@ class StateLPFTpl : public crocoddyl::StateAbstractTpl<_Scalar> {
   std::size_t ndy_;
 
  private:
-  boost::shared_ptr<pinocchio::ModelTpl<Scalar> > pinocchio_;
+  boost::shared_ptr<pinocchio::ModelTpl<double> > pinocchio_;
   VectorXs y0_;
   JointType joint_type_;
 };
 
+
+}  // namespace lpf
 }  // namespace force_feedback_mpc
 
 #endif  // FORCE_FEEDBACK_MPC_STATELPF_HPP_

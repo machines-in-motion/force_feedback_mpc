@@ -6,14 +6,13 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <eigenpy/eigenpy.hpp>
+#include "force_feedback_mpc/python.hpp"
 #include "force_feedback_mpc/lowpassfilter/state.hpp"
 
-#include "force_feedback_mpc/fwd.hpp"
+namespace force_feedback_mpc {
+namespace lpf {
 
 namespace bp = boost::python;
-
-namespace force_feedback_mpc {
 
 void exposeStateLPF() {
   bp::register_ptr_to_python<boost::shared_ptr<StateLPF>>();
@@ -102,4 +101,5 @@ void exposeStateLPF() {
           "pinocchio model");
 }
 
+}  // namespace lpf
 }  // namespace force_feedback_mpc

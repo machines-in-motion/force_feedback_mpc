@@ -19,24 +19,23 @@
 #include "state.hpp"
 
 namespace force_feedback_mpc {
+namespace lpf {
 
 
-template <typename _Scalar>
-class IntegratedActionDataLPFTpl : public crocoddyl::ActionDataAbstractTpl<_Scalar> {
+class IntegratedActionDataLPF : public crocoddyl::ActionDataAbstract {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  typedef _Scalar Scalar;
-  typedef crocoddyl::MathBaseTpl<Scalar> MathBase;
-  typedef crocoddyl::ActionDataAbstractTpl<Scalar> Base;
+  typedef crocoddyl::MathBaseTpl<double> MathBase;
+  typedef crocoddyl::ActionDataAbstractTpl<double> Base;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
-  typedef pinocchio::DataTpl<Scalar> PinocchioData;
-  typedef crocoddyl::DifferentialActionDataAbstractTpl<Scalar> DifferentialActionDataAbstract;
-  typedef crocoddyl::ActivationDataQuadraticBarrierTpl<Scalar> ActivationDataQuadraticBarrier; 
+  typedef pinocchio::DataTpl<double> PinocchioData;
+  typedef crocoddyl::DifferentialActionDataAbstractTpl<double> DifferentialActionDataAbstract;
+  typedef crocoddyl::ActivationDataQuadraticBarrierTpl<double> ActivationDataQuadraticBarrier; 
 
-  template <template <typename Scalar> class Model>
-  explicit IntegratedActionDataLPFTpl(Model<Scalar>* const model)
+  template <class Model>
+  explicit IntegratedActionDataLPF(Model* const model)
       : Base(model), tau_tmp(model->get_nu()) {
     tau_tmp.setZero();
     differential = model->get_differential()->createData();
@@ -46,7 +45,7 @@ class IntegratedActionDataLPFTpl : public crocoddyl::ActionDataAbstractTpl<_Scal
     activation = boost::static_pointer_cast<ActivationDataQuadraticBarrier>(
         model->activation_model_tauLim_->createData());
   }
-  virtual ~IntegratedActionDataLPFTpl() {}
+  virtual ~IntegratedActionDataLPF() {}
 
   boost::shared_ptr<DifferentialActionDataAbstract> differential;
   VectorXs dy;
@@ -70,32 +69,29 @@ class IntegratedActionDataLPFTpl : public crocoddyl::ActionDataAbstractTpl<_Scal
 };
 
 
-template <typename _Scalar>
-class IntegratedActionModelLPFTpl : public crocoddyl::ActionModelAbstractTpl<_Scalar> {
+class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  typedef _Scalar Scalar;
-  typedef crocoddyl::MathBaseTpl<Scalar> MathBase;
-  typedef crocoddyl::ActionModelAbstractTpl<Scalar> Base;
-  typedef IntegratedActionDataLPFTpl<Scalar> Data;
-  typedef crocoddyl::ActionDataAbstractTpl<Scalar> ActionDataAbstract;
-  typedef crocoddyl::DifferentialActionModelAbstractTpl<Scalar> DifferentialActionModelAbstract;
+  typedef crocoddyl::MathBaseTpl<double> MathBase;
+  typedef crocoddyl::ActionModelAbstractTpl<double> Base;
+  typedef IntegratedActionDataLPF Data;
+  typedef crocoddyl::ActionDataAbstractTpl<double> ActionDataAbstract;
+  typedef crocoddyl::DifferentialActionModelAbstractTpl<double> DifferentialActionModelAbstract;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
-  typedef StateLPFTpl<Scalar> StateLPF;
-  typedef crocoddyl::StateMultibodyTpl<Scalar> StateMultibody;
-  typedef pinocchio::ModelTpl<Scalar> PinocchioModel;
-  typedef crocoddyl::ActivationModelQuadraticBarrierTpl<Scalar> ActivationModelQuadraticBarrier;
-  typedef crocoddyl::ActivationBoundsTpl<Scalar> ActivationBounds;
+  typedef crocoddyl::StateMultibodyTpl<double> StateMultibody;
+  typedef pinocchio::ModelTpl<double> PinocchioModel;
+  typedef crocoddyl::ActivationModelQuadraticBarrierTpl<double> ActivationModelQuadraticBarrier;
+  typedef crocoddyl::ActivationBoundsTpl<double> ActivationBounds;
 
-  IntegratedActionModelLPFTpl(
+  IntegratedActionModelLPF(
       boost::shared_ptr<DifferentialActionModelAbstract> model,
       std::vector<std::string> lpf_joint_names = {},
-      const Scalar& time_step = Scalar(1e-3),
-      const bool& with_cost_residual = true, const Scalar& fc = 0,
+      const double& time_step = double(1e-3),
+      const bool& with_cost_residual = true, const double& fc = 0,
       const bool& tau_plus_integration = true, const int& filter = 0);
-  virtual ~IntegratedActionModelLPFTpl();
+  virtual ~IntegratedActionModelLPF();
 
   virtual void calc(const boost::shared_ptr<ActionDataAbstract>& data,
                     const Eigen::Ref<const VectorXs>& y,
@@ -118,13 +114,13 @@ class IntegratedActionModelLPFTpl : public crocoddyl::ActionModelAbstractTpl<_Sc
                            Eigen::Ref<VectorXs> u,
                            const Eigen::Ref<const VectorXs>& x,
                            const std::size_t maxiter = 100,
-                           const Scalar tol = Scalar(1e-9));
+                           const double tol = double(1e-9));
 
   const boost::shared_ptr<DifferentialActionModelAbstract>& get_differential()
       const;
-  const Scalar& get_dt() const;
-  const Scalar& get_fc() const;
-  const Scalar& get_alpha() const { return alpha_; };
+  const double& get_dt() const;
+  const double& get_fc() const;
+  const double& get_alpha() const { return alpha_; };
 
   const std::size_t& get_nw() const { return nw_; };
   const std::size_t& get_ntau() const { return ntau_; };
@@ -141,18 +137,18 @@ class IntegratedActionModelLPFTpl : public crocoddyl::ActionModelAbstractTpl<_Sc
     return non_lpf_torque_ids_;
   };
 
-  void set_dt(const Scalar& dt);
-  void set_fc(const Scalar& fc);
-  void set_alpha(const Scalar& alpha);
+  void set_dt(const double& dt);
+  void set_fc(const double& fc);
+  void set_alpha(const double& alpha);
   void set_differential(
       boost::shared_ptr<DifferentialActionModelAbstract> model);
 
   // hard-coded costs
-  void set_control_reg_cost(const Scalar& cost_weight_w_reg,
+  void set_control_reg_cost(const double& cost_weight_w_reg,
                             const VectorXs& cost_ref_w_reg);
-  void set_control_lim_cost(const Scalar& cost_weight_w_lim);
+  void set_control_lim_cost(const double& cost_weight_w_lim);
 
-  void compute_alpha(const Scalar& fc);
+  void compute_alpha(const double& fc);
 
  protected:
   using Base::has_control_limits_;  //!< Indicates whether any of the control
@@ -173,20 +169,20 @@ class IntegratedActionModelLPFTpl : public crocoddyl::ActionModelAbstractTpl<_Sc
 
  private:
   boost::shared_ptr<DifferentialActionModelAbstract> differential_;
-  Scalar time_step_;
-  Scalar time_step2_;
-  Scalar alpha_;
+  double time_step_;
+  double time_step2_;
+  double alpha_;
   bool with_cost_residual_;
-  Scalar fc_;
+  double fc_;
   // bool enable_integration_;
-  Scalar tauReg_weight_;  //!< Cost weight for unfiltered torque regularization
+  double tauReg_weight_;  //!< Cost weight for unfiltered torque regularization
   VectorXs tauReg_reference_;  //!< Cost reference for unfiltered torque
                                //!< regularization
   VectorXs tauReg_residual_,
       tauLim_residual_;  //!< Residuals for LPF torques reg and lim
   // bool gravity_reg_;                          //!< Use gravity torque for
   // unfiltered torque reg, or user-provided reference?
-  Scalar tauLim_weight_;       //!< Cost weight for unfiltered torque limits
+  double tauLim_weight_;       //!< Cost weight for unfiltered torque limits
   bool tau_plus_integration_;  //!< Use tau+ = LPF(tau,w) in acceleration
                                //!< computation, or tau
   int filter_;                 //!< Type of LPF used>
@@ -209,6 +205,7 @@ class IntegratedActionModelLPFTpl : public crocoddyl::ActionModelAbstractTpl<_Sc
 };
 
 
+}  // namespace lpf
 }  // namespace force_feedback_mpc
 
 #endif  // FORCE_FEEDBACK_MPC_LPF_HPP_
