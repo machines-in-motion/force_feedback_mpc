@@ -9,12 +9,6 @@
 #include "force_feedback_mpc/python.hpp"
 #include "force_feedback_mpc/lowpassfilter/action.hpp"
 
-#include <crocoddyl/core/action-base.hpp>
-// #include <eigenpy/eigenpy.hpp>
-#include <pinocchio/fwd.hpp>  // to avoid compilation error (https://github.com/loco-3d/crocoddyl/issues/205)
-
-// #include "force_feedback_mpc/fwd.hpp"
-
 namespace force_feedback_mpc {
 namespace lpf {
 
