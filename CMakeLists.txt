@@ -91,7 +91,7 @@ if(BUILD_PYTHON_INTERFACE)
 endif()
 
 # Unit tests
-# add_subdirectory(tests)
+add_subdirectory(tests)
 
 # Installation
 install(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)

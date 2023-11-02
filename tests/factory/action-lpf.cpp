@@ -6,11 +6,11 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "lpf.hpp"
+#include "action-lpf.hpp"
 
 #include <crocoddyl/core/utils/exception.hpp>
 
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
 
 const std::vector<ActionModelLPFTypes::Type> ActionModelLPFTypes::all(
@@ -42,13 +42,13 @@ std::ostream& operator<<(std::ostream& os, ActionModelLPFTypes::Type type) {
 ActionModelLPFFactory::ActionModelLPFFactory() {}
 ActionModelLPFFactory::~ActionModelLPFFactory() {}
 
-boost::shared_ptr<sobec::IntegratedActionModelLPF>
+boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>
 ActionModelLPFFactory::create(ActionModelLPFTypes::Type iam_type,
                               DifferentialActionModelTypes::Type dam_type,
                               PinocchioReferenceTypes::Type ref_type,
                               ContactModelMaskTypes::Type mask_type) const {
   // LPFJointMaskType lpf_mask_type) const {
-  boost::shared_ptr<sobec::IntegratedActionModelLPF> iam;
+  boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF> iam;
   boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> dam =
       DifferentialActionModelFactory().create(dam_type, ref_type, mask_type);
   switch (iam_type) {
@@ -66,7 +66,7 @@ ActionModelLPFFactory::create(ActionModelLPFTypes::Type iam_type,
           stateMultibody->get_pinocchio();
       std::vector<std::string> lpf_joint_names =
           LPFJointListFactory().create_names(model, LPFJointMaskType::ALL);
-      iam = boost::make_shared<sobec::IntegratedActionModelLPF>(
+      iam = boost::make_shared<force_feedback_mpc::lpf::IntegratedActionModelLPF>(
           dam, lpf_joint_names, time_step, with_cost_residual, fc,
           tau_plus_integration, filter);
       // set hard-coded costs on unfiltered torque
@@ -96,7 +96,7 @@ ActionModelLPFFactory::create(ActionModelLPFTypes::Type iam_type,
           stateMultibody->get_pinocchio();
       std::vector<std::string> lpf_joint_names =
           LPFJointListFactory().create_names(model, LPFJointMaskType::RAND);
-      iam = boost::make_shared<sobec::IntegratedActionModelLPF>(
+      iam = boost::make_shared<force_feedback_mpc::lpf::IntegratedActionModelLPF>(
           dam, lpf_joint_names, time_step, with_cost_residual, fc,
           tau_plus_integration, filter);
       // set hard-coded costs on unfiltered torque
@@ -124,7 +124,7 @@ ActionModelLPFFactory::create(ActionModelLPFTypes::Type iam_type,
           stateMultibody->get_pinocchio();
       std::vector<std::string> lpf_joint_names =
           LPFJointListFactory().create_names(model, LPFJointMaskType::NONE);
-      iam = boost::make_shared<sobec::IntegratedActionModelLPF>(
+      iam = boost::make_shared<force_feedback_mpc::lpf::IntegratedActionModelLPF>(
           dam, lpf_joint_names, time_step, with_cost_residual, fc,
           tau_plus_integration, filter);
       double tauReg_weight =
@@ -151,7 +151,7 @@ ActionModelLPFFactory::create(ActionModelLPFTypes::Type iam_type,
           stateMultibody->get_pinocchio();
       std::vector<std::string> lpf_joint_names =
           LPFJointListFactory().create_names(model, LPFJointMaskType::ALL);
-      iam = boost::make_shared<sobec::IntegratedActionModelLPF>(
+      iam = boost::make_shared<force_feedback_mpc::lpf::IntegratedActionModelLPF>(
           dam, lpf_joint_names, time_step, with_cost_residual, fc,
           tau_plus_integration, filter);
       // set hard-coded costs on unfiltered torque
@@ -166,4 +166,4 @@ ActionModelLPFFactory::create(ActionModelLPFTypes::Type iam_type,
 }
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc

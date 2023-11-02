@@ -18,7 +18,7 @@
 #include "factory/lpf.hpp"
 
 using namespace boost::unit_test;
-using namespace sobec::unittest;
+using namespace force_feedback_mpc::unittest;
 
 //----------------------------------------------------------------------------//
 
@@ -29,7 +29,7 @@ void test_check_data(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
   // create the model
   ActionModelLPFFactory factory_iam;
-  const boost::shared_ptr<sobec::IntegratedActionModelLPF>& model =
+  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
 
   // Run the print function
@@ -50,7 +50,7 @@ void test_calc_returns_state(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
   // create the model
   ActionModelLPFFactory factory_iam;
-  const boost::shared_ptr<sobec::IntegratedActionModelLPF>& model =
+  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   // create the corresponding data object
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
@@ -74,7 +74,7 @@ void test_calc_returns_a_cost(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
   // create the model
   ActionModelLPFFactory factory_iam;
-  const boost::shared_ptr<sobec::IntegratedActionModelLPF>& model =
+  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
 
   // create the corresponding data object and set the cost to nan
@@ -93,7 +93,7 @@ void test_calc_returns_a_cost(
 }
 
 void test_partial_derivatives_against_numdiff(
-    const boost::shared_ptr<sobec::IntegratedActionModelLPF>& model) {
+    const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model) {
   // create the corresponding data object and set the cost to nan
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
@@ -152,13 +152,13 @@ void test_partial_derivatives_action_model(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
   // create the model
   ActionModelLPFFactory factory;
-  const boost::shared_ptr<sobec::IntegratedActionModelLPF>& model =
+  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
       factory.create(iam_type, dam_type, ref_type, mask_type);
   test_partial_derivatives_against_numdiff(model);
 }
 
 void test_partial_derivatives_against_numdiff_terminal(
-    const boost::shared_ptr<sobec::IntegratedActionModelLPF>& model) {
+    const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model) {
   // create the corresponding data object and set the cost to nan
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
@@ -204,7 +204,7 @@ void test_partial_derivatives_action_model_terminal(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
   // create the model
   ActionModelLPFFactory factory;
-  const boost::shared_ptr<sobec::IntegratedActionModelLPF>& model =
+  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
       factory.create(iam_type, dam_type, ref_type, mask_type);
   model->set_dt(0);
   test_partial_derivatives_against_numdiff_terminal(model);
@@ -217,7 +217,7 @@ void test_calc_alpha0_equivalent_euler(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
   // Create IAM LPF
   ActionModelLPFFactory factory_iam;
-  const boost::shared_ptr<sobec::IntegratedActionModelLPF>& modelLPF =
+  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
       modelLPF->createData();
@@ -233,10 +233,10 @@ void test_calc_alpha0_equivalent_euler(
   std::size_t nx = modelEuler->get_state()->get_nx();
   std::size_t ndx = modelEuler->get_state()->get_ndx();
   std::size_t ntau =
-      boost::static_pointer_cast<sobec::IntegratedActionModelLPF>(modelLPF)
+      boost::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)
           ->get_ntau();
   std::size_t ntau_state =
-      boost::static_pointer_cast<sobec::StateLPF>(modelLPF->get_state())
+      boost::static_pointer_cast<force_feedback_mpc::lpf::StateLPF>(modelLPF->get_state())
           ->get_ntau();
   const Eigen::VectorXd y = modelLPF->get_state()->rand();
   const Eigen::VectorXd& w = Eigen::VectorXd::Random(modelLPF->get_nw());
@@ -289,7 +289,7 @@ void test_calc_NONE_equivalent_euler(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
   // Create IAM LPF
   ActionModelLPFFactory factory_iam;
-  const boost::shared_ptr<sobec::IntegratedActionModelLPF>& modelLPF =
+  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
       modelLPF->createData();
@@ -306,10 +306,10 @@ void test_calc_NONE_equivalent_euler(
   std::size_t ndx = modelEuler->get_state()->get_ndx();
   // std::size_t nv = modelEuler->get_state()->get_nv();
   std::size_t ntau =
-      boost::static_pointer_cast<sobec::IntegratedActionModelLPF>(modelLPF)
+      boost::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)
           ->get_ntau();
   std::size_t ntau_state =
-      boost::static_pointer_cast<sobec::StateLPF>(modelLPF->get_state())
+      boost::static_pointer_cast<force_feedback_mpc::lpf::StateLPF>(modelLPF->get_state())
           ->get_ntau();
   BOOST_CHECK(ntau == 0);
   BOOST_CHECK(ntau_state == 0);
@@ -357,7 +357,7 @@ void test_calc_NONE_equivalent_euler(
 
 //   // Create IAM LPF
 //   ActionModelLPFFactory factory_iam;
-//   const boost::shared_ptr<sobec::IntegratedActionModelLPF>& modelLPF =
+//   const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
 //       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
 //   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
 //   modelLPF->createData();
@@ -374,7 +374,7 @@ void test_calc_NONE_equivalent_euler(
 //   std::size_t ndx = modelEuler->get_state()->get_ndx();
 //   std::size_t nv = modelEuler->get_state()->get_nv();
 //   std::size_t ntau =
-//   boost::static_pointer_cast<sobec::IntegratedActionModelLPF>(modelLPF)->get_ntau();
+//   boost::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)->get_ntau();
 //   std::size_t nu = modelEuler->get_nu();
 //   const Eigen::VectorXd y = modelLPF->get_state()->rand();
 //   const Eigen::VectorXd& w = Eigen::VectorXd::Random(modelLPF->get_nw());
@@ -415,7 +415,7 @@ void test_calcDiff_explicit_equivalent_euler(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
   // Create IAM LPF
   ActionModelLPFFactory factory_iam;
-  const boost::shared_ptr<sobec::IntegratedActionModelLPF>& modelLPF =
+  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
       modelLPF->createData();
@@ -432,7 +432,7 @@ void test_calcDiff_explicit_equivalent_euler(
   std::size_t ndx = modelEuler->get_state()->get_ndx();
   // std::size_t nv = modelEuler->get_state()->get_nv();
   std::size_t ntau =
-      boost::static_pointer_cast<sobec::IntegratedActionModelLPF>(modelLPF)
+      boost::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)
           ->get_ntau();
   std::size_t nu = modelEuler->get_nu();
   const Eigen::VectorXd y = modelLPF->get_state()->rand();

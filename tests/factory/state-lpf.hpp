@@ -6,18 +6,18 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_STATELPF_FACTORY_HPP_
-#define SOBEC_STATELPF_FACTORY_HPP_
+#ifndef FORCE_FEEDBACK_MPC_STATELPF_FACTORY_HPP_
+#define FORCE_FEEDBACK_MPC_STATELPF_FACTORY_HPP_
 
 #include <crocoddyl/core/numdiff/state.hpp>
 #include <crocoddyl/core/state-base.hpp>
 #include <crocoddyl/core/utils/exception.hpp>
 
 #include "pinocchio_model.hpp"
-#include "sobec/crocomplements/lowpassfilter/state.hpp"
+#include "force_feedback_mpc/lowpassfilter/state.hpp"
 #include "state.hpp"
 
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
 
 struct StateLPFModelTypes {
@@ -74,12 +74,12 @@ class StateLPFModelFactory {
   explicit StateLPFModelFactory();
   ~StateLPFModelFactory();
 
-  boost::shared_ptr<sobec::StateLPF> create(
+  boost::shared_ptr<force_feedback_mpc::lpf::StateLPF> create(
       StateLPFModelTypes::Type state_type,
       LPFJointMaskType lpf_mask_type = LPFJointMaskType::ALL) const;
 };
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc
 
-#endif  // SOBEC_STATELPF_FACTORY_HPP_
+#endif  // FORCE_FEEDBACK_MPC_STATELPF_FACTORY_HPP_

@@ -6,17 +6,18 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_ACTION_LPF_FACTORY_HPP_
-#define SOBEC_ACTION_LPF_FACTORY_HPP_
+#ifndef FORCE_FEEDBACK_MPC_ACTION_LPF_FACTORY_HPP_
+#define FORCE_FEEDBACK_MPC_ACTION_LPF_FACTORY_HPP_
 
 #include <iterator>
 
 #include "crocoddyl/core/action-base.hpp"
 #include "crocoddyl/core/numdiff/action.hpp"
 #include "diff-action.hpp"
-#include "sobec/crocomplements/lowpassfilter/action.hpp"
+#include "force_feedback_mpc/lowpassfilter/action.hpp"
 #include "statelpf.hpp"
-namespace sobec {
+
+namespace force_feedback_mpc {
 namespace unittest {
 
 struct ActionModelLPFTypes {
@@ -48,7 +49,7 @@ class ActionModelLPFFactory {
   explicit ActionModelLPFFactory();
   ~ActionModelLPFFactory();
 
-  boost::shared_ptr<sobec::IntegratedActionModelLPF> create(
+  boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF> create(
       ActionModelLPFTypes::Type iam_type,
       DifferentialActionModelTypes::Type dam_type,
       PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
@@ -57,6 +58,6 @@ class ActionModelLPFFactory {
 };
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc
 
-#endif  // SOBEC_ACTION_LPF_FACTORY_HPP_
+#endif  // FORCE_FEEDBACK_MPC_ACTION_LPF_FACTORY_HPP_

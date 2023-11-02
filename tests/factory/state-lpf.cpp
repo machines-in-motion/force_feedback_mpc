@@ -6,7 +6,6 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "statelpf.hpp"
 
 #include <crocoddyl/core/states/euclidean.hpp>
 #include <crocoddyl/core/utils/exception.hpp>
@@ -18,9 +17,9 @@
 #include <pinocchio/parsers/sample-models.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 
-#include "state.hpp"
+#include "state-lpf.hpp"
 
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
 using namespace crocoddyl;
 
@@ -111,10 +110,10 @@ std::ostream& operator<<(std::ostream& os, StateLPFModelTypes::Type type) {
 StateLPFModelFactory::StateLPFModelFactory() {}
 StateLPFModelFactory::~StateLPFModelFactory() {}
 
-boost::shared_ptr<sobec::StateLPF> StateLPFModelFactory::create(
+boost::shared_ptr<force_feedback_mpc::lpf::StateLPF> StateLPFModelFactory::create(
     StateLPFModelTypes::Type state_type, LPFJointMaskType lpf_mask_type) const {
   boost::shared_ptr<pinocchio::Model> model;
-  boost::shared_ptr<sobec::StateLPF> state;
+  boost::shared_ptr<force_feedback_mpc::lpf::StateLPF> state;
   switch (state_type) {
     case StateLPFModelTypes::StateLPF_TalosArm: {
       model = PinocchioModelFactory(PinocchioModelTypes::TalosArm).create();
@@ -124,7 +123,7 @@ boost::shared_ptr<sobec::StateLPF> StateLPFModelFactory::create(
                   StateModelTypes::StateMultibody_TalosArm));
       std::vector<int> lpf_joint_ids =
           LPFJointListFactory().create_ids(model, lpf_mask_type);
-      state = boost::make_shared<sobec::StateLPF>(model, lpf_joint_ids);
+      state = boost::make_shared<force_feedback_mpc::lpf::StateLPF>(model, lpf_joint_ids);
 
       break;
     }
@@ -137,7 +136,7 @@ boost::shared_ptr<sobec::StateLPF> StateLPFModelFactory::create(
                       StateModelTypes::StateMultibody_HyQ)));
       std::vector<int> lpf_joint_ids =
           LPFJointListFactory().create_ids(model, lpf_mask_type);
-      state = boost::make_shared<sobec::StateLPF>(model, lpf_joint_ids);
+      state = boost::make_shared<force_feedback_mpc::lpf::StateLPF>(model, lpf_joint_ids);
       break;
     }
     case StateLPFModelTypes::StateLPF_Talos: {
@@ -149,7 +148,7 @@ boost::shared_ptr<sobec::StateLPF> StateLPFModelFactory::create(
                       StateModelTypes::StateMultibody_Talos)));
       std::vector<int> lpf_joint_ids =
           LPFJointListFactory().create_ids(model, lpf_mask_type);
-      state = boost::make_shared<sobec::StateLPF>(model, lpf_joint_ids);
+      state = boost::make_shared<force_feedback_mpc::lpf::StateLPF>(model, lpf_joint_ids);
       break;
     }
     case StateLPFModelTypes::StateLPF_RandomHumanoid: {
@@ -162,7 +161,7 @@ boost::shared_ptr<sobec::StateLPF> StateLPFModelFactory::create(
                       StateModelTypes::StateMultibody_RandomHumanoid)));
       std::vector<int> lpf_joint_ids =
           LPFJointListFactory().create_ids(model, lpf_mask_type);
-      state = boost::make_shared<sobec::StateLPF>(model, lpf_joint_ids);
+      state = boost::make_shared<force_feedback_mpc::lpf::StateLPF>(model, lpf_joint_ids);
       break;
     }
     default:
@@ -173,4 +172,4 @@ boost::shared_ptr<sobec::StateLPF> StateLPFModelFactory::create(
 }
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc

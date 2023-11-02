@@ -22,7 +22,7 @@
 #include <pinocchio/parsers/srdf.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
 using namespace crocoddyl;
 
@@ -158,4 +158,4 @@ void updateAllPinocchio(pinocchio::Model* const model, pinocchio::Data* data,
 }
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc

@@ -6,8 +6,8 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_PINOCCHIO_MODEL_FACTORY_HPP_
-#define SOBEC_PINOCCHIO_MODEL_FACTORY_HPP_
+#ifndef FORCE_FEEDBACK_MPC_PINOCCHIO_MODEL_FACTORY_HPP_
+#define FORCE_FEEDBACK_MPC_PINOCCHIO_MODEL_FACTORY_HPP_
 
 #include <crocoddyl/core/utils/exception.hpp>
 #include <example-robot-data/path.hpp>
@@ -23,7 +23,7 @@
 #include <pinocchio/parsers/srdf.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
 
 struct PinocchioModelTypes {
@@ -80,6 +80,6 @@ void updateAllPinocchio(pinocchio::Model* const model, pinocchio::Data* data,
                         const Eigen::VectorXd& u = Eigen::VectorXd());
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc
 
-#endif  // SOBEC_PINOCCHIO_MODEL_FACTORY_HPP_
+#endif  // FORCE_FEEDBACK_MPC_PINOCCHIO_MODEL_FACTORY_HPP_
