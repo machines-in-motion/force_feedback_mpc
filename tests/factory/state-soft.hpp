@@ -6,18 +6,18 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_STATESOFT_FACTORY_HPP_
-#define SOBEC_STATESOFT_FACTORY_HPP_
+#ifndef FORCE_FEEDBACK_MPC_STATESOFT_FACTORY_HPP_
+#define FORCE_FEEDBACK_MPC_STATESOFT_FACTORY_HPP_
 
 #include <crocoddyl/core/numdiff/state.hpp>
 #include <crocoddyl/core/state-base.hpp>
 #include <crocoddyl/core/utils/exception.hpp>
 
-#include "pinocchio_model.hpp"
-#include "sobec/crocomplements/softcontact/state.hpp"
-#include "state.hpp"
+#include "crocoddyl/pinocchio_model.hpp"
+#include "crocoddyl/state.hpp"
+#include "force_feedback_mpc/softcontact/state.hpp"
 
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
 
 struct StateSoftContactModelTypes {
@@ -58,11 +58,11 @@ class StateSoftContactModelFactory {
   explicit StateSoftContactModelFactory();
   ~StateSoftContactModelFactory();
 
-  boost::shared_ptr<sobec::StateSoftContact> create(
+  boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact> create(
       StateSoftContactModelTypes::Type state_type, std::size_t nc = 3) const;
 };
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc
 
-#endif  // SOBEC_STATESOFT_FACTORY_HPP_
+#endif  // FORCE_FEEDBACK_MPC_STATESOFT_FACTORY_HPP_

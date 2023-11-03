@@ -8,15 +8,18 @@
 
 #include <pinocchio/algorithm/joint-configuration.hpp>
 
-#include "crocoddyl/core/utils/exception.hpp"
-#include "state.hpp"
+#include <crocoddyl/core/utils/exception.hpp>
 
-namespace sobec {
+#include "force_feedback_mpc/softcontact/state.hpp"
+
 using namespace crocoddyl;
 
-template <typename Scalar>
-StateSoftContactTpl<Scalar>::StateSoftContactTpl(
-    boost::shared_ptr<pinocchio::ModelTpl<Scalar> > model, std::size_t nc)
+namespace force_feedback_mpc {
+namespace softcontact{
+
+
+StateSoftContact::StateSoftContact(
+    boost::shared_ptr<pinocchio::ModelTpl<double> > model, std::size_t nc)
     : Base(model->nq + model->nv + nc, 2 * model->nv + nc),
       pinocchio_(model),
       nc_(nc),
@@ -34,15 +37,15 @@ StateSoftContactTpl<Scalar>::StateSoftContactTpl(
 
   // Define internally the limits of the first joint
   const std::size_t nq0 = model->joints[1].nq();
-  lb_.head(nq0) = -std::numeric_limits<Scalar>::infinity() * VectorXs::Ones(nq0);
-  ub_.head(nq0) = std::numeric_limits<Scalar>::infinity() * VectorXs::Ones(nq0);
+  lb_.head(nq0) = -std::numeric_limits<double>::infinity() * VectorXs::Ones(nq0);
+  ub_.head(nq0) = std::numeric_limits<double>::infinity() * VectorXs::Ones(nq0);
   lb_.segment(nq0, nq_ - nq0) = pinocchio_->lowerPositionLimit.tail(nq_ - nq0);
   ub_.segment(nq0, nq_ - nq0) = pinocchio_->upperPositionLimit.tail(nq_ - nq0);
   lb_.segment(nq_, nv_) = -pinocchio_->velocityLimit;
   ub_.segment(nq_, nv_) = pinocchio_->velocityLimit;
   // Visco-elastic force limit (no limit)
-  lb_.tail(nc_) = -std::numeric_limits<Scalar>::infinity() * VectorXs::Ones(nc_);
-  ub_.tail(nc_) = std::numeric_limits<Scalar>::infinity() * VectorXs::Ones(nc_);
+  lb_.tail(nc_) = -std::numeric_limits<double>::infinity() * VectorXs::Ones(nc_);
+  ub_.tail(nc_) = std::numeric_limits<double>::infinity() * VectorXs::Ones(nc_);
 
   Base::update_has_limits();
 
@@ -52,38 +55,38 @@ StateSoftContactTpl<Scalar>::StateSoftContactTpl(
   // no, it's measured! Set 0 force. Force as state equivalent to dP as state
 }
 
-template <typename Scalar>
-StateSoftContactTpl<Scalar>::~StateSoftContactTpl() {}
 
-template <typename Scalar>
-const std::size_t& StateSoftContactTpl<Scalar>::get_nc() const {
+StateSoftContact::~StateSoftContact() {}
+
+
+const std::size_t& StateSoftContact::get_nc() const {
   return nc_;
 }
 
-template <typename Scalar>
-const std::size_t& StateSoftContactTpl<Scalar>::get_ny() const {
+
+const std::size_t& StateSoftContact::get_ny() const {
   return ny_;
 }
 
-template <typename Scalar>
-const std::size_t& StateSoftContactTpl<Scalar>::get_ndy() const {
+
+const std::size_t& StateSoftContact::get_ndy() const {
   return ndy_;
 }
 
-template <typename Scalar>
-typename MathBaseTpl<Scalar>::VectorXs StateSoftContactTpl<Scalar>::zero() const {
+
+typename MathBaseTpl<double>::VectorXs StateSoftContact::zero() const {
   return y0_;
 }
 
-template <typename Scalar>
-typename MathBaseTpl<Scalar>::VectorXs StateSoftContactTpl<Scalar>::rand() const {
+
+typename MathBaseTpl<double>::VectorXs StateSoftContact::rand() const {
   VectorXs yrand = VectorXs::Random(ny_);
   yrand.head(nq_) = pinocchio::randomConfiguration(*pinocchio_.get());
   return yrand;
 }
 
-template <typename Scalar>
-void StateSoftContactTpl<Scalar>::diff(const Eigen::Ref<const VectorXs>& y0,
+
+void StateSoftContact::diff(const Eigen::Ref<const VectorXs>& y0,
                                const Eigen::Ref<const VectorXs>& y1,
                                Eigen::Ref<VectorXs> dyout) const {
   if (static_cast<std::size_t>(y0.size()) != ny_) {
@@ -108,8 +111,8 @@ void StateSoftContactTpl<Scalar>::diff(const Eigen::Ref<const VectorXs>& y0,
   dyout.tail(nc_) = y1.tail(nc_) - y0.tail(nc_);
 }
 
-template <typename Scalar>
-void StateSoftContactTpl<Scalar>::integrate(const Eigen::Ref<const VectorXs>& y,
+
+void StateSoftContact::integrate(const Eigen::Ref<const VectorXs>& y,
                                     const Eigen::Ref<const VectorXs>& dy,
                                     Eigen::Ref<VectorXs> yout) const {
   if (static_cast<std::size_t>(y.size()) != ny_) {
@@ -134,8 +137,8 @@ void StateSoftContactTpl<Scalar>::integrate(const Eigen::Ref<const VectorXs>& y,
   yout.tail(nc_) = y.tail(nc_) + dy.tail(nc_);
 }
 
-template <typename Scalar>
-void StateSoftContactTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& y0,
+
+void StateSoftContact::Jdiff(const Eigen::Ref<const VectorXs>& y0,
                                 const Eigen::Ref<const VectorXs>& y1,
                                 Eigen::Ref<MatrixXs> Jfirst,
                                 Eigen::Ref<MatrixXs> Jsecond,
@@ -165,8 +168,8 @@ void StateSoftContactTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& y0,
 
     pinocchio::dDifference(*pinocchio_.get(), y0.head(nq_), y1.head(nq_),
                            Jfirst.topLeftCorner(nv_, nv_), pinocchio::ARG0);
-    Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)-1;
-    Jfirst.bottomRightCorner(nc_, nc_).diagonal().array() = (Scalar)-1;
+    Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() = (double)-1;
+    Jfirst.bottomRightCorner(nc_, nc_).diagonal().array() = (double)-1;
   } else if (firstsecond == second) {
     if (static_cast<std::size_t>(Jsecond.rows()) != ndy_ ||
         static_cast<std::size_t>(Jsecond.cols()) != ndy_) {
@@ -177,8 +180,8 @@ void StateSoftContactTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& y0,
     }
     pinocchio::dDifference(*pinocchio_.get(), y0.head(nq_), y1.head(nq_),
                            Jsecond.topLeftCorner(nv_, nv_), pinocchio::ARG1);
-    Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)1;
-    Jsecond.bottomRightCorner(nc_, nc_).diagonal().array() = (Scalar)1;
+    Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() = (double)1;
+    Jsecond.bottomRightCorner(nc_, nc_).diagonal().array() = (double)1;
   } else {  // computing both
     if (static_cast<std::size_t>(Jfirst.rows()) != ndy_ ||
         static_cast<std::size_t>(Jfirst.cols()) != ndy_) {
@@ -198,15 +201,15 @@ void StateSoftContactTpl<Scalar>::Jdiff(const Eigen::Ref<const VectorXs>& y0,
                            Jfirst.topLeftCorner(nv_, nv_), pinocchio::ARG0);
     pinocchio::dDifference(*pinocchio_.get(), y0.head(nq_), y1.head(nq_),
                            Jsecond.topLeftCorner(nv_, nv_), pinocchio::ARG1);
-    Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)-1;
-    Jfirst.bottomRightCorner(nc_, nc_).diagonal().array() = (Scalar)-1;
-    Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)1;
-    Jsecond.bottomRightCorner(nc_, nc_).diagonal().array() = (Scalar)1;
+    Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() = (double)-1;
+    Jfirst.bottomRightCorner(nc_, nc_).diagonal().array() = (double)-1;
+    Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() = (double)1;
+    Jsecond.bottomRightCorner(nc_, nc_).diagonal().array() = (double)1;
   }
 }
 
-template <typename Scalar>
-void StateSoftContactTpl<Scalar>::Jintegrate(const Eigen::Ref<const VectorXs>& y,
+
+void StateSoftContact::Jintegrate(const Eigen::Ref<const VectorXs>& y,
                                      const Eigen::Ref<const VectorXs>& dy,
                                      Eigen::Ref<MatrixXs> Jfirst,
                                      Eigen::Ref<MatrixXs> Jsecond,
@@ -230,22 +233,22 @@ void StateSoftContactTpl<Scalar>::Jintegrate(const Eigen::Ref<const VectorXs>& y
         pinocchio::dIntegrate(*pinocchio_.get(), y.head(nq_), dy.head(nv_),
                               Jfirst.topLeftCorner(nv_, nv_), pinocchio::ARG0,
                               pinocchio::SETTO);
-        Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)1;
-        Jfirst.bottomRightCorner(nc_, nc_).diagonal().array() = (Scalar)1;
+        Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() = (double)1;
+        Jfirst.bottomRightCorner(nc_, nc_).diagonal().array() = (double)1;
         break;
       case addto:
         pinocchio::dIntegrate(*pinocchio_.get(), y.head(nq_), dy.head(nv_),
                               Jfirst.topLeftCorner(nv_, nv_), pinocchio::ARG0,
                               pinocchio::ADDTO);
-        Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() += (Scalar)1;
-        Jfirst.bottomRightCorner(nc_, nc_).diagonal().array() += (Scalar)1;
+        Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() += (double)1;
+        Jfirst.bottomRightCorner(nc_, nc_).diagonal().array() += (double)1;
         break;
       case rmfrom:
         pinocchio::dIntegrate(*pinocchio_.get(), y.head(nq_), dy.head(nv_),
                               Jfirst.topLeftCorner(nv_, nv_), pinocchio::ARG0,
                               pinocchio::RMTO);
-        Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() -= (Scalar)1;
-        Jfirst.bottomRightCorner(nc_, nc_).diagonal().array() -= (Scalar)1;
+        Jfirst.block(nv_, nv_, nv_, nv_).diagonal().array() -= (double)1;
+        Jfirst.bottomRightCorner(nc_, nc_).diagonal().array() -= (double)1;
         break;
       default:
         throw_pretty(
@@ -266,22 +269,22 @@ void StateSoftContactTpl<Scalar>::Jintegrate(const Eigen::Ref<const VectorXs>& y
         pinocchio::dIntegrate(*pinocchio_.get(), y.head(nq_), dy.head(nv_),
                               Jsecond.topLeftCorner(nv_, nv_), pinocchio::ARG1,
                               pinocchio::SETTO);
-        Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() = (Scalar)1;
-        Jsecond.bottomRightCorner(nc_, nc_).diagonal().array() = (Scalar)1;
+        Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() = (double)1;
+        Jsecond.bottomRightCorner(nc_, nc_).diagonal().array() = (double)1;
         break;
       case addto:
         pinocchio::dIntegrate(*pinocchio_.get(), y.head(nq_), dy.head(nv_),
                               Jsecond.topLeftCorner(nv_, nv_), pinocchio::ARG1,
                               pinocchio::ADDTO);
-        Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() += (Scalar)1;
-        Jsecond.bottomRightCorner(nc_, nc_).diagonal().array() += (Scalar)1;
+        Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() += (double)1;
+        Jsecond.bottomRightCorner(nc_, nc_).diagonal().array() += (double)1;
         break;
       case rmfrom:
         pinocchio::dIntegrate(*pinocchio_.get(), y.head(nq_), dy.head(nv_),
                               Jsecond.topLeftCorner(nv_, nv_), pinocchio::ARG1,
                               pinocchio::RMTO);
-        Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() -= (Scalar)1;
-        Jsecond.bottomRightCorner(nc_, nc_).diagonal().array() -= (Scalar)1;
+        Jsecond.block(nv_, nv_, nv_, nv_).diagonal().array() -= (double)1;
+        Jsecond.bottomRightCorner(nc_, nc_).diagonal().array() -= (double)1;
         break;
       default:
         throw_pretty(
@@ -291,8 +294,8 @@ void StateSoftContactTpl<Scalar>::Jintegrate(const Eigen::Ref<const VectorXs>& y
   }
 }
 
-template <typename Scalar>
-void StateSoftContactTpl<Scalar>::JintegrateTransport(
+
+void StateSoftContact::JintegrateTransport(
     const Eigen::Ref<const VectorXs>& y, const Eigen::Ref<const VectorXs>& dy,
     Eigen::Ref<MatrixXs> Jin, const Jcomponent firstsecond) const {
   assert_pretty(
@@ -318,10 +321,11 @@ void StateSoftContactTpl<Scalar>::JintegrateTransport(
   }
 }
 
-template <typename Scalar>
-const boost::shared_ptr<pinocchio::ModelTpl<Scalar> >&
-StateSoftContactTpl<Scalar>::get_pinocchio() const {
+
+const boost::shared_ptr<pinocchio::ModelTpl<double> >&
+StateSoftContact::get_pinocchio() const {
   return pinocchio_;
 }
 
-}  // namespace sobec
+}  // namespace softcontact
+}  // namespace force_feedback_mpc

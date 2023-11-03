@@ -10,12 +10,17 @@
 #include <crocoddyl/core/utils/exception.hpp>
 #include <iostream>
 
-#include "iam-augmented.hpp"
 
-namespace sobec {
+#include "force_feedback_mpc/softcontact/action.hpp"
+
 using namespace crocoddyl;
+
+
+namespace force_feedback_mpc {
+namespace softcontact {
+
 template <typename Scalar>
-IAMSoftContactAugmentedTpl<Scalar>::IAMSoftContactAugmentedTpl(
+IAMSoftContactAugmented::IAMSoftContactAugmented(
     boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model,
     const Scalar& time_step,
     const bool& with_cost_residual)
@@ -42,10 +47,10 @@ IAMSoftContactAugmentedTpl<Scalar>::IAMSoftContactAugmentedTpl(
 }
 
 template <typename Scalar>
-IAMSoftContactAugmentedTpl<Scalar>::~IAMSoftContactAugmentedTpl() {}
+IAMSoftContactAugmented::~IAMSoftContactAugmented() {}
 
 template <typename Scalar>
-void IAMSoftContactAugmentedTpl<Scalar>::calc(
+void IAMSoftContactAugmented::calc(
     const boost::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y, 
     const Eigen::Ref<const VectorXs>& u) {
@@ -136,7 +141,7 @@ void IAMSoftContactAugmentedTpl<Scalar>::calc(
 }  // calc
 
 template <typename Scalar>
-void IAMSoftContactAugmentedTpl<Scalar>::calc(
+void IAMSoftContactAugmented::calc(
     const boost::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y) {
   const std::size_t& nx = differential_->get_state()->get_nx();
@@ -166,7 +171,7 @@ void IAMSoftContactAugmentedTpl<Scalar>::calc(
 
 
 template <typename Scalar>
-void IAMSoftContactAugmentedTpl<Scalar>::calcDiff(
+void IAMSoftContactAugmented::calcDiff(
     const boost::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y, 
     const Eigen::Ref<const VectorXs>& u) {
@@ -231,7 +236,7 @@ void IAMSoftContactAugmentedTpl<Scalar>::calcDiff(
 }
 
 template <typename Scalar>
-void IAMSoftContactAugmentedTpl<Scalar>::calcDiff(
+void IAMSoftContactAugmented::calcDiff(
     const boost::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y) {
   const std::size_t& nx = differential_->get_state()->get_nx();
@@ -261,12 +266,12 @@ void IAMSoftContactAugmentedTpl<Scalar>::calcDiff(
 
 template <typename Scalar>
 boost::shared_ptr<ActionDataAbstractTpl<Scalar> >
-IAMSoftContactAugmentedTpl<Scalar>::createData() {
+IAMSoftContactAugmented::createData() {
   return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
 template <typename Scalar>
-bool IAMSoftContactAugmentedTpl<Scalar>::checkData(
+bool IAMSoftContactAugmented::checkData(
     const boost::shared_ptr<ActionDataAbstract>& data) {
   boost::shared_ptr<Data> d = boost::dynamic_pointer_cast<Data>(data);
   boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = boost::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
@@ -279,18 +284,18 @@ bool IAMSoftContactAugmentedTpl<Scalar>::checkData(
 
 template <typename Scalar>
 const boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamicsTpl<Scalar> >&
-IAMSoftContactAugmentedTpl<Scalar>::get_differential() const {
+IAMSoftContactAugmented::get_differential() const {
   return differential_;
 }
 
 template <typename Scalar>
-const Scalar& IAMSoftContactAugmentedTpl<Scalar>::get_dt() const {
+const Scalar& IAMSoftContactAugmented::get_dt() const {
   return time_step_;
 }
 
 
 template <typename Scalar>
-void IAMSoftContactAugmentedTpl<Scalar>::set_dt(const Scalar& dt) {
+void IAMSoftContactAugmented::set_dt(const Scalar& dt) {
   if (dt < 0.) {
     throw_pretty("Invalid argument: "
                  << "dt has positive value");
@@ -301,7 +306,7 @@ void IAMSoftContactAugmentedTpl<Scalar>::set_dt(const Scalar& dt) {
 
 
 template <typename Scalar>
-void IAMSoftContactAugmentedTpl<Scalar>::set_differential(
+void IAMSoftContactAugmented::set_differential(
     boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model) {
   const std::size_t& nu = model->get_nu();
   if (nu_ != nu) {
@@ -317,7 +322,7 @@ void IAMSoftContactAugmentedTpl<Scalar>::set_differential(
 }
 
 // template <typename Scalar>
-// void IAMSoftContactAugmentedTpl<Scalar>::quasiStatic(
+// void IAMSoftContactAugmented::quasiStatic(
 //     const boost::shared_ptr<ActionDataAbstract>& data, Eigen::Ref<VectorXs> u,
 //     const Eigen::Ref<const VectorXs>& x, 
 //     const std::size_t& maxiter,
@@ -339,4 +344,5 @@ void IAMSoftContactAugmentedTpl<Scalar>::set_differential(
 //   differential_->quasiStatic(d->differential, u, x, maxiter, tol);
 // }
 
-}  // namespace sobec
+}  // namespace softcontact
+}  // namespace force_feedback_mpc

@@ -6,8 +6,8 @@
 // individual files. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_SOFTCONTACT1D_FWDDYN_HPP_
-#define SOBEC_SOFTCONTACT1D_FWDDYN_HPP_
+#ifndef FORCE_FEEDBACK_MPC_SOFTCONTACT1D_FWDDYN_HPP_
+#define FORCE_FEEDBACK_MPC_SOFTCONTACT1D_FWDDYN_HPP_
 
 #include <stdexcept>
 
@@ -20,7 +20,7 @@
 
 #include "sobec/fwd.hpp"
 
-namespace sobec {
+namespace force_feedback_mpc {
 
 
 /**
@@ -290,11 +290,6 @@ struct DifferentialActionDataSoftContact1DFwdDynamicsTpl : public crocoddyl::Dif
   using Base::xout;
 };
 
-}  // namespace sobec
+}  // namespace force_feedback_mpc
 
-/* --- Details -------------------------------------------------------------- */
-/* --- Details -------------------------------------------------------------- */
-/* --- Details -------------------------------------------------------------- */
-#include <sobec/crocomplements/softcontact/dam1d.hxx>
-
-#endif  // SOBEC_SOFTCONTACT1D_FWDDYN_HPP_
+#endif  // FORCE_FEEDBACK_MPC_SOFTCONTACT1D_FWDDYN_HPP_

@@ -9,4 +9,7 @@ BOOST_PYTHON_MODULE(force_feedback_mpc_pywrap) {
 
     force_feedback_mpc::lpf::exposeStateLPF(); 
     force_feedback_mpc::lpf::exposeIntegratedActionModelLPF(); 
+
+    force_feedback_mpc::softcontact::exposeStateSoftContact(); 
+    force_feedback_mpc::softcontact::exposeDAMSoftContactAbstractAugmentedFwdDyn(); 
 }

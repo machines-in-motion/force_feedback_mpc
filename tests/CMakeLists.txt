@@ -8,7 +8,7 @@ set(${PROJECT_NAME}_FACTORY_TEST
   factory/diff-action.hpp
   factory/state-lpf.hpp
   factory/action-lpf.hpp
-  # factory/statesoft.hpp
+  factory/state-soft.hpp
   # factory/lpf.hpp
   # factory/diff-action-soft-abstract.hpp
   # factory/diff-action-soft3d.hpp
@@ -24,7 +24,7 @@ set(${PROJECT_NAME}_FACTORY_TEST
   factory/diff-action.cpp
   factory/state-lpf.cpp
   factory/action-lpf.cpp
-  # factory/statesoft.cpp
+  factory/state-soft.cpp
   # factory/diff-action-soft-abstract.cpp
   # factory/diff-action-soft3d.cpp
   # factory/diff-action-soft3d-friction.cpp
@@ -52,8 +52,8 @@ target_link_libraries(test_states_lpf PUBLIC ${PROJECT_NAME}_unittest)
 add_unit_test(test_actions_lpf test_actions_lpf.cpp)
 target_link_libraries(test_actions_lpf PUBLIC ${PROJECT_NAME}_unittest)
 
-# ADD_UNIT_TEST(test_statessoft test_statessoft.cpp)
-# target_link_libraries(test_statessoft PUBLIC ${PROJECT_NAME}_unittest)
+ADD_UNIT_TEST(test_states_soft test_states_soft.cpp)
+target_link_libraries(test_states_soft PUBLIC ${PROJECT_NAME}_unittest)
 
 # ADD_UNIT_TEST(test_lpf test_lpf.cpp)
 # target_link_libraries(test_lpf PUBLIC ${PROJECT_NAME}_unittest)

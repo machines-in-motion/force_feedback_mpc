@@ -1,6 +1,8 @@
 set(${PY_NAME}_SOURCES
   lowpassfilter/state.cpp
   lowpassfilter/action.cpp
+  softcontact/state.cpp
+  softcontact/dam-augmented.cpp
   main.cpp
   )
 

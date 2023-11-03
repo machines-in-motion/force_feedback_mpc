@@ -63,14 +63,17 @@ endif()
 # Main Library
 set(${PROJECT_NAME}_HEADERS
   include/${PROJECT_NAME}/python.hpp
-  # include/${PROJECT_NAME}/fwd.hpp
   include/${PROJECT_NAME}/lowpassfilter/state.hpp
-  include/${PROJECT_NAME}/lowpassfilter/action.hpp
+  include/${PROJECT_NAME}/lowpassfilter/state.hpp
+  include/${PROJECT_NAME}/softcontact/state.hpp
+  include/${PROJECT_NAME}/softcontact/dam-augmented.hpp
   )
 
 set(${PROJECT_NAME}_SOURCES
   src/lowpassfilter/state.cpp
   src/lowpassfilter/action.cpp
+  src/softcontact/state.cpp
+  src/softcontact/dam-augmented.cpp
   )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})

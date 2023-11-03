@@ -6,8 +6,8 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_IAM3D_AUGMENTED_HPP_
-#define SOBEC_IAM3D_AUGMENTED_HPP_
+#ifndef FORCE_FEEDBACK_MPC_IAM3D_AUGMENTED_HPP_
+#define FORCE_FEEDBACK_MPC_IAM3D_AUGMENTED_HPP_
 
 #include <crocoddyl/core/action-base.hpp>
 #include <crocoddyl/core/diff-action-base.hpp>
@@ -18,7 +18,7 @@
 #include "state.hpp"
 #include "dam3d-augmented.hpp"
 
-namespace sobec {
+namespace force_feedback_mpc {
 using namespace crocoddyl;
 
 template <typename _Scalar>
@@ -145,11 +145,6 @@ struct IADSoftContactAugmentedTpl : public ActionDataAbstractTpl<_Scalar> {
 //   MatrixXs& Lww = Base::Luu;
 };
 
-}  // namespace sobec
+}  // namespace force_feedback_mpc
 
-/* --- Details -------------------------------------------------------------- */
-/* --- Details -------------------------------------------------------------- */
-/* --- Details -------------------------------------------------------------- */
-#include "sobec/crocomplements/softcontact/iam-augmented.hxx"
-
-#endif  // SOBEC_IAM3D_AUGMENTED_HPP_
+#endif  // FORCE_FEEDBACK_MPC_IAM3D_AUGMENTED_HPP_

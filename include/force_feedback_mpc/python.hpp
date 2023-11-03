@@ -6,12 +6,22 @@
 #include "force_feedback_mpc/lowpassfilter/state.hpp"
 #include "force_feedback_mpc/lowpassfilter/action.hpp"
 
+#include "force_feedback_mpc/softcontact/state.hpp"
+#include "force_feedback_mpc/softcontact/dam-augmented.hpp"
 
 namespace force_feedback_mpc{
 namespace lpf{
     void exposeStateLPF();
     void exposeIntegratedActionModelLPF();
 } // namespace lpf
+} // namespace force_feedback_mpc
+
+
+namespace force_feedback_mpc{
+namespace softcontact{
+    void exposeStateSoftContact();
+    void exposeDAMSoftContactAbstractAugmentedFwdDyn();
+} // namespace softcontact
 } // namespace force_feedback_mpc
 
 #endif

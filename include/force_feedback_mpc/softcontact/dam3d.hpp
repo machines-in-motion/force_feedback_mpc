@@ -6,8 +6,8 @@
 // individual files. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_SOFTCONTACT3D_FWDDYN_HPP_
-#define SOBEC_SOFTCONTACT3D_FWDDYN_HPP_
+#ifndef FORCE_FEEDBACK_MPC_SOFTCONTACT3D_FWDDYN_HPP_
+#define FORCE_FEEDBACK_MPC_SOFTCONTACT3D_FWDDYN_HPP_
 
 #include <stdexcept>
 
@@ -20,7 +20,7 @@
 
 #include "sobec/fwd.hpp"
 
-namespace sobec {
+namespace force_feedback_mpc {
 
 /**
  * @brief Differential action model for visco-elastic contact forward dynamics in multibody
@@ -265,11 +265,6 @@ struct DifferentialActionDataSoftContact3DFwdDynamicsTpl : public crocoddyl::Dif
   using Base::xout;
 };
 
-}  // namespace sobec
+}  // namespace force_feedback_mpc
 
-/* --- Details -------------------------------------------------------------- */
-/* --- Details -------------------------------------------------------------- */
-/* --- Details -------------------------------------------------------------- */
-#include <sobec/crocomplements/softcontact/dam3d.hxx>
-
-#endif  // SOBEC_SOFTCONTACT3D_FWDDYN_HPP_
+#endif  // FORCE_FEEDBACK_MPC_SOFTCONTACT3D_FWDDYN_HPP_
