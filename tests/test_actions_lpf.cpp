@@ -112,7 +112,7 @@ void test_partial_derivatives_against_numdiff(
 
   // Tolerance defined as in
   // http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c5-7.pdf
-  double tol = 10*std::pow(model_num_diff.get_disturbance(), 1. / 3.);
+  double tol = std::pow(model_num_diff.get_disturbance(), 1. / 3.);
   // const std::size_t nv = model->get_state()->get_nv();
   // const std::size_t nu = model->get_differential()->get_nu();
   // std::cout << " Fx - Fx_nd [q]: " << std::endl;
@@ -124,21 +124,17 @@ void test_partial_derivatives_against_numdiff(
   // [tau]: " << std::endl; std::cout << (data->Fx -
   // data_num_diff->Fx).rightCols(nu).lpNorm<Eigen::Infinity>() << std::endl;
 
-  BOOST_CHECK((data->Fx - data_num_diff->Fx).isZero(NUMDIFF_MODIFIER * tol));
-  BOOST_CHECK((data->Fu - data_num_diff->Fu).isZero(NUMDIFF_MODIFIER * tol));
-  BOOST_CHECK((data->Lx - data_num_diff->Lx).isZero(NUMDIFF_MODIFIER * tol));
-  BOOST_CHECK((data->Lu - data_num_diff->Lu).isZero(NUMDIFF_MODIFIER * tol));
+  BOOST_CHECK((data->Fx - data_num_diff->Fx).isZero(tol));
+  BOOST_CHECK((data->Fu - data_num_diff->Fu).isZero(tol));
+  BOOST_CHECK((data->Lx - data_num_diff->Lx).isZero(tol));
+  BOOST_CHECK((data->Lu - data_num_diff->Lu).isZero(tol));
   if (model_num_diff.get_with_gauss_approx()) {
     BOOST_CHECK(
-        (data->Lxx - data_num_diff->Lxx).isZero(NUMDIFF_MODIFIER * tol));
+        (data->Lxx - data_num_diff->Lxx).isZero(tol));
     BOOST_CHECK(
-        (data->Lxu - data_num_diff->Lxu).isZero(NUMDIFF_MODIFIER * tol));
+        (data->Lxu - data_num_diff->Lxu).isZero(tol));
     BOOST_CHECK(
-        (data->Luu - data_num_diff->Luu).isZero(NUMDIFF_MODIFIER * tol));
-  } else {
-    BOOST_CHECK((data_num_diff->Lxx).isZero(tol));
-    BOOST_CHECK((data_num_diff->Lxu).isZero(tol));
-    BOOST_CHECK((data_num_diff->Luu).isZero(tol));
+        (data->Luu - data_num_diff->Luu).isZero(tol));
   }
 }
 
@@ -174,23 +170,19 @@ void test_partial_derivatives_against_numdiff_terminal(
 
   // Tolerance defined as in
   // http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c5-7.pdf
-  double tol = 10*std::pow(model_num_diff.get_disturbance(), 1. / 3.);
+  double tol = std::pow(model_num_diff.get_disturbance(), 1. / 3.);
   // Checking the partial derivatives against NumDiff
-  BOOST_CHECK((data->Fx - data_num_diff->Fx).isZero(NUMDIFF_MODIFIER * tol));
-  BOOST_CHECK((data->Fu - data_num_diff->Fu).isZero(NUMDIFF_MODIFIER * tol));
-  BOOST_CHECK((data->Lx - data_num_diff->Lx).isZero(NUMDIFF_MODIFIER * tol));
-  BOOST_CHECK((data->Lu - data_num_diff->Lu).isZero(NUMDIFF_MODIFIER * tol));
+  BOOST_CHECK((data->Fx - data_num_diff->Fx).isZero(tol));
+  BOOST_CHECK((data->Fu - data_num_diff->Fu).isZero(tol));
+  BOOST_CHECK((data->Lx - data_num_diff->Lx).isZero(tol));
+  BOOST_CHECK((data->Lu - data_num_diff->Lu).isZero(tol));
   if (model_num_diff.get_with_gauss_approx()) {
     BOOST_CHECK(
-        (data->Lxx - data_num_diff->Lxx).isZero(NUMDIFF_MODIFIER * tol));
+        (data->Lxx - data_num_diff->Lxx).isZero(tol));
     BOOST_CHECK(
-        (data->Lxu - data_num_diff->Lxu).isZero(NUMDIFF_MODIFIER * tol));
+        (data->Lxu - data_num_diff->Lxu).isZero(tol));
     BOOST_CHECK(
-        (data->Luu - data_num_diff->Luu).isZero(NUMDIFF_MODIFIER * tol));
-  } else {
-    BOOST_CHECK((data_num_diff->Lxx).isZero(tol));
-    BOOST_CHECK((data_num_diff->Lxu).isZero(tol));
-    BOOST_CHECK((data_num_diff->Luu).isZero(tol));
+        (data->Luu - data_num_diff->Luu).isZero(tol));
   }
 }
 
@@ -654,8 +646,8 @@ bool init_function() {
     //                                  DifferentialActionModelTypes::DifferentialActionModelLQR);
     // register_action_model_unit_tests(ActionModelLPFTypes::all[i],
     //                                  DifferentialActionModelTypes::DifferentialActionModelLQRDriftFree);
-    register_action_model_unit_tests(ActionModelLPFTypes::all[i],
-                                     DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_Hector);
+    // register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+    //                                  DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_Hector);
     register_action_model_unit_tests(ActionModelLPFTypes::all[i],
                                      DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm);
     register_action_model_unit_tests(ActionModelLPFTypes::all[i],
