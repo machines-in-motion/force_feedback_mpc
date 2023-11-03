@@ -274,26 +274,13 @@ void register_action_model_unit_tests(
 }
 
 bool init_function() {
+
   // free (no contact)
-  for (size_t i = 0; i < DifferentialActionModelTypes::all.size(); ++i) {
-    if (DifferentialActionModelTypes::all[i] ==
-            DifferentialActionModelTypes::
-                DifferentialActionModelLQR  ||
-        DifferentialActionModelTypes::all[i] ==
-            DifferentialActionModelTypes::
-                DifferentialActionModelLQRDriftFree ||
-        DifferentialActionModelTypes::all[i] ==
-            DifferentialActionModelTypes::
-                DifferentialActionModelFreeFwdDynamics_Hector ||
-        DifferentialActionModelTypes::all[i] ==
-            DifferentialActionModelTypes::
-                DifferentialActionModelFreeFwdDynamics_TalosArm ||
-        DifferentialActionModelTypes::all[i] ==
-            DifferentialActionModelTypes::
-                DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed) {
-      register_action_model_unit_tests(DifferentialActionModelTypes::all[i]);
-    }
-  }
+  register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelLQR);
+  register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelLQRDriftFree);
+  register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_Hector);
+  register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm);
+  register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed);
 
   // contact 1D (Talos arm)
   for (size_t j = 0; j < ContactModelTypes::all.size(); ++j) {

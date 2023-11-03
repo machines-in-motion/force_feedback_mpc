@@ -6,8 +6,8 @@ set(${PROJECT_NAME}_FACTORY_TEST
   factory/crocoddyl/activation.hpp
   factory/crocoddyl/cost.hpp
   factory/diff-action.hpp
-  # factory/state-lpf.hpp
-  # factory/action-lpf.hpp
+  factory/state-lpf.hpp
+  factory/action-lpf.hpp
   # factory/statesoft.hpp
   # factory/lpf.hpp
   # factory/diff-action-soft-abstract.hpp
@@ -22,8 +22,8 @@ set(${PROJECT_NAME}_FACTORY_TEST
   factory/crocoddyl/activation.cpp
   factory/crocoddyl/cost.cpp
   factory/diff-action.cpp
-  # factory/state-lpf.cpp
-  # factory/action-lpf.cpp
+  factory/state-lpf.cpp
+  factory/action-lpf.cpp
   # factory/statesoft.cpp
   # factory/diff-action-soft-abstract.cpp
   # factory/diff-action-soft3d.cpp
@@ -46,8 +46,11 @@ target_link_libraries(
 add_unit_test(test_diff_actions test_diff_actions.cpp)
 target_link_libraries(test_diff_actions PUBLIC ${PROJECT_NAME}_unittest)
 
-# add_unit_test(test_states_lpf test_states_lpf.cpp)
-# target_link_libraries(test_states_lpf PUBLIC ${PROJECT_NAME}_unittest)
+add_unit_test(test_states_lpf test_states_lpf.cpp)
+target_link_libraries(test_states_lpf PUBLIC ${PROJECT_NAME}_unittest)
+
+add_unit_test(test_actions_lpf test_actions_lpf.cpp)
+target_link_libraries(test_actions_lpf PUBLIC ${PROJECT_NAME}_unittest)
 
 # ADD_UNIT_TEST(test_statessoft test_statessoft.cpp)
 # target_link_libraries(test_statessoft PUBLIC ${PROJECT_NAME}_unittest)

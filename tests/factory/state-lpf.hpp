@@ -13,9 +13,9 @@
 #include <crocoddyl/core/state-base.hpp>
 #include <crocoddyl/core/utils/exception.hpp>
 
-#include "pinocchio_model.hpp"
+#include "crocoddyl/pinocchio_model.hpp"
+#include "crocoddyl/state.hpp"
 #include "force_feedback_mpc/lowpassfilter/state.hpp"
-#include "state.hpp"
 
 namespace force_feedback_mpc {
 namespace unittest {

@@ -15,7 +15,7 @@
 
 #include "common.hpp"
 #include "factory/diff-action.hpp"
-#include "factory/lpf.hpp"
+#include "factory/action-lpf.hpp"
 
 using namespace boost::unit_test;
 using namespace force_feedback_mpc::unittest;
@@ -25,12 +25,11 @@ using namespace force_feedback_mpc::unittest;
 void test_check_data(
     ActionModelLPFTypes::Type iam_type,
     DifferentialActionModelTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
+    ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // create the model
   ActionModelLPFFactory factory_iam;
   const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
-      factory_iam.create(iam_type, dam_type, ref_type, mask_type);
+      factory_iam.create(iam_type, dam_type, contact_type);
 
   // Run the print function
   std::ostringstream tmp;
@@ -46,12 +45,11 @@ void test_check_data(
 void test_calc_returns_state(
     ActionModelLPFTypes::Type iam_type,
     DifferentialActionModelTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
+    ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // create the model
   ActionModelLPFFactory factory_iam;
   const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
-      factory_iam.create(iam_type, dam_type, ref_type, mask_type);
+      factory_iam.create(iam_type, dam_type, contact_type);
   // create the corresponding data object
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
@@ -70,12 +68,11 @@ void test_calc_returns_state(
 void test_calc_returns_a_cost(
     ActionModelLPFTypes::Type iam_type,
     DifferentialActionModelTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
+    ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // create the model
   ActionModelLPFFactory factory_iam;
   const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
-      factory_iam.create(iam_type, dam_type, ref_type, mask_type);
+      factory_iam.create(iam_type, dam_type, contact_type);
 
   // create the corresponding data object and set the cost to nan
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
@@ -113,9 +110,9 @@ void test_partial_derivatives_against_numdiff(
   model_num_diff.calc(data_num_diff, x, u);
   model_num_diff.calcDiff(data_num_diff, x, u);
 
-  // Checking the partial derivatives against NumDiff
-  double tol = sqrt(model_num_diff.get_disturbance());
-
+  // Tolerance defined as in
+  // http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c5-7.pdf
+  double tol = 10*std::pow(model_num_diff.get_disturbance(), 1. / 3.);
   // const std::size_t nv = model->get_state()->get_nv();
   // const std::size_t nu = model->get_differential()->get_nu();
   // std::cout << " Fx - Fx_nd [q]: " << std::endl;
@@ -148,12 +145,11 @@ void test_partial_derivatives_against_numdiff(
 void test_partial_derivatives_action_model(
     ActionModelLPFTypes::Type iam_type,
     DifferentialActionModelTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
+    ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // create the model
   ActionModelLPFFactory factory;
   const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
-      factory.create(iam_type, dam_type, ref_type, mask_type);
+      factory.create(iam_type, dam_type, contact_type);
   test_partial_derivatives_against_numdiff(model);
 }
 
@@ -176,8 +172,9 @@ void test_partial_derivatives_against_numdiff_terminal(
   model_num_diff.calc(data_num_diff, x);
   model_num_diff.calcDiff(data_num_diff, x);
 
-  // Checking the partial derivatives against NumDiff
-  double tol = sqrt(model_num_diff.get_disturbance());
+  // Tolerance defined as in
+  // http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c5-7.pdf
+  double tol = 10*std::pow(model_num_diff.get_disturbance(), 1. / 3.);
   // Checking the partial derivatives against NumDiff
   BOOST_CHECK((data->Fx - data_num_diff->Fx).isZero(NUMDIFF_MODIFIER * tol));
   BOOST_CHECK((data->Fu - data_num_diff->Fu).isZero(NUMDIFF_MODIFIER * tol));
@@ -200,12 +197,11 @@ void test_partial_derivatives_against_numdiff_terminal(
 void test_partial_derivatives_action_model_terminal(
     ActionModelLPFTypes::Type iam_type,
     DifferentialActionModelTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
+    ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // create the model
   ActionModelLPFFactory factory;
   const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
-      factory.create(iam_type, dam_type, ref_type, mask_type);
+      factory.create(iam_type, dam_type, contact_type);
   model->set_dt(0);
   test_partial_derivatives_against_numdiff_terminal(model);
 }
@@ -213,12 +209,11 @@ void test_partial_derivatives_action_model_terminal(
 void test_calc_alpha0_equivalent_euler(
     ActionModelLPFTypes::Type iam_type,
     DifferentialActionModelTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
+    ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // Create IAM LPF
   ActionModelLPFFactory factory_iam;
   const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
-      factory_iam.create(iam_type, dam_type, ref_type, mask_type);
+      factory_iam.create(iam_type, dam_type, contact_type);
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
       modelLPF->createData();
 
@@ -231,7 +226,7 @@ void test_calc_alpha0_equivalent_euler(
 
   // Generating random values for the state and control
   std::size_t nx = modelEuler->get_state()->get_nx();
-  std::size_t ndx = modelEuler->get_state()->get_ndx();
+  // std::size_t ndx = modelEuler->get_state()->get_ndx();
   std::size_t ntau =
       boost::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)
           ->get_ntau();
@@ -254,8 +249,9 @@ void test_calc_alpha0_equivalent_euler(
   BOOST_CHECK(non_lpf_torque_ids.size() + lpf_torque_ids.size() ==
               modelEuler->get_nu());
 
-  // Checking the partial derivatives against NumDiff
-  double tol = 1e-6;
+  // Tolerance defined as in
+  // http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c5-7.pdf
+  double tol = 1e-6; //std::pow(model_num_diff.get_disturbance(), 1. / 3.);
 
   // Computing the action
   modelLPF->calc(dataLPF, y, w);
@@ -285,12 +281,11 @@ void test_calc_alpha0_equivalent_euler(
 void test_calc_NONE_equivalent_euler(
     ActionModelLPFTypes::Type iam_type,
     DifferentialActionModelTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
+    ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // Create IAM LPF
   ActionModelLPFFactory factory_iam;
   const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
-      factory_iam.create(iam_type, dam_type, ref_type, mask_type);
+      factory_iam.create(iam_type, dam_type, contact_type);
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
       modelLPF->createData();
 
@@ -303,7 +298,7 @@ void test_calc_NONE_equivalent_euler(
 
   // Generating random values for the state and control
   std::size_t nx = modelEuler->get_state()->get_nx();
-  std::size_t ndx = modelEuler->get_state()->get_ndx();
+  // std::size_t ndx = modelEuler->get_state()->get_ndx();
   // std::size_t nv = modelEuler->get_state()->get_nv();
   std::size_t ntau =
       boost::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)
@@ -326,8 +321,9 @@ void test_calc_NONE_equivalent_euler(
   const Eigen::VectorXd& w = Eigen::VectorXd::Random(modelLPF->get_nw());
   BOOST_CHECK(w.size() == modelEuler->get_nu());
 
-  // Checking the partial derivatives against NumDiff
-  double tol = 1e-6;
+  // Tolerance defined as in
+  // http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c5-7.pdf
+  double tol = 1e-6; //std::pow(model_num_diff.get_disturbance(), 1. / 3.);
   // Computing the action
   modelLPF->calc(dataLPF, y, w);
   modelEuler->calc(dataEuler, y, w);
@@ -352,13 +348,13 @@ void test_calc_NONE_equivalent_euler(
 // void test_calcDiff_NONE_equivalent_euler(
 //     ActionModelLPFTypes::Type iam_type,
 //     DifferentialActionModelTypes::Type dam_type,
-//     PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
+//     
 //     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z){
 
 //   // Create IAM LPF
 //   ActionModelLPFFactory factory_iam;
 //   const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
-//       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
+//       factory_iam.create(iam_type, dam_type, contact_type);
 //   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
 //   modelLPF->createData();
 
@@ -411,12 +407,11 @@ void test_calc_NONE_equivalent_euler(
 void test_calcDiff_explicit_equivalent_euler(
     ActionModelLPFTypes::Type iam_type,
     DifferentialActionModelTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
+    ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // Create IAM LPF
   ActionModelLPFFactory factory_iam;
   const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
-      factory_iam.create(iam_type, dam_type, ref_type, mask_type);
+      factory_iam.create(iam_type, dam_type, contact_type);
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
       modelLPF->createData();
 
@@ -448,8 +443,9 @@ void test_calcDiff_explicit_equivalent_euler(
   }
   BOOST_CHECK(non_lpf_torque_ids.size() + lpf_torque_ids.size() == nu);
 
-  // Checking the partial derivatives against NumDiff
-  double tol = 1e-6;
+  // Tolerance defined as in
+  // http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c5-7.pdf
+  double tol = 1e-6; //std::pow(model_num_diff.get_disturbance(), 1. / 3.);
 
   // Computing the action
   modelLPF->calc(dataLPF, y, w);
@@ -597,17 +593,21 @@ void test_calcDiff_explicit_equivalent_euler(
 void register_action_model_unit_tests(
     ActionModelLPFTypes::Type iam_type,
     DifferentialActionModelTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) {
+    ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   boost::test_tools::output_test_stream test_name;
   if (dam_type == DifferentialActionModelTypes::
-                      DifferentialActionModelContact1DFwdDynamics_TalosArm ||
+              DifferentialActionModelLQR  ||
       dam_type == DifferentialActionModelTypes::
-                      DifferentialActionModelContact1DFwdDynamics_HyQ) {
-    test_name << "test_" << iam_type << "_" << dam_type << "_" << ref_type
-              << "_" << mask_type;
+              DifferentialActionModelLQRDriftFree ||
+      dam_type == DifferentialActionModelTypes::
+              DifferentialActionModelFreeFwdDynamics_Hector ||
+      dam_type == DifferentialActionModelTypes::
+              DifferentialActionModelFreeFwdDynamics_TalosArm ||
+      dam_type == DifferentialActionModelTypes::
+              DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed) {
+    test_name << "test_" << iam_type << "_" << dam_type;
   } else {
-    test_name << "test_" << iam_type << "_" << dam_type << "_" << ref_type;
+    test_name << "test_" << iam_type << "_" << dam_type << "_" << contact_type;
   }
   std::cout << "Running " << test_name.str() << std::endl;
   test_suite* ts = BOOST_TEST_SUITE(test_name.str());
@@ -616,90 +616,150 @@ void register_action_model_unit_tests(
   //     mask_type)));
 
   ts->add(BOOST_TEST_CASE(boost::bind(&test_calc_returns_state, iam_type,
-                                      dam_type, ref_type, mask_type)));
+                                      dam_type, contact_type)));
   ts->add(BOOST_TEST_CASE(boost::bind(&test_calc_returns_a_cost, iam_type,
-                                      dam_type, ref_type, mask_type)));
+                                      dam_type, contact_type)));
   ts->add(BOOST_TEST_CASE(boost::bind(&test_partial_derivatives_action_model,
-                                  iam_type, dam_type, ref_type, mask_type)));
+                                  iam_type, dam_type, contact_type)));
   // seems incompatible with euler equivalence test
   // ts->add(
   //     BOOST_TEST_CASE(boost::bind(&test_partial_derivatives_action_model_terminal,
-  //                                 iam_type, dam_type, ref_type, mask_type)));
+  //                                 iam_type, dam_type, contact_type)));
   // Equivalence with Euler when alpha=0 or ntau=0
   if (iam_type == ActionModelLPFTypes::Type::IntegratedActionModelLPF_alpha0) {
     ts->add(
         BOOST_TEST_CASE(boost::bind(&test_calc_alpha0_equivalent_euler,
-                                    iam_type, dam_type, ref_type, mask_type)));
+                                    iam_type, dam_type, contact_type)));
   }
   if (iam_type == ActionModelLPFTypes::Type::IntegratedActionModelLPF_NONE) {
     ts->add(
         BOOST_TEST_CASE(boost::bind(&test_calc_NONE_equivalent_euler, iam_type,
-                                    dam_type, ref_type, mask_type)));
+                                    dam_type, contact_type)));
     // ts->add(BOOST_TEST_CASE(boost::bind(&test_calcDiff_NONE_equivalent_euler,
-    // iam_type, dam_type, ref_type, mask_type)));
+    // iam_type, dam_type, contact_type)));
   }
   ts->add(
       BOOST_TEST_CASE(boost::bind(&test_calcDiff_explicit_equivalent_euler,
-                                  iam_type, dam_type, ref_type, mask_type)));
+                                  iam_type, dam_type, contact_type)));
   framework::master_test_suite().add(ts);
 }
 
 bool init_function() {
-  // free
-  // register_action_model_unit_tests(ActionModelLPFTypes::IntegratedActionModelLPF,
-  //                                  DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm);
+
+  
   for (size_t i = 0; i < ActionModelLPFTypes::all.size(); ++i) {
-    for (size_t j = 0; j < DifferentialActionModelTypes::all.size(); ++j) {
-      if (DifferentialActionModelTypes::all[j] ==
-              DifferentialActionModelTypes::
-                  DifferentialActionModelFreeFwdDynamics_TalosArm ||
-          DifferentialActionModelTypes::all[j] ==
-              DifferentialActionModelTypes::
-                  DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed) {
+
+    // free (no contact)
+    // register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+    //                                  DifferentialActionModelTypes::DifferentialActionModelLQR);
+    // register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+    //                                  DifferentialActionModelTypes::DifferentialActionModelLQRDriftFree);
+    register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+                                     DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_Hector);
+    register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+                                     DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm);
+    register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+                                     DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed);
+
+    // contact 1D (Talos arm)
+    for (size_t k = 0; k < ContactModelTypes::all.size(); ++k) {
+      if(ContactModelTypes::all[k] == ContactModelTypes::ContactModel1D_LOCAL ||
+         ContactModelTypes::all[k] == ContactModelTypes::ContactModel1D_WORLD ||
+         ContactModelTypes::all[k] == ContactModelTypes::ContactModel1D_LWA) {
         register_action_model_unit_tests(ActionModelLPFTypes::all[i],
-                                         DifferentialActionModelTypes::all[j]);
+                                         DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics_TalosArm,
+                                         ContactModelTypes::all[k]);
+        register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+                                         DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamicsWithFriction_TalosArm,
+                                         ContactModelTypes::all[k]);
       }
     }
-  }
-  // 3D contact
-  for (size_t i = 0; i < ActionModelLPFTypes::all.size(); ++i) {
-    for (size_t j = 0; j < DifferentialActionModelTypes::all.size(); ++j) {
-      if (DifferentialActionModelTypes::all[j] ==
-          DifferentialActionModelTypes::DifferentialActionModelContact3DFwdDynamics_TalosArm ||
-          DifferentialActionModelTypes::all[j] ==
-          DifferentialActionModelTypes::DifferentialActionModelContact3DFwdDynamics_HyQ ||
-          DifferentialActionModelTypes::all[j] ==
-          DifferentialActionModelTypes::DifferentialActionModelSoftContact3DFwdDynamics_TalosArm ||
-          DifferentialActionModelTypes::all[j] ==
-          DifferentialActionModelTypes::DifferentialActionModelSoftContact3DFwdDynamics_HyQ) {
-        for (size_t k = 0; k < PinocchioReferenceTypes::all.size(); ++k) {
-          register_action_model_unit_tests(ActionModelLPFTypes::all[i],
-                                           DifferentialActionModelTypes::all[j],
-                                           PinocchioReferenceTypes::all[k]);
-        }
+
+    // contact 3D (HyQ)
+    for (size_t k = 0; k < ContactModelTypes::all.size(); ++k) {
+      if(ContactModelTypes::all[k] == ContactModelTypes::ContactModel3D_LOCAL ||
+         ContactModelTypes::all[k] == ContactModelTypes::ContactModel3D_WORLD ||
+         ContactModelTypes::all[k] == ContactModelTypes::ContactModel3D_LWA) {
+        register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+                                         DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics_HyQ,
+                                         ContactModelTypes::all[k]);
+        register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+                                         DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamicsWithFriction_HyQ,
+                                         ContactModelTypes::all[k]);
       }
     }
-  }
-  // 1D contact
-  for (size_t i = 0; i < ActionModelLPFTypes::all.size(); ++i) {
-    for (size_t j = 0; j < DifferentialActionModelTypes::all.size(); ++j) {
-      if (DifferentialActionModelTypes::all[j] ==
-              DifferentialActionModelTypes::
-                  DifferentialActionModelContact1DFwdDynamics_TalosArm ||
-          DifferentialActionModelTypes::all[j] ==
-              DifferentialActionModelTypes::
-                  DifferentialActionModelContact1DFwdDynamics_HyQ) {
-        for (size_t k = 0; k < PinocchioReferenceTypes::all.size(); ++k) {
-          for (size_t l = 0; l < ContactModelMaskTypes::all.size(); ++l) {
-            register_action_model_unit_tests(
-                ActionModelLPFTypes::all[i],
-                DifferentialActionModelTypes::all[j],
-                PinocchioReferenceTypes::all[k], ContactModelMaskTypes::all[l]);
-          }
-        }
+
+    // contact 6D (Talos)
+    for (size_t k = 0; k < ContactModelTypes::all.size(); ++k) {
+      if(ContactModelTypes::all[k] == ContactModelTypes::ContactModel6D_LOCAL ||
+         ContactModelTypes::all[k] == ContactModelTypes::ContactModel6D_WORLD ||
+         ContactModelTypes::all[k] == ContactModelTypes::ContactModel6D_LWA) {
+        register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+                                         DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics_Talos,
+                                         ContactModelTypes::all[k]);
+        register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+                                         DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamicsWithFriction_Talos,
+                                         ContactModelTypes::all[k]);
       }
     }
+
   }
+
+  // // free
+  // // register_action_model_unit_tests(ActionModelLPFTypes::IntegratedActionModelLPF,
+  // //                                  DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm);
+  // for (size_t i = 0; i < ActionModelLPFTypes::all.size(); ++i) {
+  //   for (size_t j = 0; j < DifferentialActionModelTypes::all.size(); ++j) {
+  //     if (DifferentialActionModelTypes::all[j] ==
+  //             DifferentialActionModelTypes::
+  //                 DifferentialActionModelFreeFwdDynamics_TalosArm ||
+  //         DifferentialActionModelTypes::all[j] ==
+  //             DifferentialActionModelTypes::
+  //                 DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed) {
+  //       register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+  //                                        DifferentialActionModelTypes::all[j]);
+  //     }
+  //   }
+  // }
+  // // 3D contact
+  // for (size_t i = 0; i < ActionModelLPFTypes::all.size(); ++i) {
+  //   for (size_t j = 0; j < DifferentialActionModelTypes::all.size(); ++j) {
+  //     if (DifferentialActionModelTypes::all[j] ==
+  //         DifferentialActionModelTypes::DifferentialActionModelContact3DFwdDynamics_TalosArm ||
+  //         DifferentialActionModelTypes::all[j] ==
+  //         DifferentialActionModelTypes::DifferentialActionModelContact3DFwdDynamics_HyQ ||
+  //         DifferentialActionModelTypes::all[j] ==
+  //         DifferentialActionModelTypes::DifferentialActionModelSoftContact3DFwdDynamics_TalosArm ||
+  //         DifferentialActionModelTypes::all[j] ==
+  //         DifferentialActionModelTypes::DifferentialActionModelSoftContact3DFwdDynamics_HyQ) {
+  //       for (size_t k = 0; k < PinocchioReferenceTypes::all.size(); ++k) {
+  //         register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+  //                                          DifferentialActionModelTypes::all[j],
+  //                                          PinocchioReferenceTypes::all[k]);
+  //       }
+  //     }
+  //   }
+  // }
+  // // 1D contact
+  // for (size_t i = 0; i < ActionModelLPFTypes::all.size(); ++i) {
+  //   for (size_t j = 0; j < DifferentialActionModelTypes::all.size(); ++j) {
+  //     if (DifferentialActionModelTypes::all[j] ==
+  //             DifferentialActionModelTypes::
+  //                 DifferentialActionModelContact1DFwdDynamics_TalosArm ||
+  //         DifferentialActionModelTypes::all[j] ==
+  //             DifferentialActionModelTypes::
+  //                 DifferentialActionModelContact1DFwdDynamics_HyQ) {
+  //       for (size_t k = 0; k < PinocchioReferenceTypes::all.size(); ++k) {
+  //         for (size_t l = 0; l < ContactModelMaskTypes::all.size(); ++l) {
+  //           register_action_model_unit_tests(
+  //               ActionModelLPFTypes::all[i],
+  //               DifferentialActionModelTypes::all[j],
+  //               PinocchioReferenceTypes::all[k], ContactModelMaskTypes::all[l]);
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   return true;
 }

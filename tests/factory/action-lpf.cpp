@@ -45,12 +45,11 @@ ActionModelLPFFactory::~ActionModelLPFFactory() {}
 boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>
 ActionModelLPFFactory::create(ActionModelLPFTypes::Type iam_type,
                               DifferentialActionModelTypes::Type dam_type,
-                              PinocchioReferenceTypes::Type ref_type,
-                              ContactModelMaskTypes::Type mask_type) const {
+                              ContactModelTypes::Type contact_type) const {
   // LPFJointMaskType lpf_mask_type) const {
   boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF> iam;
   boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> dam =
-      DifferentialActionModelFactory().create(dam_type, ref_type, mask_type);
+      DifferentialActionModelFactory().create(dam_type, contact_type);
   switch (iam_type) {
     case ActionModelLPFTypes::IntegratedActionModelLPF_ALL: {
       double time_step = 1e-3;

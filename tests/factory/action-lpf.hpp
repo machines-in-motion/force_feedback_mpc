@@ -11,11 +11,15 @@
 
 #include <iterator>
 
-#include "crocoddyl/core/action-base.hpp"
-#include "crocoddyl/core/numdiff/action.hpp"
+#include <crocoddyl/core/action-base.hpp>
+#include <crocoddyl/core/numdiff/action.hpp>
+
+#include "crocoddyl/contact.hpp"
+
+#include "state-lpf.hpp"
 #include "diff-action.hpp"
+
 #include "force_feedback_mpc/lowpassfilter/action.hpp"
-#include "statelpf.hpp"
 
 namespace force_feedback_mpc {
 namespace unittest {
@@ -52,8 +56,7 @@ class ActionModelLPFFactory {
   boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF> create(
       ActionModelLPFTypes::Type iam_type,
       DifferentialActionModelTypes::Type dam_type,
-      PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-      ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Z) const;
+      ContactModelTypes::Type contact_type) const;
   // LPFJointMaskType lpf_mask_type = LPFJointMaskType::ALL) const;
 };
 
