@@ -148,18 +148,18 @@ void test_partial_derivatives_against_numdiff(
     BOOST_CHECK((data->Lxu - data_num_diff->Lxu).isZero(tol));
     BOOST_CHECK((data->Luu - data_num_diff->Luu).isZero(tol));
   }
-  // if(!(data->Lx - data_num_diff->Lx).isZero(tol)){
-  //   std::cout << "Test = " << action_type << "_" << ref_type << std::endl;
-  //   std::cout << " tol = " << tol << std::endl;
-  //   std::cout << " Lx - Lx_nd " << std::endl;
-  //   std::cout << data->Lx - data_num_diff->Lx << std::endl;
-  // }
-  // if(!(data->Lu - data_num_diff->Lu).isZero(tol)){
-  //   std::cout << "Test = " << action_type << "_" << ref_type << std::endl;
-  //   std::cout << " tol = " << tol << std::endl;
-  //   std::cout << " Lu - Lu_nd " << std::endl;
-  //   std::cout << data->Lu - data_num_diff->Lu << std::endl;
-  // }
+  if(!(data->Fx - data_num_diff->Fx).isZero(tol)){
+    std::cout << "Test = " << action_type << "_" << contact_type << std::endl;
+    std::cout << " tol = " << tol << std::endl;
+    std::cout << " Fx - Fx_nd " << std::endl;
+    std::cout << data->Fx - data_num_diff->Fx << std::endl;
+  }
+  if(!(data->Fu - data_num_diff->Fu).isZero(tol)){
+    std::cout << "Test = " << action_type << "_" << contact_type << std::endl;
+    std::cout << " tol = " << tol << std::endl;
+    std::cout << " Fu - Fu_nd " << std::endl;
+    std::cout << data->Fu - data_num_diff->Fu << std::endl;
+  }
 }
 
 
@@ -295,30 +295,39 @@ bool init_function() {
     }
   }
 
-  // contact fwd
-  for (size_t i = 0; i < DifferentialActionModelTypes::all.size(); ++i) {
-    if (DifferentialActionModelTypes::all[i] ==
-        DifferentialActionModelTypes::
-            DifferentialActionModelContactFwdDynamics_TalosArm ||
-        DifferentialActionModelTypes::all[i] ==
-            DifferentialActionModelTypes::
-                DifferentialActionModelContactFwdDynamics_HyQ || 
-        DifferentialActionModelTypes::all[i] ==
-            DifferentialActionModelTypes::
-                DifferentialActionModelContactFwdDynamics_Talos ||
-        DifferentialActionModelTypes::all[i] ==
-            DifferentialActionModelTypes::
-                DifferentialActionModelContactFwdDynamicsWithFriction_TalosArm ||
-        DifferentialActionModelTypes::all[i] ==
-            DifferentialActionModelTypes::
-                DifferentialActionModelContactFwdDynamicsWithFriction_HyQ ||
-        DifferentialActionModelTypes::all[i] ==
-            DifferentialActionModelTypes::
-                DifferentialActionModelContactFwdDynamicsWithFriction_Talos) {
-      for (size_t j = 0; j < ContactModelTypes::all.size(); ++j) {
-        register_action_model_unit_tests(DifferentialActionModelTypes::all[i],
-                                         ContactModelTypes::all[j]);
-      }
+  // contact 1D (Talos arm)
+  for (size_t j = 0; j < ContactModelTypes::all.size(); ++j) {
+    if(ContactModelTypes::all[j] == ContactModelTypes::ContactModel1D_LOCAL ||
+       ContactModelTypes::all[j] == ContactModelTypes::ContactModel1D_WORLD ||
+       ContactModelTypes::all[j] == ContactModelTypes::ContactModel1D_LWA) {
+      register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics_TalosArm,
+                                      ContactModelTypes::all[j]);
+      register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamicsWithFriction_TalosArm,
+                                      ContactModelTypes::all[j]);
+    }
+  }
+
+  // contact 3D (HyQ)
+  for (size_t j = 0; j < ContactModelTypes::all.size(); ++j) {
+    if(ContactModelTypes::all[j] == ContactModelTypes::ContactModel3D_LOCAL ||
+       ContactModelTypes::all[j] == ContactModelTypes::ContactModel3D_WORLD ||
+       ContactModelTypes::all[j] == ContactModelTypes::ContactModel3D_LWA) {
+      register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics_HyQ,
+                                      ContactModelTypes::all[j]);
+      register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamicsWithFriction_HyQ,
+                                      ContactModelTypes::all[j]);
+    }
+  }
+
+  // contact 6D (Talos)
+  for (size_t j = 0; j < ContactModelTypes::all.size(); ++j) {
+    if(ContactModelTypes::all[j] == ContactModelTypes::ContactModel6D_LOCAL ||
+       ContactModelTypes::all[j] == ContactModelTypes::ContactModel6D_WORLD ||
+       ContactModelTypes::all[j] == ContactModelTypes::ContactModel6D_LWA) {
+      register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics_Talos,
+                                      ContactModelTypes::all[j]);
+      register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamicsWithFriction_Talos,
+                                      ContactModelTypes::all[j]);
     }
   }
 

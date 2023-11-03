@@ -292,30 +292,17 @@ DifferentialActionModelFactory::create_contactFwdDynamics(
                                     contact_type,
                                     PinocchioModelTypes::TalosArm, gains,
                                     "gripper_left_fingertip_1_link", nu));
-      if (with_friction && 
-          contact_type != ContactModelTypes::ContactModel1D_LOCAL &&
-          contact_type != ContactModelTypes::ContactModel1D_WORLD &&
-          contact_type != ContactModelTypes::ContactModel1D_LWA) {
-        // friction cone
-        cost->addCost(
-            "lf_cone",
-            boost::make_shared<crocoddyl::CostModelResidual>(
-                state, friction_activation,
-                boost::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
-                    state,
-                    state->get_pinocchio()->getFrameId(
-                        "gripper_left_fingertip_1_link"),
-                    friction_cone, nu)),
-            0.1);
+      // Only test 1D contact force cost (there can be no friction cone in 1D contact)
+      if (with_friction) {
         // force regularization
         cost->addCost(
             "lf_forceReg",
             boost::make_shared<crocoddyl::CostModelResidual>(
                 state, boost::make_shared<crocoddyl::ResidualModelContactForce>(
-                           state,
-                           state->get_pinocchio()->getFrameId(
-                               "gripper_left_fingertip_1_link"),
-                           force, nc, nu)),
+                        state,
+                        state->get_pinocchio()->getFrameId(
+                            "gripper_left_fingertip_1_link"),
+                        force, nc, nu)),
             0.1);
       }
       break;
@@ -323,7 +310,7 @@ DifferentialActionModelFactory::create_contactFwdDynamics(
       contact->addContact(
           "lf", ContactModelFactory().create(
                     contact_type,
-                    PinocchioModelTypes::HyQ, 0.25 * gains, "lf_foot", nu));
+                    PinocchioModelTypes::HyQ, 0. * gains, "lf_foot", nu));
       contact->addContact(
           "rf", ContactModelFactory().create(
                     contact_type,
@@ -336,72 +323,70 @@ DifferentialActionModelFactory::create_contactFwdDynamics(
           "rh", ContactModelFactory().create(
                     contact_type,
                     PinocchioModelTypes::HyQ, 0.25 * gains, "rh_foot", nu));
-      if (with_friction && 
-          contact_type != ContactModelTypes::ContactModel1D_LOCAL &&
-          contact_type != ContactModelTypes::ContactModel1D_WORLD &&
-          contact_type != ContactModelTypes::ContactModel1D_LWA) {
-        // friction cone
-        cost->addCost(
-            "lf_cone",
-            boost::make_shared<crocoddyl::CostModelResidual>(
-                state, friction_activation,
-                boost::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
-                    state, state->get_pinocchio()->getFrameId("lf_foot"),
-                    friction_cone, nu)),
-            0.1);
-        cost->addCost(
-            "rf_cone",
-            boost::make_shared<crocoddyl::CostModelResidual>(
-                state, friction_activation,
-                boost::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
-                    state, state->get_pinocchio()->getFrameId("rf_foot"),
-                    friction_cone, nu)),
-            0.1);
-        cost->addCost(
-            "lh_cone",
-            boost::make_shared<crocoddyl::CostModelResidual>(
-                state, friction_activation,
-                boost::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
-                    state, state->get_pinocchio()->getFrameId("lh_foot"),
-                    friction_cone, nu)),
-            0.1);
-        cost->addCost(
-            "rh_cone",
-            boost::make_shared<crocoddyl::CostModelResidual>(
-                state, friction_activation,
-                boost::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
-                    state, state->get_pinocchio()->getFrameId("rh_foot"),
-                    friction_cone, nu)),
-            0.1);
-        // force regularization
-        cost->addCost(
-            "lf_forceReg",
-            boost::make_shared<crocoddyl::CostModelResidual>(
-                state, boost::make_shared<crocoddyl::ResidualModelContactForce>(
-                           state, state->get_pinocchio()->getFrameId("lf_foot"),
-                           force, nc, nu)),
-            0.1);
-        cost->addCost(
-            "rf_forceReg",
-            boost::make_shared<crocoddyl::CostModelResidual>(
-                state, boost::make_shared<crocoddyl::ResidualModelContactForce>(
-                           state, state->get_pinocchio()->getFrameId("rf_foot"),
-                           force, nc, nu)),
-            0.1);
-        cost->addCost(
-            "lh_forceReg",
-            boost::make_shared<crocoddyl::CostModelResidual>(
-                state, boost::make_shared<crocoddyl::ResidualModelContactForce>(
-                           state, state->get_pinocchio()->getFrameId("lh_foot"),
-                           force, nc, nu)),
-            0.1);
-        cost->addCost(
-            "rh_forceReg",
-            boost::make_shared<crocoddyl::CostModelResidual>(
-                state, boost::make_shared<crocoddyl::ResidualModelContactForce>(
-                           state, state->get_pinocchio()->getFrameId("rh_foot"),
-                           force, nc, nu)),
-            0.1);
+      // Only test 3D friction cones
+      if (with_friction) {
+            // friction cone
+            cost->addCost(
+                "lf_cone",
+                boost::make_shared<crocoddyl::CostModelResidual>(
+                    state, friction_activation,
+                    boost::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
+                        state, state->get_pinocchio()->getFrameId("lf_foot"),
+                        friction_cone, nu)),
+                0.1);
+            cost->addCost(
+                "rf_cone",
+                boost::make_shared<crocoddyl::CostModelResidual>(
+                    state, friction_activation,
+                    boost::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
+                        state, state->get_pinocchio()->getFrameId("rf_foot"),
+                        friction_cone, nu)),
+                0.1);
+            cost->addCost(
+                "lh_cone",
+                boost::make_shared<crocoddyl::CostModelResidual>(
+                    state, friction_activation,
+                    boost::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
+                        state, state->get_pinocchio()->getFrameId("lh_foot"),
+                        friction_cone, nu)),
+                0.1);
+            cost->addCost(
+                "rh_cone",
+                boost::make_shared<crocoddyl::CostModelResidual>(
+                    state, friction_activation,
+                    boost::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
+                        state, state->get_pinocchio()->getFrameId("rh_foot"),
+                        friction_cone, nu)),
+                0.1);
+            // force regularization
+            cost->addCost(
+                "lf_forceReg",
+                boost::make_shared<crocoddyl::CostModelResidual>(
+                    state, boost::make_shared<crocoddyl::ResidualModelContactForce>(
+                            state, state->get_pinocchio()->getFrameId("lf_foot"),
+                            force, nc, nu)),
+                0.1);
+            cost->addCost(
+                "rf_forceReg",
+                boost::make_shared<crocoddyl::CostModelResidual>(
+                    state, boost::make_shared<crocoddyl::ResidualModelContactForce>(
+                            state, state->get_pinocchio()->getFrameId("rf_foot"),
+                            force, nc, nu)),
+                0.1);
+            cost->addCost(
+                "lh_forceReg",
+                boost::make_shared<crocoddyl::CostModelResidual>(
+                    state, boost::make_shared<crocoddyl::ResidualModelContactForce>(
+                            state, state->get_pinocchio()->getFrameId("lh_foot"),
+                            force, nc, nu)),
+                0.1);
+            cost->addCost(
+                "rh_forceReg",
+                boost::make_shared<crocoddyl::CostModelResidual>(
+                    state, boost::make_shared<crocoddyl::ResidualModelContactForce>(
+                            state, state->get_pinocchio()->getFrameId("rh_foot"),
+                            force, nc, nu)),
+                0.1);
       }
       break;
     case StateModelTypes::StateMultibody_Talos:
@@ -413,10 +398,8 @@ DifferentialActionModelFactory::create_contactFwdDynamics(
           "rf", ContactModelFactory().create(
                     contact_type,
                     PinocchioModelTypes::Talos, gains, "right_sole_link", nu));
+      // Only test 6D wrench cone
       if (with_friction) {
-        if(contact_type == ContactModelTypes::ContactModel6D_LOCAL ||
-           contact_type == ContactModelTypes::ContactModel6D_WORLD ||
-           contact_type == ContactModelTypes::ContactModel6D_LWA) {
             // wrench cone
             cost->addCost(
                 "lf_cone",
@@ -453,7 +436,6 @@ DifferentialActionModelFactory::create_contactFwdDynamics(
                         state->get_pinocchio()->getFrameId("right_sole_link"),
                         force, nc, nu)),
                 0.01);
-        }
       }
       break;
     default:
