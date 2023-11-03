@@ -21,6 +21,7 @@ namespace unittest {
 struct StateModelTypes {
   enum Type {
     StateVector,
+    StateMultibody_Hector,
     StateMultibody_TalosArm,
     StateMultibody_HyQ,
     StateMultibody_Talos,

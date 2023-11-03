@@ -13,7 +13,7 @@
 #include "crocoddyl/core/numdiff/actuation.hpp"
 #include "state.hpp"
 
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
 
 struct ActuationModelTypes {
@@ -65,6 +65,6 @@ void updateActuation(
     const Eigen::VectorXd& x, const Eigen::VectorXd& u);
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc
 
 #endif  // FORCE_FEEDBACK_MPC_ACTUATION_FACTORY_HPP_

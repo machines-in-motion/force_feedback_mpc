@@ -6,49 +6,34 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_RANDOM_GENERATOR_HPP_
-#define SOBEC_RANDOM_GENERATOR_HPP_
+#ifndef FORCE_FEEDBACK_MPC_RANDOM_GENERATOR_HPP_
+#define FORCE_FEEDBACK_MPC_RANDOM_GENERATOR_HPP_
 
-#include <Eigen/Dense>
-#include <boost/bind/bind.hpp>
-
-#if __cplusplus >= 201103L
+#include <functional>
 #include <random>
-std::mt19937 rng;
-#else
-#include <boost/nondet_random.hpp>
-#include <boost/random.hpp>
-boost::random::mt19937 rng;
-#endif
 
-namespace sobec {
+static std::mt19937 rng;
+
+namespace force_feedback_mpc {
 namespace unittest {
 
 template <typename IntType>
 IntType random_int_in_range(IntType first = 0, IntType last = 10) {
-#if __cplusplus >= 201103L
   return std::uniform_int_distribution<IntType>(first, last)(rng);
-#else
-  return boost::random::uniform_int_distribution<IntType>(first, last)(rng);
-#endif
 }
 
 template <typename RealType>
 RealType random_real_in_range(RealType first = 0, RealType last = 1) {
-#if __cplusplus >= 201103L
   return std::uniform_real_distribution<RealType>(first, last)(rng);
-#else
-  return boost::random::uniform_real_distribution<RealType>(first, last)(rng);
-#endif
 }
 
 bool random_boolean() {
-  static auto generator = boost::bind(std::uniform_int_distribution<>(0, 1),
-                                      std::default_random_engine());
+  static auto generator = std::bind(std::uniform_int_distribution<>(0, 1),
+                                    std::default_random_engine());
   return generator();
 }
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc
 
-#endif  // SOBEC_RANDOM_GENERATOR_HPP_
+#endif  // FORCE_FEEDBACK_MPC_RANDOM_GENERATOR_HPP_

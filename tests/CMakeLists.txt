@@ -1,8 +1,12 @@
 set(${PROJECT_NAME}_FACTORY_TEST
-  factory/pinocchio_model.hpp
-  factory/random_generator.hpp
-  factory/state.hpp
-  factory/state-lpf.hpp
+  factory/crocoddyl/pinocchio_model.hpp
+  factory/crocoddyl/state.hpp
+  factory/crocoddyl/actuation.hpp
+  factory/crocoddyl/contact.hpp
+  factory/crocoddyl/activation.hpp
+  factory/crocoddyl/cost.hpp
+  factory/diff-action.hpp
+  # factory/state-lpf.hpp
   # factory/action-lpf.hpp
   # factory/statesoft.hpp
   # factory/lpf.hpp
@@ -11,9 +15,14 @@ set(${PROJECT_NAME}_FACTORY_TEST
   # factory/diff-action-soft3d-friction.hpp
   # factory/diff-action-soft1d.hpp
   # factory/action-soft.hpp
-  factory/pinocchio_model.cpp
-  factory/state.cpp
-  factory/state-lpf.cpp
+  factory/crocoddyl/pinocchio_model.cpp
+  factory/crocoddyl/state.cpp
+  factory/crocoddyl/actuation.cpp
+  factory/crocoddyl/contact.cpp
+  factory/crocoddyl/activation.cpp
+  factory/crocoddyl/cost.cpp
+  factory/diff-action.cpp
+  # factory/state-lpf.cpp
   # factory/action-lpf.cpp
   # factory/statesoft.cpp
   # factory/diff-action-soft-abstract.cpp
@@ -28,11 +37,17 @@ target_link_libraries(
   ${PROJECT_NAME}_unittest PUBLIC ${PROJECT_NAME}
                                   example-robot-data::example-robot-data)
 
-                                  add_unit_test(test_states test_states.cpp)
-target_link_libraries(test_states PUBLIC ${PROJECT_NAME}_unittest)
+# add_unit_test(test_states test_states.cpp)
+# target_link_libraries(test_states PUBLIC ${PROJECT_NAME}_unittest)
 
-add_unit_test(test_states_lpf test_states_lpf.cpp)
-target_link_libraries(test_states_lpf PUBLIC ${PROJECT_NAME}_unittest)
+# add_unit_test(test_actuations test_actuations.cpp)
+# target_link_libraries(test_actuations PUBLIC ${PROJECT_NAME}_unittest)
+
+add_unit_test(test_diff_actions test_diff_actions.cpp)
+target_link_libraries(test_diff_actions PUBLIC ${PROJECT_NAME}_unittest)
+
+# add_unit_test(test_states_lpf test_states_lpf.cpp)
+# target_link_libraries(test_states_lpf PUBLIC ${PROJECT_NAME}_unittest)
 
 # ADD_UNIT_TEST(test_statessoft test_statessoft.cpp)
 # target_link_libraries(test_statessoft PUBLIC ${PROJECT_NAME}_unittest)

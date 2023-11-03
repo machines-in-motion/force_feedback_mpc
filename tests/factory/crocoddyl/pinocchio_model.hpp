@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2020, University of Edinburgh
+// Copyright (C) 2019-2022, University of Edinburgh, Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -9,8 +9,6 @@
 #ifndef FORCE_FEEDBACK_MPC_PINOCCHIO_MODEL_FACTORY_HPP_
 #define FORCE_FEEDBACK_MPC_PINOCCHIO_MODEL_FACTORY_HPP_
 
-#include <crocoddyl/core/utils/exception.hpp>
-#include <example-robot-data/path.hpp>
 #include <pinocchio/algorithm/center-of-mass.hpp>
 #include <pinocchio/algorithm/centroidal-derivatives.hpp>
 #include <pinocchio/algorithm/centroidal.hpp>
@@ -23,14 +21,23 @@
 #include <pinocchio/parsers/srdf.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 
+#include "crocoddyl/core/utils/exception.hpp"
+
 namespace force_feedback_mpc {
 namespace unittest {
 
 struct PinocchioModelTypes {
-  enum Type { TalosArm, HyQ, Talos, RandomHumanoid, NbPinocchioModelTypes };
+  enum Type {
+    Hector,
+    TalosArm,
+    HyQ,
+    Talos,
+    RandomHumanoid,
+    NbPinocchioModelTypes
+  };
   static std::vector<Type> init_all() {
     std::vector<Type> v;
-    v.clear();
+    v.reserve(NbPinocchioModelTypes);
     for (int i = 0; i < NbPinocchioModelTypes; ++i) {
       v.push_back((Type)i);
     }
@@ -53,16 +60,16 @@ class PinocchioModelFactory {
                        bool free_flyer = true);
 
   boost::shared_ptr<pinocchio::Model> create() const;
-  const std::string& get_frame_name() const;
-  std::size_t get_frame_id() const;
+  std::vector<std::string> get_frame_names() const;
+  std::vector<std::size_t> get_frame_ids() const;
   std::size_t get_contact_nc() const;
 
  private:
   boost::shared_ptr<pinocchio::Model>
-      model_;               //!< The pointer to the state in testing
-  std::string frame_name_;  //!< Frame name for unittesting
-  std::size_t frame_id_;    //!< Frame id for unittesting
-  std::size_t contact_nc_;  //!< Dimension of the contact
+      model_;  //!< The pointer to the state in testing
+  std::vector<std::string> frame_name_;  //!< Frame name for unittesting
+  std::vector<std::size_t> frame_id_;    //!< Frame id for unittesting
+  std::size_t contact_nc_;               //!< Dimension of the contact
 };
 
 /**
