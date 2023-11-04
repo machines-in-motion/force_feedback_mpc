@@ -22,7 +22,7 @@ using namespace crocoddyl;
 
 
 namespace force_feedback_mpc {
-namespace sofcontact {
+namespace softcontact {
 
 
 DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDynamics(
@@ -363,7 +363,7 @@ void DAMSoftContactAbstractAugmentedFwdDynamics::set_with_gravity_torque_reg(con
 }
 
 
-const double DAMSoftContactAbstractAugmentedFwdDynamics::get_tau_grav_weight() const {
+double DAMSoftContactAbstractAugmentedFwdDynamics::get_tau_grav_weight() const {
   return tau_grav_weight_;
 }
 

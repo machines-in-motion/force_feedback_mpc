@@ -9,7 +9,7 @@
 #include "diff-action-soft-abstract.hpp"
 
 
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
 
 const std::vector<DAMSoftContactAbstractTypes::Type>
@@ -38,4 +38,4 @@ std::ostream& operator<<(std::ostream& os,
 
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc

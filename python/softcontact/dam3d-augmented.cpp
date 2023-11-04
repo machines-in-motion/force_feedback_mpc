@@ -6,23 +6,19 @@
 // individual files. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-// #include "dam-augmented.cpp"
-// #include "sobec/crocomplements/softcontact/dam-augmented.hpp"
-#include "sobec/crocomplements/softcontact/dam3d-augmented.hpp"
+#include "force_feedback_mpc/python.hpp"
+#include "force_feedback_mpc/softcontact/dam3d-augmented.hpp"
 
-#include <boost/python.hpp>
-#include <boost/python/enum.hpp>
-#include <eigenpy/eigenpy.hpp>
+namespace force_feedback_mpc {
+namespace softcontact {
 
-namespace sobec {
-namespace python {
 namespace bp = boost::python;
 
 void exposeDAMSoftContact3DAugmentedFwdDyn() {
 
   bp::register_ptr_to_python<boost::shared_ptr<DAMSoftContact3DAugmentedFwdDynamics>>();
 
-  bp::class_<DAMSoftContact3DAugmentedFwdDynamics, bp::bases<sobec::DAMSoftContactAbstractAugmentedFwdDynamics>>(
+  bp::class_<DAMSoftContact3DAugmentedFwdDynamics, bp::bases<DAMSoftContactAbstractAugmentedFwdDynamics>>(
       "DAMSoftContact3DAugmentedFwdDynamics", 
       "Differential action model for 3D visco-elastic contact forward dynamics in multibody systems.",
       bp::init<boost::shared_ptr<crocoddyl::StateMultibody>,
@@ -86,7 +82,7 @@ void exposeDAMSoftContact3DAugmentedFwdDyn() {
 
   bp::register_ptr_to_python<boost::shared_ptr<DADSoftContact3DAugmentedFwdDynamics> >();
 
-  bp::class_<DADSoftContact3DAugmentedFwdDynamics, bp::bases<sobec::DADSoftContactAbstractAugmentedFwdDynamics> >(
+  bp::class_<DADSoftContact3DAugmentedFwdDynamics, bp::bases<DADSoftContactAbstractAugmentedFwdDynamics> >(
       "DADSoftContact3DAugmentedFwdDynamics", "Action data for the soft contact 3D forward dynamics system",
       bp::init<DAMSoftContact3DAugmentedFwdDynamics*>(
           bp::args("self", "model"),
@@ -94,5 +90,5 @@ void exposeDAMSoftContact3DAugmentedFwdDyn() {
           ":param model: soft contact 3D model"));
 }
 
-}  // namespace python
-}  // namespace sobec
+}  // namespace softcontact
+}  // namespace force_feedback_mpc

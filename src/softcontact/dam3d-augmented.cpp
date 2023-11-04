@@ -12,16 +12,21 @@
 #include <pinocchio/algorithm/compute-all-terms.hpp>
 #include <pinocchio/algorithm/contact-dynamics.hpp>
 #include <pinocchio/algorithm/frames.hpp>
+#include <pinocchio/algorithm/frames-derivatives.hpp>
 #include <pinocchio/algorithm/kinematics-derivatives.hpp>
 #include <pinocchio/algorithm/rnea-derivatives.hpp>
 #include <pinocchio/algorithm/rnea.hpp>
 
-#include "dam3d-augmented.hpp"
+#include "force_feedback_mpc/softcontact/dam-augmented.hpp"
+#include "force_feedback_mpc/softcontact/dam3d-augmented.hpp"
 
-namespace sobec {
 
-template <typename Scalar>
-DAMSoftContact3DAugmentedFwdDynamicsTpl<Scalar>::DAMSoftContact3DAugmentedFwdDynamicsTpl(
+namespace force_feedback_mpc {
+namespace softcontact {
+
+
+
+DAMSoftContact3DAugmentedFwdDynamics::DAMSoftContact3DAugmentedFwdDynamics(
     boost::shared_ptr<StateMultibody> state, 
     boost::shared_ptr<ActuationModelAbstract> actuation,
     boost::shared_ptr<CostModelSum> costs,
@@ -32,12 +37,12 @@ DAMSoftContact3DAugmentedFwdDynamicsTpl<Scalar>::DAMSoftContact3DAugmentedFwdDyn
     const pinocchio::ReferenceFrame ref)
     : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 3, ref) {}
 
-template <typename Scalar>
-DAMSoftContact3DAugmentedFwdDynamicsTpl<Scalar>::~DAMSoftContact3DAugmentedFwdDynamicsTpl() {}
 
-template <typename Scalar>
-void DAMSoftContact3DAugmentedFwdDynamicsTpl<Scalar>::calc(
-            const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+DAMSoftContact3DAugmentedFwdDynamics::~DAMSoftContact3DAugmentedFwdDynamics() {}
+
+
+void DAMSoftContact3DAugmentedFwdDynamics::calc(
+            const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const VectorXs>& x,
             const Eigen::Ref<const VectorXs>& f,
             const Eigen::Ref<const VectorXs>& u) {
@@ -66,10 +71,10 @@ void DAMSoftContact3DAugmentedFwdDynamicsTpl<Scalar>::calc(
   // If contact is active, compute aq = ABA(q,v,tau,fext)
   if(active_contact_){
     // Compute external wrench for LOCAL f
-    d->pinForce = pinocchio::ForceTpl<Scalar>(f, Vector3s::Zero());
+    d->pinForce = pinocchio::ForceTpl<double>(f, Vector3s::Zero());
     // Rotate if not f not in LOCAL
     if(ref_ != pinocchio::LOCAL){
-        d->pinForce = pinocchio::ForceTpl<Scalar>(d->oRf.transpose() * f, Vector3s::Zero());
+        d->pinForce = pinocchio::ForceTpl<double>(d->oRf.transpose() * f, Vector3s::Zero());
     }
     d->fext[parentId_] = jMf_.act(d->pinForce);
 
@@ -163,9 +168,9 @@ void DAMSoftContact3DAugmentedFwdDynamicsTpl<Scalar>::calc(
 }
 
 
-template <typename Scalar>
-void DAMSoftContact3DAugmentedFwdDynamicsTpl<Scalar>::calc(
-            const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+
+void DAMSoftContact3DAugmentedFwdDynamics::calc(
+            const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const VectorXs>& x,
             const Eigen::Ref<const VectorXs>& f) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
@@ -220,9 +225,9 @@ void DAMSoftContact3DAugmentedFwdDynamicsTpl<Scalar>::calc(
 
 
 
-template <typename Scalar>
-void DAMSoftContact3DAugmentedFwdDynamicsTpl<Scalar>::calcDiff(
-    const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+
+void DAMSoftContact3DAugmentedFwdDynamics::calcDiff(
+    const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
     const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& f,
     const Eigen::Ref<const VectorXs>& u) {
@@ -420,9 +425,9 @@ void DAMSoftContact3DAugmentedFwdDynamicsTpl<Scalar>::calcDiff(
 }
 
 
-template <typename Scalar>
-void DAMSoftContact3DAugmentedFwdDynamicsTpl<Scalar>::calcDiff(
-    const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+
+void DAMSoftContact3DAugmentedFwdDynamics::calcDiff(
+    const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
     const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& f) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
@@ -502,10 +507,11 @@ void DAMSoftContact3DAugmentedFwdDynamicsTpl<Scalar>::calcDiff(
   }
 }
 
-template <typename Scalar>
-boost::shared_ptr<DifferentialActionDataAbstractTpl<Scalar> >
-DAMSoftContact3DAugmentedFwdDynamicsTpl<Scalar>::createData() {
+
+boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double> >
+DAMSoftContact3DAugmentedFwdDynamics::createData() {
   return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
-}  // namespace sobec
+}  // namespace softcontact
+}  // namespace force_feedback_mpc

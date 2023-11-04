@@ -3,6 +3,7 @@ set(${PY_NAME}_SOURCES
   lowpassfilter/action.cpp
   softcontact/state.cpp
   softcontact/dam-augmented.cpp
+  softcontact/dam3d-augmented.cpp
   main.cpp
   )
 

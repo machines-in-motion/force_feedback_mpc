@@ -9,8 +9,7 @@ set(${PROJECT_NAME}_FACTORY_TEST
   factory/state-lpf.hpp
   factory/action-lpf.hpp
   factory/state-soft.hpp
-  # factory/lpf.hpp
-  # factory/diff-action-soft-abstract.hpp
+  factory/diff-action-soft-abstract.hpp
   # factory/diff-action-soft3d.hpp
   # factory/diff-action-soft3d-friction.hpp
   # factory/diff-action-soft1d.hpp
@@ -25,7 +24,7 @@ set(${PROJECT_NAME}_FACTORY_TEST
   factory/state-lpf.cpp
   factory/action-lpf.cpp
   factory/state-soft.cpp
-  # factory/diff-action-soft-abstract.cpp
+  factory/diff-action-soft-abstract.cpp
   # factory/diff-action-soft3d.cpp
   # factory/diff-action-soft3d-friction.cpp
   # factory/diff-action-soft1d.cpp

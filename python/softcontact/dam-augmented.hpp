@@ -20,8 +20,8 @@ namespace softcontact {
 
 namespace bp = boost::python;
 
-class DAMSoftContactAbstractAugmentedFwdDynamics_wrap : public DAMSoftContactAbstractAugmentedFwdDynamics,
-                                                        public bp::wrapper<DAMSoftContactAbstractAugmentedFwdDynamics> {
+class DAMSoftContactAbstractAugmentedFwdDynamics_wrap : public force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics,
+                                                        public bp::wrapper<force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics> {
  public:
   DAMSoftContactAbstractAugmentedFwdDynamics_wrap(boost::shared_ptr<crocoddyl::StateMultibody> state, 
                                                   boost::shared_ptr<crocoddyl::ActuationModelAbstract> actuation,
@@ -32,7 +32,7 @@ class DAMSoftContactAbstractAugmentedFwdDynamics_wrap : public DAMSoftContactAbs
                                                   const Eigen::Vector3d& oPc, 
                                                   const std::size_t nc,
                                                   const pinocchio::ReferenceFrame ref)
-      : DAMSoftContactAbstractAugmentedFwdDynamics(state, actuation, costs, frameId, Kp, Kv, oPc, nc, ref), bp::wrapper<DAMSoftContactAbstractAugmentedFwdDynamics>() {}
+      : force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics(state, actuation, costs, frameId, Kp, Kv, oPc, nc, ref), bp::wrapper<force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics>() {}
 
   void calc(const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const Eigen::VectorXd>& x,
@@ -66,17 +66,17 @@ class DAMSoftContactAbstractAugmentedFwdDynamics_wrap : public DAMSoftContactAbs
   //   if (boost::python::override createData = this->get_override("createData")) {
   //     return bp::call<boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> >(createData.ptr());
   //   }
-  //   return DAMSoftContactAbstractAugmentedFwdDynamics::createData();
+  //   return force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics::createData();
   // }
 
 //   boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> default_createData() {
-//     return this->DAMSoftContactAbstractAugmentedFwdDynamics::createData();
+//     return this->force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics::createData();
 //   }
 
 };
 
 // BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(DifferentialActionModel_quasiStatic_wraps,
-//                                        DAMSoftContactAbstractAugmentedFwdDynamics::quasiStatic_x, 2, 4)
+//                                        force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics::quasiStatic_x, 2, 4)
 
 }  // namespace softcontact
 }  // namespace force_feedback_mpc

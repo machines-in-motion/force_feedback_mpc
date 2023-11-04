@@ -19,33 +19,27 @@
 #include "dam3d-augmented.hpp"
 
 namespace force_feedback_mpc {
-using namespace crocoddyl;
+namespace softcontact {
 
-template <typename _Scalar>
-class IAMSoftContactAugmentedTpl : public ActionModelAbstractTpl<_Scalar> {
+class IAMSoftContactAugmented : public ActionModelAbstractTpl<double> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  typedef _Scalar Scalar;
-  typedef MathBaseTpl<Scalar> MathBase;
-  typedef ActionModelAbstractTpl<Scalar> Base;
-  typedef IADSoftContactAugmentedTpl<Scalar> Data;
-  typedef ActionDataAbstractTpl<Scalar> ActionDataAbstract;
-  typedef DifferentialActionModelAbstractTpl<Scalar>
-      DifferentialActionModelAbstract;
-  typedef DAMSoftContactAbstractAugmentedFwdDynamicsTpl<Scalar>
-      DAMSoftContactAbstractAugmentedFwdDynamics;
+  typedef crocoddyl::MathBaseTpl<double> MathBase;
+  typedef crocoddyl::ActionModelAbstractTpl<double> Base;
+  typedef IADSoftContactAugmented Data;
+  typedef crocoddyl::ActionDataAbstractTpl<double> ActionDataAbstract;
+  typedef crocoddyl::DifferentialActionModelAbstractTpl<double> DifferentialActionModelAbstract;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
-  typedef StateSoftContactTpl<Scalar> StateSoftContact;
-  typedef StateMultibodyTpl<Scalar> StateMultibody;
-  typedef pinocchio::ModelTpl<Scalar> PinocchioModel;
+  typedef crocoddyl::StateMultibodyTpl<double> StateMultibody;
+  typedef pinocchio::ModelTpl<double> PinocchioModel;
 
-  IAMSoftContactAugmentedTpl(
+  IAMSoftContactAugmented(
       boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model,
-      const Scalar& time_step = Scalar(1e-3),
+      const double& time_step = double(1e-3),
       const bool& with_cost_residual = true);
-  virtual ~IAMSoftContactAugmentedTpl();
+  virtual ~IAMSoftContactAugmented();
 
   virtual void calc(const boost::shared_ptr<ActionDataAbstract>& data,
                     const Eigen::Ref<const VectorXs>& y,
@@ -69,16 +63,16 @@ class IAMSoftContactAugmentedTpl : public ActionModelAbstractTpl<_Scalar> {
 //                            Eigen::Ref<VectorXs> u,
 //                            const Eigen::Ref<const VectorXs>& x,
 //                            const std::size_t& maxiter = 100,
-//                            const Scalar& tol = Scalar(1e-9));
+//                            const double& tol = double(1e-9));
 
   const boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>& get_differential()
       const;
-  const Scalar& get_dt() const;
+  const double& get_dt() const;
 
   const std::size_t& get_nc() const { return nc_; };
   const std::size_t& get_ny() const { return ny_; };
 
-  void set_dt(const Scalar& dt);
+  void set_dt(const double& dt);
   void set_differential(boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model);
 
  protected:
@@ -95,40 +89,35 @@ class IAMSoftContactAugmentedTpl : public ActionModelAbstractTpl<_Scalar> {
 
  private:
   boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> differential_;
-  Scalar time_step_;
-  Scalar time_step2_;
+  double time_step_;
+  double time_step2_;
   bool with_cost_residual_;
   boost::shared_ptr<PinocchioModel> pin_model_;  //!< for reg cost
   bool is_terminal_;  //!< is it a terminal model or not ? (deactivate cost on w
                       //!< if true)
 };
 
-template <typename _Scalar>
-struct IADSoftContactAugmentedTpl : public ActionDataAbstractTpl<_Scalar> {
+struct IADSoftContactAugmented : public ActionDataAbstractTpl<double> {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  typedef _Scalar Scalar;
-  typedef MathBaseTpl<Scalar> MathBase;
-  typedef ActionDataAbstractTpl<Scalar> Base;
+  typedef crocoddyl::MathBaseTpl<double> MathBase;
+  typedef crocoddyl::ActionDataAbstractTpl<double> Base;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
-  typedef pinocchio::DataTpl<Scalar> PinocchioData;
-  typedef DifferentialActionDataAbstractTpl<Scalar>
-      DifferentialActionDataAbstract;
-  typedef DADSoftContactAbstractAugmentedFwdDynamicsTpl<Scalar>
-      DADSoftContactAbstractAugmentedFwdDynamics;
+  typedef pinocchio::DataTpl<double> PinocchioData;
+  typedef crocoddyl::DifferentialActionDataAbstractTpl<double> DifferentialActionDataAbstract;
 
-  template <template <typename Scalar> class Model>
-  explicit IADSoftContactAugmentedTpl(Model<Scalar>* const model)
+  template <class Model>
+  explicit IADSoftContactAugmented(Model* const model)
       : Base(model), tau_tmp(model->get_nu()) {
     tau_tmp.setZero();
     differential = model->get_differential()->createData();
     const std::size_t& ndy = model->get_state()->get_ndx();
     dy = VectorXs::Zero(ndy);
   }
-  virtual ~IADSoftContactAugmentedTpl() {}
+  virtual ~IADSoftContactAugmented() {}
 
-  boost::shared_ptr<DifferentialActionDataAbstractTpl<Scalar> > differential;
+  boost::shared_ptr<DifferentialActionDataAbstractTpl<double> > differential;
   VectorXs dy;
 
   using Base::cost;
@@ -145,6 +134,7 @@ struct IADSoftContactAugmentedTpl : public ActionDataAbstractTpl<_Scalar> {
 //   MatrixXs& Lww = Base::Luu;
 };
 
+}  // namespace softcontact
 }  // namespace force_feedback_mpc
 
 #endif  // FORCE_FEEDBACK_MPC_IAM3D_AUGMENTED_HPP_

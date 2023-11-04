@@ -20,7 +20,7 @@
 
 
 namespace force_feedback_mpc {
-namespace sofcontact {
+namespace softcontact {
 
 
 struct DADSoftContactAbstractAugmentedFwdDynamics : 
@@ -359,7 +359,7 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
   // Gravity cost
   bool get_with_gravity_torque_reg() const;
   void set_with_gravity_torque_reg(const bool);
-  const double get_tau_grav_weight() const;
+  double get_tau_grav_weight() const;
   void set_tau_grav_weight(const double);
 
   std::size_t get_nc() {return nc_;};

@@ -67,6 +67,7 @@ set(${PROJECT_NAME}_HEADERS
   include/${PROJECT_NAME}/lowpassfilter/state.hpp
   include/${PROJECT_NAME}/softcontact/state.hpp
   include/${PROJECT_NAME}/softcontact/dam-augmented.hpp
+  include/${PROJECT_NAME}/softcontact/dam3d-augmented.hpp
   )
 
 set(${PROJECT_NAME}_SOURCES
@@ -74,6 +75,7 @@ set(${PROJECT_NAME}_SOURCES
   src/lowpassfilter/action.cpp
   src/softcontact/state.cpp
   src/softcontact/dam-augmented.cpp
+  src/softcontact/dam3d-augmented.cpp
   )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})

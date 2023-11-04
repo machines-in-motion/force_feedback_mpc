@@ -11,171 +11,31 @@
 
 #include <stdexcept>
 
-#include "crocoddyl/core/actuation-base.hpp"
-#include "crocoddyl/core/costs/cost-sum.hpp"
-#include "crocoddyl/core/diff-action-base.hpp"
-#include "crocoddyl/multibody/fwd.hpp"
-#include "crocoddyl/multibody/states/multibody.hpp"
-#include "crocoddyl/multibody/actions/free-fwddyn.hpp"
+#include <crocoddyl/core/actuation-base.hpp>
+#include <crocoddyl/core/costs/cost-sum.hpp>
+#include <crocoddyl/core/diff-action-base.hpp>
+#include <crocoddyl/multibody/fwd.hpp>
+#include <crocoddyl/multibody/states/multibody.hpp>
+#include <crocoddyl/multibody/actions/free-fwddyn.hpp>
 
-#include "sobec/fwd.hpp"
 #include "dam-augmented.hpp"
 
 namespace force_feedback_mpc {
+namespace softcontact {
 
-/**
- * @brief Differential action model for visco-elastic contact forward dynamics in multibody
- * systems (augmented dynamics including contact force as a state)
- *
- * Derived class with 3D force (linear)
- * Maths here : https://www.overleaf.com/read/xdpymjfhqqhn
- *
- * \sa `DAMSoftContact3DAugmentedFwdDynamicsTpl`, `calc()`, `calcDiff()`,
- * `createData()`
- */
-template <typename _Scalar>
-class DAMSoftContact3DAugmentedFwdDynamicsTpl
-    : public sobec::DAMSoftContactAbstractAugmentedFwdDynamicsTpl<_Scalar> {
- public:
+
+struct DADSoftContact3DAugmentedFwdDynamics 
+    : public DADSoftContactAbstractAugmentedFwdDynamics {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-  typedef _Scalar Scalar;
-  typedef sobec::DAMSoftContactAbstractAugmentedFwdDynamicsTpl<Scalar> Base;
-  typedef DADSoftContact3DAugmentedFwdDynamicsTpl<Scalar> Data;
-  typedef crocoddyl::MathBaseTpl<Scalar> MathBase;
-  typedef crocoddyl::CostModelSumTpl<Scalar> CostModelSum;
-  typedef crocoddyl::StateMultibodyTpl<Scalar> StateMultibody;
-  typedef crocoddyl::ActuationModelAbstractTpl<Scalar> ActuationModelAbstract;
-  typedef crocoddyl::DifferentialActionDataAbstractTpl<Scalar> DifferentialActionDataAbstract;
+  typedef crocoddyl::MathBaseTpl<double> MathBase;
+  typedef DADSoftContactAbstractAugmentedFwdDynamics Base;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::Vector3s Vector3s;
   typedef typename MathBase::MatrixXs MatrixXs;
   typedef typename MathBase::Matrix3s Matrix3s;
 
-  /**
-   * @brief Initialize the soft contact forward-dynamics action model
-   *
-   * It describes the dynamics evolution of a multibody system under
-   * visco-elastic contact (linear spring damper force)
-   *
-   * @param[in] state            State of the multibody system
-   * @param[in] actuation        Actuation model
-   * @param[in] costs            Stack of cost functions
-   * @param[in] frameId          Pinocchio frame id of the frame in contact
-   * @param[in] Kp               Soft contact model stiffness
-   * @param[in] Kv               Soft contact model damping
-   * @param[in] oPc              Anchor point of the contact model in WORLD coordinates
-   * @param[in] ref              Pinocchio reference frame in which the contact force is to be expressed
-   * 
-   */
-  DAMSoftContact3DAugmentedFwdDynamicsTpl(
-      boost::shared_ptr<StateMultibody> state,
-      boost::shared_ptr<ActuationModelAbstract> actuation,
-      boost::shared_ptr<CostModelSum> costs,
-      const pinocchio::FrameIndex frameId,
-      const VectorXs& Kp, 
-      const VectorXs& Kv,
-      const Vector3s& oPc,
-      const pinocchio::ReferenceFrame ref = pinocchio::LOCAL);
-  virtual ~DAMSoftContact3DAugmentedFwdDynamicsTpl();
-
-  /**
-   * @brief Compute the system acceleration, and cost value
-   *
-   * It computes the system acceleration using the soft contact forward-dynamics.
-   *
-   * @param[in] data  Soft contact forward-dynamics data
-   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
-   * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
-   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
-   */
-  virtual void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
-                    const Eigen::Ref<const VectorXs>& x,
-                    const Eigen::Ref<const VectorXs>& f,
-                    const Eigen::Ref<const VectorXs>& u);
-
-  /**
-   * @brief Compute the system acceleration, and cost value
-   *
-   * It computes the system acceleration using the soft contact forward-dynamics.
-   *
-   * @param[in] data  Soft contact forward-dynamics data
-   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
-   * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
-   */
-  virtual void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
-                    const Eigen::Ref<const VectorXs>& x,
-                    const Eigen::Ref<const VectorXs>& f);
-
-  /**
-   * @brief Compute the derivatives of the contact dynamics, and cost function
-   *
-   * @param[in] data  Contact forward-dynamics data
-   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
-   * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
-   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
-   */
-  virtual void calcDiff(
-      const boost::shared_ptr<DifferentialActionDataAbstract>& data,
-      const Eigen::Ref<const VectorXs>& x, 
-      const Eigen::Ref<const VectorXs>& f, 
-      const Eigen::Ref<const VectorXs>& u);
-
-  /**
-   * @brief Compute the derivatives of the contact dynamics, and cost function
-   *
-   * @param[in] data  Contact forward-dynamics data
-   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
-   * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
-   */
-  virtual void calcDiff(
-      const boost::shared_ptr<DifferentialActionDataAbstract>& data,
-      const Eigen::Ref<const VectorXs>& x,
-      const Eigen::Ref<const VectorXs>& f);
-  
-    /**
-   * @brief Create the soft contact forward-dynamics data
-   *
-   * @return soft contact forward-dynamics data
-   */
-  virtual boost::shared_ptr<DifferentialActionDataAbstract> createData();
-  
-  protected:
-    using Base::Kp_;
-    using Base::Kv_;
-    using Base::oPc_;
-    using Base::frameId_;
-    using Base::parentId_;
-    using Base::ref_;
-    using Base::with_force_cost_;
-    using Base::active_contact_;
-    using Base::nc_;
-    using Base::jMf_;
-    using Base::with_armature_;
-    using Base::with_gravity_torque_reg_;
-    using Base::armature_;
-    using Base::force_des_;                    
-    using Base::force_weight_;                   
-    using Base::tau_grav_weight_;
-    using Base::with_force_rate_reg_cost_;
-    using Base::force_rate_reg_weight_;
-    using Base::cost_ref_;
-    
-};
-
-template <typename _Scalar>
-struct DADSoftContact3DAugmentedFwdDynamicsTpl : public sobec::DADSoftContactAbstractAugmentedFwdDynamicsTpl<_Scalar> {
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  typedef _Scalar Scalar;
-  typedef MathBaseTpl<Scalar> MathBase;
-  typedef sobec::DADSoftContactAbstractAugmentedFwdDynamicsTpl<Scalar> Base;
-  typedef typename MathBase::VectorXs VectorXs;
-  typedef typename MathBase::Vector3s Vector3s;
-  typedef typename MathBase::MatrixXs MatrixXs;
-  typedef typename MathBase::Matrix3s Matrix3s;
-
-  template <template <typename Scalar> class Model>
-  explicit DADSoftContact3DAugmentedFwdDynamicsTpl(Model<Scalar>* const model)
+  template <class Model>
+  explicit DADSoftContact3DAugmentedFwdDynamics(Model* const model)
       : Base(model) {}
 
   using Base::pinocchio;
@@ -252,6 +112,145 @@ struct DADSoftContact3DAugmentedFwdDynamicsTpl : public sobec::DADSoftContactAbs
   using Base::xout;
 };
 
+
+/**
+ * @brief Differential action model for visco-elastic contact forward dynamics in multibody
+ * systems (augmented dynamics including contact force as a state)
+ *
+ * Derived class with 3D force (linear)
+ * Maths here : https://www.overleaf.com/read/xdpymjfhqqhn
+ *
+ * \sa `DAMSoftContact3DAugmentedFwdDynamics`, `calc()`, `calcDiff()`,
+ * `createData()`
+ */
+class DAMSoftContact3DAugmentedFwdDynamics : public DAMSoftContactAbstractAugmentedFwdDynamics {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  typedef DADSoftContact3DAugmentedFwdDynamics Data;
+  typedef DAMSoftContactAbstractAugmentedFwdDynamics Base;
+  typedef crocoddyl::MathBaseTpl<double> MathBase;
+  typedef crocoddyl::CostModelSumTpl<double> CostModelSum;
+  typedef crocoddyl::StateMultibodyTpl<double> StateMultibody;
+  typedef crocoddyl::ActuationModelAbstractTpl<double> ActuationModelAbstract;
+  typedef crocoddyl::DifferentialActionDataAbstractTpl<double> DifferentialActionDataAbstract;
+  typedef typename MathBase::VectorXs VectorXs;
+  typedef typename MathBase::Vector3s Vector3s;
+  typedef typename MathBase::MatrixXs MatrixXs;
+  typedef typename MathBase::Matrix3s Matrix3s;
+
+  /**
+   * @brief Initialize the soft contact forward-dynamics action model
+   *
+   * It describes the dynamics evolution of a multibody system under
+   * visco-elastic contact (linear spring damper force)
+   *
+   * @param[in] state            State of the multibody system
+   * @param[in] actuation        Actuation model
+   * @param[in] costs            Stack of cost functions
+   * @param[in] frameId          Pinocchio frame id of the frame in contact
+   * @param[in] Kp               Soft contact model stiffness
+   * @param[in] Kv               Soft contact model damping
+   * @param[in] oPc              Anchor point of the contact model in WORLD coordinates
+   * @param[in] ref              Pinocchio reference frame in which the contact force is to be expressed
+   * 
+   */
+  DAMSoftContact3DAugmentedFwdDynamics(
+      boost::shared_ptr<StateMultibody> state,
+      boost::shared_ptr<ActuationModelAbstract> actuation,
+      boost::shared_ptr<CostModelSum> costs,
+      const pinocchio::FrameIndex frameId,
+      const VectorXs& Kp, 
+      const VectorXs& Kv,
+      const Vector3s& oPc,
+      const pinocchio::ReferenceFrame ref = pinocchio::LOCAL);
+  virtual ~DAMSoftContact3DAugmentedFwdDynamics();
+
+  /**
+   * @brief Compute the system acceleration, and cost value
+   *
+   * It computes the system acceleration using the soft contact forward-dynamics.
+   *
+   * @param[in] data  Soft contact forward-dynamics data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
+   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
+   */
+  virtual void calc(const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
+                    const Eigen::Ref<const VectorXs>& x,
+                    const Eigen::Ref<const VectorXs>& f,
+                    const Eigen::Ref<const VectorXs>& u);
+
+  /**
+   * @brief Compute the system acceleration, and cost value
+   *
+   * It computes the system acceleration using the soft contact forward-dynamics.
+   *
+   * @param[in] data  Soft contact forward-dynamics data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
+   */
+  virtual void calc(const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
+                    const Eigen::Ref<const VectorXs>& x,
+                    const Eigen::Ref<const VectorXs>& f);
+
+  /**
+   * @brief Compute the derivatives of the contact dynamics, and cost function
+   *
+   * @param[in] data  Contact forward-dynamics data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
+   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
+   */
+  virtual void calcDiff(
+      const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data,
+      const Eigen::Ref<const VectorXs>& x, 
+      const Eigen::Ref<const VectorXs>& f, 
+      const Eigen::Ref<const VectorXs>& u);
+
+  /**
+   * @brief Compute the derivatives of the contact dynamics, and cost function
+   *
+   * @param[in] data  Contact forward-dynamics data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
+   */
+  virtual void calcDiff(
+      const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data,
+      const Eigen::Ref<const VectorXs>& x,
+      const Eigen::Ref<const VectorXs>& f);
+  
+    /**
+   * @brief Create the soft contact forward-dynamics data
+   *
+   * @return soft contact forward-dynamics data
+   */
+  virtual boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> createData();
+  
+  protected:
+    using Base::Kp_;
+    using Base::Kv_;
+    using Base::oPc_;
+    using Base::frameId_;
+    using Base::parentId_;
+    using Base::ref_;
+    using Base::with_force_cost_;
+    using Base::active_contact_;
+    using Base::nc_;
+    using Base::jMf_;
+    using Base::with_armature_;
+    using Base::with_gravity_torque_reg_;
+    using Base::armature_;
+    using Base::force_des_;                    
+    using Base::force_weight_;                   
+    using Base::tau_grav_weight_;
+    using Base::with_force_rate_reg_cost_;
+    using Base::force_rate_reg_weight_;
+    using Base::cost_ref_;
+    
+};
+
+}  // namespace softcontact
 }  // namespace force_feedback_mpc
 
 #endif  // FORCE_FEEDBACK_MPC_SOFTCONTACT3D_AUGMENTED_FWDDYN_HPP_

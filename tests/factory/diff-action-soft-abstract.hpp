@@ -6,12 +6,12 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_DIFF_ACTION_SOFT_FACTORY_HPP_
-#define SOBEC_DIFF_ACTION_SOFT_FACTORY_HPP_
+#ifndef FORCE_FEEDBACK_MPC_DIFF_ACTION_SOFT_FACTORY_HPP_
+#define FORCE_FEEDBACK_MPC_DIFF_ACTION_SOFT_FACTORY_HPP_
 
-#include "sobec/crocomplements/softcontact/dam-augmented.hpp"
+#include "force_feedback_mpc/softcontact/dam-augmented.hpp"
 
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
 
 struct DAMSoftContactAbstractTypes {
@@ -37,6 +37,6 @@ std::ostream& operator<<(std::ostream& os,
                          DAMSoftContactAbstractTypes::Type type);
                          
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc
 
-#endif  // SOBEC_DIFF_ACTION_SOFT_FACTORY_HPP_
+#endif  // FORCE_FEEDBACK_MPC_DIFF_ACTION_SOFT_FACTORY_HPP_
