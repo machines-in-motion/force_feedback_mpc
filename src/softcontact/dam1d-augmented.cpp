@@ -12,16 +12,20 @@
 #include <pinocchio/algorithm/compute-all-terms.hpp>
 #include <pinocchio/algorithm/contact-dynamics.hpp>
 #include <pinocchio/algorithm/frames.hpp>
+#include <pinocchio/algorithm/frames-derivatives.hpp>
 #include <pinocchio/algorithm/kinematics-derivatives.hpp>
 #include <pinocchio/algorithm/rnea-derivatives.hpp>
 #include <pinocchio/algorithm/rnea.hpp>
 
-#include "dam1d-augmented.hpp"
+#include "force_feedback_mpc/softcontact/dam-augmented.hpp"
+#include "force_feedback_mpc/softcontact/dam1d-augmented.hpp"
 
-namespace sobec {
 
-template <typename Scalar>
-DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::DAMSoftContact1DAugmentedFwdDynamicsTpl(
+namespace force_feedback_mpc {
+namespace softcontact {
+
+
+DAMSoftContact1DAugmentedFwdDynamics::DAMSoftContact1DAugmentedFwdDynamics(
     boost::shared_ptr<StateMultibody> state, 
     boost::shared_ptr<ActuationModelAbstract> actuation,
     boost::shared_ptr<CostModelSum> costs,
@@ -33,11 +37,11 @@ DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::DAMSoftContact1DAugmentedFwdDyn
     const Vector3MaskType& type)
     : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 1, ref) { type_ = type; }
 
-template <typename Scalar>
-DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::~DAMSoftContact1DAugmentedFwdDynamicsTpl() {}
 
-template <typename Scalar>
-void DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::calc(
+DAMSoftContact1DAugmentedFwdDynamics::~DAMSoftContact1DAugmentedFwdDynamics() {}
+
+
+void DAMSoftContact1DAugmentedFwdDynamics::calc(
             const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const VectorXs>& x,
             const Eigen::Ref<const VectorXs>& f,
@@ -69,10 +73,10 @@ void DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::calc(
     // Compute external wrench for LOCAL f
     d->f3d = Vector3s::Zero();
     d->f3d(this->get_type()) = f(0);
-    d->pinForce = pinocchio::ForceTpl<Scalar>(d->f3d, Vector3s::Zero());
+    d->pinForce = pinocchio::ForceTpl<double>(d->f3d, Vector3s::Zero());
     // Rotate if not f not in LOCAL
     if(ref_ != pinocchio::LOCAL){
-        d->pinForce = pinocchio::ForceTpl<Scalar>(d->oRf.transpose() * d->f3d, Vector3s::Zero());
+        d->pinForce = pinocchio::ForceTpl<double>(d->oRf.transpose() * d->f3d, Vector3s::Zero());
     }
     d->fext[parentId_] = jMf_.act(d->pinForce);
 
@@ -163,8 +167,8 @@ void DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::calc(
 }
 
 
-template <typename Scalar>
-void DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::calc(
+
+void DAMSoftContact1DAugmentedFwdDynamics::calc(
             const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const VectorXs>& x,
             const Eigen::Ref<const VectorXs>& f) {
@@ -216,8 +220,8 @@ void DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::calc(
 
 
 
-template <typename Scalar>
-void DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::calcDiff(
+
+void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
     const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
     const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& f,
@@ -428,8 +432,8 @@ void DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::calcDiff(
 }
 
 
-template <typename Scalar>
-void DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::calcDiff(
+
+void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
     const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
     const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& f) {
@@ -513,21 +517,22 @@ void DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::calcDiff(
 }
 
 
-template <typename Scalar>
-boost::shared_ptr<DifferentialActionDataAbstractTpl<Scalar> >
-DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::createData() {
+
+boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double> >
+DAMSoftContact1DAugmentedFwdDynamics::createData() {
   return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
 
-template <typename Scalar>
-const Vector3MaskType& DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::get_type() const {
+
+const Vector3MaskType& DAMSoftContact1DAugmentedFwdDynamics::get_type() const {
   return type_;
 }
 
-template <typename Scalar>
-void DAMSoftContact1DAugmentedFwdDynamicsTpl<Scalar>::set_type(const Vector3MaskType& inType) {
+
+void DAMSoftContact1DAugmentedFwdDynamics::set_type(const Vector3MaskType& inType) {
   type_ = inType;
 }
 
-}  // namespace sobec
+}  // namespace softcontact
+}  // namespace force_feedback_mpc

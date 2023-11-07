@@ -15,12 +15,10 @@
 #include <crocoddyl/multibody/actuations/full.hpp>
 #include <crocoddyl/multibody/states/multibody.hpp>
 
-#include "contact3d.hpp"
-#include "cost.hpp"
 
-
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
+
 
 const std::vector<DAMSoftContact3DTypes::Type>
     DAMSoftContact3DTypes::all(DAMSoftContact3DTypes::init_all());
@@ -53,10 +51,10 @@ std::ostream& operator<<(std::ostream& os,
 DAMSoftContact3DFactory::DAMSoftContact3DFactory() {}
 DAMSoftContact3DFactory::~DAMSoftContact3DFactory() {}
 
-boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFwdDynamics>
+boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics>
 DAMSoftContact3DFactory::create(DAMSoftContact3DTypes::Type dam_type,
-                              PinocchioReferenceTypes::Type ref_type) const {
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFwdDynamics> action;
+                              pinocchio::ReferenceFrame ref_type) const {
+  boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics> action;
   switch (dam_type) {
     // TalosArm 
     case DAMSoftContact3DTypes::
@@ -93,11 +91,11 @@ DAMSoftContact3DFactory::create(DAMSoftContact3DTypes::Type dam_type,
   return action;
 }
 
-boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFwdDynamics>
+boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics>
 DAMSoftContact3DFactory::create_augmentedDAMSoft3D(StateModelTypes::Type state_type,
                                                  ActuationModelTypes::Type actuation_type,
-                                                 PinocchioReferenceTypes::Type ref_type) const {
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFwdDynamics> action;
+                                                 pinocchio::ReferenceFrame ref_type) const {
+  boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics> action;
   boost::shared_ptr<crocoddyl::StateMultibody> state;
   boost::shared_ptr<crocoddyl::ActuationModelAbstract> actuation;
   boost::shared_ptr<crocoddyl::ContactModelMultiple> contact;
@@ -106,22 +104,6 @@ DAMSoftContact3DFactory::create_augmentedDAMSoft3D(StateModelTypes::Type state_t
   actuation = ActuationModelFactory().create(actuation_type, state_type);
   cost = boost::make_shared<crocoddyl::CostModelSum>(state, actuation->get_nu());
   std::string frameName = "";
-
-  pinocchio::ReferenceFrame pinRefFrame;
-  switch(ref_type){
-    case PinocchioReferenceTypes::Type::LOCAL:
-      pinRefFrame = pinocchio::LOCAL;
-      break;
-    case PinocchioReferenceTypes::Type::LOCAL_WORLD_ALIGNED:
-      pinRefFrame = pinocchio::LOCAL_WORLD_ALIGNED;
-      break;
-    case PinocchioReferenceTypes::Type::WORLD:
-      pinRefFrame = pinocchio::LOCAL_WORLD_ALIGNED;
-      break;
-    default:
-      throw_pretty(__FILE__ ": Wrong PinocchioReferenceTypes::Type given");
-      break;
-  }
 
   switch (state_type) {
     case StateModelTypes::StateMultibody_TalosArm: {
@@ -154,12 +136,12 @@ DAMSoftContact3DFactory::create_augmentedDAMSoft3D(StateModelTypes::Type state_t
   Eigen::VectorXd Kp = Eigen::VectorXd::Ones(3)*100;
   Eigen::VectorXd Kv = Eigen::VectorXd::Ones(3)*10;
   Eigen::Vector3d oPc = Eigen::Vector3d::Zero();
-  action = boost::make_shared<sobec::DAMSoftContact3DAugmentedFwdDynamics>(
+  action = boost::make_shared<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics>(
       state, 
       actuation, 
       cost, 
       state->get_pinocchio()->getFrameId(frameName), 
-      Kp, Kv, oPc, pinRefFrame);
+      Kp, Kv, oPc, ref_type);
   action->set_force_des(Eigen::Vector3d::Zero());
   action->set_force_weight(Eigen::Vector3d::Ones());
   action->set_with_force_cost(true);
@@ -173,6 +155,5 @@ DAMSoftContact3DFactory::create_augmentedDAMSoft3D(StateModelTypes::Type state_t
 }
 
 
-
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc

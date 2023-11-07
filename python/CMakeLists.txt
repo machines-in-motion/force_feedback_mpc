@@ -4,6 +4,8 @@ set(${PY_NAME}_SOURCES
   softcontact/state.cpp
   softcontact/dam-augmented.cpp
   softcontact/dam3d-augmented.cpp
+  softcontact/dam1d-augmented.cpp
+  softcontact/iam-augmented.cpp
   main.cpp
   )
 

@@ -11,7 +11,7 @@
 #include <iostream>
 
 
-#include "force_feedback_mpc/softcontact/action.hpp"
+#include "force_feedback_mpc/softcontact/iam-augmented.hpp"
 
 using namespace crocoddyl;
 
@@ -19,10 +19,10 @@ using namespace crocoddyl;
 namespace force_feedback_mpc {
 namespace softcontact {
 
-template <typename Scalar>
+
 IAMSoftContactAugmented::IAMSoftContactAugmented(
     boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model,
-    const Scalar& time_step,
+    const double& time_step,
     const bool& with_cost_residual)
     : Base(model->get_state(), model->get_nu(),
            model->get_nr() + model->get_nc()),
@@ -39,17 +39,17 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
   state_ = boost::make_shared<StateSoftContact>(pin_model_, nc_);
   ny_ = boost::static_pointer_cast<StateSoftContact>(state_)->get_ny();
   // Check stuff
-  if (time_step_ < Scalar(0.)) {
-    time_step_ = Scalar(1e-3);
+  if (time_step_ < double(0.)) {
+    time_step_ = double(1e-3);
     time_step2_ = time_step_ * time_step_;
     std::cerr << "Warning: dt should be positive, set to 1e-3" << std::endl;
   }
 }
 
-template <typename Scalar>
+
 IAMSoftContactAugmented::~IAMSoftContactAugmented() {}
 
-template <typename Scalar>
+
 void IAMSoftContactAugmented::calc(
     const boost::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y, 
@@ -140,7 +140,7 @@ void IAMSoftContactAugmented::calc(
   }
 }  // calc
 
-template <typename Scalar>
+
 void IAMSoftContactAugmented::calc(
     const boost::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y) {
@@ -170,7 +170,7 @@ void IAMSoftContactAugmented::calc(
 }  // calc
 
 
-template <typename Scalar>
+
 void IAMSoftContactAugmented::calcDiff(
     const boost::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y, 
@@ -205,7 +205,7 @@ void IAMSoftContactAugmented::calcDiff(
   // Fill out blocks
   d->Fy.topLeftCorner(nv, ndx).noalias() = da_dx * time_step2_;
   d->Fy.block(nv, 0, nv, ndx).noalias() = da_dx * time_step_;
-  d->Fy.block(0, nv, nv, nv).diagonal().array() += Scalar(time_step_);
+  d->Fy.block(0, nv, nv, nv).diagonal().array() += double(time_step_);
   d->Fu.topRows(nv).noalias() = time_step2_ * da_du;
   d->Fu.block(nv, 0, nv, nu_).noalias() = time_step_ * da_du;
 
@@ -214,7 +214,7 @@ void IAMSoftContactAugmented::calcDiff(
   d->Fy.block(nv, ndx, nv, nc_) = diff_data_soft->aba_df * time_step_;
   // New block from augmented dynamics (bottom right corner)
   d->Fy.bottomRightCorner(nc_, nc_) = diff_data_soft->dfdt_df*time_step_;
-  d->Fy.bottomRightCorner(nc_, nc_).diagonal().array() += Scalar(1.);
+  d->Fy.bottomRightCorner(nc_, nc_).diagonal().array() += double(1.);
   // New block from augmented dynamics (bottom left corner)
   d->Fy.bottomLeftCorner(nc_, ndx) = diff_data_soft->dfdt_dx * time_step_;
 
@@ -222,7 +222,7 @@ void IAMSoftContactAugmented::calcDiff(
   
   state_->JintegrateTransport(y, d->dy, d->Fy, second);
   state_->Jintegrate(y, d->dy, d->Fy, d->Fy, first, addto);
-  d->Fy.bottomRightCorner(nc_, nc_).diagonal().array() -= Scalar(1.);  // remove identity from Ftau (due to stateLPF.Jintegrate)
+  d->Fy.bottomRightCorner(nc_, nc_).diagonal().array() -= double(1.);  // remove identity from Ftau (due to stateLPF.Jintegrate)
   state_->JintegrateTransport(y, d->dy, d->Fu, second);
 
   // d->Lx.noalias() = time_step_ * diff_data_soft->Lx;
@@ -235,7 +235,7 @@ void IAMSoftContactAugmented::calcDiff(
   d->Luu = diff_data_soft->Luu*time_step_;
 }
 
-template <typename Scalar>
+
 void IAMSoftContactAugmented::calcDiff(
     const boost::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y) {
@@ -264,13 +264,13 @@ void IAMSoftContactAugmented::calcDiff(
   d->Lyy.bottomRightCorner(nc_, nc_).noalias() = diff_data_soft->Lff;
 }
 
-template <typename Scalar>
-boost::shared_ptr<ActionDataAbstractTpl<Scalar> >
+
+boost::shared_ptr<ActionDataAbstractTpl<double> >
 IAMSoftContactAugmented::createData() {
   return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
-template <typename Scalar>
+
 bool IAMSoftContactAugmented::checkData(
     const boost::shared_ptr<ActionDataAbstract>& data) {
   boost::shared_ptr<Data> d = boost::dynamic_pointer_cast<Data>(data);
@@ -282,20 +282,20 @@ bool IAMSoftContactAugmented::checkData(
   }
 }
 
-template <typename Scalar>
-const boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamicsTpl<Scalar> >&
+
+const boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>&
 IAMSoftContactAugmented::get_differential() const {
   return differential_;
 }
 
-template <typename Scalar>
-const Scalar& IAMSoftContactAugmented::get_dt() const {
+
+const double& IAMSoftContactAugmented::get_dt() const {
   return time_step_;
 }
 
 
-template <typename Scalar>
-void IAMSoftContactAugmented::set_dt(const Scalar& dt) {
+
+void IAMSoftContactAugmented::set_dt(const double& dt) {
   if (dt < 0.) {
     throw_pretty("Invalid argument: "
                  << "dt has positive value");
@@ -305,7 +305,7 @@ void IAMSoftContactAugmented::set_dt(const Scalar& dt) {
 }
 
 
-template <typename Scalar>
+
 void IAMSoftContactAugmented::set_differential(
     boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model) {
   const std::size_t& nu = model->get_nu();
@@ -321,12 +321,12 @@ void IAMSoftContactAugmented::set_differential(
   Base::set_u_ub(differential_->get_u_ub());
 }
 
-// template <typename Scalar>
+// 
 // void IAMSoftContactAugmented::quasiStatic(
 //     const boost::shared_ptr<ActionDataAbstract>& data, Eigen::Ref<VectorXs> u,
 //     const Eigen::Ref<const VectorXs>& x, 
 //     const std::size_t& maxiter,
-//     const Scalar& tol) {
+//     const double& tol) {
 //   if (static_cast<std::size_t>(u.size()) != nu_) {
 //     throw_pretty("Invalid argument: "
 //                  << "u has wrong dimension (it should be " +

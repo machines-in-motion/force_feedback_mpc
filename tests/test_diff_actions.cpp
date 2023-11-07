@@ -80,10 +80,10 @@ void test_calc_returns_a_cost(DifferentialActionModelTypes::Type action_type,
 
 void test_quasi_static(DifferentialActionModelTypes::Type action_type,
                        ContactModelTypes::Type contact_type) {
-  if (action_type ==
-      DifferentialActionModelTypes::
-          DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed)
-    return;
+  // if (action_type ==
+  //     DifferentialActionModelTypes::
+  //         DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed)
+  //   return;
   // create the model
   DifferentialActionModelFactory factory;
   boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
@@ -251,9 +251,9 @@ void register_action_model_unit_tests(
       action_type == DifferentialActionModelTypes::
               DifferentialActionModelFreeFwdDynamics_Hector ||
       action_type == DifferentialActionModelTypes::
-              DifferentialActionModelFreeFwdDynamics_TalosArm ||
-      action_type == DifferentialActionModelTypes::
-              DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed) {
+              DifferentialActionModelFreeFwdDynamics_TalosArm) { // ||
+      // action_type == DifferentialActionModelTypes::
+      //         DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed) {
     test_name << "test_" << action_type;
   } else {
     test_name << "test_" << action_type << "_" << contact_type;
@@ -280,7 +280,7 @@ bool init_function() {
   register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelLQRDriftFree);
   register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_Hector);
   register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm);
-  register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed);
+  // register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed);
 
   // contact 1D (Talos arm)
   for (size_t j = 0; j < ContactModelTypes::all.size(); ++j) {

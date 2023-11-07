@@ -6,20 +6,22 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_DIFF_ACTION_SOFT3D_FACTORY_HPP_
-#define SOBEC_DIFF_ACTION_SOFT3D_FACTORY_HPP_
+#ifndef FORCE_FEEDBACK_MPC_DIFF_ACTION_SOFT3D_FACTORY_HPP_
+#define FORCE_FEEDBACK_MPC_DIFF_ACTION_SOFT3D_FACTORY_HPP_
 
 #include <crocoddyl/core/diff-action-base.hpp>
 #include <crocoddyl/core/numdiff/diff-action.hpp>
 #include <crocoddyl/multibody/actions/free-fwddyn.hpp>
 
-#include "actuation.hpp"
-#include "contact1d.hpp"
-#include "sobec/crocomplements/softcontact/dam3d-augmented.hpp"
-#include "state.hpp"
+#include "crocoddyl/actuation.hpp"
+#include "crocoddyl/contact.hpp"
+#include "crocoddyl/state.hpp"
+#include "crocoddyl/cost.hpp"
+#include "force_feedback_mpc/softcontact/dam3d-augmented.hpp"
 
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
+
 
 struct DAMSoftContact3DTypes {
   enum Type {
@@ -50,18 +52,18 @@ class DAMSoftContact3DFactory {
   explicit DAMSoftContact3DFactory();
   ~DAMSoftContact3DFactory();
 
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFwdDynamics> create(
+  boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics> create(
       DAMSoftContact3DTypes::Type type,
-      PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL) const;
+      pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL) const;
 
   // Soft contact 3D dynamics
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFwdDynamics>
+  boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics>
   create_augmentedDAMSoft3D(StateModelTypes::Type state_type,
                             ActuationModelTypes::Type actuation_type,
-                            PinocchioReferenceTypes::Type ref_type) const;
+                            pinocchio::ReferenceFrame ref_type) const;
 };
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc
 
-#endif  // SOBEC_DIFF_ACTION_SOFT3D_FACTORY_HPP_
+#endif  // FORCE_FEEDBACK_MPC_DIFF_ACTION_SOFT3D_FACTORY_HPP_

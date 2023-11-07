@@ -6,27 +6,31 @@
 // individual files. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "sobec/crocomplements/softcontact/dam1d-augmented.hpp"
+#include "force_feedback_mpc/python.hpp"
+#include "force_feedback_mpc/softcontact/dam1d-augmented.hpp"
 
-#include <boost/python.hpp>
-#include <boost/python/enum.hpp>
-#include <eigenpy/eigenpy.hpp>
+namespace force_feedback_mpc {
+namespace softcontact {
 
-namespace sobec {
-namespace python {
 namespace bp = boost::python;
 
 void exposeDAMSoftContact1DAugmentedFwdDyn() {
 
   bp::register_ptr_to_python<boost::shared_ptr<DAMSoftContact1DAugmentedFwdDynamics>>();
 
-  bp::class_<DAMSoftContact1DAugmentedFwdDynamics, bp::bases<sobec::DAMSoftContactAbstractAugmentedFwdDynamics>>(
+  bp::enum_<Vector3MaskType>("Vector3MaskType")
+      .value("x", x)
+      .value("y", y)
+      .value("z", z)
+      .export_values();
+      
+  bp::class_<DAMSoftContact1DAugmentedFwdDynamics, bp::bases<DAMSoftContactAbstractAugmentedFwdDynamics>>(
       "DAMSoftContact1DAugmentedFwdDynamics", 
       "Differential action model for 1D visco-elastic contact forward dynamics in multibody systems.",
       bp::init<boost::shared_ptr<crocoddyl::StateMultibody>,
                boost::shared_ptr<crocoddyl::ActuationModelAbstract>,
                boost::shared_ptr<crocoddyl::CostModelSum>,
-               pinocchio::FrameIndex, Eigen::VectorXd, Eigen::VectorXd, Eigen::Vector3d, pinocchio::ReferenceFrame, sobec::Vector3MaskType>(
+               pinocchio::FrameIndex, Eigen::VectorXd, Eigen::VectorXd, Eigen::Vector3d, pinocchio::ReferenceFrame, Vector3MaskType>(
           bp::args("self", "state", "actuation", "costs", "frameId", "Kp", "Kv", "oPc", "ref", "type"),
           "Initialize the constrained forward-dynamics action model.\n\n"
           ":param state: multibody state\n"
@@ -92,7 +96,7 @@ void exposeDAMSoftContact1DAugmentedFwdDyn() {
 
   bp::register_ptr_to_python<boost::shared_ptr<DADSoftContact1DAugmentedFwdDynamics> >();
 
-  bp::class_<DADSoftContact1DAugmentedFwdDynamics, bp::bases<sobec::DADSoftContactAbstractAugmentedFwdDynamics> >(
+  bp::class_<DADSoftContact1DAugmentedFwdDynamics, bp::bases<DADSoftContactAbstractAugmentedFwdDynamics> >(
       "DADSoftContact1DAugmentedFwdDynamics", "Action data for the soft contact 1D forward dynamics system",
       bp::init<DAMSoftContact1DAugmentedFwdDynamics*>(
           bp::args("self", "model"),
@@ -100,40 +104,40 @@ void exposeDAMSoftContact1DAugmentedFwdDyn() {
           ":param model: soft contact 1D model"))
       .add_property(
           "aba_df3d",
-          bp::make_getter(&sobec::DADSoftContact1DAugmentedFwdDynamics::aba_df3d,
+          bp::make_getter(&DADSoftContact1DAugmentedFwdDynamics::aba_df3d,
                           bp::return_internal_reference<>()),
           "Partial derivative of joint acceleration w.r.t. 3D contact force")
       .add_property(
           "da_df3d",
-          bp::make_getter(&sobec::DADSoftContact1DAugmentedFwdDynamics::da_df3d,
+          bp::make_getter(&DADSoftContact1DAugmentedFwdDynamics::da_df3d,
                           bp::return_internal_reference<>()),
           "Partial derivative of LOCAL contact frame acceleration w.r.t. 3D contact force")
       .add_property(
           "f3d",
-          bp::make_getter(&sobec::DADSoftContact1DAugmentedFwdDynamics::f3d,
+          bp::make_getter(&DADSoftContact1DAugmentedFwdDynamics::f3d,
                           bp::return_internal_reference<>()),
           "LOCAL 3D contact force")
       .add_property(
           "fout3d",
-          bp::make_getter(&sobec::DADSoftContact1DAugmentedFwdDynamics::f3d,
+          bp::make_getter(&DADSoftContact1DAugmentedFwdDynamics::f3d,
                           bp::return_internal_reference<>()),
           "Time-derivative of the LOCAL 3D contact force")
       .add_property(
           "dfdt3d_dx",
-          bp::make_getter(&sobec::DADSoftContact1DAugmentedFwdDynamics::dfdt3d_dx,
+          bp::make_getter(&DADSoftContact1DAugmentedFwdDynamics::dfdt3d_dx,
                           bp::return_internal_reference<>()),
           "Partial derivative of the time derivative of the contact force (3D, LOCAL) w.r.t. state")
       .add_property(
           "dfdt3d_du",
-          bp::make_getter(&sobec::DADSoftContact1DAugmentedFwdDynamics::dfdt3d_du,
+          bp::make_getter(&DADSoftContact1DAugmentedFwdDynamics::dfdt3d_du,
                           bp::return_internal_reference<>()),
           "Partial derivative of the time derivative of the contact force (3D, LOCAL) w.r.t. joint torques")
       .add_property(
           "dfdt3d_df",
-          bp::make_getter(&sobec::DADSoftContact1DAugmentedFwdDynamics::dfdt3d_df,
+          bp::make_getter(&DADSoftContact1DAugmentedFwdDynamics::dfdt3d_df,
                           bp::return_internal_reference<>()),
           "Partial derivative of the time derivative of the contact force (3D, LOCAL) w.r.t. contact force");
 }
 
-}  // namespace python
-}  // namespace sobec
+}  // namespace softcontact
+}  // namespace force_feedback_mpc

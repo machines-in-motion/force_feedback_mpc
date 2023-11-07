@@ -6,23 +6,24 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_ACTION_IAM3D_AUGMENTED_FACTORY_HPP_
-#define SOBEC_ACTION_IAM3D_AUGMENTED_FACTORY_HPP_
+#ifndef FORCE_FEEDBACK_MPC_ACTION_IAM3D_AUGMENTED_FACTORY_HPP_
+#define FORCE_FEEDBACK_MPC_ACTION_IAM3D_AUGMENTED_FACTORY_HPP_
 
 #include <iterator>
 
-#include "crocoddyl/core/action-base.hpp"
-#include "crocoddyl/core/numdiff/action.hpp"
+#include <crocoddyl/core/diff-action-base.hpp>
+#include <crocoddyl/core/numdiff/diff-action.hpp>
 
-#include "sobec/crocomplements/softcontact/iam-augmented.hpp"
-#include "statesoft.hpp"
-
+#include "force_feedback_mpc/softcontact/iam-augmented.hpp"
+#include "state-soft.hpp"
 #include "diff-action-soft-abstract.hpp"
 #include "diff-action-soft3d.hpp"
 #include "diff-action-soft1d.hpp"
 
-namespace sobec {
+
+namespace force_feedback_mpc {
 namespace unittest {
+
 
 struct IAMSoftContactTypes {
   enum Type {
@@ -69,17 +70,18 @@ class IAMSoftContactFactory {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  typedef typename force_feedback_mpc::softcontact::Vector3MaskType Vector3MaskType;
+
   explicit IAMSoftContactFactory();
   ~IAMSoftContactFactory();
 
-  boost::shared_ptr<sobec::IAMSoftContactAugmented> create(
+  boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented> create(
       IAMSoftContactTypes::Type iam_type,
       DAMSoftContactAbstractTypes::Type dam_type,
-      PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-      ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) const;
+        pinocchio::ReferenceFrame ref_type,
+        Vector3MaskType mask_type) const;
 };
 
 }  // namespace unittest
-}  // namespace sobec
-
-#endif  // SOBEC_ACTION_IAM3D_AUGMENTED_FACTORY_HPP_
+}  // namespace force_feedback_mpc
+#endif  // FORCE_FEEDBACK_MPC_ACTION_IAM3D_AUGMENTED_FACTORY_HPP_

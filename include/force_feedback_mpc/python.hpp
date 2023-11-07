@@ -10,6 +10,7 @@
 #include "force_feedback_mpc/softcontact/state.hpp"
 #include "force_feedback_mpc/softcontact/dam-augmented.hpp"
 #include "force_feedback_mpc/softcontact/dam3d-augmented.hpp"
+#include "force_feedback_mpc/softcontact/dam1d-augmented.hpp"
 
 namespace force_feedback_mpc{
 namespace lpf{
@@ -24,6 +25,8 @@ namespace softcontact{
     void exposeStateSoftContact();
     void exposeDAMSoftContactAbstractAugmentedFwdDyn();
     void exposeDAMSoftContact3DAugmentedFwdDyn();
+    void exposeDAMSoftContact1DAugmentedFwdDyn();
+    void exposeIAMSoftContactAugmented();
 } // namespace softcontact
 } // namespace force_feedback_mpc
 

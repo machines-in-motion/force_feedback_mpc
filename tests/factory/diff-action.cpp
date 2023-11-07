@@ -48,10 +48,10 @@ std::ostream& operator<<(std::ostream& os,
         DifferentialActionModelFreeFwdDynamics_TalosArm:
       os << "DifferentialActionModelFreeFwdDynamics_TalosArm";
       break;
-    case DifferentialActionModelTypes::
-        DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed:
-      os << "DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed";
-      break;
+    // case DifferentialActionModelTypes::
+    //     DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed:
+    //   os << "DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed";
+    //   break;
     case DifferentialActionModelTypes::
         DifferentialActionModelContactFwdDynamics_TalosArm:
       os << "DifferentialActionModelContactFwdDynamics_TalosArm";
@@ -110,12 +110,12 @@ DifferentialActionModelFactory::create(DifferentialActionModelTypes::Type type,
       action = create_freeFwdDynamics(StateModelTypes::StateMultibody_TalosArm,
                                       ActuationModelTypes::ActuationModelFull);
       break;
-    case DifferentialActionModelTypes::
-        DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed:
-      action = create_freeFwdDynamics(
-          StateModelTypes::StateMultibody_TalosArm,
-          ActuationModelTypes::ActuationModelSquashingFull);
-      break;
+    // case DifferentialActionModelTypes::
+    //     DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed:
+    //   action = create_freeFwdDynamics(
+    //       StateModelTypes::StateMultibody_TalosArm,
+    //       ActuationModelTypes::ActuationModelSquashingFull);
+    //   break;
     case DifferentialActionModelTypes::
         DifferentialActionModelContactFwdDynamics_TalosArm:
       action = create_contactFwdDynamics(

@@ -9,7 +9,7 @@
 #include "action-soft.hpp"
 #include <crocoddyl/core/utils/exception.hpp>
 
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
 
 const std::vector<IAMSoftContactTypes::Type> IAMSoftContactTypes::all(
@@ -32,28 +32,28 @@ std::ostream& operator<<(std::ostream& os, IAMSoftContactTypes::Type type) {
 IAMSoftContactFactory::IAMSoftContactFactory() {}
 IAMSoftContactFactory::~IAMSoftContactFactory() {}
 
-boost::shared_ptr<sobec::IAMSoftContactAugmented>
+boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>
 IAMSoftContactFactory::create(IAMSoftContactTypes::Type iam_type,
                               DAMSoftContactAbstractTypes::Type dam_type,
                               PinocchioReferenceTypes::Type ref_type,
                               ContactModelMaskTypes::Type mask_type) const {
-  boost::shared_ptr<sobec::IAMSoftContactAugmented> iam;
+  boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented> iam;
   switch (iam_type) {
     case IAMSoftContactTypes::IAMSoftContactAugmented: {
-      boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFwdDynamics> dam =
+      boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics> dam =
           DAMSoftContact3DFactory().create(mapDAMSoftAbstractTo3D.at(dam_type), ref_type);
       double time_step = 1e-3;
       bool with_cost_residual = true;
-      iam = boost::make_shared<sobec::IAMSoftContactAugmented>(
+      iam = boost::make_shared<force_feedback_mpc::softcontact::IAMSoftContactAugmented>(
           dam, time_step, with_cost_residual);
       break;
     }
     case IAMSoftContactTypes::IAMSoftContact1DAugmented: {
-      boost::shared_ptr<sobec::DAMSoftContact1DAugmentedFwdDynamics> dam =
+      boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics> dam =
           DAMSoftContact1DFactory().create(mapDAMSoftAbstractTo1D.at(dam_type), ref_type, mask_type);
       double time_step = 1e-3;
       bool with_cost_residual = true;
-      iam = boost::make_shared<sobec::IAMSoftContactAugmented>(
+      iam = boost::make_shared<force_feedback_mpc::softcontact::IAMSoftContactAugmented>(
           dam, time_step, with_cost_residual);
       break;
     }
@@ -65,4 +65,4 @@ IAMSoftContactFactory::create(IAMSoftContactTypes::Type iam_type,
 }
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc

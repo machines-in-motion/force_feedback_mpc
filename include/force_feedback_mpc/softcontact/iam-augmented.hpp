@@ -21,7 +21,44 @@
 namespace force_feedback_mpc {
 namespace softcontact {
 
-class IAMSoftContactAugmented : public ActionModelAbstractTpl<double> {
+struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double> {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  typedef crocoddyl::MathBaseTpl<double> MathBase;
+  typedef crocoddyl::ActionDataAbstractTpl<double> Base;
+  typedef typename MathBase::VectorXs VectorXs;
+  typedef typename MathBase::MatrixXs MatrixXs;
+  typedef pinocchio::DataTpl<double> PinocchioData;
+  typedef crocoddyl::DifferentialActionDataAbstractTpl<double> DifferentialActionDataAbstract;
+
+  template <class Model>
+  explicit IADSoftContactAugmented(Model* const model)
+      : Base(model), tau_tmp(model->get_nu()) {
+    tau_tmp.setZero();
+    differential = model->get_differential()->createData();
+    const std::size_t& ndy = model->get_state()->get_ndx();
+    dy = VectorXs::Zero(ndy);
+  }
+  virtual ~IADSoftContactAugmented() {}
+
+  boost::shared_ptr<DifferentialActionDataAbstract> differential;
+  VectorXs dy;
+
+  using Base::cost;
+  using Base::r;
+  VectorXs tau_tmp;
+  // use refs to "alias" base class member names
+  VectorXs& ynext = Base::xnext;
+  MatrixXs& Fy = Base::Fx;
+//   MatrixXs& Fw = Base::Fu;
+  VectorXs& Ly = Base::Lx;
+//   VectorXs& Lw = Base::Lu;
+  MatrixXs& Lyy = Base::Lxx;
+  MatrixXs& Lyu = Base::Lxu;
+//   MatrixXs& Lww = Base::Luu;
+};
+
+class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -95,43 +132,6 @@ class IAMSoftContactAugmented : public ActionModelAbstractTpl<double> {
   boost::shared_ptr<PinocchioModel> pin_model_;  //!< for reg cost
   bool is_terminal_;  //!< is it a terminal model or not ? (deactivate cost on w
                       //!< if true)
-};
-
-struct IADSoftContactAugmented : public ActionDataAbstractTpl<double> {
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-  typedef crocoddyl::MathBaseTpl<double> MathBase;
-  typedef crocoddyl::ActionDataAbstractTpl<double> Base;
-  typedef typename MathBase::VectorXs VectorXs;
-  typedef typename MathBase::MatrixXs MatrixXs;
-  typedef pinocchio::DataTpl<double> PinocchioData;
-  typedef crocoddyl::DifferentialActionDataAbstractTpl<double> DifferentialActionDataAbstract;
-
-  template <class Model>
-  explicit IADSoftContactAugmented(Model* const model)
-      : Base(model), tau_tmp(model->get_nu()) {
-    tau_tmp.setZero();
-    differential = model->get_differential()->createData();
-    const std::size_t& ndy = model->get_state()->get_ndx();
-    dy = VectorXs::Zero(ndy);
-  }
-  virtual ~IADSoftContactAugmented() {}
-
-  boost::shared_ptr<DifferentialActionDataAbstractTpl<double> > differential;
-  VectorXs dy;
-
-  using Base::cost;
-  using Base::r;
-  VectorXs tau_tmp;
-  // use refs to "alias" base class member names
-  VectorXs& ynext = Base::xnext;
-  MatrixXs& Fy = Base::Fx;
-//   MatrixXs& Fw = Base::Fu;
-  VectorXs& Ly = Base::Lx;
-//   VectorXs& Lw = Base::Lu;
-  MatrixXs& Lyy = Base::Lxx;
-  MatrixXs& Lyu = Base::Lxu;
-//   MatrixXs& Lww = Base::Luu;
 };
 
 }  // namespace softcontact

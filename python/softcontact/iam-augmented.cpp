@@ -1,28 +1,21 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2020, LAAS-CNRS, University of Edinburgh
-// Copyright note valid unless otherwise stated in individual files.
-// All rights reserved.
+// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh, CTU, INRIA,
+// University of Oxford Copyright note valid unless otherwise stated in
+// individual files. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "sobec/crocomplements/softcontact/iam-augmented.hpp"
+#include "force_feedback_mpc/python.hpp"
+#include "force_feedback_mpc/softcontact/iam-augmented.hpp"
 
-#include <boost/python.hpp>
-#include <boost/python/enum.hpp>
-#include <crocoddyl/core/action-base.hpp>
-#include <eigenpy/eigenpy.hpp>
-#include <pinocchio/fwd.hpp>  // to avoid compilation error (https://github.com/loco-3d/crocoddyl/issues/205)
+namespace force_feedback_mpc {
+namespace softcontact {
 
-#include "sobec/fwd.hpp"
-
-namespace sobec {
-namespace python {
-using namespace crocoddyl;
 namespace bp = boost::python;
 
 void exposeIAMSoftContactAugmented() {
-  bp::class_<IAMSoftContactAugmented, bp::bases<ActionModelAbstract> >(
+  bp::class_<IAMSoftContactAugmented, bp::bases<crocoddyl::ActionModelAbstract> >(
       "IAMSoftContactAugmented",
       "Sympletic Euler integrator for differential action models.\n\n"
       "This class implements a sympletic Euler integrator (a.k.a "
@@ -41,7 +34,7 @@ void exposeIAMSoftContactAugmented() {
           "derivatives\n"
           "computation, or tau"))
       .def<void (IAMSoftContactAugmented::*)(
-          const boost::shared_ptr<ActionDataAbstract>&,
+          const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &IAMSoftContactAugmented::calc,
@@ -53,11 +46,11 @@ void exposeIAMSoftContactAugmented() {
           ":param x: state vector\n"
           ":param u: control input")
       .def<void (IAMSoftContactAugmented::*)(
-          const boost::shared_ptr<ActionDataAbstract>&,
+          const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
-          "calc", &ActionModelAbstract::calc, bp::args("self", "data", "x"))
+          "calc", &crocoddyl::ActionModelAbstract::calc, bp::args("self", "data", "x"))
       .def<void (IAMSoftContactAugmented::*)(
-          const boost::shared_ptr<ActionDataAbstract>&,
+          const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &IAMSoftContactAugmented::calcDiff,
@@ -71,9 +64,9 @@ void exposeIAMSoftContactAugmented() {
           ":param x: state vector\n"
           ":param u: control input\n")
       .def<void (IAMSoftContactAugmented::*)(
-          const boost::shared_ptr<ActionDataAbstract>&,
+          const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
-          "calcDiff", &ActionModelAbstract::calcDiff,
+          "calcDiff", &crocoddyl::ActionModelAbstract::calcDiff,
           bp::args("self", "data", "x"))
       .def("createData", &IAMSoftContactAugmented::createData,
            bp::args("self"), "Create the Euler integrator data.")
@@ -102,7 +95,7 @@ void exposeIAMSoftContactAugmented() {
 
   bp::register_ptr_to_python<boost::shared_ptr<IADSoftContactAugmented> >();
 
-  bp::class_<IADSoftContactAugmented, bp::bases<ActionDataAbstract> >(
+  bp::class_<IADSoftContactAugmented, bp::bases<crocoddyl::ActionDataAbstract> >(
       "IADSoftContactAugmented", "Sympletic Euler integrator data.",
       bp::init<IAMSoftContactAugmented*>(
           bp::args("self", "model"),
@@ -119,5 +112,5 @@ void exposeIAMSoftContactAugmented() {
                     "state rate.");
 }
 
-}  // namespace python
-}  // namespace sobec
+}  // namespace softcontact
+}  // namespace force_feedback_mpc

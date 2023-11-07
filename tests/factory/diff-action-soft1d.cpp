@@ -15,11 +15,8 @@
 #include <crocoddyl/multibody/actuations/full.hpp>
 #include <crocoddyl/multibody/states/multibody.hpp>
 
-#include "contact1d.hpp"
-#include "cost.hpp"
-// #include "sobec/crocomplements/softcontact/dam1d.hpp"
 
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
 
 const std::vector<DAMSoftContact1DTypes::Type>
@@ -50,11 +47,11 @@ DAMSoftContact1DFactory::DAMSoftContact1DFactory() {}
 DAMSoftContact1DFactory::~DAMSoftContact1DFactory() {}
 
 
-boost::shared_ptr<sobec::DAMSoftContact1DAugmentedFwdDynamics>
+boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>
 DAMSoftContact1DFactory::create(DAMSoftContact1DTypes::Type dam_type,
-                              PinocchioReferenceTypes::Type ref_type,
-                              ContactModelMaskTypes::Type mask_type) const {
-  boost::shared_ptr<sobec::DAMSoftContact1DAugmentedFwdDynamics> action;
+                              pinocchio::ReferenceFrame ref_type,
+                              Vector3MaskType mask_type) const {
+  boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics> action;
   switch (dam_type) {
     // TalosArm 
     case DAMSoftContact1DTypes::
@@ -92,12 +89,12 @@ DAMSoftContact1DFactory::create(DAMSoftContact1DTypes::Type dam_type,
 }
 
 
-boost::shared_ptr<sobec::DAMSoftContact1DAugmentedFwdDynamics>
+boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>
 DAMSoftContact1DFactory::create_augmentedDAMSoft1D(StateModelTypes::Type state_type,
                                                  ActuationModelTypes::Type actuation_type,
-                                                 PinocchioReferenceTypes::Type ref_type,
-                                                 ContactModelMaskTypes::Type mask_type) const {
-  boost::shared_ptr<sobec::DAMSoftContact1DAugmentedFwdDynamics> action;
+                                                 pinocchio::ReferenceFrame ref_type,
+                                                 Vector3MaskType mask_type) const {
+  boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics> action;
   boost::shared_ptr<crocoddyl::StateMultibody> state;
   boost::shared_ptr<crocoddyl::ActuationModelAbstract> actuation;
   boost::shared_ptr<crocoddyl::ContactModelMultiple> contact;
@@ -107,40 +104,6 @@ DAMSoftContact1DFactory::create_augmentedDAMSoft1D(StateModelTypes::Type state_t
   cost = boost::make_shared<crocoddyl::CostModelSum>(state, actuation->get_nu());
   std::string frameName = "";
 
-  pinocchio::ReferenceFrame pinRefFrame;
-  switch(ref_type){
-    case PinocchioReferenceTypes::Type::LOCAL:
-      pinRefFrame = pinocchio::LOCAL;
-      break;
-    case PinocchioReferenceTypes::Type::LOCAL_WORLD_ALIGNED:
-      pinRefFrame = pinocchio::LOCAL_WORLD_ALIGNED;
-      break;
-    case PinocchioReferenceTypes::Type::WORLD:
-      pinRefFrame = pinocchio::LOCAL_WORLD_ALIGNED;
-      break;
-    default:
-      throw_pretty(__FILE__ ": Wrong PinocchioReferenceTypes::Type given");
-      break;
-  }
-  // get 1D mask type
-  sobec::Vector3MaskType mask;
-  switch (mask_type) {
-    case ContactModelMaskTypes::X: {
-      mask = sobec::Vector3MaskType::x;
-      break;
-    }
-    case ContactModelMaskTypes::Y: {
-      mask = sobec::Vector3MaskType::y;
-      break;
-    }
-    case ContactModelMaskTypes::Z: {
-      mask = sobec::Vector3MaskType::z;
-      break;
-    }
-    default:
-      throw_pretty(__FILE__ ": Wrong ContactModelMaskTypes::Type given");
-      break;
-  }
   switch (state_type) {
     case StateModelTypes::StateMultibody_TalosArm: {
       frameName = "gripper_left_fingertip_1_link";
@@ -172,12 +135,12 @@ DAMSoftContact1DFactory::create_augmentedDAMSoft1D(StateModelTypes::Type state_t
   Eigen::VectorXd Kp = Eigen::VectorXd::Ones(1)*100;
   Eigen::VectorXd Kv = Eigen::VectorXd::Ones(1)*10;
   Eigen::Vector3d oPc = Eigen::Vector3d::Zero();
-  action = boost::make_shared<sobec::DAMSoftContact1DAugmentedFwdDynamics>(
+  action = boost::make_shared<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>(
       state, 
       actuation, 
       cost, 
       state->get_pinocchio()->getFrameId(frameName), 
-      Kp, Kv, oPc, pinRefFrame, mask);
+      Kp, Kv, oPc, ref_type, mask_type);
   action->set_force_des(Eigen::VectorXd::Zero(1));
   action->set_force_weight(Eigen::VectorXd::Ones(1)*0.01);
   action->set_with_force_cost(true);
@@ -193,4 +156,4 @@ DAMSoftContact1DFactory::create_augmentedDAMSoft1D(StateModelTypes::Type state_t
 
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc

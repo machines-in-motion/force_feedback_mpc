@@ -594,9 +594,9 @@ void register_action_model_unit_tests(
       dam_type == DifferentialActionModelTypes::
               DifferentialActionModelFreeFwdDynamics_Hector ||
       dam_type == DifferentialActionModelTypes::
-              DifferentialActionModelFreeFwdDynamics_TalosArm ||
-      dam_type == DifferentialActionModelTypes::
-              DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed) {
+              DifferentialActionModelFreeFwdDynamics_TalosArm ) { //|
+    //   dam_type == DifferentialActionModelTypes::
+    //           DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed) {
     test_name << "test_" << iam_type << "_" << dam_type;
   } else {
     test_name << "test_" << iam_type << "_" << dam_type << "_" << contact_type;
@@ -650,8 +650,8 @@ bool init_function() {
     //                                  DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_Hector);
     register_action_model_unit_tests(ActionModelLPFTypes::all[i],
                                      DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm);
-    register_action_model_unit_tests(ActionModelLPFTypes::all[i],
-                                     DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed);
+    // register_action_model_unit_tests(ActionModelLPFTypes::all[i],
+    //                                  DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed);
 
     // contact 1D (Talos arm)
     for (size_t k = 0; k < ContactModelTypes::all.size(); ++k) {

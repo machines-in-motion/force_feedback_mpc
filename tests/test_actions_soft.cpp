@@ -15,11 +15,12 @@
 
 #include "common.hpp"
 #include "factory/action-soft.hpp"
+#include "factory/diff-action-soft1d.hpp"
 #include "factory/diff-action-soft3d.hpp"
 #include <crocoddyl/multibody/residuals/control-gravity.hpp>
 
 using namespace boost::unit_test;
-using namespace sobec::unittest;
+using namespace force_feedback_mpc::unittest;
 
 //----------------------------------------------------------------------------//
 
@@ -30,7 +31,7 @@ void test_check_data(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
   // create the model
   IAMSoftContactFactory factory_iam;
-  const boost::shared_ptr<sobec::IAMSoftContactAugmented>& model =
+  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   // Run the print function
   std::ostringstream tmp;
@@ -50,7 +51,7 @@ void test_calc_returns_state(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
   // create the model
   IAMSoftContactFactory factory_iam;
-  const boost::shared_ptr<sobec::IAMSoftContactAugmented>& model =
+  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   // create the corresponding data object
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
@@ -71,7 +72,7 @@ void test_calc_returns_a_cost(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
   // create the model
   IAMSoftContactFactory factory_iam;
-  const boost::shared_ptr<sobec::IAMSoftContactAugmented>& model =
+  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   // create the corresponding data object and set the cost to nan
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
@@ -89,7 +90,7 @@ void test_calc_returns_a_cost(
 
 
 void test_partial_derivatives_against_numdiff(
-    const boost::shared_ptr<sobec::IAMSoftContactAugmented>& model) {
+    const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model) {
   // create the corresponding data object and set the cost to nan
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
@@ -133,7 +134,7 @@ void test_partial_derivatives_action_model(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
   // create the model
   IAMSoftContactFactory factory;
-  const boost::shared_ptr<sobec::IAMSoftContactAugmented>& model =
+  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory.create(iam_type, dam_type, ref_type, mask_type);
   test_partial_derivatives_against_numdiff(model);
 }
@@ -142,7 +143,7 @@ void test_partial_derivatives_action_model(
 
 
 void test_partial_derivatives_against_numdiff_terminal(
-    const boost::shared_ptr<sobec::IAMSoftContactAugmented>& model) {
+    const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model) {
   // create the corresponding data object and set the cost to nan
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
@@ -185,7 +186,7 @@ void test_partial_derivatives_action_model_terminal(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
   // create the model
   IAMSoftContactFactory factory;
-  const boost::shared_ptr<sobec::IAMSoftContactAugmented>& model =
+  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory.create(iam_type, dam_type, ref_type, mask_type);
   model->set_dt(0.);
   test_partial_derivatives_against_numdiff_terminal(model);
@@ -201,7 +202,7 @@ void test_calc_equivalent_euler(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
   // Create IAM soft from DAMSoft
   IAMSoftContactFactory factory_iam;
-  const boost::shared_ptr<sobec::IAMSoftContactAugmented>& modelsoft = factory_iam.create(iam_type, dam_type, ref_type, mask_type);
+  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& modelsoft = factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataSoft = modelsoft->createData();
   // Set gains to 0
   modelsoft->get_differential()->set_Kp(Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));
@@ -241,7 +242,7 @@ void test_calcDiff_equivalent_euler(
     ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
   // Create IAM soft from DAMSoft
   IAMSoftContactFactory factory_iam;
-  const boost::shared_ptr<sobec::IAMSoftContactAugmented>& modelsoft = factory_iam.create(iam_type, dam_type, ref_type, mask_type);
+  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& modelsoft = factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataSoft = modelsoft->createData();
   // Set gains to 0
   modelsoft->get_differential()->set_Kp(Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));

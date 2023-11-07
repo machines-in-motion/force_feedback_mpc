@@ -6,20 +6,22 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef SOBEC_DIFF_ACTION_SOFT1D_FACTORY_HPP_
-#define SOBEC_DIFF_ACTION_SOFT1D_FACTORY_HPP_
+#ifndef FORCE_FEEDBACK_MPC_DIFF_ACTION_SOFT1D_FACTORY_HPP_
+#define FORCE_FEEDBACK_MPC_DIFF_ACTION_SOFT1D_FACTORY_HPP_
 
 #include <crocoddyl/core/diff-action-base.hpp>
 #include <crocoddyl/core/numdiff/diff-action.hpp>
 #include <crocoddyl/multibody/actions/free-fwddyn.hpp>
 
-#include "actuation.hpp"
-#include "contact1d.hpp"
-#include "sobec/crocomplements/softcontact/dam1d-augmented.hpp"
-#include "state.hpp"
+#include "crocoddyl/actuation.hpp"
+#include "crocoddyl/contact.hpp"
+#include "crocoddyl/state.hpp"
+#include "crocoddyl/cost.hpp"
+#include "force_feedback_mpc/softcontact/dam1d-augmented.hpp"
 
-namespace sobec {
+namespace force_feedback_mpc {
 namespace unittest {
+
 
 struct DAMSoftContact1DTypes {
   enum Type {
@@ -47,23 +49,25 @@ class DAMSoftContact1DFactory {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  typedef typename force_feedback_mpc::softcontact::Vector3MaskType Vector3MaskType;
+
   explicit DAMSoftContact1DFactory();
   ~DAMSoftContact1DFactory();
 
-  boost::shared_ptr<sobec::DAMSoftContact1DAugmentedFwdDynamics> create(
+  boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics> create(
       DAMSoftContact1DTypes::Type type,
-      PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-      ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) const;
+      pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL,
+      Vector3MaskType mask_type = Vector3MaskType::z) const;
 
   // Soft contact 1D dynamics
-  boost::shared_ptr<sobec::DAMSoftContact1DAugmentedFwdDynamics>
+  boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>
   create_augmentedDAMSoft1D(StateModelTypes::Type state_type,
                             ActuationModelTypes::Type actuation_type,
-                            PinocchioReferenceTypes::Type ref_type,
-                            ContactModelMaskTypes::Type mask_type) const;
+                            pinocchio::ReferenceFrame ref_type,
+                            Vector3MaskType mask_type) const;
 };
 
 }  // namespace unittest
-}  // namespace sobec
+}  // namespace force_feedback_mpc
 
-#endif  // SOBEC_DIFF_ACTION_SOFT1D_FACTORY_HPP_
+#endif  // FORCE_FEEDBACK_MPC_DIFF_ACTION_SOFT1D_FACTORY_HPP_
