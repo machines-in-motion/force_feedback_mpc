@@ -22,13 +22,15 @@
 using namespace boost::unit_test;
 using namespace force_feedback_mpc::unittest;
 
+typedef typename force_feedback_mpc::softcontact::Vector3MaskType Vector3MaskType;
+
 //----------------------------------------------------------------------------//
 
 void test_check_data(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL, 
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
+    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL, 
+    Vector3MaskType mask_type = Vector3MaskType::z ) {
   // create the model
   IAMSoftContactFactory factory_iam;
   const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
@@ -47,8 +49,8 @@ void test_check_data(
 void test_calc_returns_state(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL, 
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
+    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL, 
+    Vector3MaskType mask_type = Vector3MaskType::z ) {
   // create the model
   IAMSoftContactFactory factory_iam;
   const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
@@ -68,8 +70,8 @@ void test_calc_returns_state(
 void test_calc_returns_a_cost(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL, 
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
+    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL, 
+    Vector3MaskType mask_type = Vector3MaskType::z ) {
   // create the model
   IAMSoftContactFactory factory_iam;
   const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
@@ -110,28 +112,25 @@ void test_partial_derivatives_against_numdiff(
   model_num_diff.calc(data_num_diff, x, u);
   model_num_diff.calcDiff(data_num_diff, x, u);
 
-  // Checking the partial derivatives against NumDiff
-  double tol = sqrt(model_num_diff.get_disturbance());
-  BOOST_CHECK((data->Fx - data_num_diff->Fx).isZero(NUMDIFF_MODIFIER * tol));
-  BOOST_CHECK((data->Fu - data_num_diff->Fu).isZero(NUMDIFF_MODIFIER * tol));
-  BOOST_CHECK((data->Lx - data_num_diff->Lx).isZero(NUMDIFF_MODIFIER * tol));
-  BOOST_CHECK((data->Lu - data_num_diff->Lu).isZero(NUMDIFF_MODIFIER * tol));
+  // Tolerance defined as in
+  // http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c5-7.pdf
+  double tol = std::pow(model_num_diff.get_disturbance(), 1. / 3.);
+  BOOST_CHECK((data->Fx - data_num_diff->Fx).isZero(tol));
+  BOOST_CHECK((data->Fu - data_num_diff->Fu).isZero(tol));
+  BOOST_CHECK((data->Lx - data_num_diff->Lx).isZero(tol));
+  BOOST_CHECK((data->Lu - data_num_diff->Lu).isZero(tol));
   if (model_num_diff.get_with_gauss_approx()) {
-    BOOST_CHECK((data->Lxx - data_num_diff->Lxx).isZero(NUMDIFF_MODIFIER * tol));
-    BOOST_CHECK((data->Lxu - data_num_diff->Lxu).isZero(NUMDIFF_MODIFIER * tol));
-    BOOST_CHECK((data->Luu - data_num_diff->Luu).isZero(NUMDIFF_MODIFIER * tol));
-  } else {
-    BOOST_CHECK((data_num_diff->Lxx).isZero(tol));
-    BOOST_CHECK((data_num_diff->Lxu).isZero(tol));
-    BOOST_CHECK((data_num_diff->Luu).isZero(tol));
+    BOOST_CHECK((data->Lxx - data_num_diff->Lxx).isZero(tol));
+    BOOST_CHECK((data->Lxu - data_num_diff->Lxu).isZero(tol));
+    BOOST_CHECK((data->Luu - data_num_diff->Luu).isZero(tol));
   }
 }
 
 void test_partial_derivatives_action_model(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL, 
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
+    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL, 
+    Vector3MaskType mask_type = Vector3MaskType::z ) {
   // create the model
   IAMSoftContactFactory factory;
   const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
@@ -161,29 +160,26 @@ void test_partial_derivatives_against_numdiff_terminal(
   model_num_diff.calc(data_num_diff, x);
   model_num_diff.calcDiff(data_num_diff, x);
 
+  // Tolerance defined as in
+  // http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c5-7.pdf
+  double tol = std::pow(model_num_diff.get_disturbance(), 1. / 3.);
   // Checking the partial derivatives against NumDiff
-  double tol = sqrt(model_num_diff.get_disturbance());
-  // Checking the partial derivatives against NumDiff
-  BOOST_CHECK((data->Fx - data_num_diff->Fx).isZero(NUMDIFF_MODIFIER * tol));
-  BOOST_CHECK((data->Fu - data_num_diff->Fu).isZero(NUMDIFF_MODIFIER * tol));
-  BOOST_CHECK((data->Lx - data_num_diff->Lx).isZero(NUMDIFF_MODIFIER * tol));
-  BOOST_CHECK((data->Lu - data_num_diff->Lu).isZero(NUMDIFF_MODIFIER * tol));
+  BOOST_CHECK((data->Fx - data_num_diff->Fx).isZero(tol));
+  BOOST_CHECK((data->Fu - data_num_diff->Fu).isZero(tol));
+  BOOST_CHECK((data->Lx - data_num_diff->Lx).isZero(tol));
+  BOOST_CHECK((data->Lu - data_num_diff->Lu).isZero(tol));
   if (model_num_diff.get_with_gauss_approx()) {
-    BOOST_CHECK((data->Lxx - data_num_diff->Lxx).isZero(NUMDIFF_MODIFIER * tol));
-    BOOST_CHECK((data->Lxu - data_num_diff->Lxu).isZero(NUMDIFF_MODIFIER * tol));
-    BOOST_CHECK((data->Luu - data_num_diff->Luu).isZero(NUMDIFF_MODIFIER * tol));
-  } else {
-    BOOST_CHECK((data_num_diff->Lxx).isZero(tol));
-    BOOST_CHECK((data_num_diff->Lxu).isZero(tol));
-    BOOST_CHECK((data_num_diff->Luu).isZero(tol));
+    BOOST_CHECK((data->Lxx - data_num_diff->Lxx).isZero(tol));
+    BOOST_CHECK((data->Lxu - data_num_diff->Lxu).isZero(tol));
+    BOOST_CHECK((data->Luu - data_num_diff->Luu).isZero(tol));
   }
 }
 
 void test_partial_derivatives_action_model_terminal(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL, 
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
+    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL, 
+    Vector3MaskType mask_type = Vector3MaskType::z ) {
   // create the model
   IAMSoftContactFactory factory;
   const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
@@ -198,8 +194,8 @@ void test_partial_derivatives_action_model_terminal(
 void test_calc_equivalent_euler(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL, 
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
+    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL, 
+    Vector3MaskType mask_type = Vector3MaskType::z ) {
   // Create IAM soft from DAMSoft
   IAMSoftContactFactory factory_iam;
   const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& modelsoft = factory_iam.create(iam_type, dam_type, ref_type, mask_type);
@@ -238,8 +234,8 @@ void test_calc_equivalent_euler(
 void test_calcDiff_equivalent_euler(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
+    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL,
+    Vector3MaskType mask_type = Vector3MaskType::z ) {
   // Create IAM soft from DAMSoft
   IAMSoftContactFactory factory_iam;
   const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& modelsoft = factory_iam.create(iam_type, dam_type, ref_type, mask_type);
@@ -299,8 +295,8 @@ void test_calcDiff_equivalent_euler(
 void register_action_model_unit_tests(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
-    PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL,
-    ContactModelMaskTypes::Type mask_type = ContactModelMaskTypes::Type::Z) {
+    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL,
+    Vector3MaskType mask_type = Vector3MaskType::z ) {
   boost::test_tools::output_test_stream test_name;
   // 3D
   if(iam_type == IAMSoftContactTypes::Type::IAMSoftContactAugmented){
@@ -330,24 +326,34 @@ bool init_function() {
     // Contact 3D 
     if(IAMSoftContactTypes::all[i] == IAMSoftContactTypes::Type::IAMSoftContactAugmented){
       for (size_t j = 0; j < DAMSoftContactAbstractTypes::all.size(); ++j) {
-        for (size_t k = 0; k < PinocchioReferenceTypes::all.size(); ++k) {
-          register_action_model_unit_tests(IAMSoftContactTypes::all[i],
-                                          DAMSoftContactAbstractTypes::all[j],
-                                          PinocchioReferenceTypes::all[k]);
-        }
+        register_action_model_unit_tests(IAMSoftContactTypes::all[i],
+                                        DAMSoftContactAbstractTypes::all[j],
+                                        pinocchio::LOCAL);
+        register_action_model_unit_tests(IAMSoftContactTypes::all[i],
+                                        DAMSoftContactAbstractTypes::all[j],
+                                        pinocchio::WORLD);
+        register_action_model_unit_tests(IAMSoftContactTypes::all[i],
+                                        DAMSoftContactAbstractTypes::all[j],
+                                        pinocchio::LOCAL_WORLD_ALIGNED);
       }
     }
 
     // Contact 1D 
     if(IAMSoftContactTypes::all[i] == IAMSoftContactTypes::Type::IAMSoftContact1DAugmented){
       for (size_t j = 0; j < DAMSoftContactAbstractTypes::all.size(); ++j) {
-        for (size_t k = 0; k < PinocchioReferenceTypes::all.size(); ++k) {
-          for (size_t l = 0; l < ContactModelMaskTypes::all.size(); ++l) {
-            register_action_model_unit_tests(IAMSoftContactTypes::all[i],
-                                            DAMSoftContactAbstractTypes::all[j],
-                                            PinocchioReferenceTypes::all[k],
-                                            ContactModelMaskTypes::all[l]);
-          }
+        for(size_t k = Vector3MaskType::x; k < Vector3MaskType::Last; k++){
+          register_action_model_unit_tests(IAMSoftContactTypes::all[i],
+                                          DAMSoftContactAbstractTypes::all[j],
+                                          pinocchio::LOCAL,
+                                          static_cast<Vector3MaskType>(k));
+          register_action_model_unit_tests(IAMSoftContactTypes::all[i],
+                                          DAMSoftContactAbstractTypes::all[j],
+                                          pinocchio::WORLD,
+                                          static_cast<Vector3MaskType>(k));
+          register_action_model_unit_tests(IAMSoftContactTypes::all[i],
+                                          DAMSoftContactAbstractTypes::all[j],
+                                          pinocchio::LOCAL_WORLD_ALIGNED,
+                                          static_cast<Vector3MaskType>(k));
         }
       }
     }

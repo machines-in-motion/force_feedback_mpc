@@ -11,8 +11,7 @@
 
 #include <iterator>
 
-#include <crocoddyl/core/diff-action-base.hpp>
-#include <crocoddyl/core/numdiff/diff-action.hpp>
+#include <crocoddyl/core/numdiff/action.hpp>
 
 #include "force_feedback_mpc/softcontact/iam-augmented.hpp"
 #include "state-soft.hpp"

@@ -35,8 +35,8 @@ IAMSoftContactFactory::~IAMSoftContactFactory() {}
 boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>
 IAMSoftContactFactory::create(IAMSoftContactTypes::Type iam_type,
                               DAMSoftContactAbstractTypes::Type dam_type,
-                              PinocchioReferenceTypes::Type ref_type,
-                              ContactModelMaskTypes::Type mask_type) const {
+                              pinocchio::ReferenceFrame ref_type,
+                              Vector3MaskType mask_type) const {
   boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented> iam;
   switch (iam_type) {
     case IAMSoftContactTypes::IAMSoftContactAugmented: {

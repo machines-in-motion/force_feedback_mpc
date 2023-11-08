@@ -13,8 +13,7 @@ set(${PROJECT_NAME}_FACTORY_TEST
   factory/diff-action-soft3d.hpp
   factory/diff-action-soft1d.hpp
   # factory/diff-action-soft3d-friction.hpp
-  # factory/diff-action-soft1d.hpp
-  # factory/action-soft.hpp
+  factory/action-soft.hpp
   factory/crocoddyl/pinocchio_model.cpp
   factory/crocoddyl/state.cpp
   factory/crocoddyl/actuation.cpp
@@ -29,8 +28,7 @@ set(${PROJECT_NAME}_FACTORY_TEST
   factory/diff-action-soft3d.cpp
   factory/diff-action-soft1d.cpp
   # factory/diff-action-soft3d-friction.cpp
-  # factory/diff-action-soft1d.cpp
-  # factory/action-soft.cpp
+  factory/action-soft.cpp
   )
 
 add_library(${PROJECT_NAME}_unittest SHARED ${${PROJECT_NAME}_FACTORY_TEST})
@@ -62,11 +60,12 @@ target_link_libraries(test_diff_actions_soft3d PUBLIC ${PROJECT_NAME}_unittest)
 ADD_UNIT_TEST(test_diff_actions_soft1d test_diff_actions_soft1d.cpp)
 target_link_libraries(test_diff_actions_soft1d PUBLIC ${PROJECT_NAME}_unittest)
 
+ADD_UNIT_TEST(test_actions_soft test_actions_soft.cpp)
+target_link_libraries(test_actions_soft PUBLIC ${PROJECT_NAME}_unittest)
+
 # ADD_UNIT_TEST(test_diff_actions_soft3d_friction test_diff_actions_soft3d_friction.cpp)
 # target_link_libraries(test_diff_actions_soft3d_friction PUBLIC ${PROJECT_NAME}_unittest)
 
-# ADD_UNIT_TEST(test_diff_actions_soft1d test_diff_actions_soft1d.cpp)
-# target_link_libraries(test_diff_actions_soft1d PUBLIC ${PROJECT_NAME}_unittest)
 
 
 if(BUILD_PYTHON_INTERFACE)
