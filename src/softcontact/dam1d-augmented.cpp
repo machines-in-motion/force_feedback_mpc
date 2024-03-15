@@ -34,8 +34,9 @@ DAMSoftContact1DAugmentedFwdDynamics::DAMSoftContact1DAugmentedFwdDynamics(
     const VectorXs& Kv,
     const Vector3s& oPc,
     const pinocchio::ReferenceFrame ref,
-    const Vector3MaskType& type)
-    : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 1, ref) { type_ = type; }
+    const Vector3MaskType& type,
+    boost::shared_ptr<ConstraintModelManager> constraints)
+    : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 1, ref, constraints) { type_ = type; }
 
 
 DAMSoftContact1DAugmentedFwdDynamics::~DAMSoftContact1DAugmentedFwdDynamics() {}
@@ -164,6 +165,12 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
       d->cost += 0.5 * force_rate_reg_weight_(0) * d->fout.transpose() * d->fout;  // penalize time derivative of the force 
     }
   }
+
+  // Constraints (on multibody state x=(q,v))
+  if (this->get_constraints() != nullptr) {
+    d->constraints->resize(this, d);
+    this->get_constraints()->calc(d->constraints, x, u);
+  }
 }
 
 
@@ -215,6 +222,12 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
     if(with_force_rate_reg_cost_){
       d->cost += 0.5 * force_rate_reg_weight_(0) * d->fout.transpose() * d->fout;  // penalize time derivative of the force 
     }
+  }
+
+  // Constraints (on multibody state x=(q,v))
+  if (this->get_constraints() != nullptr) {
+    d->constraints->resize(this, d);
+    this->get_constraints()->calc(d->constraints, x);
   }
 }
 
@@ -429,6 +442,11 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
       d->Luu +=  d->dfdt_du.transpose() * force_rate_reg_weight_(0) * d->dfdt_du;
     }
   }
+
+  // Constraints on multibody state x=(q,v)
+  if (this->get_constraints() != nullptr) {
+    this->get_constraints()->calcDiff(d->constraints, x, u);
+  }
 }
 
 
@@ -513,6 +531,11 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
       d->Lx += d->fout.transpose() * force_rate_reg_weight_(0) * d->dfdt_dx;
       d->Lxx +=  d->dfdt_dx.transpose() * force_rate_reg_weight_(0) * d->dfdt_dx;
     }
+  }
+
+  // Constraints on multibody state x=(q,v)
+  if (this->get_constraints() != nullptr) {
+    this->get_constraints()->calcDiff(d->constraints, x);
   }
 }
 

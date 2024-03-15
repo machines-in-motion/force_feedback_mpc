@@ -56,6 +56,7 @@ struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double>
   MatrixXs& Lyy = Base::Lxx;
   MatrixXs& Lyu = Base::Lxu;
 //   MatrixXs& Lww = Base::Luu;
+  MatrixXs& Gy = Base::Gx;
 };
 
 class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double> {
@@ -112,10 +113,22 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   void set_dt(const double& dt);
   void set_differential(boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model);
 
+  void set_with_force_constraint(const bool inBool) {with_force_constraint_ = inBool; };
+  const bool& get_with_force_constraint() const { return with_force_constraint_; };
+
+  void set_force_lb(const VectorXs& inVec);
+  const VectorXs& get_force_lb() const { return force_lb_; };
+
+  void set_force_ub(const VectorXs& inVec);
+  const VectorXs& get_force_ub() const { return force_ub_; };
+
  protected:
   using Base::has_control_limits_;  //!< Indicates whether any of the control
                                     //!< limits are active
   using Base::nr_;                  //!< Dimension of the cost residual
+  using Base::ng_;                  //!< Number of inequality constraints
+  using Base::g_lb_;                //!< Lower bound of the inequality constraints
+  using Base::g_ub_;                //!< Upper bound of the inequality constraints
   using Base::nu_;                  //!< Control dimension
   using Base::u_lb_;                //!< Lower control limits
   using Base::u_ub_;                //!< Upper control limits
@@ -132,6 +145,11 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   boost::shared_ptr<PinocchioModel> pin_model_;  //!< for reg cost
   bool is_terminal_;  //!< is it a terminal model or not ? (deactivate cost on w
                       //!< if true)
+  bool with_force_constraint_; // Add box constraint on the contact force
+  VectorXs force_lb_;
+  VectorXs force_ub_;
+  VectorXs g_lb_new_;
+  VectorXs g_ub_new_;
 };
 
 }  // namespace softcontact

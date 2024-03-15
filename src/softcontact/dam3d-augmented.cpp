@@ -34,8 +34,9 @@ DAMSoftContact3DAugmentedFwdDynamics::DAMSoftContact3DAugmentedFwdDynamics(
     const VectorXs& Kp, 
     const VectorXs& Kv,
     const Vector3s& oPc,
-    const pinocchio::ReferenceFrame ref)
-    : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 3, ref) {}
+    const pinocchio::ReferenceFrame ref,
+    boost::shared_ptr<ConstraintModelManager> constraints)
+    : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 3, ref, constraints) {}
 
 
 DAMSoftContact3DAugmentedFwdDynamics::~DAMSoftContact3DAugmentedFwdDynamics() {}
@@ -165,6 +166,12 @@ void DAMSoftContact3DAugmentedFwdDynamics::calc(
       d->cost += 0.5 * d->fout.transpose() * force_rate_reg_weight_.asDiagonal() * d->fout;  // penalize time derivative of the force 
     }
   }
+
+  // Constraints (on multibody state x=(q,v))
+  if (this->get_constraints() != nullptr) {
+    d->constraints->resize(this, d);
+    this->get_constraints()->calc(d->constraints, x, u);
+  }
 }
 
 
@@ -220,6 +227,12 @@ void DAMSoftContact3DAugmentedFwdDynamics::calc(
       d->residual.tail(nc_) = d->fout;
       d->cost += 0.5* d->fout.transpose() * force_rate_reg_weight_.asDiagonal() * d->fout;  // penalize time derivative of the force 
     }
+  }
+
+  // Constraints (on multibody state x=(q,v))
+  if (this->get_constraints() != nullptr) {
+    d->constraints->resize(this, d);
+    this->get_constraints()->calc(d->constraints, x);
   }
 }
 
@@ -422,6 +435,11 @@ void DAMSoftContact3DAugmentedFwdDynamics::calcDiff(
       d->Luu +=  d->dfdt_du.transpose() * force_rate_reg_weight_.asDiagonal() * d->dfdt_du;
     }
   }
+
+  // Constraints on multibody state x=(q,v)
+  if (this->get_constraints() != nullptr) {
+    this->get_constraints()->calcDiff(d->constraints, x, u);
+  }
 }
 
 
@@ -504,6 +522,11 @@ void DAMSoftContact3DAugmentedFwdDynamics::calcDiff(
       d->Lx += d->fout.transpose() * force_rate_reg_weight_.asDiagonal() * d->dfdt_dx;
       d->Lxx += d->dfdt_dx.transpose() * force_rate_reg_weight_.asDiagonal() * d->dfdt_dx;
     }
+  }
+
+  // Constraints on multibody state x=(q,v)
+  if (this->get_constraints() != nullptr) {
+    this->get_constraints()->calcDiff(d->constraints, x);
   }
 }
 

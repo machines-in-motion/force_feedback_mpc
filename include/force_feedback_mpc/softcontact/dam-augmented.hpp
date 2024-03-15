@@ -17,6 +17,7 @@
 #include <crocoddyl/multibody/fwd.hpp>
 #include <crocoddyl/multibody/states/multibody.hpp>
 #include <crocoddyl/multibody/actions/free-fwddyn.hpp>
+#include <crocoddyl/core/constraints/constraint-manager.hpp>
 
 
 namespace force_feedback_mpc {
@@ -132,6 +133,7 @@ struct DADSoftContactAbstractAugmentedFwdDynamics :
   using DADBase::dtau_dx;
   using DADBase::u_drift;
   using DADBase::tmp_xstatic;
+  using DADBase::constraints;
 
   // Contact frame rotation and Jacobians
   Matrix3s oRf;       //!< Contact frame rotation matrix 
@@ -228,6 +230,7 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
   typedef crocoddyl::ActuationModelAbstractTpl<double> ActuationModelAbstract;
   typedef crocoddyl::DifferentialActionDataAbstractTpl<double> DifferentialActionDataAbstract;
   typedef crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<double> DifferentialActionDataFreeFwdDynamics;
+  typedef crocoddyl::ConstraintModelManagerTpl<double> ConstraintModelManager;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::Vector3s Vector3s;
   typedef typename MathBase::MatrixXs MatrixXs;
@@ -258,7 +261,8 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
       const VectorXs& Kv,
       const Vector3s& oPc,
       const std::size_t nc,
-      const pinocchio::ReferenceFrame ref = pinocchio::LOCAL);
+      const pinocchio::ReferenceFrame ref = pinocchio::LOCAL,
+      boost::shared_ptr<ConstraintModelManager> constraints = nullptr);
   virtual ~DAMSoftContactAbstractAugmentedFwdDynamics();
 
   /**
@@ -391,6 +395,8 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
     VectorXs force_rate_reg_weight_;          //!< Force rate cost weight
     bool with_gravity_torque_reg_;          //!< Control regularization w.r.t. gravity torque
     double tau_grav_weight_;                //!< Weight on regularization w.r.t. gravity torque
+
+    // using DAMBase::constraints_;
 };
 
 

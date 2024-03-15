@@ -31,8 +31,9 @@ class DAMSoftContactAbstractAugmentedFwdDynamics_wrap : public force_feedback_mp
                                                   const Eigen::VectorXd& Kv,
                                                   const Eigen::Vector3d& oPc, 
                                                   const std::size_t nc,
-                                                  const pinocchio::ReferenceFrame ref)
-      : force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics(state, actuation, costs, frameId, Kp, Kv, oPc, nc, ref), bp::wrapper<force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics>() {}
+                                                  const pinocchio::ReferenceFrame ref,
+                                                  boost::shared_ptr<crocoddyl::ConstraintModelManager> constraints)
+      : force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics(state, actuation, costs, frameId, Kp, Kv, oPc, nc, ref, constraints), bp::wrapper<force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics>() {}
 
   void calc(const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const Eigen::VectorXd>& x,

@@ -69,7 +69,8 @@ struct DADSoftContact1DAugmentedFwdDynamics
   using Base::Minv;
   using Base::u_drift;
   using Base::tmp_xstatic;
-
+  using Base::constraints;
+  
   using Base::dtau_dx;
   // Contact frame rotation and Jacobians
   using Base::oRf;
@@ -174,6 +175,7 @@ class DAMSoftContact1DAugmentedFwdDynamics
   typedef crocoddyl::StateMultibodyTpl<double> StateMultibody;
   typedef crocoddyl::ActuationModelAbstractTpl<double> ActuationModelAbstract;
   typedef crocoddyl::DifferentialActionDataAbstractTpl<double> DifferentialActionDataAbstract;
+  typedef crocoddyl::ConstraintModelManagerTpl<double> ConstraintModelManager;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::Vector3s Vector3s;
   typedef typename MathBase::MatrixXs MatrixXs;
@@ -204,7 +206,8 @@ class DAMSoftContact1DAugmentedFwdDynamics
       const VectorXs& Kv,
       const Vector3s& oPc,
       const pinocchio::ReferenceFrame ref = pinocchio::LOCAL,
-      const Vector3MaskType& type = Vector3MaskType::z);
+      const Vector3MaskType& type = Vector3MaskType::z,
+      boost::shared_ptr<ConstraintModelManager> constraints = nullptr);
   virtual ~DAMSoftContact1DAugmentedFwdDynamics();
 
   /**

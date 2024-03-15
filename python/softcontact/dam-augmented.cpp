@@ -26,8 +26,8 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
       bp::init<boost::shared_ptr<crocoddyl::StateMultibody>,
                boost::shared_ptr<crocoddyl::ActuationModelAbstract>,
                boost::shared_ptr<crocoddyl::CostModelSum>,
-               pinocchio::FrameIndex, Eigen::VectorXd, Eigen::VectorXd, Eigen::Vector3d, int, bp::optional<pinocchio::ReferenceFrame>>(
-          bp::args("self", "state", "actuation", "costs", "frameId", "Kp", "Kv", "oPc", "nc", "ref"),
+               pinocchio::FrameIndex, Eigen::VectorXd, Eigen::VectorXd, Eigen::Vector3d, int, bp::optional<pinocchio::ReferenceFrame, boost::shared_ptr<crocoddyl::ConstraintModelManager>>>(
+          bp::args("self", "state", "actuation", "costs", "frameId", "Kp", "Kv", "oPc", "nc", "ref", "constraints"),
           "Initialize the constrained forward-dynamics action model.\n\n"
           ":param state: multibody state\n"
           ":param actuation: actuation model\n"
@@ -37,7 +37,8 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
           ":param Kv: Damping of the visco-elastic contact model\n"
           ":param oPc: Anchor point of the contact model\n"
           ":param nc: Dimension of the contact model\n"
-          ":param ref: Pinocchio reference frame of the contact"))
+          ":param ref: Pinocchio reference frame of the contact\n"
+          ":param constraints: stack of constraint functions"))
       // .def("calc", bp::pure_virtual(&DAMSoftContactAbstractAugmentedFwdDynamics_wrap::calc), bp::args("self", "data", "x", "f", "u"),
       //      "Compute the system acceleration and cost value.\n\n"
       //      ":param data: differential action data\n"

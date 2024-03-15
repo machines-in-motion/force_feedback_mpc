@@ -24,8 +24,11 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
     boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model,
     const double& time_step,
     const bool& with_cost_residual)
-    : Base(model->get_state(), model->get_nu(),
-           model->get_nr() + model->get_nc()),
+    : Base(model->get_state(), 
+           model->get_nu(),
+           model->get_nr() + model->get_nc(), 
+           model->get_ng() + model->get_nc(),
+           0.),
       differential_(model),
       time_step_(time_step),
       time_step2_(time_step * time_step),
@@ -44,11 +47,36 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
     time_step2_ = time_step_ * time_step_;
     std::cerr << "Warning: dt should be positive, set to 1e-3" << std::endl;
   }
+  // Set constraint bounds (multibody state + force)
+  std::cout << "DAM.nc = " << model->get_nc() << std::endl;
+  std::cout << "DAM.ng = " << model->get_ng() << std::endl;
+  std::cout << "IAM.ng = " << this->get_ng() << std::endl;
+  g_lb_new_.resize(differential_->get_g_lb().size() + nc_);
+  g_ub_new_.resize(differential_->get_g_ub().size() + nc_);
+  // no constraint on force by default
+  force_lb_ = -std::numeric_limits<double>::infinity()*VectorXs::Ones(nc_);
+  force_ub_ = std::numeric_limits<double>::infinity()*VectorXs::Ones(nc_);
+  g_lb_new_ << differential_->get_g_lb(), force_lb_;
+  g_ub_new_ << differential_->get_g_ub(), force_ub_;
+  Base::set_g_lb(g_lb_new_);
+  Base::set_g_ub(g_ub_new_);
 }
 
 
 IAMSoftContactAugmented::~IAMSoftContactAugmented() {}
 
+
+void IAMSoftContactAugmented::set_force_lb(const VectorXs& inVec){
+  force_lb_ = inVec;
+  g_lb_new_ << differential_->get_g_lb(), force_lb_;
+  Base::set_g_lb(g_lb_new_);
+}
+
+void IAMSoftContactAugmented::set_force_ub(const VectorXs& inVec){
+  force_ub_ = inVec;
+  g_ub_new_ << differential_->get_g_ub(), force_ub_;
+  Base::set_g_ub(g_ub_new_);
+}
 
 void IAMSoftContactAugmented::calc(
     const boost::shared_ptr<ActionDataAbstract>& data,
@@ -134,6 +162,11 @@ void IAMSoftContactAugmented::calc(
   d->dy.tail(nc_).noalias() = fdot * time_step_;
   state_->integrate(y, d->dy, d->ynext);
   d->cost = time_step_ * diff_data_soft->cost;
+  d->g.head(nx) = d->differential->g;
+  // hard code force constraint residual here
+  if(with_force_constraint_){
+    d->g.tail(nc_) = f;
+  }
   if (with_cost_residual_) {
     d->r.head(differential_->get_nr()) = diff_data_soft->r;
     d->r.tail(nc_) = diff_data_soft->f_residual;
@@ -162,6 +195,11 @@ void IAMSoftContactAugmented::calc(
   d->dy.setZero();
   // d->ynext = y;
   d->cost = diff_data_soft->cost;
+  d->g.head(nx) = d->differential->g;
+  // hard code force constraint residual here
+  if(with_force_constraint_){
+    d->g.tail(nc_) = f;
+  }
   // Update RESIDUAL
   if (with_cost_residual_) {
     d->r.head(differential_->get_nr()) = diff_data_soft->r;
@@ -233,6 +271,12 @@ void IAMSoftContactAugmented::calcDiff(
   d->Lyu.topLeftCorner(ndx, nu_) = diff_data_soft->Lxu*time_step_;
   d->Lu = diff_data_soft->Lu*time_step_;
   d->Luu = diff_data_soft->Luu*time_step_;
+
+  d->Gy.topLeftCorner(ndx, ndx) = d->differential->Gx;
+  d->Gu.resize(differential_->get_ng(), nu_);
+  if(with_force_constraint_){
+    d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() += double(1.);
+  }
 }
 
 
@@ -293,8 +337,6 @@ const double& IAMSoftContactAugmented::get_dt() const {
   return time_step_;
 }
 
-
-
 void IAMSoftContactAugmented::set_dt(const double& dt) {
   if (dt < 0.) {
     throw_pretty("Invalid argument: "
@@ -320,29 +362,6 @@ void IAMSoftContactAugmented::set_differential(
   Base::set_u_lb(differential_->get_u_lb());
   Base::set_u_ub(differential_->get_u_ub());
 }
-
-// 
-// void IAMSoftContactAugmented::quasiStatic(
-//     const boost::shared_ptr<ActionDataAbstract>& data, Eigen::Ref<VectorXs> u,
-//     const Eigen::Ref<const VectorXs>& x, 
-//     const std::size_t& maxiter,
-//     const double& tol) {
-//   if (static_cast<std::size_t>(u.size()) != nu_) {
-//     throw_pretty("Invalid argument: "
-//                  << "u has wrong dimension (it should be " +
-//                         std::to_string(nu_) + ")");
-//   }
-//   if (static_cast<std::size_t>(x.size()) != state_->get_nx()) {
-//     throw_pretty("Invalid argument: "
-//                  << "x has wrong dimension (it should be " +
-//                         std::to_string(state_->get_nx()) + ")");
-//   }
-
-//   // Static casting the data
-//   boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
-
-//   differential_->quasiStatic(d->differential, u, x, maxiter, tol);
-// }
 
 }  // namespace softcontact
 }  // namespace force_feedback_mpc

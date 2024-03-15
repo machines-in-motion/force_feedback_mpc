@@ -91,7 +91,25 @@ void exposeIAMSoftContactAugmented() {
           "ny",
           bp::make_function(&IAMSoftContactAugmented::get_ny,
                             bp::return_value_policy<bp::return_by_value>()),
-          "augmented state dimension (nx+ntau)");
+          "augmented state dimension (nx+ntau)")
+      .add_property(
+          "force_lb",
+          bp::make_function(&IAMSoftContactAugmented::get_force_lb,
+                            bp::return_value_policy<bp::return_by_value>()),
+          &IAMSoftContactAugmented::set_force_lb,
+          "lower bound on the box constraint on the contact force")
+      .add_property(
+          "force_ub",
+          bp::make_function(&IAMSoftContactAugmented::get_force_ub,
+                            bp::return_value_policy<bp::return_by_value>()),
+          &IAMSoftContactAugmented::set_force_ub,
+          "upper bound on the box constraint on the contact force")
+      .add_property(
+          "with_force_constraint",
+          bp::make_function(&IAMSoftContactAugmented::get_with_force_constraint,
+                            bp::return_value_policy<bp::return_by_value>()),
+          &IAMSoftContactAugmented::set_with_force_constraint,
+          "activate box constraint on the contact force (default: False)");
 
   bp::register_ptr_to_python<boost::shared_ptr<IADSoftContactAugmented> >();
 

@@ -34,8 +34,9 @@ DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDy
     const VectorXs& Kv,
     const Vector3s& oPc,
     const std::size_t nc,
-    const pinocchio::ReferenceFrame ref)
-    : DAMBase(state, actuation, costs) {
+    const pinocchio::ReferenceFrame ref,
+    boost::shared_ptr<ConstraintModelManager> constraints)
+    : DAMBase(state, actuation, costs, constraints) {
   if (this->get_costs()->get_nu() != this->get_nu()) {
     throw_pretty("Invalid argument: "
                  << "Costs doesn't have the same control dimension (it should be " + std::to_string(this->get_nu()) + ")");
