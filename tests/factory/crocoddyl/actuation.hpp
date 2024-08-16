@@ -9,8 +9,8 @@
 #ifndef FORCE_FEEDBACK_MPC_ACTUATION_FACTORY_HPP_
 #define FORCE_FEEDBACK_MPC_ACTUATION_FACTORY_HPP_
 
-#include "crocoddyl/core/actuation-base.hpp"
-#include "crocoddyl/core/numdiff/actuation.hpp"
+#include <crocoddyl/core/actuation-base.hpp>
+#include <crocoddyl/core/numdiff/actuation.hpp>
 #include "state.hpp"
 
 namespace force_feedback_mpc {

@@ -32,6 +32,10 @@ set(${PROJECT_NAME}_FACTORY_TEST
   )
 
 add_library(${PROJECT_NAME}_unittest SHARED ${${PROJECT_NAME}_FACTORY_TEST})
+add_project_dependency(example-robot-data 4.0.9 REQUIRED PKG_CONFIG_REQUIRES
+"example-robot-data >= 4.0.9")
+# add_project_dependency(pinocchio REQUIRED)
+# add_project_dependency(crocoddyl REQUIRED)
 target_link_libraries(
   ${PROJECT_NAME}_unittest PUBLIC ${PROJECT_NAME}
                                   example-robot-data::example-robot-data)

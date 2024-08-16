@@ -13,6 +13,8 @@ set( CMAKE_VERBOSE_MAKEFILE on)
 # Project options
 option(BUILD_PYTHON_INTERFACE "Build the python binding" ON)
 option(SUFFIX_SO_VERSION "Suffix library name with its version" ON)
+option(CHECK_RUNTIME_MALLOC "Check eigen mallocs" OFF)
+option(BUILD_BENCHMARKS "Build the benchmarks" OFF)
 
 # Project configuration
 set(PROJECT_USE_CMAKE_EXPORT TRUE)
@@ -52,13 +54,23 @@ find_package(OpenMP REQUIRED COMPONENTS CXX)
 
 add_project_dependency(crocoddyl REQUIRED)
 add_project_dependency(eigenpy 2.7.10 REQUIRED)
-
+add_project_dependency(pinocchio REQUIRED)
+add_project_dependency(example-robot-data 4.0.7 REQUIRED PKG_CONFIG_REQUIRES
+                       "example-robot-data >= 4.0.7")
+                       
 if(BUILD_PYTHON_INTERFACE)
   FINDPYTHON()
   string(REGEX REPLACE "-" "_" PY_NAME ${PROJECT_NAME})
   set(${PY_NAME}_INSTALL_DIR ${PYTHON_SITELIB}/${PY_NAME})
   SEARCH_FOR_BOOST_PYTHON()
 endif()
+
+
+if(CHECK_RUNTIME_MALLOC)
+  message(STATUS "Check if some memory allocations are performed at runtime.")
+  add_definitions(-DMIM_SOLVERS_EIGEN_CHECK_MALLOC)
+  add_definitions(-DEIGEN_RUNTIME_NO_MALLOC)
+endif(CHECK_RUNTIME_MALLOC)
 
 # Main Library
 set(${PROJECT_NAME}_HEADERS
@@ -97,6 +109,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 # Python Bindings
 if(BUILD_PYTHON_INTERFACE)
   add_subdirectory(python)
+endif()
+
+# Benchmarks
+if(BUILD_BENCHMARKS)
+  add_subdirectory(benchmarks)
 endif()
 
 # Unit tests

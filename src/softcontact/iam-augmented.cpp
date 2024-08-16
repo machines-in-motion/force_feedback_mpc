@@ -33,6 +33,7 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
       time_step_(time_step),
       time_step2_(time_step * time_step),
       with_cost_residual_(with_cost_residual) {
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Downcast DAM state (abstract --> multibody)
   boost::shared_ptr<StateMultibody> state =
       boost::static_pointer_cast<StateMultibody>(model->get_state());
@@ -47,10 +48,7 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
     time_step2_ = time_step_ * time_step_;
     std::cerr << "Warning: dt should be positive, set to 1e-3" << std::endl;
   }
-  // Set constraint bounds (multibody state + force)
-  std::cout << "DAM.nc = " << model->get_nc() << std::endl;
-  std::cout << "DAM.ng = " << model->get_ng() << std::endl;
-  std::cout << "IAM.ng = " << this->get_ng() << std::endl;
+  // Set constraint bounds (add force constraint dimension)
   g_lb_new_.resize(differential_->get_g_lb().size() + nc_);
   g_ub_new_.resize(differential_->get_g_ub().size() + nc_);
   // no constraint on force by default
@@ -60,6 +58,7 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
   g_ub_new_ << differential_->get_g_ub(), force_ub_;
   Base::set_g_lb(g_lb_new_);
   Base::set_g_ub(g_ub_new_);
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
 
@@ -162,7 +161,7 @@ void IAMSoftContactAugmented::calc(
   d->dy.tail(nc_).noalias() = fdot * time_step_;
   state_->integrate(y, d->dy, d->ynext);
   d->cost = time_step_ * diff_data_soft->cost;
-  d->g.head(nx) = d->differential->g;
+  d->g.head(differential_->get_ng()) = d->differential->g;
   // hard code force constraint residual here
   if(with_force_constraint_){
     d->g.tail(nc_) = f;
@@ -195,7 +194,7 @@ void IAMSoftContactAugmented::calc(
   d->dy.setZero();
   // d->ynext = y;
   d->cost = diff_data_soft->cost;
-  d->g.head(nx) = d->differential->g;
+  d->g.head(differential_->get_ng()) = d->differential->g;
   // hard code force constraint residual here
   if(with_force_constraint_){
     d->g.tail(nc_) = f;
@@ -272,7 +271,7 @@ void IAMSoftContactAugmented::calcDiff(
   d->Lu = diff_data_soft->Lu*time_step_;
   d->Luu = diff_data_soft->Luu*time_step_;
 
-  d->Gy.topLeftCorner(ndx, ndx) = d->differential->Gx;
+  d->Gy.topLeftCorner(differential_->get_ng(), ndx) = d->differential->Gx;
   d->Gu.resize(differential_->get_ng(), nu_);
   if(with_force_constraint_){
     d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() += double(1.);

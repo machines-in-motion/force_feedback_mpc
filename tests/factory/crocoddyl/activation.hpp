@@ -9,8 +9,8 @@
 #ifndef FORCE_FEEDBACK_MPC_ACTIVATION_FACTORY_HPP_
 #define FORCE_FEEDBACK_MPC_ACTIVATION_FACTORY_HPP_
 
-#include "crocoddyl/core/activation-base.hpp"
-#include "crocoddyl/core/numdiff/activation.hpp"
+#include <crocoddyl/core/activation-base.hpp>
+#include <crocoddyl/core/numdiff/activation.hpp>
 
 namespace force_feedback_mpc {
 namespace unittest {
