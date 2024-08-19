@@ -1,0 +1,130 @@
+# ROBOT : 'iiwa' 
+# TASK  : force tracking task
+
+# MPC & sim parameters
+ctrl_freq: 500         # Control frequency
+RICCATI: False 
+
+# Definition of the contact surface in the simulator
+# It is aligned with the LOCAL contact frame by default
+# User-defined offset expressed in the LOCAL contact frame :
+contact_plane_offset: [0., 0., 0.034] #0.034]
+
+# Start of the reaching phase
+T_REACH: 1.
+# Start of the tracking phase
+T_TRACK: 3.
+# Start of the contact phase
+T_CONTACT: 5.
+# End of ramp
+T_RAMP: 6.
+# Start of the circle tracking phase
+T_CIRCLE: 7.
+
+# General
+SOLVER: 'sqp'                                      # Solver (fddp or sqp)
+use_filter_line_search: True                       # Filter line-search ? 
+solver_termination_tolerance: 0.0001               # Tolerance on KKT residual 
+dt: 0.003                                          # OCP integration step 
+N_h: 100                                             # Horizon length in nodes
+maxiter: 8                                         # Max number of iterations in DDP
+solver_termination_tolerance: 0.0001               # Tolerance on KKT residual 
+q0: [0., 1.0471975511965976, 0., -1.1344640137963142, 0.2,  0.7853981633974483]               # Initial robot joint configuration
+dq0: [0.,0.,0.,0.,0.,0.]                         # Initial robot joint velocity
+
+# maxiter: 10                                        # Max number of iterations in DDP
+# with_callbacks: False
+# use_filter_ls: True
+# filter_size: 1
+# termination_tol: 0.0000001
+# warm_start: True
+# max_qp_iters: 250     #125 
+# qp_termination_tol_abs: 0.00001
+# qp_termination_tol_rel: 0.00001
+
+# warm_start_y: False 
+# reset_rho: False
+
+
+# Pin model frame name of the end-effector 
+#   - Used for frame-related costs and plots generation
+#   - Overrides the frame name 'DEFAULT' values below
+frame_of_interest: 'contact'
+
+
+
+# CONSTRAINTS 
+WHICH_CONSTRAINTS: ['stateBox', 'forceBox']
+# State 
+stateLowerLimit: [-10000, -10000, -10000, -10000, -10000, -10000, -10000, -10000, -10000, -10000, -10000, -10000]
+stateUpperLimit: [10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000]
+# Force
+forceLowerLimit: [0.]
+forceUpperLimit: [25.]
+
+
+# SOFT CONTACT MODEL
+RESET_ANCHOR_POINT: True
+Kp: [1000] 
+Kv: [100]
+contactPosition: [0.65, 0., 0.01]  
+oPc_offset: [0., 0., -0.00]  # just table
+contactFrameName: 'contact'
+contactType: '1Dz'    
+pinRefFrame: 'LOCAL_WORLD_ALIGNED' 
+
+USE_LATERAL_FRICTION: False
+
+
+# COST FUNCTION
+# Cost function composition (a.k.a which terms will be actually used in the OCP)
+# to select from the list : 'stateReg', 'ctrlReg', 'ctrlRegGrav', 'stateLim', 'ctrlLim'
+#                           'force', 'friction', 'translation', 'velocity', 'placement'
+WHICH_COSTS: ['force', 'forceRateReg', 'translation', 'velocity', 'stateReg', 'ctrlRegGrav', 'rotation']  
+
+
+# Cost function weights and activations
+ # 'force' : end-effector frame force (translation + rotation)
+frameForceWeight: [0.0012] # 0.001 ok at 500hz
+frameForceWeightTerminal: [0.005] # 0.0083 ok at 500hz
+frameForceRef: [0., 0., 50, 0., 0., 0.]    
+frameForceFrameName: 'contact'
+forceCostRefFrame: 'LOCAL_WORLD_ALIGNED'
+forceRateRegWeight: [0.0000009]
+
+
+
+ # 'stateReg' : state regularization  
+stateRegWeights: [20., 20., 20., 10., 10., 10, 2., 2., 2., 2., 2., 2.]
+stateRegWeight: 0.02 
+stateRegWeightTerminal: 0.02
+stateRegRef: 'DEFAULT'
+
+ # 'ctrlReg', 'ctrlRegGrav' : torque regularization 
+ctrlRegGravWeights: [1., 1., 1., 1., 1., 1.]
+ctrlRegGravWeight: 0.0001
+
+ # 'translation' : end-effector frame translation 
+frameTranslationWeights:  [1., 1., 1.]
+frameTranslationWeight: 65 #65.
+frameTranslationWeightTerminal: 100.
+alpha_quadflatlog: 0.01
+frameTranslationRef: 'DEFAULT'
+frameTranslationFrameName: 'contact'
+
+
+ # 'velocity' : end-effector frame velocity (translation + rotation)
+frameVelocityWeights:  [1., 1., 1., 1., 1., 1.]
+frameVelocityWeight: 0.05
+frameVelocityWeightTerminal: 1
+frameVelocityRef: 'DEFAULT'    
+frameVelocityFrameName: 'contact'
+
+
+
+ # 'rotation' : end-effector frame orientation
+frameRotationWeights:  [1., 1., 1.]
+frameRotationWeight: 20. #0.05
+frameRotationWeightTerminal: 20. #0.1 #1.
+frameRotationRef: 'DEFAULT'
+frameRotationFrameName: 'contact'

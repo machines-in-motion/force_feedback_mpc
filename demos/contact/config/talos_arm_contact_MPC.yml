@@ -1,0 +1,140 @@
+# ROBOT : 'talos' 
+# TASK  : normal force task
+
+
+# MPC & sim parameters
+simu_freq: 1000        # Simulation frequency in Hz
+ctrl_freq: 500        # Control frequency
+plan_freq: 500        # Planning frequency
+T_tot: 1.             # Simu duration (s)
+# Simulation options
+DELAY_SIM: False                # Add delay in reference torques (low-level)
+DELAY_OCP: False                # Add delay in OCP solution (i.e. ~1ms resolution time)
+SCALE_TORQUES: False            # Affine scaling of reference torque
+NOISE_TORQUES: False            # Add Gaussian noise on reference torques
+FILTER_TORQUES: False           # Moving average smoothing of reference torques
+TORQUE_TRACKING: False          # Simulate low-level torque control loop
+NOISE_STATE: False              # Add Gaussian noise on the measured state 
+FILTER_STATE: False             # Moving average smoothing of reference torques
+SAVE_DATA: False                 # Save plot_data to npz
+RECORD_SOLVER_DATA: False       # Keep trace of Vxx, Riccati gains, reg, Jacobian etc. (more data to save)
+INIT_LOG: True                  # Initial logs summarizing parameters
+init_log_display_time: 1        # How long (s) to display the initial logs ?
+LOG: True                       # Logs during simulation
+log_rate: 500                   # Display sim status once very 'log_rate' sim cycles
+WHICH_PLOTS: ['all']
+
+
+
+# Definition of the contact surface in the simulator
+# It is aligned with the LOCAL contact frame by default
+# User-defined offset expressed in the LOCAL contact frame :
+contact_plane_offset: [0., 0., -0.124 ]
+
+
+# General
+dt: 0.02                            # OCP integration step 
+N_h: 50                             # Horizon length in nodes
+maxiter: 5                          # Max number of iterations in DDP
+q0: [2., 0., .5, 0., 0.5, 0., 0.]    # Initial robot joint configuration
+dq0: [0.,0.,0.,0.,0.,0.,0.]         # Initial robot joint velocity
+WHICH_PLOTS: ['all']                                          # which plots to generate 
+
+
+# Pin model frame name of the end-effector 
+#   - Used for frame-related costs and plots generation
+#   - Overrides the frame name 'DEFAULT' values below
+frame_of_interest: 'gripper_left_joint'
+
+# List of contacts
+contacts:
+  - {
+      contactModelFrameName: 'gripper_left_joint',       # frame name in pinocchio model
+      pinocchioReferenceFrame: 'LOCAL',       #LOCAL, WORLD, LOCAL_WORLD_ALIGNED
+      contactModelType: '6D',                 # 1Dx, 1Dy, 1Dz, 3D, 6D
+      contactModelTranslationRef: '',         # 3d vector
+      contactModelRotationRef: '',            # 3d matrix
+      contactModelGains: [0, 0.],             # Baumgarte stabilization gains
+      active: True                            # Initially active? 
+    }
+
+# Cost function composition (i.e. which terms will be actually used in the OCP)
+# to select from the list : 'stateReg', 'ctrlReg', 'ctrlRegGrav', 'stateLim', 'ctrlLim'
+#                           'force', 'friction', 'translation', 'velocity', 'placement'
+WHICH_COSTS: ['translation', 'stateReg', 'ctrlRegGrav'] 
+
+# Cost function weights and activations
+ # 'force' : end-effector frame force (translation + rotation)
+frameForceWeights:  [1., 1., 1., 0., 0., 0.]
+frameForceWeight: 1.
+frameForceRef: [0., 0., -20, 0., 0., 0.]    
+frameForceFrameName: 'gripper_left_joint'
+
+
+ # 'friction' : end-effector frame friction cone 
+mu:  0.7
+frictionConeWeight: 5.
+frictionConeFrameName: 'gripper_left_joint'
+
+
+ # 'stateReg' : state regularization  
+stateRegWeights: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 2., 2., 2., 2., 2., 2., 2.]
+stateRegWeight: 0.1
+stateRegWeightTerminal: 0.1
+stateRegRef: 'DEFAULT'
+
+ # 'ctrlReg', 'ctrlRegGrav' : torque regularization 
+ctrlRegWeights: [1., 1., 1., 1., 1., 1., 1.]
+ctrlRegWeight: 0.001
+ctrlRegRef: 'DEFAULT' # reference not used for 'ctrlRegGrav'
+
+ # 'translation' : end-effector frame translation 
+frameTranslationWeights:  [1., 1., 1.]
+frameTranslationWeight: 1
+frameTranslationWeightTerminal: 1
+frameTranslationRef: 'DEFAULT'
+frameTranslationFrameName: 'gripper_left_joint'
+
+ # 'velocity' : end-effector frame velocity (translation + rotation)
+frameVelocityWeights:  [1., 1., 1., 1., 1., 1.]
+frameVelocityWeight: .1
+frameVelocityWeightTerminal: .1
+frameVelocityRef: 'DEFAULT'    
+frameVelocityFrameName: 'gripper_left_joint'
+
+
+ # 'stateLim' : state limits
+stateLimWeights: [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]
+stateLimWeight: 0.
+stateLimWeightTerminal: 0.
+coef_xlim: 1
+
+ # 'ctrlLim' : torque limits
+ctrlLimWeights: [1., 1., 1., 1., 1., 1., 1.]
+ctrlLimWeight: 0.
+coef_ulim: 1
+
+# armature
+armature: [.1, .1, .1, .1, .1, .1, .0]
+
+# # # # # # # # # # # # # # # # # # # # # #
+# Low-level simulation (actuation model)  #
+# # # # # # # # # # # # # # # # # # # # # #
+  # Scaling of desired torque
+alpha_min: 0.95
+alpha_max: 1.05
+beta_min: -0.1
+beta_max: 0.1
+  # White noise on desired torque and measured state
+var_u: [3.0, 3.0, 2.0, 2.0, 1.0, 0.1, 0.1]
+var_q: 0.028 #x10
+var_v: 0.028 #x10
+  # Buffer for torque delay
+delay_OCP_ms: 1    # in ms
+delay_sim_cycle: 2 # in HF cycles
+  # Proportional-integral torque control gains
+Kp_low: [.2, .2, .2, .2, .2, .2, .2  ]
+Ki_low: [.001, .001, .001, .001, .001, .001, .01]
+Kd_low: [.00001, .00001, .00001, .00001, .00001, .00001, .00001]
+u_avg_filter_length: 20 #8 # in HF cycles
+x_avg_filter_length: 5  #20 #8 # in HF cycles
