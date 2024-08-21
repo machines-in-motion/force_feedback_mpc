@@ -10,11 +10,10 @@
 
 import crocoddyl
 import numpy as np
-from core_mpc_utils import ocp
+from croco_mpc_utils.ocp_core import OptimalControlProblemAbstract
 
-from core_mpc_utils.misc_utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
+from croco_mpc_utils.utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
 logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
-
 
 
 USE_SOBEC_BINDINGS = True
@@ -29,7 +28,7 @@ else:
 from soft_mpc.soft_models_1D import DAMSoftContactDynamics1D as DAMSoft1D
 # from soft_mpc.utils import SoftContactModel3D, SoftContactModel1D
 
-class OptimalControlProblemSoftContact(ocp.OptimalControlProblemAbstract):
+class OptimalControlProblemSoftContact(OptimalControlProblemAbstract):
   '''
   Helper class for soft contact OCP setup with Crocoddyl
   '''

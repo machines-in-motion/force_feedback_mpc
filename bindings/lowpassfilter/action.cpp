@@ -146,7 +146,26 @@ void exposeIntegratedActionModelLPF() {
            &IntegratedActionModelLPF::set_control_lim_cost,
            bp::args("self", "weight"),
            "Initialize cost weight unfiltered torque limit penalization "
-           "(quadratic barrier).");
+           "(quadratic barrier).")
+
+      .add_property(
+          "lpf_torque_lb",
+          bp::make_function(&IntegratedActionModelLPF::get_lpf_torque_lb,
+                            bp::return_value_policy<bp::return_by_value>()),
+          &IntegratedActionModelLPF::set_lpf_torque_lb,
+          "lower bound on the box constraint on the LPF torque dimensions")
+      .add_property(
+          "lpf_torque_ub",
+          bp::make_function(&IntegratedActionModelLPF::get_lpf_torque_ub,
+                            bp::return_value_policy<bp::return_by_value>()),
+          &IntegratedActionModelLPF::set_lpf_torque_ub,
+          "upper bound on the box constraint on the LPF torque dimensions")
+      .add_property(
+          "with_lpf_torque_constraint",
+          bp::make_function(&IntegratedActionModelLPF::get_with_lpf_torque_constraint,
+                            bp::return_value_policy<bp::return_by_value>()),
+          &IntegratedActionModelLPF::set_with_lpf_torque_constraint,
+          "activate box constraint on the contact LPF torque dimensions (default: False)");
 
   bp::register_ptr_to_python<boost::shared_ptr<IntegratedActionDataLPF> >();
 

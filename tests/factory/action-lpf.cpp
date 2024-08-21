@@ -50,6 +50,9 @@ ActionModelLPFFactory::create(ActionModelLPFTypes::Type iam_type,
   boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF> iam;
   boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> dam =
       DifferentialActionModelFactory().create(dam_type, contact_type);
+  // std::cout << "[IAM LPF factory] dam.ng = " << dam->get_ng() << std::endl;
+  // std::cout << "[IAM LPF factory] dam.g_lb = " << dam->get_g_lb() << std::endl;
+  
   switch (iam_type) {
     case ActionModelLPFTypes::IntegratedActionModelLPF_ALL: {
       double time_step = 1e-3;

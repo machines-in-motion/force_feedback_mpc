@@ -24,7 +24,9 @@ IntegratedActionModelLPF::IntegratedActionModelLPF(
     const bool& with_cost_residual, const double& fc,
     const bool& tau_plus_integration, const int& filter)
     : Base(model->get_state(), model->get_nu(),
-           model->get_nr() + 2 * lpf_joint_names.size()),
+           model->get_nr() + 2 * lpf_joint_names.size(),
+           model->get_ng() + lpf_joint_names.size(),
+           0),
       nw_(model->get_nu()),
       differential_(model),
       time_step_(time_step),
@@ -121,6 +123,17 @@ IntegratedActionModelLPF::IntegratedActionModelLPF(
   tauLim_weight_ = double(0.);
   tauReg_residual_.resize(ntau_);
   tauLim_residual_.resize(ntau_);
+  // Set constraint bounds (add ntau dimension for lpf torques constraints)
+  g_lb_new_.resize(differential_->get_g_lb().size() + ntau_);
+  g_ub_new_.resize(differential_->get_g_ub().size() + ntau_);
+  // no constraint on lpf torques by default
+  lpf_torque_lb_ = -std::numeric_limits<double>::infinity()*VectorXs::Ones(ntau_);
+  lpf_torque_ub_ = std::numeric_limits<double>::infinity()*VectorXs::Ones(ntau_);
+  // Fill out the constraints
+  g_lb_new_ << differential_->get_g_lb(), lpf_torque_lb_;
+  g_ub_new_ << differential_->get_g_ub(), lpf_torque_ub_;
+  Base::set_g_lb(g_lb_new_);
+  Base::set_g_ub(g_ub_new_);
 }
 
 
@@ -285,7 +298,12 @@ void IntegratedActionModelLPF::calc(
     d->cost += double(0.5 * time_step_ * tauLim_weight_ *
                       d->activation->a_value);  // tau lim
   }
-
+  // Hard-code LPF torque constraint residual here
+  d->g.head(differential_->get_ng()) = d->differential->g;
+  // hard code force constraint residual here
+  if(with_lpf_torque_constraint_){
+    d->g.tail(ntau_) = w(lpf_torque_ids_);
+  }
   // Update RESIDUAL
   if (with_cost_residual_) {
     d->r.head(differential_->get_nr()) = d->differential->r;
@@ -322,6 +340,8 @@ void IntegratedActionModelLPF::calc(
   d->dy.setZero();
   // d->ynext = y;
   d->cost = d->differential->cost;
+  // Hard-code LPF torque constraint residual here
+  d->g.head(differential_->get_ng()) = d->differential->g;
   // Update RESIDUAL
   if (with_cost_residual_) {
     d->r.head(differential_->get_nr()) = d->differential->r;
@@ -543,6 +563,13 @@ void IntegratedActionModelLPF::calcDiff(
       }
 #endif
     }  // tauLim !=0
+    // Constraint partials for LPF torque dimensions
+    d->Gy.topLeftCorner(differential_->get_ng(), ndx) = d->differential->Gx;
+    d->Gu.resize(differential_->get_ng(), nu_);
+    if(with_lpf_torque_constraint_){
+      d->Gy.bottomRightCorner(ntau_, ntau_).diagonal().array() += double(1.);
+    }
+
   }    // tau integration
 
   //   // TAU PLUS INTEGRATION

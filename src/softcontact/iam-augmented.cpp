@@ -163,7 +163,7 @@ void IAMSoftContactAugmented::calc(
   d->cost = time_step_ * diff_data_soft->cost;
   d->g.head(differential_->get_ng()) = d->differential->g;
   // hard code force constraint residual here
-  if(with_force_constraint_){
+  if (with_force_constraint_){
     d->g.tail(nc_) = f;
   }
   if (with_cost_residual_) {

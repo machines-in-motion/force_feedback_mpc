@@ -135,12 +135,13 @@ DAMSoftContact1DFactory::create_augmentedDAMSoft1D(StateModelTypes::Type state_t
   Eigen::VectorXd Kp = Eigen::VectorXd::Ones(1)*100;
   Eigen::VectorXd Kv = Eigen::VectorXd::Ones(1)*10;
   Eigen::Vector3d oPc = Eigen::Vector3d::Zero();
+  boost::shared_ptr<crocoddyl::ConstraintModelManager> constraint = boost::make_shared<crocoddyl::ConstraintModelManager>(state, actuation->get_nu());
   action = boost::make_shared<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>(
       state, 
       actuation, 
       cost, 
       state->get_pinocchio()->getFrameId(frameName), 
-      Kp, Kv, oPc, ref_type, mask_type);
+      Kp, Kv, oPc, ref_type, mask_type, constraint);
   action->set_force_des(Eigen::VectorXd::Zero(1));
   action->set_force_weight(Eigen::VectorXd::Ones(1)*0.01);
   action->set_with_force_cost(true);

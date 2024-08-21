@@ -66,6 +66,7 @@ class IntegratedActionDataLPF : public crocoddyl::ActionDataAbstract {
   MatrixXs& Lyy = Base::Lxx;
   MatrixXs& Lyw = Base::Lxu;
   MatrixXs& Lww = Base::Luu;
+  MatrixXs& Gy = Base::Gx;
 };
 
 
@@ -143,6 +144,15 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
   void set_differential(
       boost::shared_ptr<DifferentialActionModelAbstract> model);
 
+  void set_with_lpf_torque_constraint(const bool inBool) {with_lpf_torque_constraint_ = inBool; };
+  const bool& get_with_lpf_torque_constraint() const { return with_lpf_torque_constraint_; };
+
+  void set_lpf_torque_lb(const VectorXs& inVec);
+  const VectorXs& get_lpf_torque_lb() const { return lpf_torque_lb_; };
+
+  void set_lpf_torque_ub(const VectorXs& inVec);
+  const VectorXs& get_lpf_torque_ub() const { return lpf_torque_ub_; };
+  
   // hard-coded costs
   void set_control_reg_cost(const double& cost_weight_w_reg,
                             const VectorXs& cost_ref_w_reg);
@@ -154,6 +164,9 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
   using Base::has_control_limits_;  //!< Indicates whether any of the control
                                     //!< limits are active
   using Base::nr_;                  //!< Dimension of the cost residual
+  using Base::ng_;                  //!< Number of inequality constraints
+  using Base::g_lb_;                //!< Lower bound of the inequality constraints
+  using Base::g_ub_;                //!< Upper bound of the inequality constraints
   using Base::nu_;                  //!< Control dimension
   using Base::u_lb_;                //!< Lower control limits
   using Base::u_ub_;                //!< Upper control limits
@@ -174,14 +187,11 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
   double alpha_;
   bool with_cost_residual_;
   double fc_;
-  // bool enable_integration_;
   double tauReg_weight_;  //!< Cost weight for unfiltered torque regularization
   VectorXs tauReg_reference_;  //!< Cost reference for unfiltered torque
                                //!< regularization
   VectorXs tauReg_residual_,
       tauLim_residual_;  //!< Residuals for LPF torques reg and lim
-  // bool gravity_reg_;                          //!< Use gravity torque for
-  // unfiltered torque reg, or user-provided reference?
   double tauLim_weight_;       //!< Cost weight for unfiltered torque limits
   bool tau_plus_integration_;  //!< Use tau+ = LPF(tau,w) in acceleration
                                //!< computation, or tau
@@ -202,6 +212,11 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
                                          //!< low-pass filtered
   std::vector<int> non_lpf_torque_ids_;  //!< Vector of torque ids that are NOT
                                          //!< low-passs filtered
+  bool with_lpf_torque_constraint_; // Add box constraint on the LPF torques dimensions
+  VectorXs lpf_torque_lb_;
+  VectorXs lpf_torque_ub_;
+  VectorXs g_lb_new_;
+  VectorXs g_ub_new_;
 };
 
 

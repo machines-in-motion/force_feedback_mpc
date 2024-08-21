@@ -76,7 +76,7 @@ endif(CHECK_RUNTIME_MALLOC)
 set(${PROJECT_NAME}_HEADERS
   include/${PROJECT_NAME}/python.hpp
   include/${PROJECT_NAME}/lowpassfilter/state.hpp
-  include/${PROJECT_NAME}/lowpassfilter/state.hpp
+  include/${PROJECT_NAME}/lowpassfilter/action.hpp
   include/${PROJECT_NAME}/softcontact/state.hpp
   include/${PROJECT_NAME}/softcontact/dam-augmented.hpp
   include/${PROJECT_NAME}/softcontact/dam3d-augmented.hpp
@@ -118,6 +118,9 @@ endif()
 
 # Unit tests
 add_subdirectory(tests)
+
+# Python packages 
+add_subdirectory(python)
 
 # Installation
 install(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)

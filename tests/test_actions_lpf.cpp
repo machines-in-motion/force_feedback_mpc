@@ -50,6 +50,9 @@ void test_calc_returns_state(
   ActionModelLPFFactory factory_iam;
   const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
       factory_iam.create(iam_type, dam_type, contact_type);
+//   std::cout << "iam.ng = " << model->get_ng() << std::endl;
+//   std::cout << "iam.g_lb = " << model->get_g_lb() << std::endl;
+
   // create the corresponding data object
   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();

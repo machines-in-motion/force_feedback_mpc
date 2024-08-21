@@ -24,6 +24,7 @@
 #include "crocoddyl/multibody/residuals/frame-placement.hpp"
 #include "crocoddyl/multibody/residuals/frame-translation.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
+#include <crocoddyl/core/constraints/constraint-manager.hpp>
 
 namespace force_feedback_mpc {
 namespace unittest {
@@ -208,10 +209,12 @@ DifferentialActionModelFactory::create_freeFwdDynamics(
                     CostModelTypes::CostModelResidualFramePlacement, state_type,
                     ActivationModelTypes::ActivationModelQuad, nu),
                 1.);
-
+  boost::shared_ptr<crocoddyl::ConstraintModelManager> constraint = boost::make_shared<crocoddyl::ConstraintModelManager>(state, nu);
   action =
         boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
-            state, actuation, cost);
+            state, actuation, cost, constraint);
+//   std::cout << "[DAM factory] action.ng = " << action->get_ng() << std::endl;
+//   std::cout << "[DAM factory] action.g_lb = " << action->get_g_lb() << std::endl;
   return action;
 }
 
@@ -459,9 +462,12 @@ DifferentialActionModelFactory::create_contactFwdDynamics(
           state, boost::make_shared<crocoddyl::ResidualModelJointEffort>(
                      state, actuation, Eigen::VectorXd::Zero(nu), nu, true)),
       0.1);
+  boost::shared_ptr<crocoddyl::ConstraintModelManager> constraint = boost::make_shared<crocoddyl::ConstraintModelManager>(state, nu);
   action =
       boost::make_shared<crocoddyl::DifferentialActionModelContactFwdDynamics>(
-          state, actuation, contact, cost, 0., true);
+          state, actuation, contact, cost, constraint, 0., true);
+//   std::cout << "[DAM factory] action.ng = " << action->get_ng() << std::endl;
+//   std::cout << "[DAM factory] action.g_lb = " << action->get_g_lb() << std::endl;
   return action;
 }
 
