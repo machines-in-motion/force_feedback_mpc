@@ -15,17 +15,9 @@ from croco_mpc_utils.ocp_core import OptimalControlProblemAbstract
 from croco_mpc_utils.utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
 logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
 
+from .soft_models_3D import DAMSoftContactDynamics3D as DAMSoft3D
 
-USE_SOBEC_BINDINGS = True
-
-
-
-if(USE_SOBEC_BINDINGS):
-  from soft_mpc.soft_models_3D import DAMSoftContactDynamics3D as DAMSoft3D
-else:
-  from sobec import DifferentialActionModelSoftContact3DFwdDynamics as DAMSoft3D
-
-from soft_mpc.soft_models_1D import DAMSoftContactDynamics1D as DAMSoft1D
+from .soft_models_1D import DAMSoftContactDynamics1D as DAMSoft1D
 # from soft_mpc.utils import SoftContactModel3D, SoftContactModel1D
 
 class OptimalControlProblemSoftContact(OptimalControlProblemAbstract):
@@ -223,7 +215,6 @@ class OptimalControlProblemSoftContact(OptimalControlProblemAbstract):
   
   # Finish
     logger.info("OCP is ready !")
-    logger.info(  "USE_SOBEC_BINDINGS = "+str(USE_SOBEC_BINDINGS))
     logger.info("    COSTS   = "+str(self.WHICH_COSTS))
     logger.info("    SOFT CONTACT MODEL [ oPc="+str(softContactModel.oPc)+\
       " , Kp="+str(softContactModel.Kp)+\

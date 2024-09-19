@@ -147,10 +147,10 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
   void set_with_lpf_torque_constraint(const bool inBool) {with_lpf_torque_constraint_ = inBool; };
   const bool& get_with_lpf_torque_constraint() const { return with_lpf_torque_constraint_; };
 
-  void set_lpf_torque_lb(const VectorXs& inVec);
+  void set_lpf_torque_lb(const VectorXs& inVec) { lpf_torque_lb_ = inVec; };
   const VectorXs& get_lpf_torque_lb() const { return lpf_torque_lb_; };
 
-  void set_lpf_torque_ub(const VectorXs& inVec);
+  void set_lpf_torque_ub(const VectorXs& inVec) { lpf_torque_ub_ = inVec; };
   const VectorXs& get_lpf_torque_ub() const { return lpf_torque_ub_; };
   
   // hard-coded costs
