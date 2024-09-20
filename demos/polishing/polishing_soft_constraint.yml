@@ -23,22 +23,34 @@ init_log_display_time: 1        # How long (s) to display the initial logs ?
 LOG: True                       # Logs during simulation
 log_rate: 1000                  # Display sim status once very 'log_rate' sim cycles
 # WHICH_PLOTS: ['f', 'y', 'ee', 'u']   # Which plots to generate after the simulation
-WHICH_PLOTS: ['f']   # Which plots to generate after the simulation
+WHICH_PLOTS: ['all']   # Which plots to generate after the simulation
 TILT_SURFACE: True              # Tilt contact surface 
 TILT_PITCH_LOCAL_DEG: 6.      # Tilt angle of the contact surface
 RICCATI: True 
+DISPLAY_EE: False             # Display target and actual EE position as balls in PyBullet
 
-
+# Start of the reaching phase
 T_REACH: 0.
-# T_TRACK: 1.
-T_CONTACT: 2.
+# Start of the tracking phase
+T_TRACK: 0.5
+# Start of the contact phase
+T_CONTACT: 1.
+# End of ramp
+T_RAMP: 2.
+# Start of the circle tracking phase
 T_CIRCLE: 3.
 
-# General
-dt: 0.005                                          # OCP integration step 
-N_h: 10                                             # Horizon length in nodes
-maxiter: 10                                         # Max number of iterations in DDP
-q0: [0., 0.95, 0., -1.1344640137963142, 0.2,  0.7853981633974483]               # Initial robot joint configuration
+
+
+# General 
+SOLVER: 'sqp'                                      # Solver (fddp or sqp)
+use_filter_line_search: True                       # Filter line-search ? 
+solver_termination_tolerance: 0.0001               # Tolerance on KKT residual 
+dt: 0.003                                          # OCP integration step 
+N_h: 5                                             # Horizon length in nodes
+maxiter: 8                                         # Max number of iterations in DDP
+solver_termination_tolerance: 0.0001               # Tolerance on KKT residual 
+q0: [0., 1.0471975511965976, 0., -1.1344640137963142, 0.2,  0.7853981633974483]               # Initial robot joint configuration
 dq0: [0.,0.,0.,0.,0.,0.]                         # Initial robot joint velocity
 
 
@@ -48,6 +60,8 @@ dq0: [0.,0.,0.,0.,0.,0.]                         # Initial robot joint velocity
 frame_of_interest: 'contact'
 
 # SOFT CONTACT MODEL
+RESET_ANCHOR_POINT: True
+contactPosition: [0.65, 0., 0.01]  
 oPc_offset: [0., 0., -0.00]  # just table
 # oPc_offset: [0., 0., 0.015] # with wood piece
 Kp: [1000] 
@@ -65,7 +79,7 @@ stateUpperLimit: [ 10000,  10000,  10000,  10000,  10000,  10000,      10000,  1
 
 
 # FADMM solver parameters
-USE_PROXQP: True
+USE_PROXQP: False
 maxiter: 2                                    # Max number of iterations in DDP
 with_callbacks: False
 use_filter_ls: True
@@ -83,75 +97,66 @@ reset_rho: False
 # Cost function composition (a.k.a which terms will be actually used in the OCP)
 # to select from the list : 'stateReg', 'ctrlReg', 'ctrlRegGrav', 'stateLim', 'ctrlLim'
 #                           'force', 'friction', 'translation', 'velocity', 'placement'
-WHICH_COSTS: ['force', 'forceRateReg', 'translation', 'velocity', 'stateReg', 'ctrlRegGrav', 'stateLim']  
+WHICH_COSTS: ['force', 'forceRateReg', 'translation', 'velocity', 'stateReg', 'ctrlRegGrav', 'rotation']  
 
 
 # Cost function weights and activations
  # 'force' : end-effector frame force (translation + rotation)
-frameForceWeight: [0.001] 
-frameForceWeightTerminal: [0.001] 
+frameForceWeight: [0.01] # 0.001 ok at 500hz
+frameForceWeightTerminal: [0.05] # 0.0083 ok at 500hz
 frameForceRef: [0., 0., 50, 0., 0., 0.]    
 frameForceFrameName: 'contact'
 forceCostRefFrame: 'LOCAL_WORLD_ALIGNED'
-forceRateRegWeight: [0.0000001]
+forceRateRegWeight: [0.0000006]
 
 
-# 'stateReg' : state regularization  
-stateRegWeights: [0.2, 0.2, 0.2, 0.1, 0.1, 0.1, 2., 2., 2., 2., 2., 2.]
-stateRegWeight: 0.01 
-stateRegWeightTerminal: 0.01
+
+ # 'stateReg' : state regularization  
+stateRegWeights: [20., 20., 20., 10., 10., 10, 2., 2., 2., 2., 2., 2.]
+stateRegWeight: 0.02 
+stateRegWeightTerminal: 0.02
 stateRegRef: 'DEFAULT'
 
  # 'ctrlReg', 'ctrlRegGrav' : torque regularization 
-ctrlRegWeights: [1., 1., 1., 1., 1., 1.]
-ctrlRegWeight: 0.0001
-ctrlRegRef: 'DEFAULT' 
+ctrlRegGravWeights: [1., 1., 1., 1., 1., 1.]
+ctrlRegGravWeight: 0.0001
 
  # 'translation' : end-effector frame translation 
 frameTranslationWeights:  [1., 1., 1.]
-frameTranslationWeight: 50 #65.
+frameTranslationWeight: 65 #65.
 frameTranslationWeightTerminal: 100.
 alpha_quadflatlog: 0.01
 frameTranslationRef: 'DEFAULT'
 frameTranslationFrameName: 'contact'
-frameCircleTrajectoryRadius: 0.1  # in m
+frameCircleTrajectoryRadius: 0.07  # in m
 frameCircleTrajectoryVelocity: 3 # in rad/s
 numberOfRounds: 10
 CIRCLE_LOCAL_PLANE: 'XY'
 
-
  # 'velocity' : end-effector frame velocity (translation + rotation)
 frameVelocityWeights:  [1., 1., 1., 1., 1., 1.]
-frameVelocityWeight: 0.01
-frameVelocityWeightTerminal: 100
+frameVelocityWeight: 0.05
+frameVelocityWeightTerminal: 1
 frameVelocityRef: 'DEFAULT'    
 frameVelocityFrameName: 'contact'
 
 
- # 'stateLim' : state limits
-stateLimWeights: [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]
-stateLimWeight: 1000.
-stateLimWeightTerminal: 1000.
-coef_xlim: 0.85
 
- # 'ctrlLim' : torque limits
-ctrlLimWeights: [1., 1., 1., 1., 1., 1.]
-ctrlLimWeight: 0.
-coef_ulim: 1
-
-
-# armature
-armature:  [.0, .0, .0, .0, .0, .0]
-
+ # 'rotation' : end-effector frame orientation
+frameRotationWeights:  [1., 1., 1.]
+frameRotationWeight: 20. #0.05
+frameRotationWeightTerminal: 20. #0.1 #1.
+frameRotationRef: 'DEFAULT'
+frameRotationFrameName: 'contact'
 
 # # # # # # # # # # # # # # # # # # # # # #
 # Low-level simulation (actuation model)  #
 # # # # # # # # # # # # # # # # # # # # # #
   # Scaling of desired torque
-alpha_min: 0.9
-alpha_max: 1.1
-beta_min: -0.1
-beta_max: 0.1
+alpha_min: 0.8
+alpha_max: 1.2
+beta_min: 2.
+beta_max: 2.
   # White noise on desired torque and measured state
 var_u: [0.03, 0.03, 0.02, 0.02, 0.01, 0.01]
 var_q: 0.001 
@@ -161,9 +166,9 @@ var_aug: [0.01]
 delay_OCP_ms: 5    
 delay_sim_cycle: 1 
   # Static & viscous friction
-static_friction_max_torque: 5.
+static_friction_max_torque: 1.
 viscous_friction_slope: 0.5
   # Proportional-integral torque control gains
-Kp_low: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-Ki_low: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+Kp_low: [0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
+Ki_low: [0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
 Kd_low: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]

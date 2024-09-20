@@ -37,9 +37,9 @@ from core_mpc_utils import sim_utils as simulator_utils
 from croco_mpc_utils import pinocchio_utils as pin_utils
 from croco_mpc_utils.math_utils import circle_point_WORLD
 
-from soft_mpc.aug_ocp import OptimalControlProblemSoftContactAugmented
-from soft_mpc.aug_data import OCPDataHandlerSoftContactAugmented, MPCDataHandlerSoftContactAugmented
-from soft_mpc.utils import SoftContactModel1D
+from force_feedback_mpc.soft_mpc.aug_ocp import OptimalControlProblemSoftContactAugmented
+from force_feedback_mpc.soft_mpc.aug_data import OCPDataHandlerSoftContactAugmented, MPCDataHandlerSoftContactAugmented
+from force_feedback_mpc.soft_mpc.utils import SoftContactModel1D
 from croco_mpc_utils.utils import load_yaml_file
 
 import mim_solvers
@@ -51,6 +51,7 @@ RESET_ANCHOR_POINT = True
 
 import time
 import pinocchio as pin
+import os
 
 # @profile
 def solveOCP(q, v, f, solver, nb_iter, target_reach, anchor_point, TASK_PHASE, target_force):
@@ -110,9 +111,8 @@ def main(SAVE_DIR, TORQUE_TRACKING):
   ### LOAD ROBOT MODEL and SIMU ENV ### 
   # # # # # # # # # # # # # # # # # # # 
   # Read config file
-  # config, config_name = path_utils.load_config_file(__file__, robot_name)
-  config_name = 'iiwa_aug_soft_sanding_MPC'
-  config = load_yaml_file('/home/skleff/ws_croco2/workspace/src/force-feedback/demos/sanding/config/iiwa_aug_soft_sanding_MPC.yml')
+  config_name = 'polishing_soft_constraint'
+  config = path_utils.load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/'+config_name+'.yml')
   # Create a simulation environment & simu-pin wrapper 
   dt_simu = 1./float(config['simu_freq'])  
   q0 = np.asarray(config['q0'])
