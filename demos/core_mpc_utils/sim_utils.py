@@ -1,5 +1,6 @@
 import numpy as np
 import pinocchio as pin
+import hppfcl
 
 from croco_mpc_utils.utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
 logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
@@ -234,10 +235,155 @@ def set_contact_restitution(bodyId, Ks, Kd, linkId=-1):
   p.changeDynamics(bodyId, linkId, restitution=0.2) 
   logger.info("Set restitution of body n°"+str(bodyId)+" (link n°"+str(linkId)+") to "+str(Ks)) 
 
+def display_box(M, EXTENTS, COLOR=[0.662, 0.662, 0.662, 1.0]) -> int:
+    '''
+    Create a cube visual object in PyBullet.
+    INPUT:
+        M       : cube pose (SE3)
+        EXTENTS : cube extents (tuple/list of 3 scalars for x, y, z dimensions)
+        COLOR   : cube color (RGBA)
+    '''
+    # Convert the pose to the PyBullet format
+    QUAT = pin.SE3ToXYZQUAT(M)
 
+    HALF_EXTENT = (EXTENTS[0]/2, EXTENTS[1]/2, EXTENTS[2]/2)
+    visualShapeIdCUBE = p.createVisualShape(
+        shapeType=p.GEOM_BOX,
+        halfExtents=HALF_EXTENT,  # Specify the half extents for the cube
+        rgbaColor=COLOR
+    )
 
+    cubeId = p.createMultiBody(
+        baseMass=0,
+        baseInertialFramePosition=[0, 0, 0],
+        baseVisualShapeIndex=visualShapeIdCUBE,
+        basePosition=QUAT[:3],
+        baseOrientation=QUAT[3:],
+        useMaximalCoordinates=True,
+    )
 
+    return cubeId
 
+def display_capsule(M, RADIUS, LENGTH, COLOR=[1., 0., 0., 1.]) -> int:
+    '''
+    Create a capsule visual object in PyBullet
+    INPUT:
+        M               : capsule pose (SE3)
+        RADIUS          : capsule radius (scalar)
+        LEGNTH          : capsule length (scalar)
+        COLOR           : capsule color (RGBA)
+    '''
+    quat = pin.SE3ToXYZQUAT(M)
+    visualShapeIdCAPS = p.createVisualShape(
+        p.GEOM_CAPSULE,
+        radius=RADIUS,
+        length=LENGTH,
+        rgbaColor=COLOR,
+        visualFramePosition=np.zeros(3),
+        visualFrameOrientation=np.zeros(3),
+    )
+    capsId = p.createMultiBody(
+        baseMass=0,
+        baseInertialFramePosition=[0, 0, 0],
+        baseVisualShapeIndex=visualShapeIdCAPS,
+        basePosition=quat[:3],
+        baseOrientation=quat[3:],
+        useMaximalCoordinates=True,
+    )
+    return capsId
+
+def create_box_obstacle(OBSTACLE_POSE, EXTENTS, name="obstacle"):
+    '''
+    Create a spherical obstacle geometric model
+    '''
+    # Creating the hppfcl shape
+    # EXTENT2 = (EXTENTS[0], EXTENTS[1], EXTENTS[2])
+    OBSTACLE = hppfcl.Box(*EXTENTS)
+    # Adding the shape to the collision model
+    OBSTACLE_GEOM_OBJECT = pin.GeometryObject(
+        name,
+        0,
+        0,
+        OBSTACLE,
+        OBSTACLE_POSE,
+    )
+    return OBSTACLE_GEOM_OBJECT
+
+def create_caps_obstacle(OBSTACLE_POSE, RADIUS, LENGTH, name="obstacle"):
+    '''
+    Create a capsule obstacle geometric model
+    '''
+    capsule_geom = hppfcl.Capsule(RADIUS, LENGTH)
+    OBSTACLE_GEOM_OBJECT = pin.GeometryObject(name, 0, 0, capsule_geom, OBSTACLE_POSE)
+    return OBSTACLE_GEOM_OBJECT
+
+def transform_model_into_capsules(cmodel):
+    """Modifying the collision model to transform the spheres/cylinders into capsules which makes it easier to have a fully constrained robot."""
+    collision_model_reduced_copy = cmodel.copy()
+    list_names_capsules = []
+
+    # Going through all the goemetry objects in the collision model
+    for geom_object in collision_model_reduced_copy.geometryObjects:
+        if isinstance(geom_object.geometry, hppfcl.Cylinder):
+            # Sometimes for one joint there are two cylinders, which need to be defined by two capsules for the same link.
+            # Hence the name convention here.
+            if (geom_object.name[:-1] + "capsule_0") in list_names_capsules:
+                name = geom_object.name[:-1] + "capsule_" + "1"
+            else:
+                name = geom_object.name[:-1] + "capsule_" + "0"
+            list_names_capsules.append(name)
+            placement = geom_object.placement
+            parentJoint = geom_object.parentJoint
+            parentFrame = geom_object.parentFrame
+            geometry = geom_object.geometry
+            geom = pin.GeometryObject(
+                name,
+                parentFrame,
+                parentJoint,
+                hppfcl.Capsule(geometry.radius, geometry.halfLength),
+                placement,
+            )
+            geom.meshColor = np.array([249, 136, 126, 125]) / 255
+            cmodel.addGeometryObject(geom)
+            cmodel.removeGeometryObject(geom_object.name)
+        elif (
+            isinstance(geom_object.geometry, hppfcl.Sphere)
+            and "link" in geom_object.name
+        ):
+            cmodel.removeGeometryObject(geom_object.name)
+    return cmodel
+
+def setup_obstacle_collision(robot_simulator, pin_robot, config):
+ 
+  # Creating the obstacle
+  q1_pose = np.array(config["OBSTACLE1_POSE"])
+  OBSTACLE1_POSE        = pin.SE3(pin.Quaternion(q1_pose[3:]), q1_pose[:3])
+  OBSTACLE2_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE2_POSE"]))
+  OBSTACLE_RADIUS1      = config["OBSTACLE_RADIUS1"]
+  OBSTACLE_RADIUS2      = tuple(config["OBSTACLE_RADIUS2"])
+  LENGTH1               = config["LENGTH1"]
+  OBSTACLE1_GEOM_OBJECT = create_caps_obstacle(OBSTACLE1_POSE, OBSTACLE_RADIUS1, LENGTH1, name="obstacle1")
+  # OBSTACLE2_GEOM_OBJECT = create_box_obstacle(OBSTACLE2_POSE, OBSTACLE_RADIUS2, name="obstacle2")
+
+  # Adding obstacle to collision model (pinocchio)
+  pin_robot.collision_model = transform_model_into_capsules(pin_robot.collision_model)
+  pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
+  # pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
+  
+  # display in pybullet + add to collision model 
+  capsule_id = display_capsule(OBSTACLE1_POSE, OBSTACLE_RADIUS1, LENGTH1)
+  display_box(OBSTACLE2_POSE, OBSTACLE_RADIUS2)
+  # display_ball(TARGET0, 5e-2, COLOR=np.concatenate((np.random.rand(3), np.ones(1))))
+  # display_ball(TARGET1, 5e-2, COLOR=np.concatenate((np.random.rand(3), np.ones(1))))
+  # display_ball(TARGET2, 5e-2, COLOR=np.concatenate((np.random.rand(3), np.ones(1))))
+  # display_ball(TARGET3, 5e-2, COLOR=np.concatenate((np.random.rand(3), np.ones(1))))
+  # display_ball(TARGET4, 5e-2, COLOR=np.concatenate((np.random.rand(3), np.ones(1))))
+  robot_simulator.pin_robot.collision_model = transform_model_into_capsules(robot_simulator.pin_robot.collision_model)
+  robot_simulator.pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
+  # robot_simulator.pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
+  return capsule_id
+
+    # head = SimHead(robot_simulator, vicon_name='cube10', with_sliders=False)
 # def rotationMatrixFromTwoVectors(a, b):
 #     a_copy = a / np.linalg.norm(a)
 #     b_copy = b / np.linalg.norm(b)

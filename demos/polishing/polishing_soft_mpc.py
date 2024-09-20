@@ -118,8 +118,8 @@ def main(SAVE_DIR, TORQUE_TRACKING):
   q0 = np.asarray(config['q0'])
   v0 = np.asarray(config['dq0'])
   x0 = np.concatenate([q0, v0])  
-  env             = BulletEnvWithGround(dt=dt_simu, server=p.DIRECT)
-  robot_simulator = load_bullet_wrapper('iiwa_ft_sensor_shell', locked_joints=['A7'])
+  env             = BulletEnvWithGround(dt=dt_simu, server=p.GUI)
+  robot_simulator = load_bullet_wrapper('iiwa_convex_ft_sensor_shell', locked_joints=['A7'])
   env.add_robot(robot_simulator) 
   robot_simulator.reset_state(q0, v0)
   robot_simulator.forward_robot(q0, v0)
@@ -146,6 +146,9 @@ def main(SAVE_DIR, TORQUE_TRACKING):
   # Make the contact soft (e.g. tennis ball or sponge on the robot)
   simulator_utils.set_lateral_friction(contact_surface_bulletId, 0.5)
   simulator_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 10000, 500)
+  
+  # Create obstacle
+  capsule_id = simulator_utils.setup_obstacle_collision(robot_simulator, robot, config)
 
 
   # Contact model
@@ -179,7 +182,7 @@ def main(SAVE_DIR, TORQUE_TRACKING):
   us_init = [u0 for i in range(config['N_h'])] 
   # Setup Croco OCP and create solver
   ocp = OptimalControlProblemSoftContactAugmented(robot, config).initialize(y0, softContactModel)
-  solver = mim_solvers.SolverSQP(ocp)
+  solver = mim_solvers.SolverCSQP(ocp)
   solver.regMax                 = 1e6
   solver.reg_max                = 1e6
   solver.termination_tolerance  = 0.0001 
@@ -195,6 +198,7 @@ def main(SAVE_DIR, TORQUE_TRACKING):
       m.differential.costs.costs['rotation'].active = False
       m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
             
+  solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
   solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
 
   # Setup tracking problem with circle ref EE trajectory + Warm start state = IK of circle trajectory
@@ -394,7 +398,7 @@ def main(SAVE_DIR, TORQUE_TRACKING):
       # If we are in a control cycle send reference torque to motor driver and compute the motor torque
       if(i%int(sim_data.simu_freq/sim_data.ctrl_freq) == 0):   
           # Anti-aliasing filter on measured torques (sim-->ctrl)
-          tau_mea_CTRL            = antiAliasingFilter.step(nb_ctrl, i, sim_data.ctrl_freq, sim_data.simu_freq, sim_data.tau_mea_SIMU)
+          tau_mea_CTRL            = sim_data.tau_mea_SIMU #antiAliasingFilter.step(nb_ctrl, i, sim_data.ctrl_freq, sim_data.simu_freq, sim_data.tau_mea_SIMU)
           tau_mea_derivative_CTRL = antiAliasingFilter.step(nb_ctrl, i, sim_data.ctrl_freq, sim_data.simu_freq, sim_data.tau_mea_derivative_SIMU)
           # Select the desired torque 
           tau_des_CTRL = sim_data.u_curr.copy()

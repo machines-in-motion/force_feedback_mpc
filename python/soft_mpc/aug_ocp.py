@@ -42,7 +42,47 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
     self.check_attribute('pinRefFrame')
     self.check_attribute('contactType')
 
-  def create_differential_action_model(self, state, actuation, softContactModel):
+  def parse_constraints(self):
+    '''
+    Parses the YAML dict of constraints and count them
+    '''
+    if(not hasattr(self, 'WHICH_CONSTRAINTS')):
+      self.nb_constraints = 0
+    else:
+      if('None' in self.WHICH_CONSTRAINTS):
+        self.nb_constraints = 0
+      else:
+        self.nb_constraints = len(self.WHICH_CONSTRAINTS)
+
+  def create_constraint_model_manager(self, state, actuation, node_id):
+    '''
+    Initialize a constraint model manager and adds constraints to it 
+    '''
+    constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
+    # State limits
+    if('stateBox' in self.WHICH_CONSTRAINTS and node_id != 0):
+      stateBoxConstraint = self.create_state_constraint(state, actuation)   
+      constraintModelManager.addConstraint('stateBox', stateBoxConstraint)
+    # Control limits
+    if('ctrlBox' in self.WHICH_CONSTRAINTS):
+      ctrlBoxConstraint = self.create_ctrl_constraint(state, actuation)
+      constraintModelManager.addConstraint('ctrlBox', ctrlBoxConstraint)
+    # End-effector position limits
+    if('translationBox' in self.WHICH_CONSTRAINTS and node_id != 0):
+      translationBoxConstraint = self.create_translation_constraint(state, actuation)
+      constraintModelManager.addConstraint('translationBox', translationBoxConstraint)
+    # Contact force 
+    if('forceBox' in self.WHICH_CONSTRAINTS and node_id != 0 and node_id != self.N_h):
+      forceBoxConstraint = self.create_force_constraint(state, actuation)
+      constraintModelManager.addConstraint('forceBox', forceBoxConstraint)
+    if('collisionBox' in self.WHICH_CONSTRAINTS):
+        collisionBoxConstraints = self.create_collision_constraints(state, actuation)
+        for i, collisionBoxConstraint in enumerate(collisionBoxConstraints):
+          constraintModelManager.addConstraint('collisionBox_' + str(i), collisionBoxConstraint)
+
+    return constraintModelManager
+    
+  def create_differential_action_model(self, state, actuation, softContactModel, constraintModelManager=None):
     '''
     Initialize a differential action model with soft contact
     '''
@@ -63,24 +103,47 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
       #   dam.mu = self.mu
       #   dam.eps = self.eps
       # else:
-      dam = force_feedback_mpc.DAMSoftContact3DAugmentedFwdDynamics(state, 
-                              actuation, 
-                              crocoddyl.CostModelSum(state, nu=actuation.nu),
-                              softContactModel.frameId, 
-                              softContactModel.Kp,
-                              softContactModel.Kv,
-                              softContactModel.oPc,
-                              softContactModel.pinRefFrame )
+      if(constraintModelManager is None):
+        dam = force_feedback_mpc.DAMSoftContact3DAugmentedFwdDynamics(state, 
+                                actuation, 
+                                crocoddyl.CostModelSum(state, nu=actuation.nu),
+                                softContactModel.frameId, 
+                                softContactModel.Kp,
+                                softContactModel.Kv,
+                                softContactModel.oPc,
+                                softContactModel.pinRefFrame )
+      else:
+        dam = force_feedback_mpc.DAMSoftContact3DAugmentedFwdDynamics(state, 
+                                actuation, 
+                                crocoddyl.CostModelSum(state, nu=actuation.nu),
+                                softContactModel.frameId, 
+                                softContactModel.Kp,
+                                softContactModel.Kv,
+                                softContactModel.oPc,
+                                softContactModel.pinRefFrame,
+                                constraintModelManager )
     elif(softContactModel.nc == 1):
-      dam = force_feedback_mpc.DAMSoftContact1DAugmentedFwdDynamics(state, 
-                              actuation, 
-                              crocoddyl.CostModelSum(state, nu=actuation.nu),
-                              softContactModel.frameId, 
-                              softContactModel.Kp,
-                              softContactModel.Kv,
-                              softContactModel.oPc,
-                              softContactModel.pinRefFrame,
-                              softContactModel.maskType )
+      if(constraintModelManager is None):
+        dam = force_feedback_mpc.DAMSoftContact1DAugmentedFwdDynamics(state, 
+                                actuation, 
+                                crocoddyl.CostModelSum(state, nu=actuation.nu),
+                                softContactModel.frameId, 
+                                softContactModel.Kp,
+                                softContactModel.Kv,
+                                softContactModel.oPc,
+                                softContactModel.pinRefFrame,
+                                softContactModel.maskType )
+      else:
+        dam = force_feedback_mpc.DAMSoftContact1DAugmentedFwdDynamics(state, 
+                                actuation, 
+                                crocoddyl.CostModelSum(state, nu=actuation.nu),
+                                softContactModel.frameId, 
+                                softContactModel.Kp,
+                                softContactModel.Kv,
+                                softContactModel.oPc,
+                                softContactModel.pinRefFrame,
+                                softContactModel.maskType,
+                                constraintModelManager )
     else:
       logger.error("softContactModel.nc = 3 or 1")
 
@@ -216,17 +279,29 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
     state = crocoddyl.StateMultibody(self.rmodel)
     actuation = crocoddyl.ActuationModelFull(state)
     
-    
+  # Constraints or not ?
+    self.parse_constraints()
+
   # Create IAMs
     runningModels = []
     for i in range(self.N_h):  
       # Create DAM (Contact or FreeFwd), IAM LPF and initialize costs+contacts
-        dam = self.create_differential_action_model(state, actuation, softContactModel) 
+        if(self.nb_constraints == 0):
+          dam = self.create_differential_action_model(state, actuation, softContactModel) 
+        else:
+        # Create constraint manager and constraints
+          constraintModelManager = self.create_constraint_model_manager(state, actuation, i)
+        # Create DAM (Contact or FreeFwd), IAM Euler and initialize costs+contacts+constraints
+          dam = self.create_differential_action_model(state, actuation, softContactModel, constraintModelManager) 
         runningModels.append(force_feedback_mpc.IAMSoftContactAugmented( dam, self.dt ))
         self.init_running_model(state, actuation, runningModels[i], softContactModel)
         
     # Terminal model
-    dam_t = self.create_differential_action_model(state, actuation, softContactModel)  
+    if(self.nb_constraints == 0):
+      dam_t = self.create_differential_action_model(state, actuation, softContactModel)  
+    else:
+      constraintModelManager = self.create_constraint_model_manager(state, actuation, self.N_h)
+      dam_t = self.create_differential_action_model(state, actuation, softContactModel, constraintModelManager)  
     terminalModel = force_feedback_mpc.IAMSoftContactAugmented( dam_t, 0. )
     self.init_terminal_model(state, actuation, terminalModel, softContactModel)
     
