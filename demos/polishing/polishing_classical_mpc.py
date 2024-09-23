@@ -122,7 +122,7 @@ def main(SAVE_DIR, TORQUE_TRACKING):
   ### LOAD ROBOT MODEL and SIMU ENV ### 
   # # # # # # # # # # # # # # # # # # # 
   # Read config file
-  config_name = 'polishing_classical'
+  config_name = 'polishing_classical_constraint'
   config = path_utils.load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/'+config_name+'.yml')
   # Create a simulation environment & simu-pin wrapper 
   dt_simu = 1./float(config['simu_freq'])  
@@ -168,12 +168,21 @@ def main(SAVE_DIR, TORQUE_TRACKING):
   xs_init = [x0 for i in range(config['N_h']+1)]
   us_init = ocp.quasiStatic(xs_init[:-1])
   # us_init = [u0 for i in range(config['N_h'])] 
-  solver = mim_solvers.SolverSQP(ocp)
+  solver = mim_solvers.SolverCSQP(ocp)
+  solver.with_callbacks         = config['with_callbacks']
+  solver.use_filter_line_search = config['use_filter_line_search']
+  solver.filter_size            = config['filter_size']
+  solver.warm_start             = config['warm_start']
+  solver.termination_tolerance  = config['solver_termination_tolerance']
+  solver.max_qp_iters           = config['max_qp_iter']
+  solver.eps_abs                = config['qp_termination_tol_abs']
+  solver.eps_rel                = config['qp_termination_tol_rel']
+  solver.warm_start_y           = config['warm_start_y']
+  solver.reset_rho              = config['reset_rho']  
+  solver.mu_dynamic             = config["mu_dynamic"]
+  solver.mu_constraint          = config["mu_constraint"]
   solver.regMax                 = 1e6
   solver.reg_max                = 1e6
-  solver.termination_tolerance  = 0.0001 
-  solver.use_filter_line_search = True
-  solver.filter_size            = config['maxiter']
   # !!! Deactivate all costs & contact models initially !!!
   models = list(solver.problem.runningModels) + [solver.problem.terminalModel]
   for k,m in enumerate(models):
@@ -182,7 +191,8 @@ def main(SAVE_DIR, TORQUE_TRACKING):
       m.differential.contacts.changeContactStatus("contact", False)
       m.differential.costs.costs['rotation'].active = False
       m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
-      
+
+  # solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
   solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
 
 

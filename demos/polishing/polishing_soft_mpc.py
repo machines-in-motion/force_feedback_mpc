@@ -183,29 +183,29 @@ def main(SAVE_DIR, TORQUE_TRACKING):
   # Setup Croco OCP and create solver
   ocp = OptimalControlProblemSoftContactAugmented(robot, config).initialize(y0, softContactModel)
   solver = mim_solvers.SolverCSQP(ocp)
-#   solver.with_callbacks         = config['with_callbacks']
-#   solver.use_filter_line_search = config['use_filter_line_search']
-#   solver.filter_size            = config['filter_size']
-#   solver.warm_start             = config['warm_start']
-#   solver.termination_tolerance  = config['solver_termination_tolerance']
-#   solver.max_qp_iters           = config['max_qp_iter']
-#   solver.eps_abs                = config['qp_termination_tol_abs']
-#   solver.eps_rel                = config['qp_termination_tol_rel']
-#   solver.warm_start_y           = config['warm_start_y']
-#   solver.reset_rho              = config['reset_rho']  
-#   solver.mu_dynamic             = config["mu_dynamic"]
-#   solver.mu_constraint          = config["mu_constraint"]
-#   solver.regMax                 = 1e6
-#   solver.reg_max                = 1e6
-#   # !!! Deactivate all costs & contact models initially !!!
-#   models = list(solver.problem.runningModels) + [solver.problem.terminalModel]
-#   for k,m in enumerate(models):
-#       m.differential.costs.costs["translation"].active = False
-#       m.differential.active_contact = False
-#       m.differential.f_des = np.zeros(1)
-#       m.differential.cost_ref = pin.LOCAL_WORLD_ALIGNED
-#       m.differential.costs.costs['rotation'].active = False
-#       m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
+  solver.with_callbacks         = config['with_callbacks']
+  solver.use_filter_line_search = config['use_filter_line_search']
+  solver.filter_size            = config['filter_size']
+  solver.warm_start             = config['warm_start']
+  solver.termination_tolerance  = config['solver_termination_tolerance']
+  solver.max_qp_iters           = config['max_qp_iter']
+  solver.eps_abs                = config['qp_termination_tol_abs']
+  solver.eps_rel                = config['qp_termination_tol_rel']
+  solver.warm_start_y           = config['warm_start_y']
+  solver.reset_rho              = config['reset_rho']  
+  solver.mu_dynamic             = config["mu_dynamic"]
+  solver.mu_constraint          = config["mu_constraint"]
+  solver.regMax                 = 1e6
+  solver.reg_max                = 1e6
+  # !!! Deactivate all costs & contact models initially !!!
+  models = list(solver.problem.runningModels) + [solver.problem.terminalModel]
+  for k,m in enumerate(models):
+      m.differential.costs.costs["translation"].active = False
+      m.differential.active_contact = False
+      m.differential.f_des = np.zeros(1)
+      m.differential.cost_ref = pin.LOCAL_WORLD_ALIGNED
+      m.differential.costs.costs['rotation'].active = False
+      m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
 
   solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
   solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)

@@ -255,7 +255,9 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
       " , Kp="+str(softContactModel.Kp)+\
         ', Kv='+str(softContactModel.Kv)+\
         ', pinRefFrame='+str(softContactModel.pinRefFrame)+']')
-
+    if(self.nb_constraints > 0):
+      logger.info("    CONSTRAINTS   = "+str(self.WHICH_CONSTRAINTS))
+      
   def initialize(self, y0, softContactModel):
     '''
     Initializes OCP and  solver from config parameters and initial state
@@ -286,22 +288,22 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
     runningModels = []
     for i in range(self.N_h):  
       # Create DAM (Contact or FreeFwd), IAM LPF and initialize costs+contacts
-        # if(self.nb_constraints == 0):
-        dam = self.create_differential_action_model(state, actuation, softContactModel) 
-        # else:
+        if(self.nb_constraints == 0):
+          dam = self.create_differential_action_model(state, actuation, softContactModel) 
+        else:
         # Create constraint manager and constraints
-          # constraintModelManager = self.create_constraint_model_manager(state, actuation, i)
-        # Create DAM (Contact or FreeFwd), IAM Euler and initialize costs+contacts+constraints
-          # dam = self.create_differential_action_model(state, actuation, softContactModel, constraintModelManager) 
+          constraintModelManager = self.create_constraint_model_manager(state, actuation, i)
+        # Create DAM & IAM and initialize costs+contacts+constraints
+          dam = self.create_differential_action_model(state, actuation, softContactModel, constraintModelManager) 
         runningModels.append(force_feedback_mpc.IAMSoftContactAugmented( dam, self.dt ))
         self.init_running_model(state, actuation, runningModels[i], softContactModel)
         
     # Terminal model
-    # if(self.nb_constraints == 0):
-    dam_t = self.create_differential_action_model(state, actuation, softContactModel)  
-    # else:
-      # constraintModelManager = self.create_constraint_model_manager(state, actuation, self.N_h)
-      # dam_t = self.create_differential_action_model(state, actuation, softContactModel, constraintModelManager)  
+    if(self.nb_constraints == 0):
+      dam_t = self.create_differential_action_model(state, actuation, softContactModel)  
+    else:
+      constraintModelManager = self.create_constraint_model_manager(state, actuation, self.N_h)
+      dam_t = self.create_differential_action_model(state, actuation, softContactModel, constraintModelManager)  
     terminalModel = force_feedback_mpc.IAMSoftContactAugmented( dam_t, 0. )
     self.init_terminal_model(state, actuation, terminalModel, softContactModel)
     

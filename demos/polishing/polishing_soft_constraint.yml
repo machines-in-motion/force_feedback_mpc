@@ -85,6 +85,7 @@ contactPosition: [0.6, 0., 0.1]
 # Constraints terms
 # to select from the list : 'stateBox', 'ctrlBox', 'translationBox', 'None'
 WHICH_CONSTRAINTS: ['']
+ctrlLimit: [1000, 1000, 1000, 1000, 1000, 1000]
 stateLowerLimit: [-2.07, -1.46, -2.07, -1.46, -2.07, -1.46, -1.03, -1.03, -1.22, -0.91, -1.58, -1.64]
 stateUpperLimit: [2.07, 1.46, 2.07, 1.46 , 2.07, 1.46,       1.03,  1.03,  1.22,  0.91,  1.58,  1.64]
 # Collision constraint
