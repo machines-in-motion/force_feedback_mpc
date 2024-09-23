@@ -41,6 +41,7 @@ DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDy
     throw_pretty("Invalid argument: "
                  << "Costs doesn't have the same control dimension (it should be " + std::to_string(this->get_nu()) + ")");
   }
+  std::cout << "pin.effortLimit  = " << this->get_pinocchio().effortLimit.tail(this->get_nu()) << std::endl;
   DAMBase::set_u_lb(double(-1.) * this->get_pinocchio().effortLimit.tail(this->get_nu()));
   DAMBase::set_u_ub(double(+1.) * this->get_pinocchio().effortLimit.tail(this->get_nu()));
   // Soft contact model parameters

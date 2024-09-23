@@ -64,9 +64,11 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
       stateBoxConstraint = self.create_state_constraint(state, actuation)   
       constraintModelManager.addConstraint('stateBox', stateBoxConstraint)
     # Control limits
-    if('ctrlBox' in self.WHICH_CONSTRAINTS):
+    if('ctrlBox' in self.WHICH_CONSTRAINTS and node_id != self.N_h):
       ctrlBoxConstraint = self.create_ctrl_constraint(state, actuation)
       constraintModelManager.addConstraint('ctrlBox', ctrlBoxConstraint)
+      logger.debug("constraint manager ctrl box "+str(node_id)+" lb = : "+str(constraintModelManager.g_lb))
+      logger.debug("constraint manager ctrl box "+str(node_id)+" ub = : "+str(constraintModelManager.g_ub))
     # End-effector position limits
     if('translationBox' in self.WHICH_CONSTRAINTS and node_id != 0):
       translationBoxConstraint = self.create_translation_constraint(state, actuation)
@@ -312,7 +314,6 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
 
   # Create the shooting problem
     problem = crocoddyl.ShootingProblem(y0, runningModels, terminalModel)
-
 
   # Finish
     self.success_log(softContactModel)

@@ -202,6 +202,9 @@ struct DADSoftContactAbstractAugmentedFwdDynamics :
   using DADBase::Lxx;
   using DADBase::r;
   using DADBase::xout;
+  using DADBase::g;
+  using DADBase::Gx;
+  using DADBase::Gu;
 };
 
 
@@ -396,7 +399,9 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
     bool with_gravity_torque_reg_;          //!< Control regularization w.r.t. gravity torque
     double tau_grav_weight_;                //!< Weight on regularization w.r.t. gravity torque
 
-    // using DAMBase::constraints_;
+    // boost::shared_ptr<ConstraintModelManager> constraints_;
+    using DAMBase::g_lb_;
+    using DAMBase::g_ub_;
 };
 
 

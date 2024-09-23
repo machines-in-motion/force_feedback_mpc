@@ -38,6 +38,10 @@ struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double>
     differential = model->get_differential()->createData();
     const std::size_t& ndy = model->get_state()->get_ndx();
     dy = VectorXs::Zero(ndy);
+    // Gy.resize(model->get_ng(), model->get_state()->get_ndx());
+    // Gy.setZero();
+    // Gu.resize(model->get_ng(), model->get_nu());
+    // Gu.setZero();
   }
   virtual ~IADSoftContactAugmented() {}
 
@@ -57,6 +61,7 @@ struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double>
   MatrixXs& Lyu = Base::Lxu;
 //   MatrixXs& Lww = Base::Luu;
   MatrixXs& Gy = Base::Gx;
+  MatrixXs& Gu = Base::Gu;
 };
 
 class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double> {

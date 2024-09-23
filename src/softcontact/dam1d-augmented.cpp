@@ -59,6 +59,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
     throw_pretty("Invalid argument: "
                  << "u has wrong dimension (it should be " + std::to_string(this->get_nu()) + ")");
   }
+  std::cout << " OK 1" << std::endl;
 
   Data* d = static_cast<Data*>(data.get());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(this->get_state()->get_nq());
@@ -125,6 +126,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
       d->xout = pinocchio::aba(this->get_pinocchio(), d->pinocchio, q, v, d->multibody.actuation->tau);
     }
   }
+  std::cout << " OK 2" << std::endl;
 
   pinocchio::updateGlobalPlacements(this->get_pinocchio(), d->pinocchio);
   
@@ -165,12 +167,14 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
       d->cost += 0.5 * force_rate_reg_weight_(0) * d->fout.transpose() * d->fout;  // penalize time derivative of the force 
     }
   }
+  std::cout << " OK 3" << std::endl;
 
   // Constraints (on multibody state x=(q,v))
   if (this->get_constraints() != nullptr) {
     d->constraints->resize(this, d);
     this->get_constraints()->calc(d->constraints, x, u);
   }
+  std::cout << " OK 4" << std::endl;
 }
 
 

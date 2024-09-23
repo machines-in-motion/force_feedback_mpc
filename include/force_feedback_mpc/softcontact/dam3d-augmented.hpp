@@ -111,6 +111,9 @@ struct DADSoftContact3DAugmentedFwdDynamics
   using Base::Lxx;
   using Base::r;
   using Base::xout;
+  using Base::g;
+  using Base::Gx;
+  using Base::Gu;
 };
 
 
@@ -251,6 +254,9 @@ class DAMSoftContact3DAugmentedFwdDynamics : public DAMSoftContactAbstractAugmen
     using Base::with_force_rate_reg_cost_;
     using Base::force_rate_reg_weight_;
     using Base::cost_ref_;
+    
+    using Base::g_lb_;
+    using Base::g_ub_;
     
 };
 

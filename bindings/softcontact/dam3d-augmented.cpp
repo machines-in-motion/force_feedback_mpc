@@ -89,7 +89,12 @@ void exposeDAMSoftContact3DAugmentedFwdDyn() {
       bp::init<DAMSoftContact3DAugmentedFwdDynamics*>(
           bp::args("self", "model"),
           "Create soft contact 3D forward-dynamics action data.\n\n"
-          ":param model: soft contact 3D model"));
+          ":param model: soft contact 3D model"))
+      .add_property(
+          "constraints",
+          bp::make_getter(&DADSoftContact3DAugmentedFwdDynamics::constraints,
+                          bp::return_value_policy<bp::return_by_value>()),
+          "constraint data");
 }
 
 }  // namespace softcontact

@@ -138,7 +138,12 @@ void exposeDAMSoftContact1DAugmentedFwdDyn() {
           "dfdt3d_df",
           bp::make_getter(&DADSoftContact1DAugmentedFwdDynamics::dfdt3d_df,
                           bp::return_internal_reference<>()),
-          "Partial derivative of the time derivative of the contact force (3D, LOCAL) w.r.t. contact force");
+          "Partial derivative of the time derivative of the contact force (3D, LOCAL) w.r.t. contact force")
+      .add_property(
+          "constraints",
+          bp::make_getter(&DADSoftContact1DAugmentedFwdDynamics::constraints,
+                          bp::return_value_policy<bp::return_by_value>()),
+          "constraint data");
 }
 
 }  // namespace softcontact
