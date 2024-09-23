@@ -38,7 +38,7 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
   boost::shared_ptr<StateMultibody> state =
       boost::static_pointer_cast<StateMultibody>(model->get_state());
   pin_model_ = state->get_pinocchio();
-  // Instantiate stateLPF using pinocchio model of DAM state
+  // Instantiate stateSofcontact using pinocchio model of DAM state
   nc_ = model->get_nc();
   state_ = boost::make_shared<StateSoftContact>(pin_model_, nc_);
   ny_ = boost::static_pointer_cast<StateSoftContact>(state_)->get_ny();
@@ -270,9 +270,8 @@ void IAMSoftContactAugmented::calcDiff(
   d->Lyu.topLeftCorner(ndx, nu_) = diff_data_soft->Lxu*time_step_;
   d->Lu = diff_data_soft->Lu*time_step_;
   d->Luu = diff_data_soft->Luu*time_step_;
-
+  
   d->Gy.topLeftCorner(differential_->get_ng(), ndx) = d->differential->Gx;
-  d->Gu.resize(differential_->get_ng(), nu_);
   if(with_force_constraint_){
     d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() += double(1.);
   }
