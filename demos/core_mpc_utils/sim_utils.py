@@ -356,31 +356,24 @@ def transform_model_into_capsules(cmodel):
 def setup_obstacle_collision(robot_simulator, pin_robot, config):
  
   # Creating the obstacle
-  q1_pose = np.array(config["OBSTACLE1_POSE"])
-  OBSTACLE1_POSE        = pin.SE3(pin.Quaternion(q1_pose[3:]), q1_pose[:3])
+  OBSTACLE1_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE1_POSE"]))
   OBSTACLE2_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE2_POSE"]))
   OBSTACLE_RADIUS1      = config["OBSTACLE_RADIUS1"]
   OBSTACLE_RADIUS2      = tuple(config["OBSTACLE_RADIUS2"])
-  LENGTH1               = config["LENGTH1"]
-  OBSTACLE1_GEOM_OBJECT = create_caps_obstacle(OBSTACLE1_POSE, OBSTACLE_RADIUS1, LENGTH1, name="obstacle1")
-  # OBSTACLE2_GEOM_OBJECT = create_box_obstacle(OBSTACLE2_POSE, OBSTACLE_RADIUS2, name="obstacle2")
+  OBSTACLE1_GEOM_OBJECT = create_box_obstacle(OBSTACLE1_POSE, OBSTACLE_RADIUS1, name="obstacle1")
+  OBSTACLE2_GEOM_OBJECT = create_box_obstacle(OBSTACLE2_POSE, OBSTACLE_RADIUS2, name="obstacle2")
 
   # Adding obstacle to collision model (pinocchio)
   pin_robot.collision_model = transform_model_into_capsules(pin_robot.collision_model)
   pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
-  # pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
+  pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
   
   # display in pybullet + add to collision model 
-  capsule_id = display_capsule(OBSTACLE1_POSE, OBSTACLE_RADIUS1, LENGTH1)
+  capsule_id = display_box(OBSTACLE1_POSE, OBSTACLE_RADIUS1)
   display_box(OBSTACLE2_POSE, OBSTACLE_RADIUS2)
-  # display_ball(TARGET0, 5e-2, COLOR=np.concatenate((np.random.rand(3), np.ones(1))))
-  # display_ball(TARGET1, 5e-2, COLOR=np.concatenate((np.random.rand(3), np.ones(1))))
-  # display_ball(TARGET2, 5e-2, COLOR=np.concatenate((np.random.rand(3), np.ones(1))))
-  # display_ball(TARGET3, 5e-2, COLOR=np.concatenate((np.random.rand(3), np.ones(1))))
-  # display_ball(TARGET4, 5e-2, COLOR=np.concatenate((np.random.rand(3), np.ones(1))))
   robot_simulator.pin_robot.collision_model = transform_model_into_capsules(robot_simulator.pin_robot.collision_model)
   robot_simulator.pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
-  # robot_simulator.pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
+  robot_simulator.pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
   return capsule_id
 
     # head = SimHead(robot_simulator, vicon_name='cube10', with_sliders=False)
