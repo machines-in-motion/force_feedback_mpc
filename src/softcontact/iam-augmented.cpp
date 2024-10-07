@@ -52,21 +52,21 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
   // Set constraint bounds (add force constraint dimension)
   g_lb_new_.resize(differential_->get_g_lb().size() + nc_);
   g_ub_new_.resize(differential_->get_g_ub().size() + nc_);
-  std::cout << "differential.g_lb  = " << differential_->get_g_lb() << std::endl;
-  std::cout << "differential.g_ub  = " << differential_->get_g_ub() << std::endl;
+  // std::cout << "differential.g_lb  = " << differential_->get_g_lb() << std::endl;
+  // std::cout << "differential.g_ub  = " << differential_->get_g_ub() << std::endl;
   // no constraint on force by default
   force_lb_ = -std::numeric_limits<double>::infinity()*VectorXs::Ones(nc_);
   force_ub_ = std::numeric_limits<double>::infinity()*VectorXs::Ones(nc_);
-  std::cout << "force_lb  = " << force_lb_ << std::endl;
-  std::cout << "force_ub  = " << force_ub_ << std::endl;
+  // std::cout << "force_lb  = " << force_lb_ << std::endl;
+  // std::cout << "force_ub  = " << force_ub_ << std::endl;
   g_lb_new_ << differential_->get_g_lb(), force_lb_;
   g_ub_new_ << differential_->get_g_ub(), force_ub_;
-  std::cout << "g_lb_new  = " << g_lb_new_ << std::endl;
-  std::cout << "g_ub_new  = " << g_ub_new_ << std::endl;
+  // std::cout << "g_lb_new  = " << g_lb_new_ << std::endl;
+  // std::cout << "g_ub_new  = " << g_ub_new_ << std::endl;
   Base::set_g_lb(g_lb_new_);
   Base::set_g_ub(g_ub_new_);
-  std::cout << "g_lb_  = " << Base::get_g_lb() << std::endl;
-  std::cout << "g_ub_  = " << Base::get_g_ub() << std::endl;
+  // std::cout << "g_lb_  = " << Base::get_g_lb() << std::endl;
+  // std::cout << "g_ub_  = " << Base::get_g_ub() << std::endl;
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 

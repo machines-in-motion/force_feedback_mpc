@@ -29,6 +29,7 @@ logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
 import numpy as np  
 np.set_printoptions(precision=4, linewidth=180)
 RANDOM_SEED = 1
+import os
 
 from core_mpc_utils import path_utils, pin_utils, mpc_utils, misc_utils
 from core_mpc_utils import ocp as ocp_utils
@@ -119,10 +120,8 @@ def main(robot_name='iiwa', simulator='bullet', PLOT_INIT=False):
   ### LOAD ROBOT MODEL and SIMU ENV ### 
   # # # # # # # # # # # # # # # # # # # 
   # Read config file
-  config, config_name = path_utils.load_config_file(__file__, robot_name)
-  # config_name = 'soft_mpc_contact'
-  # file = '/home/skleff/ws/workspace/src/force_feedback_dgh/config/soft_mpc_contact.yml' # 
-  # config = path_utils.load_yaml_file(file)
+  config_name = 'polishing_classical_obstacle'
+  config = path_utils.load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/'+config_name+'.yml')
   # Create a simulation environment & simu-pin wrapper 
   dt_simu = 1./float(config['simu_freq'])  
   q0 = np.asarray(config['q0'])
@@ -161,7 +160,7 @@ def main(robot_name='iiwa', simulator='bullet', PLOT_INIT=False):
   contact_surface_bulletId = simulator_utils.display_contact_surface(contact_placement, bullet_endeff_ids=robot_simulator.bullet_endeff_ids)
   # Make the contact soft (e.g. tennis ball or sponge on the robot)
   simulator_utils.set_lateral_friction(contact_surface_bulletId, 0.5)
-  simulator_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 1000000, 2000)
+  simulator_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 10000, 500)
 
 
 

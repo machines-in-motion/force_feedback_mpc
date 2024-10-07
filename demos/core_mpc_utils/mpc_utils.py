@@ -100,7 +100,7 @@ class LowLevelTorqueController:
       # Optional PID feedback term 
       if(self.TORQUE_TRACKING and len(measured_torque) !=0):
           # print(self.TORQUE_TRACKING)
-          self.err_P = measured_torque - reference_torque              
+          self.err_P = measured_torque - reference_torque             
           self.err_I += self.err_P
           self.err_D = measured_torque_derivative                 
           motor_torque -= 1.*self.gain_P.dot(self.err_P) 
