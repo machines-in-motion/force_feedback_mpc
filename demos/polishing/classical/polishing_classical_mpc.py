@@ -182,7 +182,15 @@ def main(SAVE_DIR, TORQUE_TRACKING):
       m.differential.contacts.changeContactStatus("contact", False)
       m.differential.costs.costs['rotation'].active = False
       m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
-      
+  
+  # Test calc
+  for k,m in enumerate(models):
+      print("Model ", k, " calc()")
+      if(k < config['N_h']):
+        solver.problem.runningModels[k].calc(solver.problem.runningDatas[k], xs_init[k], us_init[k])
+      else:
+        solver.problem.terminalModel.calc(solver.problem.terminalData, xs_init[k])
+  
   solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
 
 

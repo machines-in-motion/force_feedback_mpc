@@ -47,7 +47,9 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
             const Eigen::Ref<const VectorXs>& x,
             const Eigen::Ref<const VectorXs>& f,
             const Eigen::Ref<const VectorXs>& u) {
+  std::cout << "[DAM--1D-augmented.cpp] START OF CALC" << std::endl;
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
+    
     throw_pretty("Invalid argument: "
                  << "x has wrong dimension (it should be " + std::to_string(this->get_state()->get_nx()) + ")");
   }
@@ -59,15 +61,22 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
     throw_pretty("Invalid argument: "
                  << "u has wrong dimension (it should be " + std::to_string(this->get_nu()) + ")");
   }
-
   Data* d = static_cast<Data*>(data.get());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(this->get_state()->get_nq());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(this->get_state()->get_nv());
+  std::cout << "[DAM--1D-augmented.cpp] q.size() " << q.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] v.size() " << v.size() << std::endl;
   pinocchio::computeAllTerms(this->get_pinocchio(), d->pinocchio, q, v);
   pinocchio::updateFramePlacements(this->get_pinocchio(), d->pinocchio);
   d->oRf = d->pinocchio.oMf[frameId_].rotation();
+  std::cout << "[DAM--1D-augmented.cpp] d->oRf.size() " << d->oRf.size() << std::endl;
   // Actuation calc
   this->get_actuation()->calc(d->multibody.actuation, x, u);
+  std::cout << "[DAM--1D-augmented.cpp] x.size() " << x.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] f.size() " << f.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] u.size() " << u.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] active_contact_ " << active_contact_ << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] with_armature_ " << with_armature_ << std::endl;
   
   // If contact is active, compute aq = ABA(q,v,tau,fext)
   if(active_contact_){
@@ -124,6 +133,70 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
     } else {
       d->xout = pinocchio::aba(this->get_pinocchio(), d->pinocchio, q, v, d->multibody.actuation->tau);
     }
+
+  std::cout << "[DAM--1D-augmented.cpp] END OF CALC " << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->f3d.size() " << d->f3d.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->lJ.size() " << d->lJ.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->oJ.size() " << d->oJ.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->aba_dq.size() " << d->aba_dq.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->aba_dv.size() " << d->aba_dv.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->aba_dx.size() " << d->aba_dx.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->aba_dtau.size() " << d->aba_dtau.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->aba_df.size() " << d->aba_df.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->lv.size() " << d->lv.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->la.size() " << d->la.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->ov.size() " << d->ov.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->oa.size() " << d->oa.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->lv_dq.size() " << d->lv_dq.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->lv_dv.size() " << d->lv_dv.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->lv_dx.size() " << d->lv_dx.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->v_dv.size() " << d->v_dv.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->a_dq.size() " << d->a_dq.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->a_dv.size() " << d->a_dv.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->a_da.size() " << d->a_da.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->da_dx.size() " << d->da_dx.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->da_du.size() " << d->da_du.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->da_df.size() " << d->da_df.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->fout.size() " << d->fout.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->dfdt_dx.size() " << d->dfdt_dx.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->dfdt_du.size() " << d->dfdt_du.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->dfdt_df.size() " << d->dfdt_df.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Lf.size() " << d->Lf.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Lff.size() " << d->Lff.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->f_residual.size() " << d->f_residual.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->f_residual_x.size() " << d->f_residual_x.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->f_residual_f.size() " << d->f_residual_f.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->tau_grav_residual.size() " << d->tau_grav_residual.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->tau_grav_residual_x.size() " << d->tau_grav_residual_x.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->tau_grav_residual_u.size() " << d->tau_grav_residual_u.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->tau_grav_residual_f.size() " << d->tau_grav_residual_f.size() << std::endl;
+
+  std::cout << "[DAM--1D-augmented.cpp] d->cost " << d->cost << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Fu.size() " << d->Fu.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Fx.size() " << d->Fx.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Lu.size() " << d->Lu.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Lx.size() " << d->Lx.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Lxu.size() " << d->Lxu.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Lxx.size() " << d->Lxx.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Luu.size() " << d->Luu.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->r.size() " << d->r.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->xout.size() " << d->xout.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->g.size() " << d->g.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Gx.size() " << d->Gx.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Gu.size() " << d->Gu.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->h.size() " << d->h.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Hx.size() " << d->Hx.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Hu.size() " << d->Hu.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->Minv.size() " << d->Minv.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->u_drift.size() " << d->u_drift.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->dtau_dx.size() " << d->dtau_dx.size() << std::endl;
+  std::cout << "[DAM--1D-augmented.cpp] d->tmp_xstatic.size() " << d->tmp_xstatic.size() << std::endl;
+
+  assert(data != nullptr && "data pointer is not initialized!");
+  assert(d != nullptr && "d pointer is not initialized!");
+  assert(this->get_state() != nullptr && "state pointer is not initialized!");
+  
+  std::cout << "[DAM--1D-augmented.cpp] END OF CALC" << d->tmp_xstatic.size() << std::endl;
   }
 
   pinocchio::updateGlobalPlacements(this->get_pinocchio(), d->pinocchio);

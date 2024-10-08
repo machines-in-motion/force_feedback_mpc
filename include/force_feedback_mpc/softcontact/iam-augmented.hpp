@@ -33,15 +33,14 @@ struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double>
 
   template <class Model>
   explicit IADSoftContactAugmented(Model* const model)
-      : Base(model), tau_tmp(model->get_nu()) {
-    tau_tmp.setZero();
+      : Base(model) {
     differential = model->get_differential()->createData();
     const std::size_t& ndy = model->get_state()->get_ndx();
     dy = VectorXs::Zero(ndy);
-    // Gy.resize(model->get_ng(), model->get_state()->get_ndx());
-    // Gy.setZero();
-    // Gu.resize(model->get_ng(), model->get_nu());
-    // Gu.setZero();
+    Gy.resize(model->get_ng(), model->get_state()->get_ndx());
+    Gy.setZero();
+    Gu.resize(model->get_ng(), model->get_nu());
+    Gu.setZero();
   }
   virtual ~IADSoftContactAugmented() {}
 
@@ -49,17 +48,22 @@ struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double>
   VectorXs dy;
 
   using Base::cost;
+  using Base::Fu;
+  using Base::Fx;
+  using Base::Lu;
+  using Base::Luu;
+  using Base::Lx;
+  using Base::Lxu;
+  using Base::Lxx;
   using Base::r;
-  VectorXs tau_tmp;
+  using Base::xnext;
+
   // use refs to "alias" base class member names
   VectorXs& ynext = Base::xnext;
   MatrixXs& Fy = Base::Fx;
-//   MatrixXs& Fw = Base::Fu;
   VectorXs& Ly = Base::Lx;
-//   VectorXs& Lw = Base::Lu;
   MatrixXs& Lyy = Base::Lxx;
   MatrixXs& Lyu = Base::Lxu;
-//   MatrixXs& Lww = Base::Luu;
   MatrixXs& Gy = Base::Gx;
   MatrixXs& Gu = Base::Gu;
 };
@@ -118,8 +122,8 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   void set_dt(const double& dt);
   void set_differential(boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model);
 
-  void set_with_force_constraint(const bool inBool) {with_force_constraint_ = inBool; };
-  const bool& get_with_force_constraint() const { return with_force_constraint_; };
+  // void set_with_force_constraint(const bool inBool) {with_force_constraint_ = inBool; };
+  // const bool& get_with_force_constraint() const { return with_force_constraint_; };
 
   void set_force_lb(const VectorXs& inVec);
   const VectorXs& get_force_lb() const { return force_lb_; };
@@ -131,16 +135,17 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   using Base::has_control_limits_;  //!< Indicates whether any of the control
                                     //!< limits are active
   using Base::nr_;                  //!< Dimension of the cost residual
-  using Base::ng_;                  //!< Number of inequality constraints
-  using Base::g_lb_;                //!< Lower bound of the inequality constraints
-  using Base::g_ub_;                //!< Upper bound of the inequality constraints
   using Base::nu_;                  //!< Control dimension
+  using Base::state_;               //!< Model of the state
   using Base::u_lb_;                //!< Lower control limits
   using Base::u_ub_;                //!< Upper control limits
+  using Base::ng_;                  //!< Number of inequality constraints
+  using Base::nh_;                  //!< Number of inequality constraints
+  using Base::g_lb_;                //!< Lower bound of the inequality constraints
+  using Base::g_ub_;                //!< Upper bound of the inequality constraints
   using Base::unone_;               //!< Neutral state
   std::size_t nc_;                  //!< Contact model dimension
   std::size_t ny_;                  //!< Augmented state dimension : nq+nv+ntau
-  using Base::state_;               //!< Model of the state
 
  private:
   boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> differential_;

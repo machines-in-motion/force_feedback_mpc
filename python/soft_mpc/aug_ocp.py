@@ -70,8 +70,6 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
     if('ctrlBox' in self.WHICH_CONSTRAINTS and node_id != self.N_h):
       ctrlBoxConstraint = self.create_ctrl_constraint(state, actuation)
       constraintModelManager.addConstraint('ctrlBox', ctrlBoxConstraint)
-      logger.debug("constraint manager ctrl box "+str(node_id)+" lb = : "+str(constraintModelManager.g_lb))
-      logger.debug("constraint manager ctrl box "+str(node_id)+" ub = : "+str(constraintModelManager.g_ub))
     # End-effector position limits
     if('translationBox' in self.WHICH_CONSTRAINTS and node_id != 0):
       translationBoxConstraint = self.create_translation_constraint(state, actuation)
@@ -208,8 +206,6 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
                                 constraintModelManager )
     elif(softContactModel.nc == 1):
       if(constraintModelManager is None):
-        logger.debug("Kp = "+str(softContactModel.Kp))
-        logger.debug("Kv = "+str(softContactModel.Kv))
         dam = force_feedback_mpc.DAMSoftContact1DAugmentedFwdDynamics(state, 
                                 actuation, 
                                 # crocoddyl.CostModelSum(state, nu=actuation.nu),

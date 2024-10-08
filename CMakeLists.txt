@@ -6,10 +6,8 @@ set(PROJECT_NAME force_feedback_mpc)
 set(PROJECT_DESCRIPTION "Optimal control tools to achieve force feedback in MPC.")
 set(PROJECT_URL https://github.com/${PROJECT_NAMESPACE}/${PROJECT_NAME})
 
-# add_compile_options(--warn-no-conversion)
-# add_compile_options(-Wno-undef)
+set(CMAKE_VERBOSE_MAKEFILE on)
 
-set( CMAKE_VERBOSE_MAKEFILE on)
 # Project options
 option(BUILD_PYTHON_INTERFACE "Build the python binding" ON)
 option(SUFFIX_SO_VERSION "Suffix library name with its version" ON)
@@ -57,7 +55,7 @@ add_project_dependency(eigenpy 2.7.10 REQUIRED)
 add_project_dependency(pinocchio REQUIRED)
 add_project_dependency(example-robot-data 4.0.7 REQUIRED PKG_CONFIG_REQUIRES
                        "example-robot-data >= 4.0.7")
-                       
+
 if(BUILD_PYTHON_INTERFACE)
   FINDPYTHON()
   string(REGEX REPLACE "-" "_" PY_NAME ${PROJECT_NAME})
@@ -65,12 +63,11 @@ if(BUILD_PYTHON_INTERFACE)
   SEARCH_FOR_BOOST_PYTHON()
 endif()
 
-
 if(CHECK_RUNTIME_MALLOC)
   message(STATUS "Check if some memory allocations are performed at runtime.")
   add_definitions(-DMIM_SOLVERS_EIGEN_CHECK_MALLOC)
   add_definitions(-DEIGEN_RUNTIME_NO_MALLOC)
-endif(CHECK_RUNTIME_MALLOC)
+endif()
 
 # Main Library
 set(${PROJECT_NAME}_HEADERS
@@ -82,7 +79,7 @@ set(${PROJECT_NAME}_HEADERS
   include/${PROJECT_NAME}/softcontact/dam3d-augmented.hpp
   include/${PROJECT_NAME}/softcontact/dam1d-augmented.hpp
   include/${PROJECT_NAME}/softcontact/iam-augmented.hpp
-  )
+)
 
 set(${PROJECT_NAME}_SOURCES
   src/lowpassfilter/state.cpp
@@ -92,7 +89,7 @@ set(${PROJECT_NAME}_SOURCES
   src/softcontact/dam3d-augmented.cpp
   src/softcontact/dam1d-augmented.cpp
   src/softcontact/iam-augmented.cpp
-  )
+)
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
 target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
@@ -111,13 +108,13 @@ if(BUILD_PYTHON_INTERFACE)
   add_subdirectory(bindings)
 endif()
 
-# Benchmarks
-if(BUILD_BENCHMARKS)
-  add_subdirectory(benchmarks)
-endif()
+# # Benchmarks
+# if(BUILD_BENCHMARKS)
+#   add_subdirectory(benchmarks)
+# endif()
 
-# Unit tests
-add_subdirectory(tests)
+# # Unit tests
+# add_subdirectory(tests)
 
 # Python packages 
 add_subdirectory(python)
@@ -125,3 +122,6 @@ add_subdirectory(python)
 # Installation
 install(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
 install(FILES package.xml DESTINATION share/${PROJECT_NAME})
+
+# Add flags for Valgrind (if desired)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fstack-protector")  # Add debug symbols and no optimization

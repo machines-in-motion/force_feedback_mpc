@@ -220,7 +220,13 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
           bp::make_function(&force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics::get_armature,
                             bp::return_value_policy<bp::return_by_value>()),
           &force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics::set_armature,
-          "Armature");
+          "Armature")
+      .add_property(
+          "with_force_constraint",
+          bp::make_function(&force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics::get_with_force_constraint,
+                          bp::return_value_policy<bp::return_by_value>()),
+            &force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics::set_with_force_constraint,
+          "Is there a contact force constraint?");
 
   bp::register_ptr_to_python<boost::shared_ptr<force_feedback_mpc::softcontact::DADSoftContactAbstractAugmentedFwdDynamics> >();
 
