@@ -61,6 +61,9 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
     constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
     # State limits
     if('stateBox' in self.WHICH_CONSTRAINTS and node_id != 0):
+      logger.warning("! ! ! ! ! ! ! ! ! ! ! ! ! ! !")
+      logger.warning("UNDEFINED BEHAVIOR FOR STATE CONSTRAINTS in SOFT CONTACT")
+      logger.warning("! ! ! ! ! ! ! ! ! ! ! ! ! ! !")
       stateBoxConstraint = self.create_state_constraint(state, actuation)   
       constraintModelManager.addConstraint('stateBox', stateBoxConstraint)
     # Control limits
@@ -75,6 +78,9 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
       constraintModelManager.addConstraint('translationBox', translationBoxConstraint)
     # Contact force 
     if('forceBox' in self.WHICH_CONSTRAINTS and node_id != 0 and node_id != self.N_h):
+      logger.warning("! ! ! ! ! ! ! ! ! ! ! ! ! ! !")
+      logger.warning("Force constraint not implemented yet for the SOFT CONTACT AUGMENTED MODEL")
+      logger.warning("! ! ! ! ! ! ! ! ! ! ! ! ! ! !")
       forceBoxConstraint = self.create_force_constraint(state, actuation)
       constraintModelManager.addConstraint('forceBox', forceBoxConstraint)
     if('collisionBox' in self.WHICH_CONSTRAINTS):
@@ -83,8 +89,84 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
           constraintModelManager.addConstraint('collisionBox_' + str(i), collisionBoxConstraint)
 
     return constraintModelManager
+  
+  def create_running_cost_model(self, state, actuation):
+    '''
+    Create running cost model sum
+    '''
+    costModelSum = crocoddyl.CostModelSum(state, nu=actuation.nu)
+  # Create and add cost function terms to current IAM
+    # State regularization 
+    if('stateReg' in self.WHICH_COSTS):
+      xRegCost = self.create_state_reg_cost(state, actuation)
+      costModelSum.addCost("stateReg", xRegCost, self.stateRegWeight)
+    # Control regularization
+    if('ctrlReg' in self.WHICH_COSTS ):
+      uRegCost = self.create_ctrl_reg_cost(state)
+      costModelSum.addCost("ctrlReg", uRegCost, self.ctrlRegWeight)
+    # State limits penalizationself.
+    if('stateLim' in self.WHICH_COSTS):
+      xLimitCost = self.create_state_limit_cost(state, actuation)
+      costModelSum.addCost("stateLim", xLimitCost, self.stateLimWeight)
+    # Control limits penalization
+    if('ctrlLim' in self.WHICH_COSTS):
+      uLimitCost = self.create_ctrl_limit_cost(state)
+      costModelSum.addCost("ctrlLim", uLimitCost, self.ctrlLimWeight)
+    # End-effector placement 
+    if('placement' in self.WHICH_COSTS):
+      framePlacementCost = self.create_frame_placement_cost(state, actuation)
+      costModelSum.addCost("placement", framePlacementCost, self.framePlacementWeight)
+    # End-effector velocity
+    if('velocity' in self.WHICH_COSTS): 
+      frameVelocityCost = self.create_frame_velocity_cost(state, actuation)
+      costModelSum.addCost("velocity", frameVelocityCost, self.frameVelocityWeight)
+    # Frame translation cost
+    if('translation' in self.WHICH_COSTS):
+      frameTranslationCost = self.create_frame_translation_cost(state, actuation)
+      costModelSum.addCost("translation", frameTranslationCost, self.frameTranslationWeight)
+    # End-effector orientation 
+    if('rotation' in self.WHICH_COSTS):
+      frameRotationCost = self.create_frame_rotation_cost(state, actuation)
+      costModelSum.addCost("rotation", frameRotationCost, self.frameRotationWeight)
     
-  def create_differential_action_model(self, state, actuation, softContactModel, constraintModelManager=None):
+    return costModelSum
+
+  def create_terminal_cost_model(self, state, actuation):
+    '''
+    Create terminal cost model sum
+      All cost weights are scaled by the OCP integration step dt
+      because the terminal model is not integrated in calc
+    '''
+    costModelSum_t = crocoddyl.CostModelSum(state, nu=actuation.nu)
+  # Create and add terminal cost models to terminal IAM
+  #   State regularization
+    if('stateReg' in self.WHICH_COSTS):
+      xRegCost = self.create_state_reg_cost(state, actuation)
+      costModelSum_t.addCost("stateReg", xRegCost, self.stateRegWeightTerminal*self.dt)
+    # State limits
+    if('stateLim' in self.WHICH_COSTS):
+      xLimitCost = self.create_state_limit_cost(state, actuation)
+      costModelSum_t.addCost("stateLim", xLimitCost, self.stateLimWeightTerminal*self.dt)
+    # EE placement
+    if('placement' in self.WHICH_COSTS):
+      framePlacementCost = self.create_frame_placement_cost(state, actuation)
+      costModelSum_t.addCost("placement", framePlacementCost, self.framePlacementWeightTerminal*self.dt)
+    # EE velocity
+    if('velocity' in self.WHICH_COSTS):
+      frameVelocityCost = self.create_frame_velocity_cost(state, actuation)
+      costModelSum_t.addCost("velocity", frameVelocityCost, self.frameVelocityWeightTerminal*self.dt)
+    # EE translation
+    if('translation' in self.WHICH_COSTS):
+      frameTranslationCost = self.create_frame_translation_cost(state, actuation)
+      costModelSum_t.addCost("translation", frameTranslationCost, self.frameTranslationWeightTerminal*self.dt)
+    # End-effector orientation 
+    if('rotation' in self.WHICH_COSTS):
+      frameRotationCost = self.create_frame_rotation_cost(state, actuation)
+      costModelSum_t.addCost("rotation", frameRotationCost, self.frameRotationWeightTerminal*self.dt)
+    
+    return costModelSum_t
+  
+  def create_differential_action_model(self, state, actuation, costModelSum, softContactModel, constraintModelManager=None):
     '''
     Initialize a differential action model with soft contact
     '''
@@ -126,9 +208,12 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
                                 constraintModelManager )
     elif(softContactModel.nc == 1):
       if(constraintModelManager is None):
+        logger.debug("Kp = "+str(softContactModel.Kp))
+        logger.debug("Kv = "+str(softContactModel.Kv))
         dam = force_feedback_mpc.DAMSoftContact1DAugmentedFwdDynamics(state, 
                                 actuation, 
-                                crocoddyl.CostModelSum(state, nu=actuation.nu),
+                                # crocoddyl.CostModelSum(state, nu=actuation.nu),
+                                costModelSum,
                                 softContactModel.frameId, 
                                 softContactModel.Kp,
                                 softContactModel.Kv,
@@ -138,7 +223,8 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
       else:
         dam = force_feedback_mpc.DAMSoftContact1DAugmentedFwdDynamics(state, 
                                 actuation, 
-                                crocoddyl.CostModelSum(state, nu=actuation.nu),
+                                # crocoddyl.CostModelSum(state, nu=actuation.nu),
+                                costModelSum,
                                 softContactModel.frameId, 
                                 softContactModel.Kp,
                                 softContactModel.Kv,
@@ -151,48 +237,15 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
 
     return dam
 
-
-  def init_running_model(self, state, actuation, runningModel, softContactModel):
+  def finalize_running_model(self, runningModel, softContactModel):
     '''
-  Populate running model with costs and contacts
+    Populate running model with hard-coded costs 
     '''
   # Create and add cost function terms to current IAM
-    # State regularization 
-    if('stateReg' in self.WHICH_COSTS):
-      xRegCost = self.create_state_reg_cost(state, actuation)
-      runningModel.differential.costs.addCost("stateReg", xRegCost, self.stateRegWeight)
-    # Control regularization
-    if('ctrlReg' in self.WHICH_COSTS):
-      uRegCost = self.create_ctrl_reg_cost(state)
-      runningModel.differential.costs.addCost("ctrlReg", uRegCost, self.ctrlRegWeight)
     # Control regularization (gravity)
     if('ctrlRegGrav' in self.WHICH_COSTS):
       runningModel.differential.with_gravity_torque_reg = True
       runningModel.differential.tau_grav_weight = self.ctrlRegGravWeight
-    # State limits penalizationself.
-    if('stateLim' in self.WHICH_COSTS):
-      xLimitCost = self.create_state_limit_cost(state, actuation)
-      runningModel.differential.costs.addCost("stateLim", xLimitCost, self.stateLimWeight)
-    # Control limits penalization
-    if('ctrlLim' in self.WHICH_COSTS):
-      uLimitCost = self.create_ctrl_limit_cost(state)
-      runningModel.differential.costs.addCost("ctrlLim", uLimitCost, self.ctrlLimWeight)
-    # End-effector placement 
-    if('placement' in self.WHICH_COSTS):
-      framePlacementCost = self.create_frame_placement_cost(state, actuation)
-      runningModel.differential.costs.addCost("placement", framePlacementCost, self.framePlacementWeight)
-    # End-effector velocity
-    if('velocity' in self.WHICH_COSTS): 
-      frameVelocityCost = self.create_frame_velocity_cost(state, actuation)
-      runningModel.differential.costs.addCost("velocity", frameVelocityCost, self.frameVelocityWeight)
-    # Frame translation cost
-    if('translation' in self.WHICH_COSTS):
-      frameTranslationCost = self.create_frame_translation_cost(state, actuation)
-      runningModel.differential.costs.addCost("translation", frameTranslationCost, self.frameTranslationWeight)
-    # End-effector orientation 
-    if('rotation' in self.WHICH_COSTS):
-      frameRotationCost = self.create_frame_rotation_cost(state, actuation)
-      runningModel.differential.costs.addCost("rotation", frameRotationCost, self.frameRotationWeight)
     # Frame force cost
     if('force' in self.WHICH_COSTS):
       if(softContactModel.nc == 3):
@@ -206,36 +259,14 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
     if('forceRateReg' in self.WHICH_COSTS):
       runningModel.differential.with_force_rate_reg_cost = True
       runningModel.differential.f_rate_reg_weight = np.asarray(self.forceRateRegWeight)
-
-  def init_terminal_model(self, state, actuation, terminalModel, softContactModel):
+ 
+  def finalize_terminal_model(self, terminalModel, softContactModel):
     ''' 
-    Populate terminal model with costs and contacts 
+    Populate terminal model with hard-coded costs 
+      All cost weights are scaled by the OCP integration step dt
+      because the terminal model is not integrated in calc
     '''
   # Create and add terminal cost models to terminal IAM
-    # State regularization
-    if('stateReg' in self.WHICH_COSTS):
-      xRegCost = self.create_state_reg_cost(state, actuation)
-      terminalModel.differential.costs.addCost("stateReg", xRegCost, self.stateRegWeightTerminal*self.dt)
-    # State limits
-    if('stateLim' in self.WHICH_COSTS):
-      xLimitCost = self.create_state_limit_cost(state, actuation)
-      terminalModel.differential.costs.addCost("stateLim", xLimitCost, self.stateLimWeightTerminal*self.dt)
-    # EE placement
-    if('placement' in self.WHICH_COSTS):
-      framePlacementCost = self.create_frame_placement_cost(state, actuation)
-      terminalModel.differential.costs.addCost("placement", framePlacementCost, self.framePlacementWeightTerminal*self.dt)
-    # EE velocity
-    if('velocity' in self.WHICH_COSTS):
-      frameVelocityCost = self.create_frame_velocity_cost(state, actuation)
-      terminalModel.differential.costs.addCost("velocity", frameVelocityCost, self.frameVelocityWeightTerminal*self.dt)
-    # EE translation
-    if('translation' in self.WHICH_COSTS):
-      frameTranslationCost = self.create_frame_translation_cost(state, actuation)
-      terminalModel.differential.costs.addCost("translation", frameTranslationCost, self.frameTranslationWeightTerminal*self.dt)
-    # End-effector orientation 
-    if('rotation' in self.WHICH_COSTS):
-      frameRotationCost = self.create_frame_rotation_cost(state, actuation)
-      terminalModel.differential.costs.addCost("rotation", frameRotationCost, self.frameRotationWeightTerminal*self.dt)
     # Frame force cost
     if('force' in self.WHICH_COSTS):
       if(softContactModel.nc == 3):
@@ -290,24 +321,28 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
     runningModels = []
     for i in range(self.N_h):  
       # Create DAM (Contact or FreeFwd), IAM LPF and initialize costs+contacts
+        costModelSum = self.create_running_cost_model(state, actuation)
         if(self.nb_constraints == 0):
-          dam = self.create_differential_action_model(state, actuation, softContactModel) 
+          dam = self.create_differential_action_model(state, actuation, costModelSum, softContactModel) 
         else:
         # Create constraint manager and constraints
           constraintModelManager = self.create_constraint_model_manager(state, actuation, i)
         # Create DAM & IAM and initialize costs+contacts+constraints
-          dam = self.create_differential_action_model(state, actuation, softContactModel, constraintModelManager) 
+          dam = self.create_differential_action_model(state, actuation, costModelSum, softContactModel, constraintModelManager) 
         runningModels.append(force_feedback_mpc.IAMSoftContactAugmented( dam, self.dt ))
-        self.init_running_model(state, actuation, runningModels[i], softContactModel)
+        self.finalize_running_model(runningModels[i], softContactModel)
+        # self.init_running_model(state, actuation, runningModels[i], softContactModel)
         
     # Terminal model
+    costModelSum_t = self.create_terminal_cost_model(state, actuation)
     if(self.nb_constraints == 0):
-      dam_t = self.create_differential_action_model(state, actuation, softContactModel)  
+      dam_t = self.create_differential_action_model(state, actuation, costModelSum_t, softContactModel)  
     else:
       constraintModelManager = self.create_constraint_model_manager(state, actuation, self.N_h)
-      dam_t = self.create_differential_action_model(state, actuation, softContactModel, constraintModelManager)  
+      dam_t = self.create_differential_action_model(state, actuation, costModelSum_t, softContactModel, constraintModelManager)  
     terminalModel = force_feedback_mpc.IAMSoftContactAugmented( dam_t, 0. )
-    self.init_terminal_model(state, actuation, terminalModel, softContactModel)
+    self.finalize_terminal_model(terminalModel, softContactModel)
+    # self.init_terminal_model(state, actuation, terminalModel, softContactModel)
     
     logger.info("Created IAMs.")  
 
