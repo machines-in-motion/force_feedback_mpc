@@ -192,8 +192,7 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
                                 softContactModel.frameId, 
                                 softContactModel.Kp,
                                 softContactModel.Kv,
-                                softContactModel.oPc,
-                                softContactModel.pinRefFrame )
+                                softContactModel.oPc )
       else:
         dam = force_feedback_mpc.DAMSoftContact3DAugmentedFwdDynamics(state, 
                                 actuation, 
@@ -202,7 +201,6 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
                                 softContactModel.Kp,
                                 softContactModel.Kv,
                                 softContactModel.oPc,
-                                softContactModel.pinRefFrame,
                                 constraintModelManager )
     elif(softContactModel.nc == 1):
       if(constraintModelManager is None):
@@ -214,7 +212,6 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
                                 softContactModel.Kp,
                                 softContactModel.Kv,
                                 softContactModel.oPc,
-                                softContactModel.pinRefFrame,
                                 softContactModel.maskType )
       else:
         dam = force_feedback_mpc.DAMSoftContact1DAugmentedFwdDynamics(state, 
@@ -225,12 +222,15 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
                                 softContactModel.Kp,
                                 softContactModel.Kv,
                                 softContactModel.oPc,
-                                softContactModel.pinRefFrame,
                                 softContactModel.maskType,
                                 constraintModelManager )
     else:
       logger.error("softContactModel.nc = 3 or 1")
 
+    # set dynamics and cost reference frames
+    dam.ref      = softContactModel.pinRefFrame
+    dam.cost_ref = softContactModel.pinRefFrame
+    logger.warning("Set dynamics and cost reference frames to "+str(softContactModel.pinRefFrame))
     return dam
 
   def finalize_running_model(self, runningModel, softContactModel):

@@ -1,0 +1,1020 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeDetermineSystem.cmake:205 (message)"
+      - "CMakeLists.txt:43 (project)"
+    message: |
+      The system is: Linux - 5.15.0-122-generic - x86_64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:43 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ 
+      Build flags: -fvisibility-inlines-hidden;-fmessage-length=0;-march=nocona;-mtune=haswell;-ftree-vectorize;-fPIC;-fstack-protector-strong;-fno-plt;-O2;-ffunction-sections;-pipe;-isystem;/home/skleff/miniconda3/envs/debug/include
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+      
+      The CXX compiler identification is GNU, found in:
+        /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/3.30.4/CompilerIdCXX/a.out
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:43 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-QT71s7"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-QT71s7"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-QT71s7'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_28406/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_28406.dir/build.make CMakeFiles/cmTC_28406.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-QT71s7'
+        Building CXX object CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include    -v -o CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o -c /home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeCXXCompilerABI.cpp
+        Reading specs from /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/specs
+        could not find specs file conda.specs
+        COLLECT_GCC=/home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++
+        Target: x86_64-conda-linux-gnu
+        Configured with: ../configure --prefix=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho --with-slibdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --libdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --mandir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/man --build=x86_64-conda-linux-gnu --host=x86_64-conda-linux-gnu --target=x86_64-conda-linux-gnu --enable-languages=c,c++,fortran,objc,obj-c++ --enable-__cxa_atexit --disable-libmudflap --enable-libgomp --disable-libssp --enable-libquadmath --enable-libquadmath-support --enable-lto --enable-target-optspace --enable-plugin --enable-gold --disable-nls --disable-bootstrap --disable-multilib --enable-long-long --with-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/x86_64-conda-linux-gnu/sysroot --with-build-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/work/cf-compilers/x86_64-conda-linux-gnu/sysroot --with-native-system-header-dir=/usr/include --with-gxx-include-dir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++ --with-pkgversion='conda-forge gcc 13.3.0-1' --with-bugurl=https://github.com/conda-forge/ctng-compilers-feedstock/issues/new/choose --enable-libsanitizer --enable-default-pie --enable-threads=posix
+        Thread model: posix
+        Supported LTO compression algorithms: zlib
+        gcc version 13.3.0 (conda-forge gcc 13.3.0-1) 
+        COLLECT_GCC_OPTIONS='-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-v' '-o' 'CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-dumpdir' 'CMakeFiles/cmTC_28406.dir/'
+         /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/cc1plus -quiet -v -iprefix /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/ -isysroot /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot -D_GNU_SOURCE -isystem /home/skleff/miniconda3/envs/debug/include /home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_28406.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -march=nocona -mtune=haswell -O2 -version -fvisibility-inlines-hidden -fmessage-length=0 -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -ffunction-sections -o - |
+         /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/as -v --64 -o CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o
+        GNU assembler version 2.43 (x86_64-conda-linux-gnu) using BFD version (GNU Binutils) 2.43
+        GNU C++17 (conda-forge gcc 13.3.0-1) version 13.3.0 (x86_64-conda-linux-gnu)
+        	compiled by GNU C version 14.1.0, GMP version 6.2.1, MPFR version 4.1.0, MPC version 1.2.1, isl version isl-0.24-GMP
+        
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring nonexistent directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/include"
+        ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++"
+        ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/x86_64-conda-linux-gnu"
+        ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/backward"
+        ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include"
+        ignoring nonexistent directory "/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/local/include"
+        ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include-fixed"
+        ignoring nonexistent directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /home/skleff/miniconda3/envs/debug/include
+         /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++
+         /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/x86_64-conda-linux-gnu
+         /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/backward
+         /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include
+         /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include-fixed
+         /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/include
+        End of search list.
+        Compiler executable checksum: 039015ee0a9e66f9e392e0a654f3b067
+        COMPILER_PATH=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/
+        LIBRARY_PATH=/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/
+        COLLECT_GCC_OPTIONS='-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-v' '-o' 'CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-dumpdir' 'CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.'
+        Linking CXX executable cmTC_28406
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_28406.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib -v -Wl,-v CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_28406
+        Reading specs from /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/specs
+        could not find specs file conda.specs
+        COLLECT_GCC=/home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++
+        COLLECT_LTO_WRAPPER=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/lto-wrapper
+        Target: x86_64-conda-linux-gnu
+        Configured with: ../configure --prefix=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho --with-slibdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --libdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --mandir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/man --build=x86_64-conda-linux-gnu --host=x86_64-conda-linux-gnu --target=x86_64-conda-linux-gnu --enable-languages=c,c++,fortran,objc,obj-c++ --enable-__cxa_atexit --disable-libmudflap --enable-libgomp --disable-libssp --enable-libquadmath --enable-libquadmath-support --enable-lto --enable-target-optspace --enable-plugin --enable-gold --disable-nls --disable-bootstrap --disable-multilib --enable-long-long --with-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/x86_64-conda-linux-gnu/sysroot --with-build-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/work/cf-compilers/x86_64-conda-linux-gnu/sysroot --with-native-system-header-dir=/usr/include --with-gxx-include-dir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++ --with-pkgversion='conda-forge gcc 13.3.0-1' --with-bugurl=https://github.com/conda-forge/ctng-compilers-feedstock/issues/new/choose --enable-libsanitizer --enable-default-pie --enable-threads=posix
+        Thread model: posix
+        Supported LTO compression algorithms: zlib
+        gcc version 13.3.0 (conda-forge gcc 13.3.0-1) 
+        COMPILER_PATH=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/
+        LIBRARY_PATH=/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/
+        COLLECT_GCC_OPTIONS='-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-L/home/skleff/miniconda3/envs/debug/lib' '-v' '-o' 'cmTC_28406' '-shared-libgcc' '-dumpdir' 'cmTC_28406.'
+         /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/collect2 -plugin /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/liblto_plugin.so -plugin-opt=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/lto-wrapper -plugin-opt=-fresolution=/tmp/cc9icYOQ.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_28406 /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/Scrt1.o /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crti.o /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtbeginS.o -L/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0 -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../.. -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib -O2 --sort-common --as-needed -z relro -z now --disable-new-dtags --gc-sections --allow-shlib-undefined -rpath /home/skleff/miniconda3/envs/debug/lib -rpath-link /home/skleff/miniconda3/envs/debug/lib -v CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtendS.o /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crtn.o -rpath /home/skleff/miniconda3/envs/debug/lib
+        collect2 version 13.3.0
+        /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/ld -plugin /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/liblto_plugin.so -plugin-opt=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/lto-wrapper -plugin-opt=-fresolution=/tmp/cc9icYOQ.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_28406 /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/Scrt1.o /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crti.o /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtbeginS.o -L/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0 -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../.. -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib -O2 --sort-common --as-needed -z relro -z now --disable-new-dtags --gc-sections --allow-shlib-undefined -rpath /home/skleff/miniconda3/envs/debug/lib -rpath-link /home/skleff/miniconda3/envs/debug/lib -v CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtendS.o /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crtn.o -rpath /home/skleff/miniconda3/envs/debug/lib
+        GNU ld (GNU Binutils) 2.43
+        COLLECT_GCC_OPTIONS='-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-L/home/skleff/miniconda3/envs/debug/lib' '-v' '-o' 'cmTC_28406' '-shared-libgcc' '-dumpdir' 'cmTC_28406.'
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-QT71s7'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeDetermineCompilerABI.cmake:182 (message)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:43 (project)"
+    message: |
+      Parsed CXX implicit include dir info: rv=done
+        found start of include info
+        found start of implicit include info
+          add: [/home/skleff/miniconda3/envs/debug/include]
+          add: [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++]
+          add: [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/x86_64-conda-linux-gnu]
+          add: [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/backward]
+          add: [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include]
+          add: [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include-fixed]
+          add: [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/include]
+        end of search list found
+        collapse include dir [/home/skleff/miniconda3/envs/debug/include] ==> [/home/skleff/miniconda3/envs/debug/include]
+        collapse include dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++] ==> [/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++]
+        collapse include dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/x86_64-conda-linux-gnu] ==> [/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/x86_64-conda-linux-gnu]
+        collapse include dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/backward] ==> [/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/backward]
+        collapse include dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include] ==> [/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include]
+        collapse include dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include-fixed] ==> [/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include-fixed]
+        collapse include dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/include] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/include]
+        implicit include dirs: [/home/skleff/miniconda3/envs/debug/include;/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++;/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/x86_64-conda-linux-gnu;/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/backward;/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include;/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include-fixed;/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/include]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeDetermineCompilerABI.cmake:218 (message)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:43 (project)"
+    message: |
+      Parsed CXX implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(\\.[a-z]+)?))("|,| |$)]
+        ignore line: [Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-QT71s7']
+        ignore line: []
+        ignore line: [Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_28406/fast]
+        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_28406.dir/build.make CMakeFiles/cmTC_28406.dir/build]
+        ignore line: [make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-QT71s7']
+        ignore line: [Building CXX object CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [/home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include    -v -o CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o -c /home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Reading specs from /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/specs]
+        ignore line: [could not find specs file conda.specs]
+        ignore line: [COLLECT_GCC=/home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++]
+        ignore line: [Target: x86_64-conda-linux-gnu]
+        ignore line: [Configured with: ../configure --prefix=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho --with-slibdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --libdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --mandir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/man --build=x86_64-conda-linux-gnu --host=x86_64-conda-linux-gnu --target=x86_64-conda-linux-gnu --enable-languages=c c++ fortran objc obj-c++ --enable-__cxa_atexit --disable-libmudflap --enable-libgomp --disable-libssp --enable-libquadmath --enable-libquadmath-support --enable-lto --enable-target-optspace --enable-plugin --enable-gold --disable-nls --disable-bootstrap --disable-multilib --enable-long-long --with-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/x86_64-conda-linux-gnu/sysroot --with-build-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/work/cf-compilers/x86_64-conda-linux-gnu/sysroot --with-native-system-header-dir=/usr/include --with-gxx-include-dir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++ --with-pkgversion='conda-forge gcc 13.3.0-1' --with-bugurl=https://github.com/conda-forge/ctng-compilers-feedstock/issues/new/choose --enable-libsanitizer --enable-default-pie --enable-threads=posix]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib]
+        ignore line: [gcc version 13.3.0 (conda-forge gcc 13.3.0-1) ]
+        ignore line: [COLLECT_GCC_OPTIONS='-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-v' '-o' 'CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-dumpdir' 'CMakeFiles/cmTC_28406.dir/']
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/cc1plus -quiet -v -iprefix /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/ -isysroot /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot -D_GNU_SOURCE -isystem /home/skleff/miniconda3/envs/debug/include /home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_28406.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -march=nocona -mtune=haswell -O2 -version -fvisibility-inlines-hidden -fmessage-length=0 -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -ffunction-sections -o - |]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/as -v --64 -o CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [GNU assembler version 2.43 (x86_64-conda-linux-gnu) using BFD version (GNU Binutils) 2.43]
+        ignore line: [GNU C++17 (conda-forge gcc 13.3.0-1) version 13.3.0 (x86_64-conda-linux-gnu)]
+        ignore line: [	compiled by GNU C version 14.1.0  GMP version 6.2.1  MPFR version 4.1.0  MPC version 1.2.1  isl version isl-0.24-GMP]
+        ignore line: []
+        ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+        ignore line: [ignoring nonexistent directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/include"]
+        ignore line: [ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++"]
+        ignore line: [ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/x86_64-conda-linux-gnu"]
+        ignore line: [ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/backward"]
+        ignore line: [ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include"]
+        ignore line: [ignoring nonexistent directory "/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/local/include"]
+        ignore line: [ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include-fixed"]
+        ignore line: [ignoring nonexistent directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/include"]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/include]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/x86_64-conda-linux-gnu]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/backward]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include-fixed]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/include]
+        ignore line: [End of search list.]
+        ignore line: [Compiler executable checksum: 039015ee0a9e66f9e392e0a654f3b067]
+        ignore line: [COMPILER_PATH=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/]
+        ignore line: [LIBRARY_PATH=/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-v' '-o' 'CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-dumpdir' 'CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.']
+        ignore line: [Linking CXX executable cmTC_28406]
+        ignore line: [/home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_28406.dir/link.txt --verbose=1]
+        ignore line: [/home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl -O2 -Wl --sort-common -Wl --as-needed -Wl -z relro -Wl -z now -Wl --disable-new-dtags -Wl --gc-sections -Wl --allow-shlib-undefined -Wl -rpath /home/skleff/miniconda3/envs/debug/lib -Wl -rpath-link /home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib -v -Wl -v CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_28406]
+        ignore line: [Reading specs from /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/specs]
+        ignore line: [could not find specs file conda.specs]
+        ignore line: [COLLECT_GCC=/home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++]
+        ignore line: [COLLECT_LTO_WRAPPER=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/lto-wrapper]
+        ignore line: [Target: x86_64-conda-linux-gnu]
+        ignore line: [Configured with: ../configure --prefix=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho --with-slibdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --libdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --mandir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/man --build=x86_64-conda-linux-gnu --host=x86_64-conda-linux-gnu --target=x86_64-conda-linux-gnu --enable-languages=c c++ fortran objc obj-c++ --enable-__cxa_atexit --disable-libmudflap --enable-libgomp --disable-libssp --enable-libquadmath --enable-libquadmath-support --enable-lto --enable-target-optspace --enable-plugin --enable-gold --disable-nls --disable-bootstrap --disable-multilib --enable-long-long --with-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/x86_64-conda-linux-gnu/sysroot --with-build-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/work/cf-compilers/x86_64-conda-linux-gnu/sysroot --with-native-system-header-dir=/usr/include --with-gxx-include-dir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++ --with-pkgversion='conda-forge gcc 13.3.0-1' --with-bugurl=https://github.com/conda-forge/ctng-compilers-feedstock/issues/new/choose --enable-libsanitizer --enable-default-pie --enable-threads=posix]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib]
+        ignore line: [gcc version 13.3.0 (conda-forge gcc 13.3.0-1) ]
+        ignore line: [COMPILER_PATH=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/]
+        ignore line: [LIBRARY_PATH=/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-L/home/skleff/miniconda3/envs/debug/lib' '-v' '-o' 'cmTC_28406' '-shared-libgcc' '-dumpdir' 'cmTC_28406.']
+        link line: [ /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/collect2 -plugin /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/liblto_plugin.so -plugin-opt=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/lto-wrapper -plugin-opt=-fresolution=/tmp/cc9icYOQ.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_28406 /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/Scrt1.o /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crti.o /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtbeginS.o -L/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0 -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../.. -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib -O2 --sort-common --as-needed -z relro -z now --disable-new-dtags --gc-sections --allow-shlib-undefined -rpath /home/skleff/miniconda3/envs/debug/lib -rpath-link /home/skleff/miniconda3/envs/debug/lib -v CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtendS.o /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crtn.o -rpath /home/skleff/miniconda3/envs/debug/lib]
+          arg [/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/collect2] ==> ignore
+          arg [-plugin] ==> ignore
+          arg [/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/liblto_plugin.so] ==> ignore
+          arg [-plugin-opt=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/lto-wrapper] ==> ignore
+          arg [-plugin-opt=-fresolution=/tmp/cc9icYOQ.res] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [--sysroot=/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf_x86_64] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+          arg [-pie] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_28406] ==> ignore
+          arg [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/Scrt1.o] ==> obj [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/Scrt1.o]
+          arg [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crti.o] ==> obj [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crti.o]
+          arg [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtbeginS.o] ==> obj [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtbeginS.o]
+          arg [-L/home/skleff/miniconda3/envs/debug/lib] ==> dir [/home/skleff/miniconda3/envs/debug/lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../..] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../..]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib]
+          arg [-O2] ==> ignore
+          arg [--sort-common] ==> ignore
+          arg [--as-needed] ==> ignore
+          arg [-zrelro] ==> ignore
+          arg [-znow] ==> ignore
+          arg [--disable-new-dtags] ==> ignore
+          arg [--gc-sections] ==> ignore
+          arg [--allow-shlib-undefined] ==> ignore
+          arg [-rpath] ==> ignore
+          arg [/home/skleff/miniconda3/envs/debug/lib] ==> ignore
+          arg [-rpath-link] ==> ignore
+          arg [/home/skleff/miniconda3/envs/debug/lib] ==> ignore
+          arg [-v] ==> ignore
+          arg [CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [-lstdc++] ==> lib [stdc++]
+          arg [-lm] ==> lib [m]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-lc] ==> lib [c]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtendS.o] ==> obj [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtendS.o]
+          arg [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crtn.o] ==> obj [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crtn.o]
+          arg [-rpath] ==> ignore
+          arg [/home/skleff/miniconda3/envs/debug/lib] ==> ignore
+        ignore line: [collect2 version 13.3.0]
+        ignore line: [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/ld -plugin /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/liblto_plugin.so -plugin-opt=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/lto-wrapper -plugin-opt=-fresolution=/tmp/cc9icYOQ.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_28406 /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/Scrt1.o /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crti.o /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtbeginS.o -L/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0 -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../.. -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib -O2 --sort-common --as-needed -z relro -z now --disable-new-dtags --gc-sections --allow-shlib-undefined -rpath /home/skleff/miniconda3/envs/debug/lib -rpath-link /home/skleff/miniconda3/envs/debug/lib -v CMakeFiles/cmTC_28406.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtendS.o /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crtn.o -rpath /home/skleff/miniconda3/envs/debug/lib]
+        linker tool for 'CXX': /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/ld
+        collapse obj [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/Scrt1.o] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/lib/Scrt1.o]
+        collapse obj [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crti.o] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/lib/crti.o]
+        collapse obj [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtbeginS.o] ==> [/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtbeginS.o]
+        collapse obj [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtendS.o] ==> [/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtendS.o]
+        collapse obj [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crtn.o] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/lib/crtn.o]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/lib] ==> [/home/skleff/miniconda3/envs/debug/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0] ==> [/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc] ==> [/home/skleff/miniconda3/envs/debug/lib/gcc]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib] ==> [/home/skleff/miniconda3/envs/debug/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../..] ==> [/home/skleff/miniconda3/envs/debug/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/lib]
+        implicit libs: [stdc++;m;gcc_s;gcc;c;gcc_s;gcc]
+        implicit objs: [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/lib/Scrt1.o;/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/lib/crti.o;/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtbeginS.o;/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtendS.o;/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/lib/crtn.o]
+        implicit dirs: [/home/skleff/miniconda3/envs/debug/lib;/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0;/home/skleff/miniconda3/envs/debug/lib/gcc;/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/lib;/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/lib;/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/lib]
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeDetermineCompilerABI.cmake:255 (cmake_determine_linker_id)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:43 (project)"
+    message: |
+      Running the CXX compiler's linker: "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/ld" "-v"
+      GNU ld (GNU Binutils) 2.43
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CheckCXXCompilerFlag.cmake:34 (cmake_check_compiler_flag)"
+      - "cmake/compiler.cmake:34 (check_cxx_compiler_flag)"
+      - "cmake/post-project.cmake:57 (_setup_project_warnings)"
+      - "CMakeLists.txt:43 (project)"
+    checks:
+      - "Performing Test R-pedantic"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-UhTci9"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-UhTci9"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "R-pedantic"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-UhTci9'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_23063/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_23063.dir/build.make CMakeFiles/cmTC_23063.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-UhTci9'
+        Building CXX object CMakeFiles/cmTC_23063.dir/src.cxx.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include    -DR-pedantic -pedantic -o CMakeFiles/cmTC_23063.dir/src.cxx.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-UhTci9/src.cxx
+        <command-line>: warning: ISO C++11 requires whitespace after the macro name
+        Linking CXX executable cmTC_23063
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_23063.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  CMakeFiles/cmTC_23063.dir/src.cxx.o -o cmTC_23063
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-UhTci9'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CheckCXXCompilerFlag.cmake:34 (cmake_check_compiler_flag)"
+      - "cmake/compiler.cmake:34 (check_cxx_compiler_flag)"
+      - "cmake/post-project.cmake:57 (_setup_project_warnings)"
+      - "CMakeLists.txt:43 (project)"
+    checks:
+      - "Performing Test R-Wno-long-long"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-qS8i7a"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-qS8i7a"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "R-Wno-long-long"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-qS8i7a'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_64af5/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_64af5.dir/build.make CMakeFiles/cmTC_64af5.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-qS8i7a'
+        Building CXX object CMakeFiles/cmTC_64af5.dir/src.cxx.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include    -DR-Wno-long-long -Wno-long-long -o CMakeFiles/cmTC_64af5.dir/src.cxx.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-qS8i7a/src.cxx
+        <command-line>: warning: ISO C++11 requires whitespace after the macro name
+        Linking CXX executable cmTC_64af5
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_64af5.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  CMakeFiles/cmTC_64af5.dir/src.cxx.o -o cmTC_64af5
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-qS8i7a'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CheckCXXCompilerFlag.cmake:34 (cmake_check_compiler_flag)"
+      - "cmake/compiler.cmake:34 (check_cxx_compiler_flag)"
+      - "cmake/post-project.cmake:57 (_setup_project_warnings)"
+      - "CMakeLists.txt:43 (project)"
+    checks:
+      - "Performing Test R-Wall"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-ePxib7"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-ePxib7"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "R-Wall"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-ePxib7'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_2cb08/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_2cb08.dir/build.make CMakeFiles/cmTC_2cb08.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-ePxib7'
+        Building CXX object CMakeFiles/cmTC_2cb08.dir/src.cxx.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include    -DR-Wall -Wall -o CMakeFiles/cmTC_2cb08.dir/src.cxx.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-ePxib7/src.cxx
+        <command-line>: warning: ISO C++11 requires whitespace after the macro name
+        Linking CXX executable cmTC_2cb08
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2cb08.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  CMakeFiles/cmTC_2cb08.dir/src.cxx.o -o cmTC_2cb08
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-ePxib7'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CheckCXXCompilerFlag.cmake:34 (cmake_check_compiler_flag)"
+      - "cmake/compiler.cmake:34 (check_cxx_compiler_flag)"
+      - "cmake/post-project.cmake:57 (_setup_project_warnings)"
+      - "CMakeLists.txt:43 (project)"
+    checks:
+      - "Performing Test R-Wextra"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-vlN3na"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-vlN3na"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "R-Wextra"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-vlN3na'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_f0534/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_f0534.dir/build.make CMakeFiles/cmTC_f0534.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-vlN3na'
+        Building CXX object CMakeFiles/cmTC_f0534.dir/src.cxx.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include    -DR-Wextra -Wextra -o CMakeFiles/cmTC_f0534.dir/src.cxx.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-vlN3na/src.cxx
+        <command-line>: warning: ISO C++11 requires whitespace after the macro name
+        Linking CXX executable cmTC_f0534
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f0534.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  CMakeFiles/cmTC_f0534.dir/src.cxx.o -o cmTC_f0534
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-vlN3na'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CheckCXXCompilerFlag.cmake:34 (cmake_check_compiler_flag)"
+      - "cmake/compiler.cmake:34 (check_cxx_compiler_flag)"
+      - "cmake/post-project.cmake:57 (_setup_project_warnings)"
+      - "CMakeLists.txt:43 (project)"
+    checks:
+      - "Performing Test R-Wcast-align"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-pIXwpa"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-pIXwpa"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "R-Wcast-align"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-pIXwpa'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_75df7/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_75df7.dir/build.make CMakeFiles/cmTC_75df7.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-pIXwpa'
+        Building CXX object CMakeFiles/cmTC_75df7.dir/src.cxx.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include    -DR-Wcast-align -Wcast-align -o CMakeFiles/cmTC_75df7.dir/src.cxx.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-pIXwpa/src.cxx
+        <command-line>: warning: ISO C++11 requires whitespace after the macro name
+        Linking CXX executable cmTC_75df7
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_75df7.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  CMakeFiles/cmTC_75df7.dir/src.cxx.o -o cmTC_75df7
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-pIXwpa'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CheckCXXCompilerFlag.cmake:34 (cmake_check_compiler_flag)"
+      - "cmake/compiler.cmake:34 (check_cxx_compiler_flag)"
+      - "cmake/post-project.cmake:57 (_setup_project_warnings)"
+      - "CMakeLists.txt:43 (project)"
+    checks:
+      - "Performing Test R-Wcast-qual"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-Lexnw9"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-Lexnw9"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "R-Wcast-qual"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-Lexnw9'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_14e7b/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_14e7b.dir/build.make CMakeFiles/cmTC_14e7b.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-Lexnw9'
+        Building CXX object CMakeFiles/cmTC_14e7b.dir/src.cxx.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include    -DR-Wcast-qual -Wcast-qual -o CMakeFiles/cmTC_14e7b.dir/src.cxx.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-Lexnw9/src.cxx
+        <command-line>: warning: ISO C++11 requires whitespace after the macro name
+        Linking CXX executable cmTC_14e7b
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_14e7b.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  CMakeFiles/cmTC_14e7b.dir/src.cxx.o -o cmTC_14e7b
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-Lexnw9'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CheckCXXCompilerFlag.cmake:34 (cmake_check_compiler_flag)"
+      - "cmake/compiler.cmake:34 (check_cxx_compiler_flag)"
+      - "cmake/post-project.cmake:57 (_setup_project_warnings)"
+      - "CMakeLists.txt:43 (project)"
+    checks:
+      - "Performing Test R-Wformat"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-HUC2T9"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-HUC2T9"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "R-Wformat"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-HUC2T9'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_55c04/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_55c04.dir/build.make CMakeFiles/cmTC_55c04.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-HUC2T9'
+        Building CXX object CMakeFiles/cmTC_55c04.dir/src.cxx.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include    -DR-Wformat -Wformat -o CMakeFiles/cmTC_55c04.dir/src.cxx.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-HUC2T9/src.cxx
+        <command-line>: warning: ISO C++11 requires whitespace after the macro name
+        Linking CXX executable cmTC_55c04
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_55c04.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  CMakeFiles/cmTC_55c04.dir/src.cxx.o -o cmTC_55c04
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-HUC2T9'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CheckCXXCompilerFlag.cmake:34 (cmake_check_compiler_flag)"
+      - "cmake/compiler.cmake:34 (check_cxx_compiler_flag)"
+      - "cmake/post-project.cmake:57 (_setup_project_warnings)"
+      - "CMakeLists.txt:43 (project)"
+    checks:
+      - "Performing Test R-Wwrite-strings"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-ZgxNv7"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-ZgxNv7"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "R-Wwrite-strings"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-ZgxNv7'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_cc051/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_cc051.dir/build.make CMakeFiles/cmTC_cc051.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-ZgxNv7'
+        Building CXX object CMakeFiles/cmTC_cc051.dir/src.cxx.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include    -DR-Wwrite-strings -Wwrite-strings -o CMakeFiles/cmTC_cc051.dir/src.cxx.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-ZgxNv7/src.cxx
+        <command-line>: warning: ISO C++11 requires whitespace after the macro name
+        Linking CXX executable cmTC_cc051
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cc051.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  CMakeFiles/cmTC_cc051.dir/src.cxx.o -o cmTC_cc051
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-ZgxNv7'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CheckCXXCompilerFlag.cmake:34 (cmake_check_compiler_flag)"
+      - "cmake/compiler.cmake:34 (check_cxx_compiler_flag)"
+      - "cmake/post-project.cmake:57 (_setup_project_warnings)"
+      - "CMakeLists.txt:43 (project)"
+    checks:
+      - "Performing Test R-Wconversion"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-K6tab7"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-K6tab7"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "R-Wconversion"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-K6tab7'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_ba193/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_ba193.dir/build.make CMakeFiles/cmTC_ba193.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-K6tab7'
+        Building CXX object CMakeFiles/cmTC_ba193.dir/src.cxx.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include    -DR-Wconversion -Wconversion -o CMakeFiles/cmTC_ba193.dir/src.cxx.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-K6tab7/src.cxx
+        <command-line>: warning: ISO C++11 requires whitespace after the macro name
+        Linking CXX executable cmTC_ba193
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ba193.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  CMakeFiles/cmTC_ba193.dir/src.cxx.o -o cmTC_ba193
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-K6tab7'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/FindOpenMP.cmake:238 (try_compile)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/FindOpenMP.cmake:506 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:51 (find_package)"
+    description: "Detecting CXX OpenMP compiler info"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-px4Sb9"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-px4Sb9"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "OpenMP_COMPILE_RESULT_CXX_fopenmp"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-px4Sb9'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_40ef8/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_40ef8.dir/build.make CMakeFiles/cmTC_40ef8.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-px4Sb9'
+        Building CXX object CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include -fopenmp -v -o CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-px4Sb9/OpenMPTryFlag.cpp
+        Reading specs from /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/specs
+        could not find specs file conda.specs
+        COLLECT_GCC=/home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++
+        Target: x86_64-conda-linux-gnu
+        Configured with: ../configure --prefix=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho --with-slibdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --libdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --mandir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/man --build=x86_64-conda-linux-gnu --host=x86_64-conda-linux-gnu --target=x86_64-conda-linux-gnu --enable-languages=c,c++,fortran,objc,obj-c++ --enable-__cxa_atexit --disable-libmudflap --enable-libgomp --disable-libssp --enable-libquadmath --enable-libquadmath-support --enable-lto --enable-target-optspace --enable-plugin --enable-gold --disable-nls --disable-bootstrap --disable-multilib --enable-long-long --with-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/x86_64-conda-linux-gnu/sysroot --with-build-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/work/cf-compilers/x86_64-conda-linux-gnu/sysroot --with-native-system-header-dir=/usr/include --with-gxx-include-dir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++ --with-pkgversion='conda-forge gcc 13.3.0-1' --with-bugurl=https://github.com/conda-forge/ctng-compilers-feedstock/issues/new/choose --enable-libsanitizer --enable-default-pie --enable-threads=posix
+        Thread model: posix
+        Supported LTO compression algorithms: zlib
+        gcc version 13.3.0 (conda-forge gcc 13.3.0-1) 
+        COLLECT_GCC_OPTIONS='-Werror' '-Wpedantic' '-Wno-long-long' '-Wall' '-Wextra' '-Wcast-align' '-Wcast-qual' '-Wformat=1' '-Wwrite-strings' '-Wconversion' '-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-fopenmp' '-v' '-o' 'CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o' '-c' '-shared-libgcc' '-pthread' '-dumpdir' 'CMakeFiles/cmTC_40ef8.dir/'
+         /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/cc1plus -quiet -v -iprefix /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/ -isysroot /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot -D_GNU_SOURCE -D_REENTRANT -isystem /home/skleff/miniconda3/envs/debug/include /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-px4Sb9/OpenMPTryFlag.cpp -quiet -dumpdir CMakeFiles/cmTC_40ef8.dir/ -dumpbase OpenMPTryFlag.cpp.cpp -dumpbase-ext .cpp -march=nocona -mtune=haswell -O2 -Werror -Wpedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat=1 -Wwrite-strings -Wconversion -version -fvisibility-inlines-hidden -fmessage-length=0 -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -ffunction-sections -fopenmp -o - |
+         /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/as -v --64 -o CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o
+        GNU assembler version 2.43 (x86_64-conda-linux-gnu) using BFD version (GNU Binutils) 2.43
+        GNU C++17 (conda-forge gcc 13.3.0-1) version 13.3.0 (x86_64-conda-linux-gnu)
+        	compiled by GNU C version 14.1.0, GMP version 6.2.1, MPFR version 4.1.0, MPC version 1.2.1, isl version isl-0.24-GMP
+        
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring nonexistent directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/include"
+        ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++"
+        ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/x86_64-conda-linux-gnu"
+        ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/backward"
+        ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include"
+        ignoring nonexistent directory "/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/local/include"
+        ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include-fixed"
+        ignoring nonexistent directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /home/skleff/miniconda3/envs/debug/include
+         /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++
+         /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/x86_64-conda-linux-gnu
+         /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/backward
+         /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include
+         /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include-fixed
+         /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/include
+        End of search list.
+        Compiler executable checksum: 039015ee0a9e66f9e392e0a654f3b067
+        COMPILER_PATH=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/
+        LIBRARY_PATH=/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/
+        COLLECT_GCC_OPTIONS='-Werror' '-Wpedantic' '-Wno-long-long' '-Wall' '-Wextra' '-Wcast-align' '-Wcast-qual' '-Wformat=1' '-Wwrite-strings' '-Wconversion' '-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-fopenmp' '-v' '-o' 'CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o' '-c' '-shared-libgcc' '-pthread' '-dumpdir' 'CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.'
+        Linking CXX executable cmTC_40ef8
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_40ef8.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include -fopenmp -v -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o -o cmTC_40ef8  -v
+        Reading specs from /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/specs
+        could not find specs file conda.specs
+        COLLECT_GCC=/home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++
+        COLLECT_LTO_WRAPPER=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/lto-wrapper
+        Target: x86_64-conda-linux-gnu
+        Configured with: ../configure --prefix=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho --with-slibdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --libdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --mandir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/man --build=x86_64-conda-linux-gnu --host=x86_64-conda-linux-gnu --target=x86_64-conda-linux-gnu --enable-languages=c,c++,fortran,objc,obj-c++ --enable-__cxa_atexit --disable-libmudflap --enable-libgomp --disable-libssp --enable-libquadmath --enable-libquadmath-support --enable-lto --enable-target-optspace --enable-plugin --enable-gold --disable-nls --disable-bootstrap --disable-multilib --enable-long-long --with-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/x86_64-conda-linux-gnu/sysroot --with-build-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/work/cf-compilers/x86_64-conda-linux-gnu/sysroot --with-native-system-header-dir=/usr/include --with-gxx-include-dir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++ --with-pkgversion='conda-forge gcc 13.3.0-1' --with-bugurl=https://github.com/conda-forge/ctng-compilers-feedstock/issues/new/choose --enable-libsanitizer --enable-default-pie --enable-threads=posix
+        Thread model: posix
+        Supported LTO compression algorithms: zlib
+        gcc version 13.3.0 (conda-forge gcc 13.3.0-1) 
+        COMPILER_PATH=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/
+        LIBRARY_PATH=/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/
+        Reading specs from /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib/libgomp.spec
+        COLLECT_GCC_OPTIONS='-Werror' '-Wpedantic' '-Wno-long-long' '-Wall' '-Wextra' '-Wcast-align' '-Wcast-qual' '-Wformat=1' '-Wwrite-strings' '-Wconversion' '-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-fopenmp' '-v' '-L/home/skleff/miniconda3/envs/debug/lib' '-o' 'cmTC_40ef8' '-v' '-shared-libgcc' '-pthread' '-dumpdir' 'cmTC_40ef8.'
+         /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/collect2 -plugin /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/liblto_plugin.so -plugin-opt=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccd3k9bv.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lpthread -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_40ef8 /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/Scrt1.o /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crti.o /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtbeginS.o -L/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0 -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../.. -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib -O2 --sort-common --as-needed -z relro -z now --disable-new-dtags --gc-sections --allow-shlib-undefined -rpath /home/skleff/miniconda3/envs/debug/lib -rpath-link /home/skleff/miniconda3/envs/debug/lib CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o -lstdc++ -lm -lgomp -lgcc_s -lgcc -lpthread -lc -lgcc_s -lgcc /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtendS.o /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crtn.o -rpath /home/skleff/miniconda3/envs/debug/lib
+        COLLECT_GCC_OPTIONS='-Werror' '-Wpedantic' '-Wno-long-long' '-Wall' '-Wextra' '-Wcast-align' '-Wcast-qual' '-Wformat=1' '-Wwrite-strings' '-Wconversion' '-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-fopenmp' '-v' '-L/home/skleff/miniconda3/envs/debug/lib' '-o' 'cmTC_40ef8' '-v' '-shared-libgcc' '-pthread' '-dumpdir' 'cmTC_40ef8.'
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-px4Sb9'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/FindOpenMP.cmake:282 (message)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/FindOpenMP.cmake:506 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:51 (find_package)"
+    message: |
+      Parsed CXX OpenMP implicit link information from above output:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        ignore line: [Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-px4Sb9']
+        ignore line: []
+        ignore line: [Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_40ef8/fast]
+        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_40ef8.dir/build.make CMakeFiles/cmTC_40ef8.dir/build]
+        ignore line: [make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-px4Sb9']
+        ignore line: [Building CXX object CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o]
+        ignore line: [/home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include -fopenmp -v -o CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-px4Sb9/OpenMPTryFlag.cpp]
+        ignore line: [Reading specs from /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/specs]
+        ignore line: [could not find specs file conda.specs]
+        ignore line: [COLLECT_GCC=/home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++]
+        ignore line: [Target: x86_64-conda-linux-gnu]
+        ignore line: [Configured with: ../configure --prefix=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho --with-slibdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --libdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --mandir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/man --build=x86_64-conda-linux-gnu --host=x86_64-conda-linux-gnu --target=x86_64-conda-linux-gnu --enable-languages=c c++ fortran objc obj-c++ --enable-__cxa_atexit --disable-libmudflap --enable-libgomp --disable-libssp --enable-libquadmath --enable-libquadmath-support --enable-lto --enable-target-optspace --enable-plugin --enable-gold --disable-nls --disable-bootstrap --disable-multilib --enable-long-long --with-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/x86_64-conda-linux-gnu/sysroot --with-build-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/work/cf-compilers/x86_64-conda-linux-gnu/sysroot --with-native-system-header-dir=/usr/include --with-gxx-include-dir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++ --with-pkgversion='conda-forge gcc 13.3.0-1' --with-bugurl=https://github.com/conda-forge/ctng-compilers-feedstock/issues/new/choose --enable-libsanitizer --enable-default-pie --enable-threads=posix]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib]
+        ignore line: [gcc version 13.3.0 (conda-forge gcc 13.3.0-1) ]
+        ignore line: [COLLECT_GCC_OPTIONS='-Werror' '-Wpedantic' '-Wno-long-long' '-Wall' '-Wextra' '-Wcast-align' '-Wcast-qual' '-Wformat=1' '-Wwrite-strings' '-Wconversion' '-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-fopenmp' '-v' '-o' 'CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o' '-c' '-shared-libgcc' '-pthread' '-dumpdir' 'CMakeFiles/cmTC_40ef8.dir/']
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/cc1plus -quiet -v -iprefix /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/ -isysroot /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot -D_GNU_SOURCE -D_REENTRANT -isystem /home/skleff/miniconda3/envs/debug/include /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-px4Sb9/OpenMPTryFlag.cpp -quiet -dumpdir CMakeFiles/cmTC_40ef8.dir/ -dumpbase OpenMPTryFlag.cpp.cpp -dumpbase-ext .cpp -march=nocona -mtune=haswell -O2 -Werror -Wpedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat=1 -Wwrite-strings -Wconversion -version -fvisibility-inlines-hidden -fmessage-length=0 -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -ffunction-sections -fopenmp -o - |]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/as -v --64 -o CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o]
+        ignore line: [GNU assembler version 2.43 (x86_64-conda-linux-gnu) using BFD version (GNU Binutils) 2.43]
+        ignore line: [GNU C++17 (conda-forge gcc 13.3.0-1) version 13.3.0 (x86_64-conda-linux-gnu)]
+        ignore line: [	compiled by GNU C version 14.1.0  GMP version 6.2.1  MPFR version 4.1.0  MPC version 1.2.1  isl version isl-0.24-GMP]
+        ignore line: []
+        ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+        ignore line: [ignoring nonexistent directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/include"]
+        ignore line: [ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++"]
+        ignore line: [ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/x86_64-conda-linux-gnu"]
+        ignore line: [ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/backward"]
+        ignore line: [ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include"]
+        ignore line: [ignoring nonexistent directory "/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/local/include"]
+        ignore line: [ignoring duplicate directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include-fixed"]
+        ignore line: [ignoring nonexistent directory "/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/../../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/include"]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/include]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/x86_64-conda-linux-gnu]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++/backward]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/include-fixed]
+        ignore line: [ /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/include]
+        ignore line: [End of search list.]
+        ignore line: [Compiler executable checksum: 039015ee0a9e66f9e392e0a654f3b067]
+        ignore line: [COMPILER_PATH=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/]
+        ignore line: [LIBRARY_PATH=/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-Werror' '-Wpedantic' '-Wno-long-long' '-Wall' '-Wextra' '-Wcast-align' '-Wcast-qual' '-Wformat=1' '-Wwrite-strings' '-Wconversion' '-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-fopenmp' '-v' '-o' 'CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o' '-c' '-shared-libgcc' '-pthread' '-dumpdir' 'CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.']
+        ignore line: [Linking CXX executable cmTC_40ef8]
+        ignore line: [/home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_40ef8.dir/link.txt --verbose=1]
+        ignore line: [/home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include -fopenmp -v -Wl -O2 -Wl --sort-common -Wl --as-needed -Wl -z relro -Wl -z now -Wl --disable-new-dtags -Wl --gc-sections -Wl --allow-shlib-undefined -Wl -rpath /home/skleff/miniconda3/envs/debug/lib -Wl -rpath-link /home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o -o cmTC_40ef8  -v]
+        ignore line: [Reading specs from /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/specs]
+        ignore line: [could not find specs file conda.specs]
+        ignore line: [COLLECT_GCC=/home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++]
+        ignore line: [COLLECT_LTO_WRAPPER=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/lto-wrapper]
+        ignore line: [Target: x86_64-conda-linux-gnu]
+        ignore line: [Configured with: ../configure --prefix=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho --with-slibdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --libdir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib --mandir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/man --build=x86_64-conda-linux-gnu --host=x86_64-conda-linux-gnu --target=x86_64-conda-linux-gnu --enable-languages=c c++ fortran objc obj-c++ --enable-__cxa_atexit --disable-libmudflap --enable-libgomp --disable-libssp --enable-libquadmath --enable-libquadmath-support --enable-lto --enable-target-optspace --enable-plugin --enable-gold --disable-nls --disable-bootstrap --disable-multilib --enable-long-long --with-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/x86_64-conda-linux-gnu/sysroot --with-build-sysroot=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/work/cf-compilers/x86_64-conda-linux-gnu/sysroot --with-native-system-header-dir=/usr/include --with-gxx-include-dir=/home/conda/feedstock_root/build_artifacts/gcc_compilers_1724798720716/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placeho/lib/gcc/x86_64-conda-linux-gnu/13.3.0/include/c++ --with-pkgversion='conda-forge gcc 13.3.0-1' --with-bugurl=https://github.com/conda-forge/ctng-compilers-feedstock/issues/new/choose --enable-libsanitizer --enable-default-pie --enable-threads=posix]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib]
+        ignore line: [gcc version 13.3.0 (conda-forge gcc 13.3.0-1) ]
+        ignore line: [COMPILER_PATH=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/bin/]
+        ignore line: [LIBRARY_PATH=/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/:/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/:/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/]
+        ignore line: [Reading specs from /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib/libgomp.spec]
+        ignore line: [COLLECT_GCC_OPTIONS='-Werror' '-Wpedantic' '-Wno-long-long' '-Wall' '-Wextra' '-Wcast-align' '-Wcast-qual' '-Wformat=1' '-Wwrite-strings' '-Wconversion' '-fvisibility-inlines-hidden' '-fmessage-length=0' '-march=nocona' '-mtune=haswell' '-ftree-vectorize' '-fPIC' '-fstack-protector-strong' '-fno-plt' '-O2' '-ffunction-sections' '-pipe' '-isystem' '/home/skleff/miniconda3/envs/debug/include' '-fopenmp' '-v' '-L/home/skleff/miniconda3/envs/debug/lib' '-o' 'cmTC_40ef8' '-v' '-shared-libgcc' '-pthread' '-dumpdir' 'cmTC_40ef8.']
+        link line: [ /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/collect2 -plugin /home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/liblto_plugin.so -plugin-opt=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccd3k9bv.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lpthread -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_40ef8 /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/Scrt1.o /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crti.o /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtbeginS.o -L/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0 -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib -L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../.. -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib -L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib -O2 --sort-common --as-needed -z relro -z now --disable-new-dtags --gc-sections --allow-shlib-undefined -rpath /home/skleff/miniconda3/envs/debug/lib -rpath-link /home/skleff/miniconda3/envs/debug/lib CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o -lstdc++ -lm -lgomp -lgcc_s -lgcc -lpthread -lc -lgcc_s -lgcc /home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/crtendS.o /home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib/crtn.o -rpath /home/skleff/miniconda3/envs/debug/lib]
+          arg [/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/collect2] ==> ignore
+          arg [-plugin] ==> ignore
+          arg [/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/liblto_plugin.so] ==> ignore
+          arg [-plugin-opt=/home/skleff/miniconda3/envs/debug/bin/../libexec/gcc/x86_64-conda-linux-gnu/13.3.0/lto-wrapper] ==> ignore
+          arg [-plugin-opt=-fresolution=/tmp/ccd3k9bv.res] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lpthread] ==> ignore
+          arg [-plugin-opt=-pass-through=-lc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [--sysroot=/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf_x86_64] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+          arg [-pie] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_40ef8] ==> ignore
+          arg [-L/home/skleff/miniconda3/envs/debug/lib] ==> dir [/home/skleff/miniconda3/envs/debug/lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../..] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../..]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib]
+          arg [-L/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib] ==> dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib]
+          arg [-O2] ==> ignore
+          arg [--sort-common] ==> ignore
+          arg [--as-needed] ==> ignore
+          arg [-zrelro] ==> ignore
+          arg [-znow] ==> ignore
+          arg [--disable-new-dtags] ==> ignore
+          arg [--gc-sections] ==> ignore
+          arg [--allow-shlib-undefined] ==> ignore
+          arg [-rpath] ==> ignore
+          arg [/home/skleff/miniconda3/envs/debug/lib] ==> ignore
+          arg [-rpath-link] ==> ignore
+          arg [/home/skleff/miniconda3/envs/debug/lib] ==> ignore
+          arg [CMakeFiles/cmTC_40ef8.dir/OpenMPTryFlag.cpp.o] ==> ignore
+          arg [-lstdc++] ==> lib [stdc++]
+          arg [-lm] ==> lib [m]
+          arg [-lgomp] ==> lib [gomp]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-lpthread] ==> lib [pthread]
+          arg [-lc] ==> lib [c]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-rpath] ==> ignore
+          arg [/home/skleff/miniconda3/envs/debug/lib] ==> ignore
+        collapse library dir [/home/skleff/miniconda3/envs/debug/lib] ==> [/home/skleff/miniconda3/envs/debug/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0] ==> [/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc] ==> [/home/skleff/miniconda3/envs/debug/lib/gcc]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib/../lib] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../lib] ==> [/home/skleff/miniconda3/envs/debug/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib/../lib] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib/../lib] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../../../x86_64-conda-linux-gnu/lib] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../lib/gcc/x86_64-conda-linux-gnu/13.3.0/../../..] ==> [/home/skleff/miniconda3/envs/debug/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/lib] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/lib]
+        collapse library dir [/home/skleff/miniconda3/envs/debug/bin/../x86_64-conda-linux-gnu/sysroot/usr/lib] ==> [/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/lib]
+        implicit libs: [stdc++;m;gomp;gcc_s;gcc;pthread;c;gcc_s;gcc]
+        implicit objs: []
+        implicit dirs: [/home/skleff/miniconda3/envs/debug/lib;/home/skleff/miniconda3/envs/debug/lib/gcc/x86_64-conda-linux-gnu/13.3.0;/home/skleff/miniconda3/envs/debug/lib/gcc;/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/lib;/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/lib;/home/skleff/miniconda3/envs/debug/x86_64-conda-linux-gnu/sysroot/usr/lib]
+        implicit fwks: []
+      
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/FindOpenMP.cmake:440 (try_compile)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/FindOpenMP.cmake:580 (_OPENMP_GET_SPEC_DATE)"
+      - "CMakeLists.txt:51 (find_package)"
+    description: "Detecting CXX OpenMP version"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-SIqKX8"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-SIqKX8"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "OpenMP_SPECTEST_CXX_"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-SIqKX8'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_2c7d0/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_2c7d0.dir/build.make CMakeFiles/cmTC_2c7d0.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-SIqKX8'
+        Building CXX object CMakeFiles/cmTC_2c7d0.dir/OpenMPCheckVersion.cpp.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include -fopenmp -o CMakeFiles/cmTC_2c7d0.dir/OpenMPCheckVersion.cpp.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-SIqKX8/OpenMPCheckVersion.cpp
+        Linking CXX executable cmTC_2c7d0
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2c7d0.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include -fopenmp -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  CMakeFiles/cmTC_2c7d0.dir/OpenMPCheckVersion.cpp.o -o cmTC_2c7d0
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeScratch/TryCompile-SIqKX8'
+        
+      exitCode: 0
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/lib/cmake/eigenpy/cxx-standard.cmake:49 (try_run)"
+      - "/home/skleff/miniconda3/envs/debug/lib/cmake/eigenpy/eigenpyConfig.cmake:196 (CHECK_MINIMAL_CXX_STANDARD)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "/home/skleff/miniconda3/envs/debug/lib/cmake/crocoddyl/crocoddylConfig.cmake:153 (find_dependency)"
+      - "cmake/package-config.cmake:110 (find_package)"
+      - "CMakeLists.txt:53 (add_project_dependency)"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "_cxx_standard_build_status"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_a481c/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_a481c.dir/build.make CMakeFiles/cmTC_a481c.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_a481c.dir/tmp-cxx-standard.cpp.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -o CMakeFiles/cmTC_a481c.dir/tmp-cxx-standard.cpp.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/cmake/tmp-cxx-standard.cpp
+        Linking CXX executable cmTC_a481c
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a481c.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  "CMakeFiles/cmTC_a481c.dir/tmp-cxx-standard.cpp.o" -o cmTC_a481c
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "_cxx_standard_run_status"
+      cached: true
+      stdout: |
+        201703
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/lib/cmake/eigenpy/cxx-standard.cmake:49 (try_run)"
+      - "/home/skleff/miniconda3/envs/debug/lib/cmake/eigenpy/eigenpyConfig.cmake:196 (CHECK_MINIMAL_CXX_STANDARD)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "/home/skleff/miniconda3/envs/debug/lib/cmake/crocoddyl/crocoddylConfig.cmake:153 (find_dependency)"
+      - "cmake/package-config.cmake:110 (find_package)"
+      - "CMakeLists.txt:53 (add_project_dependency)"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "_cxx_standard_build_status"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_383aa/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_383aa.dir/build.make CMakeFiles/cmTC_383aa.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_383aa.dir/tmp-cxx-standard.cpp.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -o CMakeFiles/cmTC_383aa.dir/tmp-cxx-standard.cpp.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/cmake/tmp-cxx-standard.cpp
+        Linking CXX executable cmTC_383aa
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_383aa.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  "CMakeFiles/cmTC_383aa.dir/tmp-cxx-standard.cpp.o" -o cmTC_383aa
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "_cxx_standard_run_status"
+      cached: true
+      stdout: |
+        201703
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "/home/skleff/miniconda3/envs/debug/lib/cmake/eigenpy/cxx-standard.cmake:49 (try_run)"
+      - "/home/skleff/miniconda3/envs/debug/lib/cmake/eigenpy/eigenpyConfig.cmake:196 (CHECK_MINIMAL_CXX_STANDARD)"
+      - "/home/skleff/miniconda3/envs/debug/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "/home/skleff/miniconda3/envs/debug/lib/cmake/crocoddyl/crocoddylConfig.cmake:153 (find_dependency)"
+      - "cmake/package-config.cmake:110 (find_package)"
+      - "CMakeLists.txt:53 (add_project_dependency)"
+    directories:
+      source: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp"
+      binary: "/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib"
+    buildResult:
+      variable: "_cxx_standard_build_status"
+      cached: true
+      stdout: |
+        Change Dir: '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /home/skleff/miniconda3/envs/debug/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_0c781/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_0c781.dir/build.make CMakeFiles/cmTC_0c781.dir/build
+        make[1]: Entering directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_0c781.dir/tmp-cxx-standard.cpp.o
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++   -Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -o CMakeFiles/cmTC_0c781.dir/tmp-cxx-standard.cpp.o -c /home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/cmake/tmp-cxx-standard.cpp
+        Linking CXX executable cmTC_0c781
+        /home/skleff/miniconda3/envs/debug/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0c781.dir/link.txt --verbose=1
+        /home/skleff/miniconda3/envs/debug/bin/x86_64-conda-linux-gnu-c++ -Werror  -pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/skleff/miniconda3/envs/debug/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/skleff/miniconda3/envs/debug/lib -Wl,-rpath-link,/home/skleff/miniconda3/envs/debug/lib -L/home/skleff/miniconda3/envs/debug/lib  "CMakeFiles/cmTC_0c781.dir/tmp-cxx-standard.cpp.o" -o cmTC_0c781
+        make[1]: Leaving directory '/home/skleff/force_feedback_ws/force_feedback_mpc/build_debug/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "_cxx_standard_run_status"
+      cached: true
+      stdout: |
+        201703
+      exitCode: 0
+...

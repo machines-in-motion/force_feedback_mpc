@@ -157,7 +157,6 @@ class DAMSoftContact3DAugmentedFwdDynamics : public DAMSoftContactAbstractAugmen
    * @param[in] Kp               Soft contact model stiffness
    * @param[in] Kv               Soft contact model damping
    * @param[in] oPc              Anchor point of the contact model in WORLD coordinates
-   * @param[in] ref              Pinocchio reference frame in which the contact force is to be expressed
    * 
    */
   DAMSoftContact3DAugmentedFwdDynamics(
@@ -168,7 +167,6 @@ class DAMSoftContact3DAugmentedFwdDynamics : public DAMSoftContactAbstractAugmen
       const VectorXs& Kp, 
       const VectorXs& Kv,
       const Vector3s& oPc,
-      const pinocchio::ReferenceFrame ref = pinocchio::LOCAL,
       boost::shared_ptr<ConstraintModelManager> constraints = nullptr);
 
   virtual ~DAMSoftContact3DAugmentedFwdDynamics();
@@ -257,7 +255,12 @@ class DAMSoftContact3DAugmentedFwdDynamics : public DAMSoftContactAbstractAugmen
     
     using Base::g_lb_;
     using Base::g_ub_;
-    
+
+    using Base::state_;
+    using Base::costs_;
+    using Base::actuation_;
+    using Base::constraints_;
+    using Base::pinocchio_;
 };
 
 }  // namespace softcontact

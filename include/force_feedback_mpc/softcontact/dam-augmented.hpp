@@ -12,12 +12,13 @@
 #include <stdexcept>
 
 #include <crocoddyl/core/actuation-base.hpp>
+#include <crocoddyl/core/constraints/constraint-manager.hpp>
 #include <crocoddyl/core/costs/cost-sum.hpp>
 #include <crocoddyl/core/diff-action-base.hpp>
+#include <crocoddyl/core/utils/exception.hpp>
+#include <crocoddyl/multibody/data/multibody.hpp>
 #include <crocoddyl/multibody/fwd.hpp>
 #include <crocoddyl/multibody/states/multibody.hpp>
-#include <crocoddyl/multibody/actions/free-fwddyn.hpp>
-#include <crocoddyl/core/constraints/constraint-manager.hpp>
 
 
 namespace force_feedback_mpc {
@@ -25,11 +26,14 @@ namespace softcontact {
 
 
 struct DADSoftContactAbstractAugmentedFwdDynamics : 
-    public crocoddyl::DifferentialActionDataFreeFwdDynamics {
+    public crocoddyl::DifferentialActionDataAbstract {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef crocoddyl::MathBaseTpl<double> MathBase;
-  typedef crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<double> DADBase;
+  typedef crocoddyl::DifferentialActionDataAbstractTpl<double> DADBase;
+  typedef crocoddyl::JointDataAbstractTpl<double> JointDataAbstract;
+  typedef crocoddyl::DataCollectorJointActMultibodyTpl<double>
+      DataCollectorJointActMultibody;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::Vector3s Vector3s;
   typedef typename MathBase::MatrixXs MatrixXs;
@@ -37,8 +41,19 @@ struct DADSoftContactAbstractAugmentedFwdDynamics :
 
   template <class DAModel>
   explicit DADSoftContactAbstractAugmentedFwdDynamics(DAModel* const model)
-      : DADBase(static_cast<crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<double>*>(model)),
-      // : DADBase(model), // this complains ( no conversion error )
+      // : DADBase(static_cast<crocoddyl::DifferentialActionModelAbstractTpl<double>*>(model)),
+      : DADBase(model), // this complains ( no conversion error )
+        pinocchio(pinocchio::DataTpl<Scalar>(model->get_pinocchio())),
+        multibody(
+            &pinocchio, model->get_actuation()->createData(),
+            boost::make_shared<JointDataAbstract>(
+                model->get_state(), model->get_actuation(), model->get_nu())),
+        costs(model->get_costs()->createData(&multibody)),
+        Minv(model->get_state()->get_nv(), model->get_state()->get_nv()),
+        u_drift(model->get_state()->get_nv()),
+        dtau_dx(model->get_state()->get_nv(), model->get_state()->get_ndx()),
+        tmp_xstatic(model->get_state()->get_nx()),
+        // custom
         lJ(6, model->get_state()->get_nv()),
         oJ(6, model->get_state()->get_nv()),
         aba_dq(model->get_state()->get_nv(), model->get_state()->get_nv()),
@@ -78,10 +93,17 @@ struct DADSoftContactAbstractAugmentedFwdDynamics :
         tau_grav_residual_f(model->get_state()->get_nv(), model->get_nc()),
         residual(model->get_nresidual()) {
           // costs residuals (nr) + grav reg (nv) + force (nc) + force rate reg (nc)
+    multibody.joint->dtau_du.diagonal().setOnes();
     costs->shareMemory(this);
+    if (model->get_constraints() != nullptr) {
+      constraints = model->get_constraints()->createData(&multibody);
+      constraints->shareMemory(this);
+    }
     Minv.setZero();
     u_drift.setZero();
+    dtau_dx.setZero();
     tmp_xstatic.setZero();
+    // Custom
     oRf.setZero();
     lJ.setZero();
     oJ.setZero();
@@ -126,14 +148,14 @@ struct DADSoftContactAbstractAugmentedFwdDynamics :
     residual.setZero();
   }
   
-  using DADBase::pinocchio;
-  using DADBase::multibody;
-  using DADBase::costs;
-  using DADBase::Minv;
-  using DADBase::dtau_dx;
-  using DADBase::u_drift;
-  using DADBase::tmp_xstatic;
-  using DADBase::constraints;
+  pinocchio::DataTpl<double> pinocchio;
+  DataCollectorJointActMultibody multibody;
+  boost::shared_ptr<crocoddyl::CostDataSumTpl<double> > costs;
+  boost::shared_ptr<crocoddyl::ConstraintDataManagerTpl<double> > constraints;
+  MatrixXs Minv;
+  VectorXs u_drift;
+  MatrixXs dtau_dx;
+  VectorXs tmp_xstatic;
 
   // Contact frame rotation and Jacobians
   Matrix3s oRf;       //!< Contact frame rotation matrix 
@@ -202,9 +224,13 @@ struct DADSoftContactAbstractAugmentedFwdDynamics :
   using DADBase::Lxx;
   using DADBase::r;
   using DADBase::xout;
+
   using DADBase::g;
   using DADBase::Gx;
   using DADBase::Gu;
+  using DADBase::h;
+  using DADBase::Hx;
+  using DADBase::Hu;
 };
 
 
@@ -216,23 +242,22 @@ struct DADSoftContactAbstractAugmentedFwdDynamics :
  * Abstract class designed specifically for cartesian force feedback MPC
  * Maths here : https://www.overleaf.com/read/xdpymjfhqqhn
  *
- * \sa `DifferentialActionModelFreeFwdDynamicsTpl`, `calc()`, `calcDiff()`,
+ * \sa `DAMSoftContactAbstractAugmentedFwdDynamics`, `calc()`, `calcDiff()`,
  * `createData()`
  */
 
 class DAMSoftContactAbstractAugmentedFwdDynamics
-    : public crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<double> {
+    : public crocoddyl::DifferentialActionModelAbstractTpl<double> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  typedef crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<double> DAMBase;
+  typedef crocoddyl::DifferentialActionModelAbstractTpl<double> DAMBase;
   typedef DADSoftContactAbstractAugmentedFwdDynamics Data;
   typedef crocoddyl::MathBaseTpl<double> MathBase;
   typedef crocoddyl::CostModelSumTpl<double> CostModelSum;
   typedef crocoddyl::StateMultibodyTpl<double> StateMultibody;
   typedef crocoddyl::ActuationModelAbstractTpl<double> ActuationModelAbstract;
   typedef crocoddyl::DifferentialActionDataAbstractTpl<double> DifferentialActionDataAbstract;
-  typedef crocoddyl::DifferentialActionDataFreeFwdDynamicsTpl<double> DifferentialActionDataFreeFwdDynamics;
   typedef crocoddyl::ConstraintModelManagerTpl<double> ConstraintModelManager;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::Vector3s Vector3s;
@@ -252,7 +277,6 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
    * @param[in] Kp               Soft contact model stiffness
    * @param[in] Kv               Soft contact model damping
    * @param[in] oPc              Anchor point of the contact model in WORLD coordinates
-   * @param[in] ref              Pinocchio reference frame in which the contact force is to be expressed
    * 
    */
   DAMSoftContactAbstractAugmentedFwdDynamics(
@@ -264,7 +288,6 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
       const VectorXs& Kv,
       const Vector3s& oPc,
       const std::size_t nc,
-      const pinocchio::ReferenceFrame ref = pinocchio::LOCAL,
       boost::shared_ptr<ConstraintModelManager> constraints = nullptr);
   virtual ~DAMSoftContactAbstractAugmentedFwdDynamics();
 
@@ -281,7 +304,7 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
   virtual void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
                     const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& f,
-                    const Eigen::Ref<const VectorXs>& u);
+                    const Eigen::Ref<const VectorXs>& u) = 0;
 
   /**
    * @brief Compute the system acceleration, and cost value
@@ -308,7 +331,7 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
       const boost::shared_ptr<DifferentialActionDataAbstract>& data,
       const Eigen::Ref<const VectorXs>& x, 
       const Eigen::Ref<const VectorXs>& f, 
-      const Eigen::Ref<const VectorXs>& u);
+      const Eigen::Ref<const VectorXs>& u) = 0;
 
   /**
    * @brief Compute the derivatives of the contact dynamics, and cost function
@@ -321,7 +344,54 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
       const boost::shared_ptr<DifferentialActionDataAbstract>& data,
       const Eigen::Ref<const VectorXs>& x,
       const Eigen::Ref<const VectorXs>& f);
-  
+
+  /**
+   * @brief Return the number of inequality constraints
+   */
+  virtual std::size_t get_ng() const;
+
+  /**
+   * @brief Return the number of equality constraints
+   */
+  virtual std::size_t get_nh() const;
+
+  /**
+   * @brief Return the lower bound of the inequality constraints
+   */
+  virtual const VectorXs& get_g_lb() const;
+
+  /**
+   * @brief Return the upper bound of the inequality constraints
+   */
+  virtual const VectorXs& get_g_ub() const;
+
+  /**
+   * @brief Return the actuation model
+   */
+  const boost::shared_ptr<ActuationModelAbstract>& get_actuation() const;
+
+  /**
+   * @brief Return the cost model
+   */
+  const boost::shared_ptr<CostModelSum>& get_costs() const;
+
+  /**
+   * @brief Return the constraint model manager
+   */
+  const boost::shared_ptr<ConstraintModelManager>& get_constraints() const;
+
+  /**
+   * @brief Return the Pinocchio model
+   */
+  pinocchio::ModelTpl<Scalar>& get_pinocchio() const;
+
+  /**
+   * @brief Print relevant information of the free forward-dynamics model
+   *
+   * @param[out] os  Output stream object
+   */
+  virtual void print(std::ostream& os) const;
+
     /**
    * @brief Create the soft contact forward-dynamics data
    *
@@ -382,6 +452,11 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
   const bool& get_with_force_constraint() const { return with_force_constraint_; };
 
   protected:
+    using DAMBase::g_lb_;   //!< Lower bound of the inequality constraints
+    using DAMBase::g_ub_;   //!< Upper bound of the inequality constraints
+    using DAMBase::nu_;     //!< Control dimension
+    using DAMBase::state_;  //!< Model of the state
+
     VectorXs Kp_;                             //!< Contact model stiffness
     VectorXs Kv_;                             //!< Contact model damping
     Vector3s oPc_;                          //!< Contact model anchor point
@@ -403,9 +478,11 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
     double tau_grav_weight_;                //!< Weight on regularization w.r.t. gravity torque
     bool with_force_constraint_; // Add box constraint on the contact force
   
-    // boost::shared_ptr<ConstraintModelManager> constraints_;
-    using DAMBase::g_lb_;
-    using DAMBase::g_ub_;
+    boost::shared_ptr<ActuationModelAbstract> actuation_;    //!< Actuation model
+    boost::shared_ptr<CostModelSum> costs_;                  //!< Cost model
+    boost::shared_ptr<ConstraintModelManager> constraints_;  //!< Constraint model
+    pinocchio::ModelTpl<double>& pinocchio_;                 //!< Pinocchio model
+    bool without_armature_;  //!< Indicate if we have defined an armature
 };
 
 

@@ -33,10 +33,9 @@ DAMSoftContact1DAugmentedFwdDynamics::DAMSoftContact1DAugmentedFwdDynamics(
     const VectorXs& Kp, 
     const VectorXs& Kv,
     const Vector3s& oPc,
-    const pinocchio::ReferenceFrame ref,
     const Vector3MaskType& type,
     boost::shared_ptr<ConstraintModelManager> constraints)
-    : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 1, ref, constraints) { type_ = type; }
+    : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 1, constraints) { type_ = type; }
 
 
 DAMSoftContact1DAugmentedFwdDynamics::~DAMSoftContact1DAugmentedFwdDynamics() {}
@@ -53,17 +52,25 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
     throw_pretty("Invalid argument: "
                  << "x has wrong dimension (it should be " + std::to_string(this->get_state()->get_nx()) + ")");
   }
+  std::cout << " f = " << f << std::endl;
+  std::cout << " check 1 " << std::endl;
+  std::cout << " f.size()" << f.size() << std::endl;
+  std::cout << " static_cast<std::size_t>(f.size())" << static_cast<std::size_t>(f.size()) << std::endl;
   if (static_cast<std::size_t>(f.size()) != 1) {
-    throw_pretty("Invalid argument: "
-                 << "f has wrong dimension (it should be 1)");
+    std::cout << " check 2 " << std::endl;
+    throw_pretty("Invalid argument: f has wrong dimension (it should be 1)");
+    std::cout << " check 3 " << std::endl;
   }
   if (static_cast<std::size_t>(u.size()) != this->get_nu()) {
     throw_pretty("Invalid argument: "
                  << "u has wrong dimension (it should be " + std::to_string(this->get_nu()) + ")");
   }
   Data* d = static_cast<Data*>(data.get());
+  std::cout << " check 4 " << std::endl;
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(this->get_state()->get_nq());
+  std::cout << " check 5 " << std::endl;
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(this->get_state()->get_nv());
+  std::cout << " check 6 " << std::endl;
   std::cout << "[DAM--1D-augmented.cpp] q.size() " << q.size() << std::endl;
   std::cout << "[DAM--1D-augmented.cpp] v.size() " << v.size() << std::endl;
   pinocchio::computeAllTerms(this->get_pinocchio(), d->pinocchio, q, v);
@@ -133,8 +140,8 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
     } else {
       d->xout = pinocchio::aba(this->get_pinocchio(), d->pinocchio, q, v, d->multibody.actuation->tau);
     }
+  }
 
-  std::cout << "[DAM--1D-augmented.cpp] END OF CALC " << std::endl;
   std::cout << "[DAM--1D-augmented.cpp] d->f3d.size() " << d->f3d.size() << std::endl;
   std::cout << "[DAM--1D-augmented.cpp] d->lJ.size() " << d->lJ.size() << std::endl;
   std::cout << "[DAM--1D-augmented.cpp] d->oJ.size() " << d->oJ.size() << std::endl;
@@ -196,8 +203,6 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
   assert(d != nullptr && "d pointer is not initialized!");
   assert(this->get_state() != nullptr && "state pointer is not initialized!");
   
-  std::cout << "[DAM--1D-augmented.cpp] END OF CALC" << d->tmp_xstatic.size() << std::endl;
-  }
 
   pinocchio::updateGlobalPlacements(this->get_pinocchio(), d->pinocchio);
   
@@ -244,6 +249,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
     d->constraints->resize(this, d);
     this->get_constraints()->calc(d->constraints, x, u);
   }
+  std::cout << "[DAM--1D-augmented.cpp] END OF CALC" << std::endl;
 }
 
 

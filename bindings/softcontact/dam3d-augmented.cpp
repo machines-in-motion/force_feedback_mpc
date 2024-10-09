@@ -24,9 +24,9 @@ void exposeDAMSoftContact3DAugmentedFwdDyn() {
       bp::init<boost::shared_ptr<crocoddyl::StateMultibody>,
                boost::shared_ptr<crocoddyl::ActuationModelAbstract>,
                boost::shared_ptr<crocoddyl::CostModelSum>,
-               pinocchio::FrameIndex, Eigen::VectorXd, Eigen::VectorXd, Eigen::Vector3d, pinocchio::ReferenceFrame,
+               pinocchio::FrameIndex, Eigen::VectorXd, Eigen::VectorXd, Eigen::Vector3d,
                bp::optional<boost::shared_ptr<crocoddyl::ConstraintModelManager>> >(
-          bp::args("self", "state", "actuation", "costs", "frameId", "Kp", "Kv", "oPc", "ref", "constraints"),
+          bp::args("self", "state", "actuation", "costs", "frameId", "Kp", "Kv", "oPc", "constraints"),
           "Initialize the constrained forward-dynamics action model.\n\n"
           ":param state: multibody state\n"
           ":param actuation: actuation model\n"
@@ -35,7 +35,6 @@ void exposeDAMSoftContact3DAugmentedFwdDyn() {
           ":param Kp: Stiffness of the visco-elastic contact model "
           ":param Kv: Damping of the visco-elastic contact model "
           ":param oPc: Anchor point of the contact model "
-          ":param ref: Pinocchio reference frame of the contact\n"
           ":param constraints: stack of constraint functions"))
       .def<void (DAMSoftContact3DAugmentedFwdDynamics::*)(
           const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,

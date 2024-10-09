@@ -1,0 +1,22 @@
+prefix=${pcfiledir}/../..
+exec_prefix=${pcfiledir}/../..
+libdir=${pcfiledir}/../../lib
+bindir=${pcfiledir}/../../bin
+pkglibdir=${pcfiledir}/../../lib/force_feedback_mpc
+includedir=${pcfiledir}/../../include
+datarootdir=${pcfiledir}/../../share
+pkgdatarootdir=${pcfiledir}/../../share
+docdir=${pcfiledir}/../../share/doc/force_feedback_mpc
+doxygendocdir=${pcfiledir}/../../share/doc/force_feedback_mpc/doxygen-html
+
+Name: force_feedback_mpc
+Description: Optimal control tools to achieve force feedback in MPC.
+URL: https://github.com/machines-in-motion/force_feedback_mpc
+Version: 1.0
+Requires: example-robot-data
+Conflicts: 
+Libs: -L${libdir} 
+Libs.private: 
+Cflags:  -I${includedir}
+
+

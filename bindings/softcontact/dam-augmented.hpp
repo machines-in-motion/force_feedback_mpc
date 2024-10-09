@@ -11,17 +11,13 @@
 
 #include "force_feedback_mpc/softcontact/dam-augmented.hpp"
 
-// #include <boost/python.hpp>
-// #include <boost/python/enum.hpp>
-// #include <eigenpy/eigenpy.hpp>
-
 namespace force_feedback_mpc {
 namespace softcontact {
 
 namespace bp = boost::python;
 
-class DAMSoftContactAbstractAugmentedFwdDynamics_wrap : public force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics,
-                                                        public bp::wrapper<force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics> {
+class DAMSoftContactAbstractAugmentedFwdDynamics_wrap : public DAMSoftContactAbstractAugmentedFwdDynamics,
+                                                        public bp::wrapper<DAMSoftContactAbstractAugmentedFwdDynamics> {
  public:
   DAMSoftContactAbstractAugmentedFwdDynamics_wrap(boost::shared_ptr<crocoddyl::StateMultibody> state, 
                                                   boost::shared_ptr<crocoddyl::ActuationModelAbstract> actuation,
@@ -31,53 +27,81 @@ class DAMSoftContactAbstractAugmentedFwdDynamics_wrap : public force_feedback_mp
                                                   const Eigen::VectorXd& Kv,
                                                   const Eigen::Vector3d& oPc, 
                                                   const std::size_t nc,
-                                                  const pinocchio::ReferenceFrame ref,
-                                                  boost::shared_ptr<crocoddyl::ConstraintModelManager> constraints)
-      : force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics(state, actuation, costs, frameId, Kp, Kv, oPc, nc, ref, constraints), bp::wrapper<force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics>() {}
-
-  void calc(const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
+                                                  boost::shared_ptr<crocoddyl::ConstraintModelManager> constraints = nullptr)
+      : DAMSoftContactAbstractAugmentedFwdDynamics(state, actuation, costs, frameId, Kp, Kv, oPc, nc, constraints), bp::wrapper<DAMSoftContactAbstractAugmentedFwdDynamics>() {}
+  
+  void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data,
             const Eigen::Ref<const Eigen::VectorXd>& x,
             const Eigen::Ref<const Eigen::VectorXd>& f,
             const Eigen::Ref<const Eigen::VectorXd>& u) {
-  return bp::call<void>(this->get_override("calc").ptr(), data, (Eigen::VectorXd)x, (Eigen::VectorXd)f, (Eigen::VectorXd)u);
+    if (static_cast<std::size_t>(x.size()) != state_->get_nx()) {
+      throw_pretty("Invalid argument: "
+                   << "x has wrong dimension (it should be " +
+                          std::to_string(state_->get_nx()) + ")");
+    }
+    if (static_cast<std::size_t>(f.size()) != this->get_nc()) {
+      throw_pretty("Invalid argument: "
+                   << "f has wrong dimension (it should be " +
+                          std::to_string(this->get_nc()) + ")");
+    }
+    if (static_cast<std::size_t>(u.size()) != nu_) {
+      throw_pretty("Invalid argument: "
+                   << "u has wrong dimension (it should be " +
+                          std::to_string(nu_) + ")");
+    }
+    if (std::isnan(u.lpNorm<Eigen::Infinity>())) {
+      return bp::call<void>(this->get_override("calc").ptr(), data,
+                            (Eigen::VectorXd)x, (Eigen::VectorXd)f);
+    } else {
+      return bp::call<void>(this->get_override("calc").ptr(), data,
+                            (Eigen::VectorXd)x, (Eigen::VectorXd)f, (Eigen::VectorXd)u);
+    }
   }
 
-  void calc(const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
-            const Eigen::Ref<const Eigen::VectorXd>& x,
-            const Eigen::Ref<const Eigen::VectorXd>& f) {
-    return bp::call<void>(this->get_override("calc").ptr(), data, (Eigen::VectorXd)x, (Eigen::VectorXd)f);
-  }
-
-
-  void calcDiff(const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data,
-                const Eigen::Ref<const Eigen::VectorXd>& x, 
-                const Eigen::Ref<const Eigen::VectorXd>& f, 
+  void calcDiff(const boost::shared_ptr<DifferentialActionDataAbstract>& data,
+                const Eigen::Ref<const Eigen::VectorXd>& x,
+                const Eigen::Ref<const Eigen::VectorXd>& f,
                 const Eigen::Ref<const Eigen::VectorXd>& u) {
-    return bp::call<void>(this->get_override("calcDiff").ptr(), data, (Eigen::VectorXd)x, (Eigen::VectorXd)f, (Eigen::VectorXd)u);
+    if (static_cast<std::size_t>(x.size()) != state_->get_nx()) {
+      throw_pretty("Invalid argument: "
+                   << "x has wrong dimension (it should be " +
+                          std::to_string(state_->get_nx()) + ")");
+    }
+    if (static_cast<std::size_t>(f.size()) != this->get_nc()) {
+      throw_pretty("Invalid argument: "
+                   << "f has wrong dimension (it should be " +
+                          std::to_string(this->get_nc()) + ")");
+    }
+    if (static_cast<std::size_t>(u.size()) != nu_) {
+      throw_pretty("Invalid argument: "
+                   << "u has wrong dimension (it should be " +
+                          std::to_string(nu_) + ")");
+    }
+    if (std::isnan(u.lpNorm<Eigen::Infinity>())) {
+      return bp::call<void>(this->get_override("calcDiff").ptr(), data,
+                            (Eigen::VectorXd)x, (Eigen::VectorXd)f);
+    } else {
+      return bp::call<void>(this->get_override("calcDiff").ptr(), data,
+                            (Eigen::VectorXd)x, (Eigen::VectorXd)f, (Eigen::VectorXd)u);
+    }
   }
 
-  void calcDiff(const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data,
-                const Eigen::Ref<const Eigen::VectorXd>& x, 
-                const Eigen::Ref<const Eigen::VectorXd>& f) {
-    return bp::call<void>(this->get_override("calcDiff").ptr(), data, (Eigen::VectorXd)x, (Eigen::VectorXd)f);
+  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> createData() {
+    crocoddyl::enableMultithreading() = false;
+    if (boost::python::override createData = this->get_override("createData")) {
+      return bp::call<boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> >(createData.ptr());
+    }
+    return DAMSoftContactAbstractAugmentedFwdDynamics::createData();
   }
 
-  // boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> createData() {
-  //   enableMultithreading() = false;
-  //   if (boost::python::override createData = this->get_override("createData")) {
-  //     return bp::call<boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> >(createData.ptr());
-  //   }
-  //   return force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics::createData();
-  // }
-
-//   boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> default_createData() {
-//     return this->force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics::createData();
-//   }
+  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> default_createData() {
+    return this->DAMSoftContactAbstractAugmentedFwdDynamics::createData();
+  }
 
 };
 
 // BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(DifferentialActionModel_quasiStatic_wraps,
-//                                        force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics::quasiStatic_x, 2, 4)
+//                                        DAMSoftContactAbstractAugmentedFwdDynamics::quasiStatic_x, 2, 4)
 
 }  // namespace softcontact
 }  // namespace force_feedback_mpc

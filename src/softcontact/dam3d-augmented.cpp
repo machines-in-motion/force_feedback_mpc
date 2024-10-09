@@ -34,9 +34,8 @@ DAMSoftContact3DAugmentedFwdDynamics::DAMSoftContact3DAugmentedFwdDynamics(
     const VectorXs& Kp, 
     const VectorXs& Kv,
     const Vector3s& oPc,
-    const pinocchio::ReferenceFrame ref,
     boost::shared_ptr<ConstraintModelManager> constraints)
-    : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 3, ref, constraints) {}
+    : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 3, constraints) {}
 
 
 DAMSoftContact3DAugmentedFwdDynamics::~DAMSoftContact3DAugmentedFwdDynamics() {}

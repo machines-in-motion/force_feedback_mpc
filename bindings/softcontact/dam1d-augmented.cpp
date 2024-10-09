@@ -30,9 +30,9 @@ void exposeDAMSoftContact1DAugmentedFwdDyn() {
       bp::init<boost::shared_ptr<crocoddyl::StateMultibody>,
                boost::shared_ptr<crocoddyl::ActuationModelAbstract>,
                boost::shared_ptr<crocoddyl::CostModelSum>,
-               pinocchio::FrameIndex, Eigen::VectorXd, Eigen::VectorXd, Eigen::Vector3d, pinocchio::ReferenceFrame, Vector3MaskType,
+               pinocchio::FrameIndex, Eigen::VectorXd, Eigen::VectorXd, Eigen::Vector3d, Vector3MaskType,
                bp::optional<boost::shared_ptr<crocoddyl::ConstraintModelManager>> >(
-          bp::args("self", "state", "actuation", "costs", "frameId", "Kp", "Kv", "oPc", "ref", "type", "constraints"),
+          bp::args("self", "state", "actuation", "costs", "frameId", "Kp", "Kv", "oPc", "type", "constraints"),
           "Initialize the constrained forward-dynamics action model.\n\n"
           ":param state: multibody state\n"
           ":param actuation: actuation model\n"
@@ -41,7 +41,6 @@ void exposeDAMSoftContact1DAugmentedFwdDyn() {
           ":param Kp: Stiffness of the visco-elastic contact model\n"
           ":param Kv: Damping of the visco-elastic contact model\n"
           ":param oPc: Anchor point of the contact model\n"
-          ":param ref: Pinocchio reference frame of the contact\n"
           ":param type: Contact 1D mask type\n"
           ":param constraints: stack of constraint functions"))
       .def<void (DAMSoftContact1DAugmentedFwdDynamics::*)(
@@ -88,7 +87,7 @@ void exposeDAMSoftContact1DAugmentedFwdDyn() {
 
       .def("createData", &DAMSoftContact1DAugmentedFwdDynamics::createData,
            bp::args("self"), "Create the Euler integrator data.")
-
+           
       .add_property(
           "type",
           bp::make_function(&DAMSoftContact1DAugmentedFwdDynamics::get_type,
