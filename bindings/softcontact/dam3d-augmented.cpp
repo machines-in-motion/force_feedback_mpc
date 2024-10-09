@@ -79,7 +79,7 @@ void exposeDAMSoftContact3DAugmentedFwdDyn() {
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &DAMSoftContact3DAugmentedFwdDynamics::calcDiff, bp::args("self", "data", "x", "f"))
       .def("createData", &DAMSoftContact3DAugmentedFwdDynamics::createData,
-           bp::args("self"), "Create the Euler integrator data.");
+           bp::args("self"), "Create the forward dynamics differential action data.");
 
   bp::register_ptr_to_python<boost::shared_ptr<DADSoftContact3DAugmentedFwdDynamics> >();
 
@@ -93,7 +93,22 @@ void exposeDAMSoftContact3DAugmentedFwdDyn() {
           "constraints",
           bp::make_getter(&DADSoftContact3DAugmentedFwdDynamics::constraints,
                           bp::return_value_policy<bp::return_by_value>()),
-          "constraint data");
+          "constraint data")
+      .add_property(
+          "pinocchio",
+          bp::make_getter(&DADSoftContact3DAugmentedFwdDynamics::pinocchio,
+                          bp::return_internal_reference<>()),
+          "pinocchio data")
+      .add_property(
+          "multibody",
+          bp::make_getter(&DADSoftContact3DAugmentedFwdDynamics::multibody,
+                          bp::return_internal_reference<>()),
+          "multibody data")
+      .add_property(
+          "costs",
+          bp::make_getter(&DADSoftContact3DAugmentedFwdDynamics::costs,
+                          bp::return_value_policy<bp::return_by_value>()),
+          "total cost data");
 }
 
 }  // namespace softcontact

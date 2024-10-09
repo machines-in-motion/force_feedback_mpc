@@ -205,10 +205,10 @@ void DAMSoftContactAbstractAugmentedFwdDynamics::calcDiff(
 
 
 
-boost::shared_ptr<DifferentialActionDataAbstractTpl<double> >
-DAMSoftContactAbstractAugmentedFwdDynamics::createData() {
-  return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
-}
+// boost::shared_ptr<DifferentialActionDataAbstractTpl<double> >
+// DAMSoftContactAbstractAugmentedFwdDynamics::createData() {
+//   return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
+// }
 
 
 

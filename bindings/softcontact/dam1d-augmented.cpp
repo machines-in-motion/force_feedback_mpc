@@ -86,7 +86,7 @@ void exposeDAMSoftContact1DAugmentedFwdDyn() {
           "calcDiff", &DAMSoftContact1DAugmentedFwdDynamics::calcDiff, bp::args("self", "data", "x", "f"))
 
       .def("createData", &DAMSoftContact1DAugmentedFwdDynamics::createData,
-           bp::args("self"), "Create the Euler integrator data.")
+           bp::args("self"), "Create the forward dynamics differential action data.")
            
       .add_property(
           "type",
@@ -142,7 +142,22 @@ void exposeDAMSoftContact1DAugmentedFwdDyn() {
           "constraints",
           bp::make_getter(&DADSoftContact1DAugmentedFwdDynamics::constraints,
                           bp::return_value_policy<bp::return_by_value>()),
-          "constraint data");
+          "constraint data")
+      .add_property(
+          "pinocchio",
+          bp::make_getter(&DADSoftContact1DAugmentedFwdDynamics::pinocchio,
+                          bp::return_internal_reference<>()),
+          "pinocchio data")
+      .add_property(
+          "multibody",
+          bp::make_getter(&DADSoftContact1DAugmentedFwdDynamics::multibody,
+                          bp::return_internal_reference<>()),
+          "multibody data")
+      .add_property(
+          "costs",
+          bp::make_getter(&DADSoftContact1DAugmentedFwdDynamics::costs,
+                          bp::return_value_policy<bp::return_by_value>()),
+          "total cost data");
 }
 
 }  // namespace softcontact

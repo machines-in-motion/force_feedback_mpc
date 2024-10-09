@@ -397,7 +397,7 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
    *
    * @return soft contact forward-dynamics data
    */
-  virtual boost::shared_ptr<DifferentialActionDataAbstract> createData();
+  // virtual boost::shared_ptr<DifferentialActionDataAbstract> createData();
 
   void set_Kp(const VectorXs& inKp);
   void set_Kv(const VectorXs& inKv);

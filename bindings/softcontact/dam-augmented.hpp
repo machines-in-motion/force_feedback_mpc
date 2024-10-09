@@ -86,17 +86,17 @@ class DAMSoftContactAbstractAugmentedFwdDynamics_wrap : public DAMSoftContactAbs
     }
   }
 
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> createData() {
-    crocoddyl::enableMultithreading() = false;
-    if (boost::python::override createData = this->get_override("createData")) {
-      return bp::call<boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> >(createData.ptr());
-    }
-    return DAMSoftContactAbstractAugmentedFwdDynamics::createData();
-  }
+  // boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> createData() {
+  //   crocoddyl::enableMultithreading() = false;
+  //   if (boost::python::override createData = this->get_override("createData")) {
+  //     return bp::call<boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> >(createData.ptr());
+  //   }
+  //   return DAMSoftContactAbstractAugmentedFwdDynamics::createData();
+  // }
 
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> default_createData() {
-    return this->DAMSoftContactAbstractAugmentedFwdDynamics::createData();
-  }
+  // boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> default_createData() {
+  //   return this->DAMSoftContactAbstractAugmentedFwdDynamics::createData();
+  // }
 
 };
 
