@@ -27,7 +27,7 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
     : Base(model->get_state(), 
            model->get_nu(),
            model->get_nr() + model->get_nc(), 
-           model->get_ng(), // + model->get_nc(),
+           model->get_ng() + model->get_nc(),
            0.),
       differential_(model),
       time_step_(time_step),
@@ -49,25 +49,17 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
     std::cerr << "Warning: dt should be positive, set to 1e-3" << std::endl;
   }
   with_force_constraint_ = model->get_with_force_constraint();
-  // // Set constraint bounds (add force constraint dimension)
-  // g_lb_new_.resize(differential_->get_g_lb().size() + nc_);
-  // g_ub_new_.resize(differential_->get_g_ub().size() + nc_);
-  // std::cout << "differential.g_lb.size()  = " << differential_->get_g_lb().size() << std::endl;
-  // std::cout << "differential.g_ub.size()  = " << differential_->get_g_ub().size() << std::endl;
-  // // no constraint on force by default
-  // force_lb_ = -std::numeric_limits<double>::infinity()*VectorXs::Ones(nc_);
-  // force_ub_ = std::numeric_limits<double>::infinity()*VectorXs::Ones(nc_);
-  // std::cout << "force_lb.size()  = " << force_lb_.size() << std::endl;
-  // std::cout << "force_ub.size()  = " << force_ub_.size() << std::endl;
-  // g_lb_new_ << differential_->get_g_lb(), force_lb_;
-  // g_ub_new_ << differential_->get_g_ub(), force_ub_;
-  // std::cout << "g_lb_new.size()  = " << g_lb_new_.size() << std::endl;
-  // std::cout << "g_ub_new.size()  = " << g_ub_new_.size() << std::endl;
-  // Base::set_g_lb(g_lb_new_);
-  // // Base::set_g_ub(g_ub_new_);
-  // std::cout << "g_lb_.size() = " << Base::get_g_lb().size() << std::endl;
-  // std::cout << "g_ub_.size() = " << Base::get_g_ub().size() << std::endl;
-  // // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
+  // Set constraint bounds (add force constraint dimension)
+  g_lb_new_.resize(differential_->get_g_lb().size() + nc_);
+  g_ub_new_.resize(differential_->get_g_ub().size() + nc_);
+  // no constraint on force by default
+  force_lb_ = -std::numeric_limits<double>::infinity()*VectorXs::Ones(nc_);
+  force_ub_ = std::numeric_limits<double>::infinity()*VectorXs::Ones(nc_);
+  g_lb_new_ << differential_->get_g_lb(), force_lb_;
+  g_ub_new_ << differential_->get_g_ub(), force_ub_;
+  this->set_g_lb(g_lb_new_);
+  this->set_g_ub(g_ub_new_);
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
 
@@ -170,7 +162,22 @@ void IAMSoftContactAugmented::calc(
   state_->integrate(y, d->dy, d->ynext);
   d->cost = time_step_ * diff_data_soft->cost;
   // compute constraint residual
+  // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
+  // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
+  // std::cout << "[IAM-Soft] Base::get_g_lb() = " << Base::get_g_lb() << std::endl;
+  // std::cout << "[IAM-Soft] this->get_g_lb() = " << this->get_g_lb() << std::endl;
+  // std::cout << "[IAM-Soft] g_lb_new_ = " << g_lb_new_ << std::endl;
+  // std::cout << "[IAM-Soft] g_lb_ = " << g_lb_ << std::endl;
+  // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
+  // std::cout << "[IAM-Soft] Base::get_g_ub() = " << Base::get_g_ub() << std::endl;
+  // std::cout << "[IAM-Soft] this->get_g_ub() = " << this->get_g_ub() << std::endl;
+  // std::cout << "[IAM-Soft] g_ub_new_ = " << g_ub_new_ << std::endl;
+  // std::cout << "[IAM-Soft] g_ub_ = " << g_ub_ << std::endl;
+  // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
+  // std::cout << "[IAM-Soft] constraint residual DAD->g = " << diff_data_soft->g << std::endl;
   if(with_force_constraint_ == true && differential_->get_ng() > 0){
+    // std::cout << "[IAM-Soft] with_force_constraint_ = " << with_force_constraint_ << std::endl;
+    // std::cout << "[IAM-Soft] differential_->get_ng() = " << differential_->get_ng() << std::endl;
     d->g.head(differential_->get_ng()) = diff_data_soft->g;
     d->g.tail(nc_).setZero();
     // hard code force constraint residual here
@@ -178,6 +185,9 @@ void IAMSoftContactAugmented::calc(
       d->g.tail(nc_) = f;
     }
   }
+  // std::cout << "[IAM-Soft] constraint IAD->g = " << d->g << std::endl;
+  // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
+  // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
   // compute cost residual
   if (with_cost_residual_) {
     d->r.head(differential_->get_nr()) = diff_data_soft->r;
