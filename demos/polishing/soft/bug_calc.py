@@ -54,7 +54,7 @@ print('u0 = ', u0.shape)
 
 # calc DAM
 DAD = DAM.createData()
-weho
+# weho
 # DAD = crocoddyl.DifferentialActionDataAbstract(DAM)
 DAM.calc(DAD, x0, f0, u0)
 

@@ -7,6 +7,9 @@ BOOST_PYTHON_MODULE(force_feedback_mpc_pywrap) {
     bp::import("pinocchio");
     bp::import("crocoddyl");
 
+    eigenpy::enableEigenPy();
+    eigenpy::enableEigenPySpecific<Eigen::VectorXi>();
+
     force_feedback_mpc::lpf::exposeStateLPF(); 
     force_feedback_mpc::lpf::exposeIntegratedActionModelLPF(); 
 

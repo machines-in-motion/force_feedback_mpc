@@ -51,12 +51,12 @@ find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 find_package(OpenMP REQUIRED COMPONENTS CXX)
 
 add_project_dependency(crocoddyl REQUIRED)
-add_project_dependency(eigenpy 2.7.10 REQUIRED)
 add_project_dependency(pinocchio REQUIRED)
 add_project_dependency(example-robot-data 4.0.7 REQUIRED PKG_CONFIG_REQUIRES
-                       "example-robot-data >= 4.0.7")
+"example-robot-data >= 4.0.7")
 
 if(BUILD_PYTHON_INTERFACE)
+  add_project_dependency(eigenpy 3.0.0 REQUIRED)
   FINDPYTHON()
   string(REGEX REPLACE "-" "_" PY_NAME ${PROJECT_NAME})
   set(${PY_NAME}_INSTALL_DIR ${PYTHON_SITELIB}/${PY_NAME})

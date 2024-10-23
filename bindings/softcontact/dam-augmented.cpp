@@ -21,7 +21,6 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
   bp::register_ptr_to_python<boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>>();
 
   bp::class_<DAMSoftContactAbstractAugmentedFwdDynamics_wrap, boost::noncopyable>(
-//   bp::class_<DAMSoftContactAbstractAugmentedFwdDynamics, bp::bases<crocoddyl::DifferentialActionModelAbstract>>(
       "DAMSoftContactAbstractAugmentedFwdDynamics", 
       "Differential action model for visco-elastic contact forward dynamics in multibody systems.",
       bp::init<boost::shared_ptr<crocoddyl::StateMultibody>,
@@ -88,19 +87,15 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
           ":param data: soft contact differential forward-dynamics action data\n"
           ":param x: time-continuous state vector\n"
           ":param f: time-continuous force vector")
-
-      .def("createData", &force_feedback_mpc::softcontact::DAMSoftContactAbstractAugmentedFwdDynamics::createData,
-           bp::args("self"), "Create the forward dynamics differential action data.")
-
-    //   .def("createData", &DAMSoftContactAbstractAugmentedFwdDynamics_wrap::createData,
-    //        &DAMSoftContactAbstractAugmentedFwdDynamics_wrap::default_createData,
-    //        bp::args("self"),
-    //        "Create the differential action data.\n\n"
-    //        "Each differential action model has its own data that needs to be\n"
-    //        "allocated. This function returns the allocated data for a "
-    //        "predefined\n"
-    //        "DAM.\n"
-    //        ":return DAM data.")
+      .def("createData", &DAMSoftContactAbstractAugmentedFwdDynamics_wrap::createData,
+           &DAMSoftContactAbstractAugmentedFwdDynamics_wrap::default_createData,
+           bp::args("self"),
+           "Create the differential action data.\n\n"
+           "Each differential action model has its own data that needs to be\n"
+           "allocated. This function returns the allocated data for a "
+           "predefined\n"
+           "DAM.\n"
+           ":return DAM data.")
       .add_property("pinocchio",
                     bp::make_function(
                         &DAMSoftContactAbstractAugmentedFwdDynamics::get_pinocchio,

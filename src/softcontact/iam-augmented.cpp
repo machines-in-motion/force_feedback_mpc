@@ -34,7 +34,6 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
       time_step2_(time_step * time_step),
       with_cost_residual_(with_cost_residual) {
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
-  std::cout << "[iam-augmented.cpp] : START OF INIT " << std::endl;
   // Downcast DAM state (abstract --> multibody)
   boost::shared_ptr<StateMultibody> state =
       boost::static_pointer_cast<StateMultibody>(model->get_state());
@@ -69,7 +68,6 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
   // std::cout << "g_lb_.size() = " << Base::get_g_lb().size() << std::endl;
   // std::cout << "g_ub_.size() = " << Base::get_g_ub().size() << std::endl;
   // // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
-  std::cout << "[iam-augmented.cpp] : END OF INIT " << std::endl;
 }
 
 
@@ -92,13 +90,9 @@ void IAMSoftContactAugmented::calc(
     const boost::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y, 
     const Eigen::Ref<const VectorXs>& u) {
-  std::cout << "[iam-augmented.cpp] START CALC " << std::endl;
   const std::size_t& nv = differential_->get_state()->get_nv();
   const std::size_t& nx = differential_->get_state()->get_nx();
   const std::size_t& nu_ = differential_->get_nu();
-  std::cout << "[iam-augmented.cpp] nv " << nv << std::endl;
-  std::cout << "[iam-augmented.cpp] nx " << nx << std::endl;
-  std::cout << "[iam-augmented.cpp] nu_ " << nu_ << std::endl;
 
   if (static_cast<std::size_t>(y.size()) != ny_) {
     throw_pretty("Invalid argument: "
@@ -117,9 +111,6 @@ void IAMSoftContactAugmented::calc(
   // Extract x=(q,v) and f from augmented state y
   const Eigen::Ref<const VectorXs>& x = y.head(nx);   // get q,v_q
   const Eigen::Ref<const VectorXs>& f = y.tail(nc_);  // get f
-  std::cout << "[iam-augmented.cpp] x.size() " << x.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] f.size() " << f.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] y.size() " << y.size() << std::endl;
 
   if (static_cast<std::size_t>(d->Fy.rows()) !=
       boost::static_pointer_cast<StateSoftContact>(state_)->get_ndy()) {
@@ -169,89 +160,29 @@ void IAMSoftContactAugmented::calc(
   // Compute acceleration and cost (DAM, i.e. CT model)
   // a_q, cost = DAM(q, v_q, f, tau_q)
   differential_->calc(diff_data_soft, x, f, u);
-  std::cout << "[iam-augmented.cpp] x.size() = " << x.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] f.size() = " << f.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] u.size() = " << u.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] diff_data_soft->xout.size() = " << diff_data_soft->xout.size() << std::endl;
   // Computing the next state x+ = x + dx and cost+ = dt*cost
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(nv);
-  std::cout << "[iam-augmented.cpp] v.size() = " << v.size() << std::endl;
   const VectorXs& a = diff_data_soft->xout;
-  std::cout << "[iam-augmented.cpp] a.size() = " << a.size() << std::endl;
   const VectorXs& fdot = diff_data_soft->fout;
-  std::cout << "[iam-augmented.cpp] fdot.size() = " << fdot.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->dy.size() = " << d->dy.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] nv = " << nv << std::endl;
-  std::cout << "[iam-augmented.cpp] nc_ = " << nc_ << std::endl;
   d->dy.head(nv).noalias() = v * time_step_ + a * time_step2_;
   d->dy.segment(nv, nv).noalias() = a * time_step_;
   d->dy.tail(nc_).noalias() = fdot * time_step_;
-  std::cout << "[iam-augmented.cpp] d->ynext.size() = " << d->ynext.size() << std::endl;
   state_->integrate(y, d->dy, d->ynext);
   d->cost = time_step_ * diff_data_soft->cost;
   // compute constraint residual
   if(with_force_constraint_ == true && differential_->get_ng() > 0){
-    std::cout << "[iam-augmented.cpp] diff_data_soft->g.size() = " << diff_data_soft->g.size() << std::endl;
-    std::cout << "[iam-augmented.cpp] differential_->get_ng() = " << differential_->get_ng() << std::endl;
-    std::cout << "[iam-augmented.cpp] d->g.size() = " << d->g.size() << std::endl;
     d->g.head(differential_->get_ng()) = diff_data_soft->g;
-    std::cout << "[iam-augmented.cpp] d->g.head(differential_->get_ng()).size() = " << d->g.head(differential_->get_ng()).size() << std::endl;
     d->g.tail(nc_).setZero();
     // hard code force constraint residual here
-    std::cout << "[iam-augmented.cpp] with_force_constraint_ = " << with_force_constraint_ << std::endl;
     if (with_force_constraint_){
       d->g.tail(nc_) = f;
     }
-    std::cout << "[iam-augmented.cpp] d->g.tail(nc_).size() = " << d->g.tail(nc_).size() << std::endl;
   }
-  std::cout << "[iam-augmented.cpp] with_cost_residual_ " << with_cost_residual_ << std::endl;
   // compute cost residual
   if (with_cost_residual_) {
-    std::cout << "[iam-augmented.cpp] this->get_nr() = " << this->get_nr() << std::endl;
-    std::cout << "[iam-augmented.cpp] d->r.size() = " << d->r.size() << std::endl;
-    std::cout << "[iam-augmented.cpp] differential_->get_nr() = " << differential_->get_nr() << std::endl;
-    std::cout << "[iam-augmented.cpp] diff_data_soft->r.size() = " << diff_data_soft->r.size() << std::endl;
-    std::cout << "[iam-augmented.cpp] diff_data_soft->f_residual.size() = " << diff_data_soft->f_residual.size() << std::endl;
     d->r.head(differential_->get_nr()) = diff_data_soft->r;
-    std::cout << "[iam-augmented.cpp] d->r.head(differential_->get_nr()).size() = " << d->r.head(differential_->get_nr()).size() << std::endl;
     d->r.tail(nc_) = diff_data_soft->f_residual;
-    std::cout << "[iam-augmented.cpp] d->r.tail(nc_).size() = " << d->r.tail(nc_).size() << std::endl;
   }
-
-
-  std::cout << "[iam-augmented.cpp] d->ynext.size() = " << d->ynext.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->r.size() = " << d->r.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Fy.size() = " << d->Fy.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Fx.size() = " << d->Fx.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Fu.size() = " << d->Fu.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Ly.size() = " << d->Ly.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Lx.size() = " << d->Lx.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Lu.size() = " << d->Lu.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Lyy.size() = " << d->Lyy.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Lxx.size() = " << d->Lxx.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Lyu.size() = " << d->Lyu.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Lxu.size() = " << d->Lxu.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Gy.size() = " << d->Gy.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Gx.size() = " << d->Gx.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Gu.size() = " << d->Gu.size() << std::endl;
-  
-  std::cout << "[iam-augmented.cpp] d->xnext.size() = " << d->xnext.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->h.size() = " << d->h.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Hx.size() = " << d->Hx.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] d->Hu.size() = " << d->Hu.size() << std::endl;
-  std::cout << "[iam-augmented.cpp] time_step_ = " << time_step_ << std::endl;
-  std::cout << "[iam-augmented.cpp] time_step2_ = " << time_step2_ << std::endl;
-
-  std::cout << "[iam-augmented.cpp] d->dy.size() = " << d->dy.size() << std::endl;
-
-  assert(data != nullptr && "data pointer is not initialized!");
-  assert(d != nullptr && "d pointer is not initialized!");
-  assert(differential_ != nullptr && "diff model pointer is not initialized!");
-  assert(diff_data_soft != nullptr && "diff data pointer is not initialized!");
-  assert(state_ != nullptr && "state pointer is not initialized!");
-  assert(differential_->get_state() != nullptr && "diff model state pointer is not initialized!");
-  
-  std::cout << "[iam-augmented.cpp] END OF CALC " << std::endl;
 }  // calc
 
 
@@ -356,8 +287,6 @@ void IAMSoftContactAugmented::calcDiff(
   d->Gy.topLeftCorner(differential_->get_ng(), ndx) = diff_data_soft->Gx;
   // d->Gu.resize(differential_->get_ng() + nc_, nu_);
   d->Gu.topLeftCorner(differential_->get_ng(), nu_) = diff_data_soft->Gu;
-  // std::cout << "Gu = " << d->Gu << std::endl;
-  // std::cout << "Gy size = " << d->Gy.size() << std::endl;
   if(with_force_constraint_){
     d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() += double(1.);
   }

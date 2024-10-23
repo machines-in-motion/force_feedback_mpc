@@ -3,6 +3,7 @@
 
 #include <pinocchio/fwd.hpp>
 #include <boost/python.hpp>
+#include <eigenpy/eigenpy.hpp>
 
 #include "force_feedback_mpc/lowpassfilter/state.hpp"
 #include "force_feedback_mpc/lowpassfilter/action.hpp"
