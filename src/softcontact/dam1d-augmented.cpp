@@ -544,6 +544,15 @@ DAMSoftContact1DAugmentedFwdDynamics::createData() {
   return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
+bool DAMSoftContact1DAugmentedFwdDynamics::checkData(
+    const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double>>& data) {
+  boost::shared_ptr<Data> d = boost::dynamic_pointer_cast<Data>(data);
+  if (d != NULL) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 
 const Vector3MaskType& DAMSoftContact1DAugmentedFwdDynamics::get_type() const {

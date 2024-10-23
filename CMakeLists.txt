@@ -113,8 +113,8 @@ endif()
 #   add_subdirectory(benchmarks)
 # endif()
 
-# # Unit tests
-# add_subdirectory(tests)
+# Unit tests
+add_subdirectory(tests)
 
 # Python packages 
 add_subdirectory(python)
@@ -123,5 +123,5 @@ add_subdirectory(python)
 install(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
 install(FILES package.xml DESTINATION share/${PROJECT_NAME})
 
-# Add flags for Valgrind (if desired)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fstack-protector")  # Add debug symbols and no optimization
+# # Add flags for Valgrind (if desired)
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fstack-protector")  # Add debug symbols and no optimization

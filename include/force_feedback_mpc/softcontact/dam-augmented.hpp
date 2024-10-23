@@ -399,6 +399,12 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
    */
   virtual boost::shared_ptr<DifferentialActionDataAbstract> createData();
 
+  /**
+   * @brief Checks that a specific data belongs to this model
+   */
+  virtual bool checkData(
+      const boost::shared_ptr<DifferentialActionDataAbstract>& data);
+      
   void set_Kp(const VectorXs& inKp);
   void set_Kv(const VectorXs& inKv);
   void set_oPc(const Vector3s& oPc);

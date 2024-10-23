@@ -112,6 +112,11 @@ DAMSoftContactAbstractAugmentedFwdDynamics::createData() {
 }
 
 
+bool DAMSoftContactAbstractAugmentedFwdDynamics::checkData(
+    const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double>>&) {
+  return false;
+}
+
 std::size_t DAMSoftContactAbstractAugmentedFwdDynamics::get_ng() const {
   if (constraints_ != nullptr) {
     return constraints_->get_ng();

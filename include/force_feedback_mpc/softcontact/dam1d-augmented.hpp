@@ -274,6 +274,13 @@ class DAMSoftContact1DAugmentedFwdDynamics
    */
   virtual boost::shared_ptr<DifferentialActionDataAbstract> createData();
 
+  /**
+   * @brief Checks that a specific data belongs to the free inverse-dynamics
+   * model
+   */
+  virtual bool checkData(
+      const boost::shared_ptr<DifferentialActionDataAbstract>& data);
+      
   const Vector3MaskType& get_type() const;
 
   void set_type(const Vector3MaskType& inType);

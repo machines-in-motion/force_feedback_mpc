@@ -111,7 +111,7 @@ TORQUE_TRACKING = 0
 ### LOAD ROBOT MODEL and SIMU ENV ### 
 # # # # # # # # # # # # # # # # # # # 
 # Read config file
-config_name = 'polishing_soft'
+config_name = 'polishing_soft_obstacle'
 config = path_utils.load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/'+config_name+'.yml')
 # Create a simulation environment & simu-pin wrapper 
 dt_simu = 1./float(config['simu_freq'])  
@@ -148,7 +148,7 @@ simulator_utils.set_lateral_friction(contact_surface_bulletId, 0.5)
 simulator_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 10000, 500)
 
 # Create obstacle
-# capsule_id = simulator_utils.setup_obstacle_collision(robot_simulator, robot, config)
+capsule_id = simulator_utils.setup_obstacle_collision(robot_simulator, robot, config)
 
 # Contact model
 softContactModel = SoftContactModel1D(Kp=np.asarray(config['Kp']), 
@@ -232,7 +232,7 @@ for k,m in enumerate(models):
       solver.problem.terminalModel.calc(solver.problem.terminalData, xs_init[k])
       logger.debug("after calc lb (tIAM) = : "+str(solver.problem.terminalModel.g_lb))
       logger.debug("after calc ub (tIAM) = : "+str(solver.problem.terminalModel.g_ub))
-wepjfof
+# wepjfof
 solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
 

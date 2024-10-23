@@ -535,5 +535,15 @@ DAMSoftContact3DAugmentedFwdDynamics::createData() {
   return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
+bool DAMSoftContact3DAugmentedFwdDynamics::checkData(
+    const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double>>& data) {
+  boost::shared_ptr<Data> d = boost::dynamic_pointer_cast<Data>(data);
+  if (d != NULL) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 }  // namespace softcontact
 }  // namespace force_feedback_mpc

@@ -316,7 +316,8 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
       .add_property(
           "a_da",
           bp::make_getter(&DADSoftContactAbstractAugmentedFwdDynamics::a_da,
-                          bp::return_internal_reference<>()),
+                        //   bp::return_internal_reference<>()),
+                          bp::return_value_policy<bp::return_by_value>()),
           "Partial derivative of LOCAL contact frame acceleration w.r.t. joint acceleration")
       .add_property(
           "da_dx",

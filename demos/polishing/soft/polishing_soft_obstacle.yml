@@ -90,7 +90,7 @@ pinRefFrame: 'LOCAL_WORLD_ALIGNED'
 # forceConstraintReferenceFrame: 'LOCAL_WORLD_ALIGNED'
 # Constraints terms
 # to select from the list : 'stateBox', 'ctrlBox', 'translationBox', 'None'
-WHICH_CONSTRAINTS: ['ctrlBox']
+WHICH_CONSTRAINTS: ['collisionBox']
 ctrlLimit: 'DEFAULT'
 stateLowerLimit: [-2.07, -1.46, -2.07, -1.46, -2.07, -1.46, -1.03, -1.03, -1.22, -0.91, -1.58, -1.64]
 stateUpperLimit: [2.07, 1.46, 2.07, 1.46 , 2.07, 1.46,       1.03, 1.03, 1.22, 0.91, 1.58, 1.64]
@@ -100,13 +100,13 @@ stateUpperLimit: [2.07, 1.46, 2.07, 1.46 , 2.07, 1.46,       1.03, 1.03, 1.22, 0
 safetyMargin: 0.
 collisionPairs:         
 - ["L2_capsule_1", "obstacle1"] # rod
-# - ["L3_capsule_0", "obstacle1"]
-# - ["L4_capsule_0", "obstacle1"]
-# - ["L4_capsule_1", "obstacle1"]
-# - ["L5_capsule_0", "obstacle1"]
-# - ["L6_capsule_0", "obstacle1"]
-# - ["L6_capsule_1", "obstacle1"]
-# - ["L7_capsule_0", "obstacle1"]
+- ["L3_capsule_0", "obstacle1"]
+- ["L4_capsule_0", "obstacle1"]
+- ["L4_capsule_1", "obstacle1"]
+- ["L5_capsule_0", "obstacle1"]
+- ["L6_capsule_0", "obstacle1"]
+- ["L6_capsule_1", "obstacle1"]
+- ["L7_capsule_0", "obstacle1"]
 # - ["L4_capsule_0", "obstacle2"] # table
 # - ["L4_capsule_1", "obstacle2"]
 # - ["L5_capsule_0", "obstacle2"]

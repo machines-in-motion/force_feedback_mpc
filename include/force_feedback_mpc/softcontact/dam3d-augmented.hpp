@@ -231,7 +231,14 @@ class DAMSoftContact3DAugmentedFwdDynamics : public DAMSoftContactAbstractAugmen
    * @return soft contact forward-dynamics data
    */
   virtual boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> createData();
-  
+
+  /**
+   * @brief Checks that a specific data belongs to the free inverse-dynamics
+   * model
+   */
+  virtual bool checkData(
+      const boost::shared_ptr<DifferentialActionDataAbstract>& data);
+      
   protected:
     using Base::Kp_;
     using Base::Kv_;

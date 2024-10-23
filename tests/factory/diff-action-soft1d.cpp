@@ -141,7 +141,7 @@ DAMSoftContact1DFactory::create_augmentedDAMSoft1D(StateModelTypes::Type state_t
       actuation, 
       cost, 
       state->get_pinocchio()->getFrameId(frameName), 
-      Kp, Kv, oPc, ref_type, mask_type, constraint);
+      Kp, Kv, oPc, mask_type, constraint);
   action->set_force_des(Eigen::VectorXd::Zero(1));
   action->set_force_weight(Eigen::VectorXd::Ones(1)*0.01);
   action->set_with_force_cost(true);
@@ -151,6 +151,7 @@ DAMSoftContact1DFactory::create_augmentedDAMSoft1D(StateModelTypes::Type state_t
   action->set_force_rate_reg_weight(1e-6*Eigen::VectorXd::Ones(1));
   pinocchio::ReferenceFrame cost_ref = pinocchio::LOCAL;
   action->set_cost_ref(cost_ref);
+  action->set_ref(ref_type);
   return action;
 }
 
