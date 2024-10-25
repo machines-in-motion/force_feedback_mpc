@@ -131,6 +131,26 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   void set_force_ub(const VectorXs& inVec);
   const VectorXs& get_force_ub() const { return force_ub_; };
 
+  // /**
+  //  * @brief Return the lower bound of the inequality constraints
+  //  */
+  // virtual const VectorXs& get_g_lb() const;
+
+  // /**
+  //  * @brief Return the upper bound of the inequality constraints
+  //  */
+  // virtual const VectorXs& get_g_ub() const;
+
+  /**
+   * @brief Modify the lower bound of the inequality constraints
+   */
+  void set_g_lb(const VectorXs& g_lb);
+
+  /**
+   * @brief Modify the upper bound of the inequality constraints
+   */
+  void set_g_ub(const VectorXs& g_ub);
+
  protected:
   using Base::has_control_limits_;  //!< Indicates whether any of the control
                                     //!< limits are active

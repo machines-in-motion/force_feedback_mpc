@@ -289,6 +289,7 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
       const Vector3s& oPc,
       const std::size_t nc,
       boost::shared_ptr<ConstraintModelManager> constraints = nullptr);
+      
   virtual ~DAMSoftContactAbstractAugmentedFwdDynamics();
 
   /**
@@ -365,6 +366,16 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
    */
   virtual const VectorXs& get_g_ub() const;
 
+  /**
+   * @brief Modify the lower bound of the inequality constraints
+   */
+  void set_g_lb(const VectorXs& g_lb);
+
+  /**
+   * @brief Modify the upper bound of the inequality constraints
+   */
+  void set_g_ub(const VectorXs& g_ub);
+  
   /**
    * @brief Return the actuation model
    */

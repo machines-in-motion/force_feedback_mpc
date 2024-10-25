@@ -83,7 +83,7 @@ def solveOCP(q, v, f, solver, nb_iter, target_reach, anchor_point, TASK_PHASE, t
         if(TASK_PHASE == 3):
             for k in range( solver.problem.T+1 ):
                 m[k].differential.active_contact = True
-                m[k].differential.f_des = np.array([target_force[k]])
+                m[k].differential.f_des = np.array([-target_force[k]])
                 m[k].differential.oPc = anchor_point
                 m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
                 m[k].differential.costs.costs["translation"].cost.activation.weights = np.array([1., 1., 0.])
@@ -94,7 +94,7 @@ def solveOCP(q, v, f, solver, nb_iter, target_reach, anchor_point, TASK_PHASE, t
         if(TASK_PHASE == 4):
             for k in range( solver.problem.T+1 ):
                 m[k].differential.costs.costs["translation"].weight = 150. 
-                m[k].differential.f_des = np.array([target_force[k]]) 
+                m[k].differential.f_des = np.array([-target_force[k]]) 
                 m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
         # Solve OCP 
         solver.solve(xs_init, us_init, maxiter=nb_iter, isFeasible=False)
@@ -119,7 +119,7 @@ q0 = np.asarray(config['q0'])
 v0 = np.asarray(config['dq0'])
 x0 = np.concatenate([q0, v0])  
 env             = BulletEnvWithGround(dt=dt_simu, server=p.GUI)
-robot_simulator = load_bullet_wrapper('iiwa_ft_sensor_shell', locked_joints=['A7'])
+robot_simulator = load_bullet_wrapper('iiwa_convex_ft_sensor_shell', locked_joints=['A7'])
 env.add_robot(robot_simulator) 
 robot_simulator.reset_state(q0, v0)
 robot_simulator.forward_robot(q0, v0)
@@ -181,58 +181,46 @@ xs_init = [y0 for i in range(config['N_h']+1)]
 us_init = [u0 for i in range(config['N_h'])] 
 # Setup Croco OCP and create solver
 ocp = OptimalControlProblemSoftContactAugmented(robot, config).initialize(y0, softContactModel)
+
 solver = mim_solvers.SolverCSQP(ocp)
+solver.with_callbacks         = config['with_callbacks']
+solver.use_filter_line_search = config['use_filter_line_search']
+solver.filter_size            = config['filter_size']
+solver.warm_start             = config['warm_start']
+solver.termination_tolerance  = config['solver_termination_tolerance']
+solver.max_qp_iters           = config['max_qp_iter']
+solver.eps_abs                = config['qp_termination_tol_abs']
+solver.eps_rel                = config['qp_termination_tol_rel']
+solver.warm_start_y           = config['warm_start_y']
+solver.reset_rho              = config['reset_rho']  
+solver.mu_dynamic             = config["mu_dynamic"]
+solver.mu_constraint          = config["mu_constraint"]
 solver.regMax                 = 1e6
 solver.reg_max                = 1e6
-solver.termination_tolerance  = 0.0001 
-solver.use_filter_line_search = True
-solver.filter_size            = config['maxiter']
 # !!! Deactivate all costs & contact models initially !!!
 models = list(solver.problem.runningModels) + [solver.problem.terminalModel]
+datas = list(solver.problem.runningDatas) + [solver.problem.terminalData]
 for k,m in enumerate(models):
     m.differential.costs.costs["translation"].active = False
     m.differential.active_contact = False
     m.differential.f_des = np.zeros(1)
     m.differential.cost_ref = pin.LOCAL_WORLD_ALIGNED
+    m.differential.ref = pin.LOCAL_WORLD_ALIGNED
     m.differential.costs.costs['rotation'].active = False
     m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
-    # if(k<config['N_h']):
-    #     m.differential.constraints.constraints['ctrlBox'].active = False
-
-# # Activate collisions initially + set bounds
-# for col_idx in range(len(robot.collision_model.collisionPairs)):
-#   for k in range(solver.problem.T):
-#     solver.problem.runningModels[k].differential.constraints.constraints['collisionBox_' + str(col_idx)].active=False
-#     solver.problem.runningModels[k].differential.constraints.constraints['collisionBox_' + str(col_idx)].constraint.updateBounds(
-#                   np.array([0.]),
-#                   np.array([np.inf]),)
-#   solver.problem.terminalModel.differential.constraints.constraints['collisionBox_' + str(col_idx)].active=False
-#   solver.problem.terminalModel.differential.constraints.constraints['collisionBox_' + str(col_idx)].constraint.updateBounds(
-#             np.array([0.]),
-#             np.array([np.inf]),)
-  
-for k,m in enumerate(models):
-    print("Model ", k, " calc()")
-    # print("x         = ", xs_init[k])
-    # print("u         = ", us_init[k])
-    # print("model     = ", m)
-    # print("model.nc  = ", m.nc)
-    # print("model.nr  = ", m.nr)
-    # print("model.ng  = ", m.ng)
-    # print("data.g    = ", solver.problem.runningDatas[k].g)
-    # print("data.r    = ", solver.problem.runningDatas[k].r)
-    # print("data.cost = ", solver.problem.runningDatas[k].cost)
-    # wefhw
-    if(k < config['N_h']):
-      solver.problem.runningModels[k].calc(solver.problem.runningDatas[k], xs_init[k], us_init[k])
-      print("wefhweff")
-      logger.debug("after calc lb (IAM) = : "+str(solver.problem.runningModels[k].g_lb))
-      logger.debug("after calc ub (IAM) = : "+str(solver.problem.runningModels[k].g_ub))
-    else:
-      solver.problem.terminalModel.calc(solver.problem.terminalData, xs_init[k])
-      logger.debug("after calc lb (tIAM) = : "+str(solver.problem.terminalModel.g_lb))
-      logger.debug("after calc ub (tIAM) = : "+str(solver.problem.terminalModel.g_ub))
-# wepjfof
+    # set each collision constraint bounds to [0, inf]
+    for col_idx in range(len(robot.collision_model.collisionPairs)):
+        # only populates the bounds of the constraint item (not the manager)
+        m.differential.constraints.constraints['collisionBox_' + str(col_idx)].constraint.updateBounds(
+                    np.array([0.]),
+                    np.array([np.inf])) 
+        # needed to pass the bounds to the manager
+        m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
+        # need to set it
+        m.g_lb = -0.001*np.ones([m.ng])
+        m.g_ub = np.array([np.inf]*m.ng)
+        # m.calc(datas[k], y0, u0) 
+# wfhwef
 solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
 

@@ -150,7 +150,7 @@ def display_contact_surface(M, robotId=1, radius=.5, length=0.0, bullet_endeff_i
       # Desactivate collisions for all links
       for i in range(p.getNumJoints(robotId)):
             p.setCollisionFilterPair(contactId, robotId, -1, i, 1) # 0
-            # logger.info("Set collision pair ("+str(contactId)+","+str(robotId)+"."+str(i)+") to True")
+            logger.info("Set collision pair ("+str(contactId)+","+str(robotId)+"."+str(i)+") to True")
     #   # activate collisions only for EE ids
     #   for ee_id in bullet_endeff_ids:
     #         p.setCollisionFilterPair(contactId, robotId, -1, ee_id, 1)
@@ -378,6 +378,24 @@ def setup_obstacle_collision(robot_simulator, pin_robot, config):
   robot_simulator.pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
   robot_simulator.pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
   return capsule_id
+
+
+def setup_obstacle_collision_no_sim(pin_robot, config):
+ 
+  # Creating the obstacle
+  OBSTACLE1_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE1_POSE"]))
+  OBSTACLE2_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE2_POSE"]))
+  OBSTACLE_RADIUS1      = config["OBSTACLE_RADIUS1"]
+  OBSTACLE_RADIUS2      = tuple(config["OBSTACLE_RADIUS2"])
+  OBSTACLE1_GEOM_OBJECT = create_box_obstacle(OBSTACLE1_POSE, OBSTACLE_RADIUS1, name="obstacle1")
+  OBSTACLE2_GEOM_OBJECT = create_box_obstacle(OBSTACLE2_POSE, OBSTACLE_RADIUS2, name="obstacle2")
+  logger.debug("7")
+
+  # Adding obstacle to collision model (pinocchio)
+  pin_robot.collision_model = transform_model_into_capsules(pin_robot.collision_model)
+  logger.debug("9")
+  pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
+  pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
 
     # head = SimHead(robot_simulator, vicon_name='cube10', with_sliders=False)
 # def rotationMatrixFromTwoVectors(a, b):

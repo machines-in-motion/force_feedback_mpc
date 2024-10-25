@@ -125,6 +125,9 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
   }
 
   pinocchio::updateGlobalPlacements(this->get_pinocchio(), d->pinocchio);
+
+  d->multibody.joint->a = d->xout;
+  d->multibody.joint->tau = u;
   
   // Computing the cost value and residuals
   this->get_costs()->calc(d->costs, x, u);
@@ -562,6 +565,40 @@ const Vector3MaskType& DAMSoftContact1DAugmentedFwdDynamics::get_type() const {
 
 void DAMSoftContact1DAugmentedFwdDynamics::set_type(const Vector3MaskType& inType) {
   type_ = inType;
+}
+
+std::size_t DAMSoftContact1DAugmentedFwdDynamics::get_ng() const {
+  if (constraints_ != nullptr) {
+    return constraints_->get_ng();
+  } else {
+    return Base::get_ng();
+  }
+}
+
+std::size_t DAMSoftContact1DAugmentedFwdDynamics::get_nh() const {
+  if (constraints_ != nullptr) {
+    return constraints_->get_nh();
+  } else {
+    return Base::get_nh();
+  }
+}
+
+const typename crocoddyl::MathBaseTpl<double>::VectorXs&
+DAMSoftContact1DAugmentedFwdDynamics::get_g_lb() const {
+  if (constraints_ != nullptr) {
+    return constraints_->get_lb();
+  } else {
+    return g_lb_;
+  }
+}
+
+const typename crocoddyl::MathBaseTpl<double>::VectorXs&
+DAMSoftContact1DAugmentedFwdDynamics::get_g_ub() const {
+  if (constraints_ != nullptr) {
+    return constraints_->get_ub();
+  } else {
+    return g_ub_;
+  }
 }
 
 }  // namespace softcontact

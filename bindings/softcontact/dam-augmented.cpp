@@ -218,7 +218,29 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
           bp::make_function(&DAMSoftContactAbstractAugmentedFwdDynamics::get_with_force_constraint,
                           bp::return_value_policy<bp::return_by_value>()),
             &DAMSoftContactAbstractAugmentedFwdDynamics::set_with_force_constraint,
-          "Is there a contact force constraint?");   
+          "Is there a contact force constraint?")
+      .add_property(
+          "g_lb",
+          bp::make_function(&DAMSoftContactAbstractAugmentedFwdDynamics_wrap::get_g_lb,
+                            bp::return_internal_reference<>()),
+          &DAMSoftContactAbstractAugmentedFwdDynamics_wrap::set_g_lb,
+          "lower bound of the inequality constraints")
+      .add_property(
+          "g_ub",
+          bp::make_function(&DAMSoftContactAbstractAugmentedFwdDynamics_wrap::get_g_ub,
+                            bp::return_internal_reference<>()),
+          &DAMSoftContactAbstractAugmentedFwdDynamics_wrap::set_g_ub,
+          "upper bound of the inequality constraints")
+      .add_property("ng",
+                    bp::make_function(
+                        &DAMSoftContactAbstractAugmentedFwdDynamics::get_ng,
+                        bp::return_value_policy<bp::return_by_value>()),
+                    "number of inequality constraints")
+      .add_property("nh",
+                    bp::make_function(
+                        &DAMSoftContactAbstractAugmentedFwdDynamics::get_nh,
+                        bp::return_value_policy<bp::return_by_value>()),
+                    "number of equality constraints"); 
 
   bp::register_ptr_to_python<boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> >();
 

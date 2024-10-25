@@ -35,7 +35,7 @@ DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDy
     const Vector3s& oPc,
     const std::size_t nc,
     boost::shared_ptr<ConstraintModelManager> constraints)
-    : DAMBase(state, actuation->get_nu(), costs->get_nr()),
+    : DAMBase(state, actuation->get_nu(), costs->get_nr(), constraints->get_ng(), constraints->get_nh()),
       actuation_(actuation),
       costs_(costs),
       constraints_(constraints),
@@ -49,6 +49,8 @@ DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDy
   // std::cout << "pin.effortLimit  = " << this->get_pinocchio().effortLimit.tail(this->get_nu()) << std::endl;
   DAMBase::set_u_lb(double(-1.) * this->get_pinocchio().effortLimit.tail(this->get_nu()));
   DAMBase::set_u_ub(double(+1.) * this->get_pinocchio().effortLimit.tail(this->get_nu()));
+  this->set_g_lb(-std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
+  this->set_g_ub(std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
   // Soft contact model parameters
   if(Kp.maxCoeff() < double(0.) || Kv.maxCoeff() < double(0.)){
      throw_pretty("Invalid argument: "
@@ -147,8 +149,30 @@ DAMSoftContactAbstractAugmentedFwdDynamics::get_g_ub() const {
   if (constraints_ != nullptr) {
     return constraints_->get_ub();
   } else {
-    return g_lb_;
+    return g_ub_;
   }
+}
+
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_g_lb(
+    const VectorXs& g_lb) {
+  if (static_cast<std::size_t>(g_lb.size()) != ng_) {
+    throw_pretty(
+        "Invalid argument: "
+        << "inequality lower bound has wrong dimension (it should be " +
+               std::to_string(ng_) + ")");
+  }
+  g_lb_ = g_lb;
+}
+
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_g_ub(
+    const VectorXs& g_ub) {
+  if (static_cast<std::size_t>(g_ub.size()) != ng_) {
+    throw_pretty(
+        "Invalid argument: "
+        << "inequality upper bound has wrong dimension (it should be " +
+               std::to_string(ng_) + ")");
+  }
+  g_ub_ = g_ub;
 }
 
 void DAMSoftContactAbstractAugmentedFwdDynamics::print(

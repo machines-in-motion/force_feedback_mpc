@@ -107,19 +107,18 @@ collisionPairs:
 - ["L6_capsule_0", "obstacle1"]
 - ["L6_capsule_1", "obstacle1"]
 - ["L7_capsule_0", "obstacle1"]
-# - ["L4_capsule_0", "obstacle2"] # table
-# - ["L4_capsule_1", "obstacle2"]
-# - ["L5_capsule_0", "obstacle2"]
-# - ["L6_capsule_0", "obstacle2"]
-# - ["L6_capsule_1", "obstacle2"]
-# - ["L7_capsule_0", "obstacle2"]
+- ["L4_capsule_0", "obstacle2"] # table
+- ["L4_capsule_1", "obstacle2"]
+- ["L5_capsule_0", "obstacle2"]
+- ["L6_capsule_0", "obstacle2"]
+- ["L6_capsule_1", "obstacle2"]
+- ["L7_capsule_0", "obstacle2"]
 
-OBSTACLE1_POSE: [1., 0.2, 0.3]
+OBSTACLE1_POSE: [1., 0.15, 0.3]
 OBSTACLE2_POSE: [0.5, 0., 0.]
 OBSTACLE_RADIUS1: [1, 0.1, 0.1]
 OBSTACLE_RADIUS2: [1, 1, 0.1]
 LENGTH1         : 0.76 # measured rod (real)
-
 
 # Cost function composition (a.k.a which terms will be actually used in the OCP)
 # to select from the list : 'stateReg', 'ctrlReg', 'ctrlRegGrav', 'stateLim', 'ctrlLim'
@@ -129,8 +128,8 @@ WHICH_COSTS: ['force', 'forceRateReg', 'translation', 'velocity', 'stateReg', 'c
 
 # Cost function weights and activations
  # 'force' : end-effector frame force (translation + rotation)
-frameForceWeight: [0.01] # 0.001 ok at 500hz
-frameForceWeightTerminal: [0.05] # 0.0083 ok at 500hz
+frameForceWeight: [0.00001] # 0.001 ok at 500hz
+frameForceWeightTerminal: [0.00005] # 0.0083 ok at 500hz
 frameForceRef: [0., 0., 50, 0., 0., 0.]    
 frameForceFrameName: 'contact'
 forceCostRefFrame: 'LOCAL_WORLD_ALIGNED'

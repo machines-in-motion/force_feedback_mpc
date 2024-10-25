@@ -112,14 +112,14 @@ collisionPairs:
 - ["L6_capsule_0", "obstacle1"]
 - ["L6_capsule_1", "obstacle1"]
 - ["L7_capsule_0", "obstacle1"]
-# - ["L4_capsule_0", "obstacle2"] # table
-# - ["L4_capsule_1", "obstacle2"]
-# - ["L5_capsule_0", "obstacle2"]
-# - ["L6_capsule_0", "obstacle2"]
-# - ["L6_capsule_1", "obstacle2"]
-# - ["L7_capsule_0", "obstacle2"]
+- ["L4_capsule_0", "obstacle2"] # table
+- ["L4_capsule_1", "obstacle2"]
+- ["L5_capsule_0", "obstacle2"]
+- ["L6_capsule_0", "obstacle2"]
+- ["L6_capsule_1", "obstacle2"]
+- ["L7_capsule_0", "obstacle2"]
 
-OBSTACLE1_POSE: [1., 0.2, 0.3]
+OBSTACLE1_POSE: [1., 0.15, 0.3]
 OBSTACLE2_POSE: [0.5, 0., 0.]
 OBSTACLE_RADIUS1: [1, 0.1, 0.1]
 OBSTACLE_RADIUS2: [1, 1, 0.1]

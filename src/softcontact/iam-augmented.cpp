@@ -49,16 +49,9 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
     std::cerr << "Warning: dt should be positive, set to 1e-3" << std::endl;
   }
   with_force_constraint_ = model->get_with_force_constraint();
-  // Set constraint bounds (add force constraint dimension)
-  g_lb_new_.resize(differential_->get_g_lb().size() + nc_);
-  g_ub_new_.resize(differential_->get_g_ub().size() + nc_);
-  // no constraint on force by default
-  force_lb_ = -std::numeric_limits<double>::infinity()*VectorXs::Ones(nc_);
-  force_ub_ = std::numeric_limits<double>::infinity()*VectorXs::Ones(nc_);
-  g_lb_new_ << differential_->get_g_lb(), force_lb_;
-  g_ub_new_ << differential_->get_g_ub(), force_ub_;
-  this->set_g_lb(g_lb_new_);
-  this->set_g_ub(g_ub_new_);
+  // no constraints initially
+  this->set_g_lb(-std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
+  this->set_g_ub(std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
@@ -68,14 +61,14 @@ IAMSoftContactAugmented::~IAMSoftContactAugmented() {}
 
 void IAMSoftContactAugmented::set_force_lb(const VectorXs& inVec){
   force_lb_ = inVec;
-  g_lb_new_ << differential_->get_g_lb(), force_lb_;
-  Base::set_g_lb(g_lb_new_);
+  g_lb_new_.tail(nc_) = force_lb_;
+  this->set_g_lb(g_lb_new_);
 }
 
 void IAMSoftContactAugmented::set_force_ub(const VectorXs& inVec){
   force_ub_ = inVec;
-  g_ub_new_ << differential_->get_g_ub(), force_ub_;
-  Base::set_g_ub(g_ub_new_);
+  g_ub_new_.tail(nc_) = force_ub_;
+  this->set_g_ub(g_ub_new_);
 }
 
 void IAMSoftContactAugmented::calc(
@@ -168,11 +161,13 @@ void IAMSoftContactAugmented::calc(
   // std::cout << "[IAM-Soft] this->get_g_lb() = " << this->get_g_lb() << std::endl;
   // std::cout << "[IAM-Soft] g_lb_new_ = " << g_lb_new_ << std::endl;
   // std::cout << "[IAM-Soft] g_lb_ = " << g_lb_ << std::endl;
+  // std::cout << "[IAM-Soft] differential->g_lb_ = " << differential_->get_g_lb() << std::endl;
   // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
   // std::cout << "[IAM-Soft] Base::get_g_ub() = " << Base::get_g_ub() << std::endl;
   // std::cout << "[IAM-Soft] this->get_g_ub() = " << this->get_g_ub() << std::endl;
   // std::cout << "[IAM-Soft] g_ub_new_ = " << g_ub_new_ << std::endl;
-  // std::cout << "[IAM-Soft] g_ub_ = " << g_ub_ << std::endl;
+  // std::cout << "[IAM-Soft] >g_ub_ = " << g_ub_ << std::endl;
+  // std::cout << "[IAM-Soft] differential->g_ub_ = " << differential_->get_g_ub() << std::endl;
   // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
   // std::cout << "[IAM-Soft] constraint residual DAD->g = " << diff_data_soft->g << std::endl;
   if(with_force_constraint_ == true && differential_->get_ng() > 0){
@@ -388,6 +383,37 @@ void IAMSoftContactAugmented::set_differential(
   differential_ = model;
   Base::set_u_lb(differential_->get_u_lb());
   Base::set_u_ub(differential_->get_u_ub());
+}
+
+
+// const typename MathBaseTpl<Scalar>::VectorXs&
+// IAMSoftContactAugmented::get_g_lb() const {
+//   return g_lb_;
+// }
+
+// const typename MathBaseTpl<Scalar>::VectorXs&
+// IAMSoftContactAugmented::get_g_ub() const {
+//   return g_ub_;
+// }
+
+void IAMSoftContactAugmented::set_g_lb(const VectorXs& g_lb) {
+  if (static_cast<std::size_t>(g_lb.size()) != ng_) {
+    throw_pretty(
+        "Invalid argument: "
+        << "inequality lower bound has wrong dimension (it should be " +
+               std::to_string(ng_) + ")");
+  }
+  g_lb_ = g_lb;
+}
+
+void IAMSoftContactAugmented::set_g_ub(const VectorXs& g_ub) {
+  if (static_cast<std::size_t>(g_ub.size()) != ng_) {
+    throw_pretty(
+        "Invalid argument: "
+        << "inequality upper bound has wrong dimension (it should be " +
+               std::to_string(ng_) + ")");
+  }
+  g_ub_ = g_ub;
 }
 
 }  // namespace softcontact

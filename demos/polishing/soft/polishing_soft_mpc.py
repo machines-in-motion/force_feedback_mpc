@@ -83,7 +83,7 @@ def solveOCP(q, v, f, solver, nb_iter, target_reach, anchor_point, TASK_PHASE, t
         if(TASK_PHASE == 3):
             for k in range( solver.problem.T+1 ):
                 m[k].differential.active_contact = True
-                m[k].differential.f_des = np.array([target_force[k]])
+                m[k].differential.f_des = np.array([-target_force[k]])
                 m[k].differential.oPc = anchor_point
                 m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
                 m[k].differential.costs.costs["translation"].cost.activation.weights = np.array([1., 1., 0.])
@@ -94,7 +94,7 @@ def solveOCP(q, v, f, solver, nb_iter, target_reach, anchor_point, TASK_PHASE, t
         if(TASK_PHASE == 4):
             for k in range( solver.problem.T+1 ):
                 m[k].differential.costs.costs["translation"].weight = 150. 
-                m[k].differential.f_des = np.array([target_force[k]]) 
+                m[k].differential.f_des = np.array([-target_force[k]]) 
                 m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
         # Solve OCP 
         solver.solve(xs_init, us_init, maxiter=nb_iter, isFeasible=False)

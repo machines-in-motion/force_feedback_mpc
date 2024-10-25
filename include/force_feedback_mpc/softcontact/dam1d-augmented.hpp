@@ -285,6 +285,26 @@ class DAMSoftContact1DAugmentedFwdDynamics
 
   void set_type(const Vector3MaskType& inType);
 
+  /**
+   * @brief Return the number of inequality constraints
+   */
+  virtual std::size_t get_ng() const;
+
+  /**
+   * @brief Return the number of equality constraints
+   */
+  virtual std::size_t get_nh() const;
+
+  /**
+   * @brief Return the lower bound of the inequality constraints
+   */
+  virtual const VectorXs& get_g_lb() const;
+
+  /**
+   * @brief Return the upper bound of the inequality constraints
+   */
+  virtual const VectorXs& get_g_ub() const;
+
   protected:
     using Base::Kp_;
     using Base::Kv_;

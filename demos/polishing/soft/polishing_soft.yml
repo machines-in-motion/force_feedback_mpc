@@ -7,14 +7,14 @@ ctrl_freq: 1000               # Control frequency
 plan_freq: 500                # Planning frequency
 T_tot: 10.                     # Simu duration (s)n (s)
 # Simulation options
-DELAY_SIM: True                 # Add delay in reference torques (low-level)
-DELAY_OCP: True                 # Add delay in OCP solution (i.e. ~1ms resolution time)
-SCALE_TORQUES: True             # Affine scaling of reference torque
-NOISE_TORQUES: True             # Add Gaussian noise on reference torques
-NOISE_STATE: True               # Add Gaussian noise on the measured state 
-STATIC_FRICTION: True           # Simulate static friction torque
-VISCOUS_FRICTION: True          # Simulate viscous friction torque
-TORQUE_TRACKING: True           # Low-level torque tracking with a PI controller
+DELAY_SIM: False                 # Add delay in reference torques (low-level)
+DELAY_OCP: False                 # Add delay in OCP solution (i.e. ~1ms resolution time)
+SCALE_TORQUES: False             # Affine scaling of reference torque
+NOISE_TORQUES: False             # Add Gaussian noise on reference torques
+NOISE_STATE: False               # Add Gaussian noise on the measured state 
+STATIC_FRICTION: False           # Simulate static friction torque
+VISCOUS_FRICTION: False          # Simulate viscous friction torque
+TORQUE_TRACKING: False           # Low-level torque tracking with a PI controller
 SAVE_DATA: True                 # Save plot_data to npz
 RECORD_SOLVER_DATA: True       # Keep trace of Vxx, Riccati gains, reg, Jacobian etc. (more data to save)
 INIT_LOG: True                  # Initial logs summarizing parameters
