@@ -292,6 +292,7 @@ sim_data.tau_mea_SIMU[0,:] = solver.us[0]
 count=0
 f_err = []
 p_err = []
+err_f_i = 0.
 for i in range(sim_data.N_simu): 
     if(i%config['log_rate']==0 and config['LOG']): 
       print('')
@@ -360,6 +361,8 @@ for i in range(sim_data.N_simu):
         # Increment planning counter
         nb_plan += 1
       #   torqueController.reset_integral_error()
+        
+
     # # # # # # # # # #
     # # Send policy # #
     # # # # # # # # # #
@@ -380,11 +383,19 @@ for i in range(sim_data.N_simu):
             Jac = pin.computeFrameJacobian(robot.model, robot.data, q, id_endeff, pin.LOCAL_WORLD_ALIGNED)[:3, :nq]
             force_est =  robot_simulator.end_effector_forces()[1][0]
             tau_des_CTRL -= Jac.T @ np.array([force_est[0], force_est[1], 0])
-        
+        if(config['USE_FORCE_PI'] and 0 <= time_to_contact):
+            Jac = pin.computeFrameJacobian(robot.model, robot.data, q, id_endeff, pin.LOCAL_WORLD_ALIGNED)[:3, :nq]
+            force_est =  robot_simulator.end_effector_forces()[1][0]
+            err_f_p = target_force[0] - force_est[2]
+            err_f_i += err_f_p
+            F_PI = config['F_Kp'] * err_f_p + config['F_Ki'] * err_f_i
+            tau_des_CTRL -= Jac.T @ np.array([0, 0, F_PI])
+
         # Compute the motor torque 
         tau_mot_CTRL = torqueController.step(tau_des_CTRL, tau_mea_CTRL, tau_mea_derivative_CTRL)
         # Increment control counter
         nb_ctrl += 1
+
     # Simulate actuation 
     tau_mea_SIMU = actuationModel.step(tau_mot_CTRL, joint_vel=sim_data.state_mea_SIMU[i,nq:nq+nv])
     # Step PyBullet simulator
