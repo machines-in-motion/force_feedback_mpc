@@ -3,9 +3,9 @@
 
 
 # MPC & sim parameters
-simu_freq: 1000               # Simulation frequency in Hz
-ctrl_freq: 1000                # Control frequency
-plan_freq: 250                # Planning frequency
+simu_freq: 2000               # Simulation frequency in Hz
+ctrl_freq: 1000               # Control frequency
+plan_freq: 500                # Planning frequency
 T_tot: 6.                           # Simu duration (s)
 # Simulation options
 DELAY_SIM: False                 # Add delay in reference torques (low-level)
@@ -80,6 +80,7 @@ contactFrameName: 'contact'
 contactType: '1Dz'    
 pinRefFrame: 'LOCAL_WORLD_ALIGNED' 
 
+USE_LATERAL_FRICTION: True 
 
 # # Constraints 
 # WHICH_CONSTRAINTS: ['forceBox']

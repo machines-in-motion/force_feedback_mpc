@@ -395,6 +395,12 @@ for i in range(config['N_simu']):
           Ktilde[:,-n_lpf:] += ( 1 - (1-alpha)*sim_data.OCP_TO_PLAN_RATIO )*np.eye(n_lpf) # only for torques
           # tau_des_CTRL += Ktilde[:,:nq+nv].dot(solver.problem.x0[:nq+nv] - y_filtered[:nq+nv]) #position vel
           tau_des_CTRL += Ktilde.dot(solver.problem.x0 - y_filtered)     # position, vel, torques
+
+        if(config['USE_LATERAL_FRICTION'] and 0 <= time_to_contact):
+            Jac = pin.computeFrameJacobian(robot.model, robot.data, q, id_endeff, pin.LOCAL_WORLD_ALIGNED)[:3, lpfStateIds]
+            force_est =  robot_simulator.end_effector_forces()[1][0]
+            tau_des_CTRL -= Jac.T @ np.array([force_est[0], force_est[1], 0])
+
         # Compute the motor torque 
         tau_mot_CTRL = torqueController.step(tau_des_CTRL, tau_mea_CTRL, tau_mea_derivative_CTRL)
         # Increment control counter

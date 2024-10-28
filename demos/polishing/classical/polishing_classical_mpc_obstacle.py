@@ -375,6 +375,12 @@ for i in range(sim_data.N_simu):
           x_filtered = antiAliasingFilter.step(nb_ctrl, i, sim_data.ctrl_freq, sim_data.simu_freq, sim_data.state_mea_SIMU)
           # x_filtered = antiAliasingFilter.iir(x_filtered, sim_data.state_mea_SIMU[i], 0.5)
           tau_des_CTRL += solver.K[0].dot(solver.problem.x0 - x_filtered)
+        
+        if(config['USE_LATERAL_FRICTION'] and 0 <= time_to_contact):
+            Jac = pin.computeFrameJacobian(robot.model, robot.data, q, id_endeff, pin.LOCAL_WORLD_ALIGNED)[:3, :nq]
+            force_est =  robot_simulator.end_effector_forces()[1][0]
+            tau_des_CTRL -= Jac.T @ np.array([force_est[0], force_est[1], 0])
+        
         # Compute the motor torque 
         tau_mot_CTRL = torqueController.step(tau_des_CTRL, tau_mea_CTRL, tau_mea_derivative_CTRL)
         # Increment control counter
