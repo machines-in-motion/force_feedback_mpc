@@ -86,7 +86,6 @@ DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDy
   force_des_ = VectorXs::Zero(nc_);
   with_gravity_torque_reg_ = false;
   tau_grav_weight_ = double(0.);
-  with_force_constraint_ = false;
   with_force_rate_reg_cost_ = false;
 }
 

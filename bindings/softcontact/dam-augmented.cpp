@@ -214,12 +214,6 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
           &DAMSoftContactAbstractAugmentedFwdDynamics::set_armature,
           "Armature")
       .add_property(
-          "with_force_constraint",
-          bp::make_function(&DAMSoftContactAbstractAugmentedFwdDynamics::get_with_force_constraint,
-                          bp::return_value_policy<bp::return_by_value>()),
-            &DAMSoftContactAbstractAugmentedFwdDynamics::set_with_force_constraint,
-          "Is there a contact force constraint?")
-      .add_property(
           "g_lb",
           bp::make_function(&DAMSoftContactAbstractAugmentedFwdDynamics_wrap::get_g_lb,
                             bp::return_internal_reference<>()),

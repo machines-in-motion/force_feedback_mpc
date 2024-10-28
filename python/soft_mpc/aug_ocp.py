@@ -74,13 +74,13 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
     if('translationBox' in self.WHICH_CONSTRAINTS and node_id != 0):
       translationBoxConstraint = self.create_translation_constraint(state, actuation)
       constraintModelManager.addConstraint('translationBox', translationBoxConstraint)
-    # Contact force 
-    if('forceBox' in self.WHICH_CONSTRAINTS and node_id != 0 and node_id != self.N_h):
-      logger.warning("! ! ! ! ! ! ! ! ! ! ! ! ! ! !")
-      logger.warning("Force constraint not implemented yet for the SOFT CONTACT AUGMENTED MODEL")
-      logger.warning("! ! ! ! ! ! ! ! ! ! ! ! ! ! !")
-      forceBoxConstraint = self.create_force_constraint(state, actuation)
-      constraintModelManager.addConstraint('forceBox', forceBoxConstraint)
+    # # Contact force 
+    # if('forceBox' in self.WHICH_CONSTRAINTS and node_id != 0 and node_id != self.N_h):
+    #   logger.warning("! ! ! ! ! ! ! ! ! ! ! ! ! ! !")
+    #   logger.warning("Force constraint not implemented yet for the SOFT CONTACT AUGMENTED MODEL")
+    #   logger.warning("! ! ! ! ! ! ! ! ! ! ! ! ! ! !")
+    #   forceBoxConstraint = self.create_force_constraint(state, actuation)
+    #   constraintModelManager.addConstraint('forceBox', forceBoxConstraint)
     if('collisionBox' in self.WHICH_CONSTRAINTS):
         collisionBoxConstraints = self.create_collision_constraints(state, actuation)
         for i, collisionBoxConstraint in enumerate(collisionBoxConstraints):
@@ -233,29 +233,44 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
     logger.warning("Set dynamics and cost reference frames to "+str(softContactModel.pinRefFrame))
     return dam
 
-  def finalize_running_model(self, runningModel, softContactModel):
+  def finalize_running_model(self, runningModel, softContactModel, node_id):
     '''
     Populate running model with hard-coded costs 
     '''
   # Create and add cost function terms to current IAM
     # Control regularization (gravity)
     if('ctrlRegGrav' in self.WHICH_COSTS):
+      self.check_attribute('ctrlRegGravWeight')
       runningModel.differential.with_gravity_torque_reg = True
       runningModel.differential.tau_grav_weight = self.ctrlRegGravWeight
     # Frame force cost
     if('force' in self.WHICH_COSTS):
+      self.check_attribute('frameForceRef')
+      self.check_attribute('frameForceWeight')
       if(softContactModel.nc == 3):
         forceRef = np.asarray(self.frameForceRef)[:3]
       else:
         forceRef = np.array([np.asarray(self.frameForceRef)[softContactModel.mask]])
+      runningModel.differential.with_force_cost = True
       runningModel.differential.f_des = forceRef
       runningModel.differential.f_weight = np.asarray(self.frameForceWeight)
-      runningModel.differential.with_force_cost = True
     # Frame force rate reg cost
     if('forceRateReg' in self.WHICH_COSTS):
+      self.check_attribute('forceRateRegWeight')
       runningModel.differential.with_force_rate_reg_cost = True
       runningModel.differential.f_rate_reg_weight = np.asarray(self.forceRateRegWeight)
- 
+    if('forceBox' in self.WHICH_CONSTRAINTS and node_id != 0): 
+      self.check_attribute('forceLowerLimit')
+      self.check_attribute('forceUpperLimit')
+      runningModel.with_force_constraint = True
+      if(softContactModel.nc == 3):
+        runningModel.force_lb = np.asarray(self.forceLowerLimit)[:3]
+        runningModel.force_ub = np.asarray(self.forceUpperLimit)[:3]
+      else:
+        runningModel.force_lb = np.array([ np.asarray(self.forceLowerLimit)[softContactModel.mask] ])
+        runningModel.force_ub = np.array([ np.asarray(self.forceUpperLimit)[softContactModel.mask] ])
+
+
   def finalize_terminal_model(self, terminalModel, softContactModel):
     ''' 
     Populate terminal model with hard-coded costs 
@@ -265,17 +280,26 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
   # Create and add terminal cost models to terminal IAM
     # Frame force cost
     if('force' in self.WHICH_COSTS):
+      self.check_attribute('frameForceRef')
+      self.check_attribute('frameForceWeight')
       if(softContactModel.nc == 3):
         forceRef = np.asarray(self.frameForceRef)[:3]
       else:
         forceRef = np.array([np.asarray(self.frameForceRef)[softContactModel.mask]])
+      terminalModel.differential.with_force_cost = True  
       terminalModel.differential.f_des = forceRef
       terminalModel.differential.f_weight = np.asarray(self.frameForceWeightTerminal)*self.dt
-      terminalModel.differential.with_force_cost = True  
     # Frame force rate reg cost
     if('forceRateReg' in self.WHICH_COSTS):
+      self.check_attribute('forceRateRegWeight')
       terminalModel.differential.with_force_rate_reg_cost = True
       terminalModel.differential.f_rate_reg_weight = np.asarray(self.forceRateRegWeight)*self.dt
+    if('forceBox' in self.WHICH_CONSTRAINTS):
+      self.check_attribute('forceLowerLimit')
+      self.check_attribute('forceUpperLimit')
+      terminalModel.with_force_constraint = True
+      # terminalModel.force_lb = np.asarray(self.forceLowerLimit)
+      # terminalModel.force_ub = np.asarray(self.forceUpperLimit)
 
   def success_log(self, softContactModel):
     logger.info("OCP (SOFT) is ready !")
@@ -326,7 +350,7 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
         # Create DAM & IAM and initialize costs+contacts+constraints
           dam = self.create_differential_action_model(state, actuation, costModelSum, softContactModel, constraintModelManager) 
         runningModels.append(force_feedback_mpc.IAMSoftContactAugmented( dam, self.dt ))
-        self.finalize_running_model(runningModels[i], softContactModel)
+        self.finalize_running_model(runningModels[i], softContactModel, i)
         # self.init_running_model(state, actuation, runningModels[i], softContactModel)
         
     # Terminal model

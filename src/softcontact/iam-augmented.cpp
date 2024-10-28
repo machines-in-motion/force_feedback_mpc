@@ -48,10 +48,15 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
     time_step2_ = time_step_ * time_step_;
     std::cerr << "Warning: dt should be positive, set to 1e-3" << std::endl;
   }
-  with_force_constraint_ = model->get_with_force_constraint();
   // no constraints initially
+  with_force_constraint_ = false;
+  force_lb_ = -std::numeric_limits<double>::infinity()*VectorXs::Ones(model->get_nc());
+  force_ub_ = std::numeric_limits<double>::infinity()*VectorXs::Ones(model->get_nc());
   this->set_g_lb(-std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
   this->set_g_ub(std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
+  // temp variable used to update the force bounds
+  g_lb_new_ =  this->get_g_lb();
+  g_ub_new_ =  this->get_g_ub();
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
@@ -61,12 +66,14 @@ IAMSoftContactAugmented::~IAMSoftContactAugmented() {}
 
 void IAMSoftContactAugmented::set_force_lb(const VectorXs& inVec){
   force_lb_ = inVec;
+  g_lb_new_ =  this->get_g_lb();
   g_lb_new_.tail(nc_) = force_lb_;
   this->set_g_lb(g_lb_new_);
 }
 
 void IAMSoftContactAugmented::set_force_ub(const VectorXs& inVec){
   force_ub_ = inVec;
+  g_ub_new_ =  this->get_g_ub();
   g_ub_new_.tail(nc_) = force_ub_;
   this->set_g_ub(g_ub_new_);
 }
@@ -154,35 +161,11 @@ void IAMSoftContactAugmented::calc(
   d->dy.tail(nc_).noalias() = fdot * time_step_;
   state_->integrate(y, d->dy, d->ynext);
   d->cost = time_step_ * diff_data_soft->cost;
+  d->g.head(differential_->get_ng()) = diff_data_soft->g;
   // compute constraint residual
-  // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
-  // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
-  // std::cout << "[IAM-Soft] Base::get_g_lb() = " << Base::get_g_lb() << std::endl;
-  // std::cout << "[IAM-Soft] this->get_g_lb() = " << this->get_g_lb() << std::endl;
-  // std::cout << "[IAM-Soft] g_lb_new_ = " << g_lb_new_ << std::endl;
-  // std::cout << "[IAM-Soft] g_lb_ = " << g_lb_ << std::endl;
-  // std::cout << "[IAM-Soft] differential->g_lb_ = " << differential_->get_g_lb() << std::endl;
-  // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
-  // std::cout << "[IAM-Soft] Base::get_g_ub() = " << Base::get_g_ub() << std::endl;
-  // std::cout << "[IAM-Soft] this->get_g_ub() = " << this->get_g_ub() << std::endl;
-  // std::cout << "[IAM-Soft] g_ub_new_ = " << g_ub_new_ << std::endl;
-  // std::cout << "[IAM-Soft] >g_ub_ = " << g_ub_ << std::endl;
-  // std::cout << "[IAM-Soft] differential->g_ub_ = " << differential_->get_g_ub() << std::endl;
-  // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
-  // std::cout << "[IAM-Soft] constraint residual DAD->g = " << diff_data_soft->g << std::endl;
-  if(with_force_constraint_ == true && differential_->get_ng() > 0){
-    // std::cout << "[IAM-Soft] with_force_constraint_ = " << with_force_constraint_ << std::endl;
-    // std::cout << "[IAM-Soft] differential_->get_ng() = " << differential_->get_ng() << std::endl;
-    d->g.head(differential_->get_ng()) = diff_data_soft->g;
-    d->g.tail(nc_).setZero();
-    // hard code force constraint residual here
-    if (with_force_constraint_){
-      d->g.tail(nc_) = f;
-    }
+  if(with_force_constraint_){
+    d->g.tail(nc_) = f;
   }
-  // std::cout << "[IAM-Soft] constraint IAD->g = " << d->g << std::endl;
-  // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
-  // std::cout << "[IAM-Soft]  - - - - - - - - - - - - - - - - " << std::endl;
   // compute cost residual
   if (with_cost_residual_) {
     d->r.head(differential_->get_nr()) = diff_data_soft->r;
@@ -293,7 +276,7 @@ void IAMSoftContactAugmented::calcDiff(
   // d->Gu.resize(differential_->get_ng() + nc_, nu_);
   d->Gu.topLeftCorner(differential_->get_ng(), nu_) = diff_data_soft->Gu;
   if(with_force_constraint_){
-    d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() += double(1.);
+    d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() = double(1.);
   }
 }
 
@@ -326,7 +309,7 @@ void IAMSoftContactAugmented::calcDiff(
   d->Lyy.bottomRightCorner(nc_, nc_).noalias() = diff_data_soft->Lff;
   d->Gy.topLeftCorner(differential_->get_ng(), ndx) = diff_data_soft->Gx;
   if(with_force_constraint_){
-    d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() += double(1.);
+    d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() = double(1.);
   }
 }
 

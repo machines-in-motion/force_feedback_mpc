@@ -47,7 +47,7 @@ T_CIRCLE: 3.
 
 
 # OCP 
-dt: 0.003                                          # OCP integration step 
+dt: 0.03                                          # OCP integration step 
 N_h: 5                                             # Horizon length in nodes
 maxiter: 8                                         # Max number of iterations in DDP
 solver_termination_tolerance: 0.0001               # Tolerance on KKT residual 

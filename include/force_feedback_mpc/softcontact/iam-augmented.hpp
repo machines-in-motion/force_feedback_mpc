@@ -122,8 +122,8 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   void set_dt(const double& dt);
   void set_differential(boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model);
 
-  // void set_with_force_constraint(const bool inBool) {with_force_constraint_ = inBool; };
-  // const bool& get_with_force_constraint() const { return with_force_constraint_; };
+  void set_with_force_constraint(const bool inBool) {with_force_constraint_ = inBool; };
+  const bool& get_with_force_constraint() const { return with_force_constraint_; };
 
   void set_force_lb(const VectorXs& inVec);
   const VectorXs& get_force_lb() const { return force_lb_; };

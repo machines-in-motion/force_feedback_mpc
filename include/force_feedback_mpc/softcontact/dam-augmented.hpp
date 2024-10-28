@@ -465,9 +465,6 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
   const VectorXs& get_armature() const;
   void set_armature(const VectorXs& armature);
 
-  void set_with_force_constraint(const bool inBool) {with_force_constraint_ = inBool; };
-  const bool& get_with_force_constraint() const { return with_force_constraint_; };
-
   protected:
     using DAMBase::g_lb_;   //!< Lower bound of the inequality constraints
     using DAMBase::g_ub_;   //!< Upper bound of the inequality constraints
@@ -493,7 +490,6 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
     VectorXs force_rate_reg_weight_;          //!< Force rate cost weight
     bool with_gravity_torque_reg_;          //!< Control regularization w.r.t. gravity torque
     double tau_grav_weight_;                //!< Weight on regularization w.r.t. gravity torque
-    bool with_force_constraint_; // Add box constraint on the contact force
   
     boost::shared_ptr<ActuationModelAbstract> actuation_;    //!< Actuation model
     boost::shared_ptr<CostModelSum> costs_;                  //!< Cost model
