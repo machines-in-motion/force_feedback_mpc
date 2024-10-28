@@ -95,6 +95,9 @@ def solveOCP(q, v, solver, nb_iter, target_reach, TASK_PHASE, target_force):
                     fref = pin.Force(np.array([0., 0., target_force[k], 0., 0., 0.]))
                     m[k].differential.costs.costs["force"].active = True
                     m[k].differential.costs.costs["force"].cost.residual.reference = fref
+                # if(k!=solver.problem.T and k != 0):
+                    m[k].differential.constraints.changeConstraintStatus('forceBox', True)
+                
         # Update OCP for circle phase
         if(TASK_PHASE == 4):
             for k in range( solver.problem.T+1 ):
@@ -197,6 +200,13 @@ for k,m in enumerate(models):
     m.differential.costs.costs['rotation'].active = False
     m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
     # set each collision constraint bounds to [0, inf]
+  
+    if(k!= config['N_h']):
+        m.differential.constraints.constraints['forceBox'].constraint.updateBounds(
+                    np.array([0.]),
+                    np.array([25])) 
+        m.differential.constraints.changeConstraintStatus('forceBox', True)
+
     for col_idx in range(len(robot.collision_model.collisionPairs)):
         # only populates the bounds of the constraint item (not the manager)
         m.differential.constraints.constraints['collisionBox_' + str(col_idx)].constraint.updateBounds(
@@ -204,7 +214,7 @@ for k,m in enumerate(models):
                     np.array([np.inf])) 
         # needed to pass the bounds to the manager
         m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
-
+# ERPGOEJR
 # solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
 # Setup tracking problem with circle ref EE trajectory + Warm start state = IK of circle trajectory

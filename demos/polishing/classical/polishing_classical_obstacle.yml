@@ -29,8 +29,8 @@ TILT_PITCH_LOCAL_DEG: 6.      # Tilt angle of the contact surface
 RICCATI: False 
 DISPLAY_EE: False             # Display target and actual EE position as balls in PyBullet
 
-USE_LATERAL_FRICTION: True 
-USE_FORCE_PI: True
+USE_LATERAL_FRICTION: False 
+USE_FORCE_PI: False
 F_Kp: 5
 F_Ki: 1.
 
@@ -94,7 +94,12 @@ contactType: '1Dz'
 
 # Constraints 
 # to select from the list : 'stateBox', 'ctrlBox', 'translationBox', 'None'
-WHICH_CONSTRAINTS: ['collisionBox']
+WHICH_CONSTRAINTS: ['forceBox']
+forceConstraintType: '1Dz'
+forceConstraintFrameName: 'contact'
+forceConstraintReferenceFrame: 'LOCAL_WORLD_ALIGNED'
+forceLowerLimit: [0, 0, 0, 0, 0, 0]
+forceUpperLimit: [0, 0, 25, 0, 0, 0]
 ctrlLimit: 'DEFAULT'
 stateLowerLimit: [-2.07, -1.46, -2.07, -1.46, -2.07, -1.46, -1.03, -1.03, -1.22, -0.91, -1.58, -1.64]
 stateUpperLimit: [2.07, 1.46, 2.07, 1.46 , 2.07, 1.46,       1.03, 1.03, 1.22, 0.91, 1.58, 1.64]

@@ -84,15 +84,20 @@ def solveOCP(q, v, f, solver, nb_iter, target_reach, anchor_point, TASK_PHASE, t
             for k in range( solver.problem.T+1 ):
                 m[k].differential.active_contact = True
                 m[k].differential.f_des = np.array([-target_force[k]])
+                # print("f_des -= ", m[k].differential.f_des)
                 m[k].differential.oPc = anchor_point
                 m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
                 m[k].differential.costs.costs["translation"].cost.activation.weights = np.array([1., 1., 0.])
                 m[k].differential.costs.costs["translation"].weight = 50.
                 m[k].differential.costs.costs['rotation'].active = True
-                m[k].differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)                      
+                m[k].differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)                   
         # Update OCP for circle phase
         if(TASK_PHASE == 4):
             for k in range( solver.problem.T+1 ):
+                if(k!= 0):
+                    m[k].with_force_constraint = True
+                #     m[k].force_lb = np.array([-49.])
+                #     m[k].force_ub = np.array([51.])
                 m[k].differential.costs.costs["translation"].weight = 150. 
                 m[k].differential.f_des = np.array([-target_force[k]]) 
                 m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
@@ -208,17 +213,23 @@ for k,m in enumerate(models):
     m.differential.ref = pin.LOCAL_WORLD_ALIGNED
     m.differential.costs.costs['rotation'].active = False
     m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
-    # set each collision constraint bounds to [0, inf]
-    for col_idx in range(len(robot.collision_model.collisionPairs)):
-        # only populates the bounds of the constraint item (not the manager)
-        m.differential.constraints.constraints['collisionBox_' + str(col_idx)].constraint.updateBounds(
-                    np.array([0.]),
-                    np.array([np.inf])) 
-        # needed to pass the bounds to the manager
-        m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
-        # need to set explicitly the IAM bounds
-        m.g_lb = -0.0001*np.ones([m.ng]) # needs to be slightly negative (bug to investigate)
-        m.g_ub = np.array([np.inf]*m.ng)
+    # if(k!=0):
+    # m.force_lb =  np.array([-10000.])
+    m.with_force_constraint = False
+        # m.force_lb = np.array([-10000.])
+        # m.force_ub = np.array([10000.])
+    # m.force_ub =  np.array([10000.])
+    # # set each collision constraint bounds to [0, inf]
+    # for col_idx in range(len(robot.collision_model.collisionPairs)):
+    #     # only populates the bounds of the constraint item (not the manager)
+    #     m.differential.constraints.constraints['collisionBox_' + str(col_idx)].constraint.updateBounds(
+    #                 np.array([0.]),
+    #                 np.array([np.inf])) 
+    #     # needed to pass the bounds to the manager
+    #     m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
+    #     # need to set explicitly the IAM bounds
+    #     m.g_lb = -0.0001*np.ones([m.ng]) # needs to be slightly negative (bug to investigate)
+    #     m.g_ub = np.array([np.inf]*m.ng)
 # wfhwef
 # solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
@@ -386,7 +397,6 @@ for i in range(sim_data.N_simu):
         target_position[:,:2] = target_position_traj[time_to_circle:tf:OCP_TO_CTRL_RATIO,:2] + position_at_contact_switch[:2] - oPc[:2]
 
 
-
     # # # # # # # # #
     # # Solve OCP # #
     # # # # # # # # #
@@ -453,7 +463,7 @@ for i in range(sim_data.N_simu):
     f_mea_SIMU = robot_simulator.end_effector_forces()[1][0]
     fz_mea_SIMU = np.array([f_mea_SIMU[2]])
     if(i%1000==0): 
-      logger.info("f_mea  = "+str(f_mea_SIMU))
+        logger.info("f_mea  = "+str(f_mea_SIMU))
       
     # Compute force and position errors
     if(i >= T_CIRCLE):
