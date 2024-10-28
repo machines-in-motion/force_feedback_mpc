@@ -124,16 +124,9 @@ IntegratedActionModelLPF::IntegratedActionModelLPF(
   tauReg_residual_.resize(ntau_);
   tauLim_residual_.resize(ntau_);
   // Set constraint bounds (add ntau dimension for lpf torques constraints)
-  g_lb_new_.resize(differential_->get_g_lb().size() + ntau_);
-  g_ub_new_.resize(differential_->get_g_ub().size() + ntau_);
-  // no constraint on lpf torques by default
-  lpf_torque_lb_ = -std::numeric_limits<double>::infinity()*VectorXs::Ones(ntau_);
-  lpf_torque_ub_ = std::numeric_limits<double>::infinity()*VectorXs::Ones(ntau_);
-  // Fill out the constraints
-  g_lb_new_ << differential_->get_g_lb(), lpf_torque_lb_;
-  g_ub_new_ << differential_->get_g_ub(), lpf_torque_ub_;
-  Base::set_g_lb(g_lb_new_);
-  Base::set_g_ub(g_ub_new_);
+  // no constraints initially
+  this->set_g_lb(-std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
+  this->set_g_ub(std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
 }
 
 

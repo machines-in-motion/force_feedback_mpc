@@ -15,7 +15,7 @@ NOISE_TORQUES: False             # Add Gaussian noise on reference torques
 NOISE_STATE: False               # Add Gaussian noise on the measured state 
 STATIC_FRICTION: False          # Simulate static friction torque
 VISCOUS_FRICTION: False         # Simulate viscous friction torque
-TORQUE_TRACKING: True           # Low-level torque tracking with a PI controller
+TORQUE_TRACKING: False           # Low-level torque tracking with a PI controller
 SAVE_DATA: True                 # Save plot_data to npz
 RECORD_SOLVER_DATA: True       # Keep trace of Vxx, Riccati gains, reg, Jacobian etc. (more data to save)
 INIT_LOG: True                  # Initial logs summarizing parameters
@@ -128,8 +128,8 @@ WHICH_COSTS: ['force', 'forceRateReg', 'translation', 'velocity', 'stateReg', 'c
 
 # Cost function weights and activations
  # 'force' : end-effector frame force (translation + rotation)
-frameForceWeight: [0.00001] # 0.001 ok at 500hz
-frameForceWeightTerminal: [0.00005] # 0.0083 ok at 500hz
+frameForceWeight: [0.01] # 0.001 ok at 500hz
+frameForceWeightTerminal: [0.05] # 0.0083 ok at 500hz
 frameForceRef: [0., 0., 50, 0., 0., 0.]    
 frameForceFrameName: 'contact'
 forceCostRefFrame: 'LOCAL_WORLD_ALIGNED'

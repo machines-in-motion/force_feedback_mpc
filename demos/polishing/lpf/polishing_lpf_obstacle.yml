@@ -1,6 +1,5 @@
 # MPC parameters for end-effector circle force task
-# + PyBullet or Raisim simulation
-
+# + PyBullet or Raisim simulation
 
 # MPC & sim parameters
 simu_freq: 1000               # Simulation frequency in Hz
@@ -22,11 +21,10 @@ INIT_LOG: True                  # Initial logs summarizing parameters
 init_log_display_time: 1        # How long (s) to display the initial logs ?
 LOG: True                       # Logs during simulation
 log_rate: 1000                  # Display sim status once very 'log_rate' sim cycles
-# WHICH_PLOTS: ['f', 'y', 'ee', 'u']   # Which plots to generate after the simulation
-WHICH_PLOTS: ['all']   # Which plots to generate after the simulation
+WHICH_PLOTS: ['control', 'state', 'force', 'solver', 'ee']   # Which plots to generate after the simulation
 TILT_SURFACE: True              # Tilt contact surface 
 TILT_PITCH_LOCAL_DEG: 6.      # Tilt angle of the contact surface
-RICCATI: False 
+RICCATI: False                # Interpolate torque command using Riccati gains
 DISPLAY_EE: False             # Display target and actual EE position as balls in PyBullet
 
 # Start of the reaching phase
@@ -39,6 +37,9 @@ T_CONTACT: 1.
 T_RAMP: 2.
 # Start of the circle tracking phase
 T_CIRCLE: 3.
+
+
+
 
 
 # OCP 
@@ -62,7 +63,12 @@ qp_termination_tol_abs: 0.0005
 qp_termination_tol_rel: 0
 warm_start_y: False 
 reset_rho: False
+                      # Initial robot joint velocity
 
+# LPF 
+LPF_TYPE: 0                            # (0) ZOH (1) Euler (2) exact EMA
+f_c: 50                                # Low-pass filter cut-off frequency (5,50)
+tau_plus_integration: False            # semi-implicit if true, explicit if false
 
 # Pin model frame name of the end-effector 
 #   - Used for frame-related costs and plots generation
@@ -70,7 +76,7 @@ reset_rho: False
 frame_of_interest: 'contact'
 
 
-# List of contacts
+# List RIGID CONTACT models
 contacts:
   - {
       contactModelFrameName: 'contact',                   # frame name in pinocchio model
@@ -81,26 +87,19 @@ contacts:
       contactModelGains: [0, 50],                         # Baumgarte stabilization gains
       active: False                                       # Initially active? 
     }
-contactPosition: [0.65, 0., 0.1] # table
-oPc_offset: [0., 0., 0.] 
-pinRefFrame: 'LOCAL_WORLD_ALIGNED'
-contactType: '1Dz'
+contactPosition: [0.65, 0., 0.1]  
+oPc_offset: [0., 0., -0.00]  # just table
+contactFrameName: 'contact'
+contactType: '1Dz'    
+pinRefFrame: 'LOCAL_WORLD_ALIGNED' 
 
-# # Constraints 
-# WHICH_CONSTRAINTS: ['forceBox']
-# forceConstraintType: '1Dz'
-# forceLowerLimit: [-10000, -10000, 0, -10000, -10000, -10000]
-# forceUpperLimit: [10000, 10000, 10000, 10000, 10000, 10000]
-# forceConstraintFrameName: 'contact'
-# forceConstraintReferenceFrame: 'LOCAL_WORLD_ALIGNED'
-# Constraints terms
+
+# Constraints 
 # to select from the list : 'stateBox', 'ctrlBox', 'translationBox', 'None'
 WHICH_CONSTRAINTS: ['collisionBox']
-ctrlLimit: 'DEFAULT'
-stateLowerLimit: [-2.07, -1.46, -2.07, -1.46, -2.07, -1.46, -1.03, -1.03, -1.22, -0.91, -1.58, -1.64]
-stateUpperLimit: [2.07, 1.46, 2.07, 1.46 , 2.07, 1.46,       1.03, 1.03, 1.22, 0.91, 1.58, 1.64]
-# stateLowerLimit: [-1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000] #-1.03, -1.03, -1.22, -0.91, -1.58, -1.64]
-# stateUpperLimit: [1000, 1000, 1000, 1000, 1000, 1000,       1000, 1000, 1000, 1000, 1000, 1000]
+# ctrlLimit: 'DEFAULT'
+# stateLowerLimit: [-2.07, -1.46, -2.07, -1.46, -2.07, -1.46, -1.03, -1.03, -1.22, -0.91, -1.58, -1.64]
+# stateUpperLimit: [2.07, 1.46, 2.07, 1.46 , 2.07, 1.46,       1.03, 1.03, 1.22, 0.91, 1.58, 1.64]
 # Collision constraint
 safetyMargin: 0.
 collisionPairs:         
@@ -125,7 +124,6 @@ OBSTACLE_RADIUS1: [1, 0.1, 0.1]
 OBSTACLE_RADIUS2: [1, 1, 0.1]
 LENGTH1         : 0.76 # measured rod (real)
 
-
 # Cost function composition (a.k.a which terms will be actually used in the OCP)
 # to select from the list : 'stateReg', 'ctrlReg', 'ctrlRegGrav', 'stateLim', 'ctrlLim'
 #                           'force', 'friction', 'translation', 'velocity', 'placement'
@@ -134,63 +132,58 @@ WHICH_COSTS: ['force', 'translation', 'velocity', 'stateReg', 'ctrlRegGrav', 'ro
 # Cost function weights and activations
  # 'force' : end-effector frame force (translation + rotation)
 frameForceWeights:  [1, 1., 1, 0., 0., 0.]
-frameForceWeight: 10 
+frameForceWeight: 1000.
 frameForceRef: [0., 0., 50, 0., 0., 0.]    
 frameForceFrameName: 'contact'
 
-# 'stateReg' : state regularization  
-stateRegWeights: [0.2, 0.2, 0.2, 0.1, 0.1, 0.1, 2., 2., 2., 2., 2., 2.]
-stateRegWeight: 0.01 
-stateRegWeightTerminal: 0.01
+
+ # 'stateReg' : state regularization  
+stateRegWeights: [10., 10., 40., 10., 10., 50, 2., 2., 2., 2., 2., 2.]
+stateRegWeight: 0.02 
+stateRegWeightTerminal: 0.02
 stateRegRef: 'DEFAULT'
 
 
  # 'ctrlReg', 'ctrlRegGrav' : torque regularization 
 ctrlRegGravWeights: [1., 1., 1., 1., 1., 1.]
 ctrlRegGravWeight: 0.0001
-ctrlRegRef: 'DEFAULT' 
+ctrlRegGravWeightTerminal: 0.0001
+
+# 'wReg' : unfiltered torque regularization
+wRegWeight: 0.000000001
+wRegRef: 'zero'
+
+# 'wLim' : unfiltered torque limit
+wLimWeight: 0
 
 
  # 'translation' : end-effector frame translation 
-frameTranslationWeights:  [1., 1., 1.1]
-frameTranslationWeight: 13.   # 0.3 ///0.25 ok ///0.12  # 0.1 ok, 0.5 too high
-frameTranslationWeightTerminal: 100.
+frameTranslationWeights:  [1., 1., 1.]
+frameTranslationWeight: 65 #65.
+frameTranslationWeightTerminal: 600.
+alpha_quadflatlog: 0.01
 frameTranslationRef: 'DEFAULT'
 frameTranslationFrameName: 'contact'
-frameCircleTrajectoryRadius: 0.1  # in m
+frameCircleTrajectoryRadius: 0.07  # in m
 frameCircleTrajectoryVelocity: 3 # in rad/s
 numberOfRounds: 10
 CIRCLE_LOCAL_PLANE: 'XY'
 
+
  # 'velocity' : end-effector frame velocity (translation + rotation)
 frameVelocityWeights:  [1., 1., 1., 1., 1., 1.]
 frameVelocityWeight: 0.05
-frameVelocityWeightTerminal: 1000
+frameVelocityWeightTerminal: 1.
 frameVelocityRef: 'DEFAULT'    
 frameVelocityFrameName: 'contact'
 
+
  # 'rotation' : end-effector frame orientation
 frameRotationWeights:  [1., 1., 1.]
-frameRotationWeight: 0. #0.05
-frameRotationWeightTerminal: 0. #0.1 #1.
+frameRotationWeight: 10. #0.05
+frameRotationWeightTerminal: 10. #0.1 #1.
 frameRotationRef: 'DEFAULT'
 frameRotationFrameName: 'contact'
-
- # 'stateLim' : state limits
-stateLimWeights: [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]
-stateLimWeight: 1000.
-stateLimWeightTerminal: 1000.
-coef_xlim: 0.85
-
- # 'ctrlLim' : torque limits
-ctrlLimWeights: [1., 1., 1., 1., 1., 1.]
-ctrlLimWeight: 0.
-coef_ulim: 1
-
-# armature
-armature:  [.0, .0, .0, .0, .0, .0] 
-
-
 
 
 # # # # # # # # # # # # # # # # # # # # # #
@@ -205,13 +198,14 @@ beta_max: 2.
 var_u: [0.03, 0.03, 0.02, 0.02, 0.01, 0.01]
 var_q: 0.001 
 var_v: 0.001 
+var_aug: [0., 0., 0., 0., 0., 0.]
   # Buffer for torque delay
 delay_OCP_ms: 5    
 delay_sim_cycle: 1 
   # Static & viscous friction
-static_friction_max_torque: 5.
+static_friction_max_torque: 1.
 viscous_friction_slope: 0.5
   # Proportional-integral torque control gains
-Kp_low: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-Ki_low: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+Kp_low: [0.07, 0.07, 0.07, 0.07, 0.07, 0.07]
+Ki_low: [0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
 Kd_low: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]

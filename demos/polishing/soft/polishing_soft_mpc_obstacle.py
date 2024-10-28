@@ -216,12 +216,11 @@ for k,m in enumerate(models):
                     np.array([np.inf])) 
         # needed to pass the bounds to the manager
         m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
-        # need to set it
-        m.g_lb = -0.001*np.ones([m.ng])
+        # need to set explicitly the IAM bounds
+        m.g_lb = -0.0001*np.ones([m.ng]) # needs to be slightly negative (bug to investigate)
         m.g_ub = np.array([np.inf]*m.ng)
-        # m.calc(datas[k], y0, u0) 
 # wfhwef
-solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
+# solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
 
 # Setup tracking problem with circle ref EE trajectory + Warm start state = IK of circle trajectory

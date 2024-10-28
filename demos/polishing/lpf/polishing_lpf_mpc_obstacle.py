@@ -1,11 +1,11 @@
 """
 @package force_feedback
-@file sanding_MPC.py
+@file LPF_sanding_MPC.py
 @author Sebastien Kleff
 @license License BSD-3-Clause
 @copyright Copyright (c) 2021, New York University & LAAS-CNRS
 @date 2021-10-28
-@brief Closed-loop classical MPC for sanding task
+@brief Closed-loop 'LPF torque feedback' MPC for sanding task
 """
 
 '''
@@ -15,8 +15,9 @@ Trajectory optimization using Crocoddyl in closed-loop MPC
 (feedback from stateLPF y=(q,v,tau), control w = unfiltered torque)
 Using PyBullet simulator & GUI for rigid-body dynamics + visualization
 
-The goal of this script is to simulate MPC with torque feedback where
-the actuation dynamics is modeled as a low pass filter (LPF) in the optimization.
+The goal of this script is to simulate MPC with state feedback, optionally
+imperfect actuation (bias, noise, delays) at higher frequency
+The actuation dynamics is modeled as a low pass filter (LPF) in the optimization.
   - The letter y denotes the augmented state of joint positions, velocities
     and filtered torques while the letter 'w' denotes the unfiltered torque 
     input to the actuation model. 
@@ -27,25 +28,22 @@ the actuation dynamics is modeled as a low pass filter (LPF) in the optimization
 import sys
 sys.path.append('.')
 
-from croco_mpc_utils.utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
+from core_mpc_utils.misc_utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
 logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
 
 
 import numpy as np  
 np.set_printoptions(precision=4, linewidth=180)
 RANDOM_SEED = 1 #19
-logger.debug("1")
 
-
-from core_mpc_utils import mpc_utils, path_utils
+from core_mpc_utils import path_utils, misc_utils, mpc_utils
 from core_mpc_utils import sim_utils as simulator_utils
 
 from croco_mpc_utils import pinocchio_utils as pin_utils
-from croco_mpc_utils.ocp_data import MPCDataHandlerClassical, OCPDataHandlerClassical
-from croco_mpc_utils.ocp import OptimalControlProblemClassical
 from croco_mpc_utils.math_utils import circle_point_WORLD
+from force_feedback_mpc.lpf_mpc.data import OCPDataHandlerLPF, MPCDataHandlerLPF
+from force_feedback_mpc.lpf_mpc.ocp import OptimalControlProblemLPF, getJointAndStateIds
 from croco_mpc_utils.utils import load_yaml_file
-
 
 import mim_solvers
 from mim_robots.robot_loader import load_bullet_wrapper
@@ -54,15 +52,13 @@ import pybullet as p
 
 import time
 import pinocchio as pin
-
 import os
-logger.debug("2")
 
-def solveOCP(q, v, solver, nb_iter, target_reach, TASK_PHASE, target_force):
-        # print(target_force)
+
+def solveOCP(q, v, tau, solver, nb_iter, target_reach, TASK_PHASE, target_force):
         t = time.time()
         # Update initial state + warm-start
-        x = np.concatenate([q, v])
+        x = np.concatenate([q, v, tau])
         solver.problem.x0 = x
         xs_init = list(solver.xs[1:]) + [solver.xs[-1]]
         xs_init[0] = x
@@ -77,18 +73,22 @@ def solveOCP(q, v, solver, nb_iter, target_reach, TASK_PHASE, target_force):
         # Update OCP for "increase weights" phase
         if(TASK_PHASE == 2):
             for k in range( solver.problem.T+1 ):
-                w = min(2.*k , 5)
+                w = min(5*k , 12.)
                 m[k].differential.costs.costs["translation"].active = True
                 m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
                 m[k].differential.costs.costs["translation"].weight = w
-        # Update OCP for contact phase
-        if(TASK_PHASE == 3):
-            for k in range( solver.problem.T+1 ):
-                m[k].differential.costs.costs["translation"].active = True
-                m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
-                m[k].differential.costs.costs["translation"].weight = 2.
                 m[k].differential.costs.costs['rotation'].active = True
                 m[k].differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0, np.pi)
+        # Update OCP for contact phase
+        if(TASK_PHASE == 3):
+            for k in range( solver.problem.T+1 ): 
+            # for k in range( 0, solver.problem.T+1, 1 ):  
+                m[k].differential.costs.costs["translation"].active = True
+                m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
+                m[k].differential.costs.costs["translation"].cost.activation.weights = np.array([1., 1., 0.])
+                m[k].differential.costs.costs["translation"].weight = 200.
+                m[k].differential.costs.costs['rotation'].active = True
+                m[k].differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0, np.pi)  
                 # activate contact and force cost
                 m[k].differential.contacts.changeContactStatus("contact", True)
                 if(k!=solver.problem.T):
@@ -98,15 +98,16 @@ def solveOCP(q, v, solver, nb_iter, target_reach, TASK_PHASE, target_force):
         # Update OCP for circle phase
         if(TASK_PHASE == 4):
             for k in range( solver.problem.T+1 ):
+            # for k in range( 0, solver.problem.T+1, 1 ):
                 m[k].differential.costs.costs["translation"].active = True
                 m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
                 m[k].differential.costs.costs["translation"].cost.activation.weights = np.array([1., 1., 0.])
-                m[k].differential.costs.costs["translation"].weight = 60. 
+                m[k].differential.costs.costs["translation"].weight = 200.
                 m[k].differential.costs.costs['rotation'].active = True
-                m[k].differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0, np.pi)
+                m[k].differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0, np.pi)  
                 # activate contact and force cost
                 m[k].differential.contacts.changeContactStatus("contact", True)
-                if(k!=solver.problem.T):
+                if(k < solver.problem.T):
                     fref = pin.Force(np.array([0., 0., target_force[k], 0., 0., 0.]))
                     m[k].differential.costs.costs["force"].active = True
                     m[k].differential.costs.costs["force"].cost.residual.reference = fref
@@ -116,16 +117,16 @@ def solveOCP(q, v, solver, nb_iter, target_reach, TASK_PHASE, target_force):
         solve_time = time.time()
         return solver.us[0], solver.xs[1], solver.K[0], solve_time - t, solver.iter, solver.KKT
 
-logger.debug("3")
-
-TORQUE_TRACKING=0
+TORQUE_TRACKING = 0
 # def main(SAVE_DIR, TORQUE_TRACKING):
+
 
 # # # # # # # # # # # # # # # # # # #
 ### LOAD ROBOT MODEL and SIMU ENV ### 
 # # # # # # # # # # # # # # # # # # # 
 # Read config file
-config_name = 'polishing_classical_obstacle'
+# config, config_name = path_utils.load_config_file(__file__, robot_name)
+config_name = 'polishing_lpf_obstacle'
 config = path_utils.load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/'+config_name+'.yml')
 # Create a simulation environment & simu-pin wrapper 
 dt_simu = 1./float(config['simu_freq'])  
@@ -138,13 +139,13 @@ env.add_robot(robot_simulator)
 robot_simulator.reset_state(q0, v0)
 robot_simulator.forward_robot(q0, v0)
 robot = robot_simulator.pin_robot
-logger.debug("4")
+
 # Get dimensions 
 nq, nv = robot.model.nq, robot.model.nv; nu = nq
 # Placement of LOCAL end-effector frame w.r.t. WORLD frame
 frame_of_interest = config['frame_of_interest']
 id_endeff = robot.model.getFrameId(frame_of_interest)
-logger.debug("5")
+# simulator_utils.print_dynamics_info(1, 9)
 # EE translation target : contact point + vertical offset (radius of the ee ball)
 oPc = np.asarray(config['contactPosition']) + np.asarray(config['oPc_offset'])
 simulator_utils.display_ball(oPc, RADIUS=0.02, COLOR=[1.,0.,0.,0.2])
@@ -160,18 +161,33 @@ contact_surface_bulletId = simulator_utils.display_contact_surface(pin.SE3(np.ey
 # Make the contact soft (e.g. tennis ball or sponge on the robot)
 simulator_utils.set_lateral_friction(contact_surface_bulletId, 0.5)
 simulator_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 10000, 500)
-logger.debug("6")
 # Create obstacle
 capsule_id = simulator_utils.setup_obstacle_collision(robot_simulator, robot, config)
+
 # # # # # # # # # 
 ### OCP SETUP ###
 # # # # # # # # # 
+# Apply masks on joints to extract LPF joints
+u0 = pin_utils.get_u_grav(q0, robot.model)
+lpf_joint_names = robot.model.names[1:] #['A1', 'A2', 'A3', 'A4'] #  #
+_, lpfStateIds = getJointAndStateIds(robot.model, lpf_joint_names)
+n_lpf = len(lpf_joint_names)
+_, nonLpfStateIds = getJointAndStateIds(robot.model, list(set(robot.model.names[1:]) - set(lpf_joint_names)) )
+logger.debug("LPF state ids ")
+logger.debug(lpfStateIds)
+logger.debug("Non LPF state ids ")
+logger.debug(nonLpfStateIds)
+y0 = np.concatenate([x0, u0[lpfStateIds]])
+# !!!! CRITICAL PARAMETER !!!!
+# Used to inerpolate (command sent to robot) between current & predicted torque
+EPSILON_INTERP    = (1./config['plan_freq']) / config['dt']
+logger.warning("Epsilon interpolation = "+str(EPSILON_INTERP))
+      
 # Init shooting problem and solver
-ocp = OptimalControlProblemClassical(robot, config).initialize(x0)
+ocp = OptimalControlProblemLPF(robot, config, lpf_joint_names).initialize(y0)
 # Warmstart and solve
-xs_init = [x0 for i in range(config['N_h']+1)]
-us_init = ocp.quasiStatic(xs_init[:-1]) 
-# us_init = [u0 for i in range(config['N_h'])] 
+xs_init = [y0 for _ in range(config['N_h']+1)] 
+us_init = [u0 for _ in range(config['N_h'])]
 solver = mim_solvers.SolverCSQP(ocp)
 solver.with_callbacks         = config['with_callbacks']
 solver.use_filter_line_search = config['use_filter_line_search']
@@ -187,11 +203,10 @@ solver.mu_dynamic             = config["mu_dynamic"]
 solver.mu_constraint          = config["mu_constraint"]
 solver.regMax                 = 1e6
 solver.reg_max                = 1e6
-# !!! Deactivate all costs & contact models initially !!!
-models = list(solver.problem.runningModels) + [solver.problem.terminalModel]
+models = list(ocp.runningModels) + [ocp.terminalModel]
 datas = list(solver.problem.runningDatas) + [solver.problem.terminalData]
+# !!! Deactivate all costs & contact models initially !!!
 for k,m in enumerate(models):
-    # logger.debug(str(m.differential.costs.active.tolist()))
     m.differential.costs.costs["translation"].active = False
     m.differential.contacts.changeContactStatus("contact", False)
     m.differential.costs.costs['rotation'].active = False
@@ -204,6 +219,9 @@ for k,m in enumerate(models):
                     np.array([np.inf])) 
         # needed to pass the bounds to the manager
         m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
+        # need to set explicitly the IAM bounds
+        m.g_lb = -0.001*np.ones([m.ng]) # needs to be slightly negative (bug to investigate)
+        m.g_ub = np.array([np.inf]*m.ng)
 
 # solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
@@ -212,6 +230,7 @@ OCP_TO_CTRL_RATIO = int(config['dt']/dt_simu)
       
 RADIUS = config['frameCircleTrajectoryRadius'] 
 OMEGA  = config['frameCircleTrajectoryVelocity']
+
 # Force trajectory
 F_MIN = 5.
 F_MAX = config['frameForceRef'][2]
@@ -221,35 +240,34 @@ target_force_traj             = np.zeros((N_total, 3))
 target_force_traj[:N_ramp, 2] = [F_MIN + (F_MAX - F_MIN)*i/N_ramp for i in range(N_ramp)]
 target_force_traj[N_ramp:, 2] = F_MAX
 target_force                  = np.zeros(config['N_h']+1)
+
 # Circle trajectory 
 N_total_pos = int((config['T_tot'] - config['T_REACH'])/dt_simu + config['N_h']*OCP_TO_CTRL_RATIO)
 N_circle    = int((config['T_tot'] - config['T_CIRCLE'])/dt_simu + config['N_h']*OCP_TO_CTRL_RATIO )
 target_position_traj = np.zeros( (N_total_pos, 3) )
 # absolute desired position
 target_position_traj[0:N_circle, :] = [np.array([oPc[0] + RADIUS * (1-np.cos(i*dt_simu*OMEGA)), 
-                                                  oPc[1] - RADIUS * np.sin(i*dt_simu*OMEGA),
-                                                  oPc[2]]) for i in range(N_circle)]
+                                                 oPc[1] - RADIUS * np.sin(i*dt_simu*OMEGA),
+                                                 oPc[2]]) for i in range(N_circle)]
 target_position_traj[N_circle:, :] = target_position_traj[N_circle-1,:]
 target_position = np.zeros((config['N_h']+1, 3)) 
 target_position[:,:] = oPc.copy() 
-# # Plot initial solution
-# # if(PLOT_INIT):
-# ocp_data_handler = OCPDataHandlerClassical(solver.problem)
-# ocp_data = ocp_data_handler.extract_data(solver.xs, solver.us)
-# _, _ = ocp_data_handler.plot_ocp_results(ocp_data, which_plots=config['WHICH_PLOTS'], markers=['.'], colors=['b'], SHOW=True)
+# if(PLOT_INIT):
+#   ddp_handler = OCPDataHandlerLPF(solver.problem, n_lpf=n_lpf)
+#   ddp_data = ddp_handler.extract_data(ee_frame_name=frame_of_interest, ct_frame_name=frame_of_interest)
+#   _, _ = ddp_handler.plot_ddp_results(ddp_data, markers=['.'], SHOW=True)
 # # # # # # # # # # #
 ### INIT MPC SIMU ###
 # # # # # # # # # # #
-sim_data = MPCDataHandlerClassical(config, robot)
-sim_data.init_sim_data(x0)
-sim_data.record_simu_cycle_measured(0, x0, x0, us_init[0], np.zeros(6))
+sim_data = MPCDataHandlerLPF(config, robot, n_lpf)
+sim_data.init_sim_data(y0)
   # Replan & control counters
 nb_plan = 0
 nb_ctrl = 0
 # Additional simulation blocks 
 communicationModel = mpc_utils.CommunicationModel(config)
-actuationModel     = mpc_utils.ActuationModel(config, nu=nu, SEED=RANDOM_SEED)
-sensingModel       = mpc_utils.SensorModel(config, SEED=RANDOM_SEED)
+actuationModel     = mpc_utils.ActuationModel(config, nu, SEED=RANDOM_SEED)
+sensingModel       = mpc_utils.SensorModel(config, naug=n_lpf, SEED=RANDOM_SEED)
 if(int(TORQUE_TRACKING) == 0):
     use = False
 else:
@@ -287,15 +305,15 @@ logger.debug("Start of CIRCLE phase in simu cycles   = "+str(T_CIRCLE))
 logger.debug("OCP to PLAN ratio (# of re-replannings between two OCP nodes) = "+str(OCP_TO_MPC_RATIO))
 logger.debug("OCP to SIMU ratio (# of simulate steps between two OCP nodes) = "+str(OCP_TO_CTRL_RATIO))
 # SIMULATE
-sim_data.tau_mea_SIMU[0,:] = solver.us[0]
 # x_filtered = x0
 count=0
 f_err = []
 p_err = []
-for i in range(sim_data.N_simu): 
+
+for i in range(config['N_simu']): 
     if(i%config['log_rate']==0 and config['LOG']): 
       print('')
-      logger.info("SIMU step "+str(i)+"/"+str(sim_data.N_simu))
+      logger.info("SIMU step "+str(i)+"/"+str(config['N_simu']))
       print('')
     # # # # # # # # # 
     # # Update OCP  #
@@ -327,7 +345,6 @@ for i in range(sim_data.N_simu):
         target_force = target_force_traj[time_to_contact:tf:OCP_TO_CTRL_RATIO, 2]
     if(time_to_circle == 0): 
         logger.warning("Entering circle phase")
-  
     # If circle tracking phase enters the MPC horizon, start updating models from the end with tracking models      
     if(0 <= time_to_circle and time_to_circle <= NH_SIMU):
         TASK_PHASE = 4
@@ -340,46 +357,49 @@ for i in range(sim_data.N_simu):
     # # Solve OCP # #
     # # # # # # # # #
     # Solve OCP if we are in a planning cycle (MPC/planning frequency)
-    if(i%int(sim_data.simu_freq/sim_data.plan_freq) == 0):    
+    if(i%int(sim_data.simu_freq/sim_data.plan_freq) == 0):       
+        # Reset x0 to measured state + warm-start solution
         # Anti-aliasing filter for measured state
         x_filtered = antiAliasingFilter.step(nb_plan, i, sim_data.plan_freq, sim_data.simu_freq, sim_data.state_mea_SIMU)
-        # x_filtered = antiAliasingFilter.iir(x_filtered, sim_data.state_mea_SIMU[i], fc=10, fs=sim_data.plan_freq)
-        # Reset x0 to measured state + warm-start solution
-        q = x_filtered[:nq]
-        v = x_filtered[nq:nq+nv]
+        q   = x_filtered[:nq]
+        v   = x_filtered[nq:nq+nv]
+        tau = x_filtered[-n_lpf:]
         # Solve OCP 
-        solveOCP(q, v, solver, config['maxiter'], target_position, TASK_PHASE, target_force)
+        solveOCP(q, v, tau, solver, config['maxiter'], target_position, TASK_PHASE, target_force)
         # Record MPC predictions, cost references and solver data 
         sim_data.record_predictions(nb_plan, solver)
         sim_data.record_cost_references(nb_plan, solver)
         sim_data.record_solver_data(nb_plan, solver) 
-        # Model communication delay between computer & robot (buffered OCP solution)
-        communicationModel.step(sim_data.x_pred, sim_data.u_curr)
-        # Record interpolated desired state, control and force at MPC frequency
+        # Model communication between computer --> robot
+        communicationModel.step(sim_data.y_pred, sim_data.w_curr)
+        # Select reference control and state for the current PLAN cycle
         sim_data.record_plan_cycle_desired(nb_plan)
         # Increment planning counter
         nb_plan += 1
-      #   torqueController.reset_integral_error()
+        # torqueController.reset_integral_error()
     # # # # # # # # # #
     # # Send policy # #
     # # # # # # # # # #
     # If we are in a control cycle send reference torque to motor driver and compute the motor torque
     if(i%int(sim_data.simu_freq/sim_data.ctrl_freq) == 0):   
         # Anti-aliasing filter on measured torques (sim-->ctrl)
-        tau_mea_CTRL            = antiAliasingFilter.step(nb_ctrl, i, sim_data.ctrl_freq, sim_data.simu_freq, sim_data.tau_mea_SIMU)
-        tau_mea_derivative_CTRL = antiAliasingFilter.step(nb_ctrl, i, sim_data.ctrl_freq, sim_data.simu_freq, sim_data.tau_mea_derivative_SIMU)
-        # Select the desired torque 
-        tau_des_CTRL = sim_data.u_curr.copy()
+        tau_mea_CTRL            = antiAliasingFilter.step(nb_ctrl, i, sim_data.ctrl_freq, sim_data.simu_freq, sim_data.state_mea_SIMU[:,-n_lpf:])
+        tau_mea_derivative_CTRL = antiAliasingFilter.step(nb_ctrl, i, sim_data.ctrl_freq, sim_data.simu_freq, sim_data.tau_mea_derivative_SIMU[:,-n_lpf:])
+        # Select the desired torque as interpolation between current and prediction
+        tau_des_CTRL = sim_data.y_curr[-n_lpf:] + EPSILON_INTERP * (sim_data.y_pred[-n_lpf:]  - sim_data.y_curr[-n_lpf:] )
         # Optionally interpolate to the control frequency using Riccati gains
         if(config['RICCATI']):
-          x_filtered = antiAliasingFilter.step(nb_ctrl, i, sim_data.ctrl_freq, sim_data.simu_freq, sim_data.state_mea_SIMU)
-          # x_filtered = antiAliasingFilter.iir(x_filtered, sim_data.state_mea_SIMU[i], 0.5)
-          tau_des_CTRL += solver.K[0].dot(solver.problem.x0 - x_filtered)
+          y_filtered = antiAliasingFilter.step(nb_ctrl, i, sim_data.ctrl_freq, sim_data.simu_freq, sim_data.state_mea_SIMU)
+          alpha = np.exp(-2*np.pi*config['f_c']*config['dt'])
+          Ktilde  = (1-alpha)*sim_data.OCP_TO_PLAN_RATIO*solver.K[0]
+          Ktilde[:,-n_lpf:] += ( 1 - (1-alpha)*sim_data.OCP_TO_PLAN_RATIO )*np.eye(n_lpf) # only for torques
+          # tau_des_CTRL += Ktilde[:,:nq+nv].dot(solver.problem.x0[:nq+nv] - y_filtered[:nq+nv]) #position vel
+          tau_des_CTRL += Ktilde.dot(solver.problem.x0 - y_filtered)     # position, vel, torques
         # Compute the motor torque 
         tau_mot_CTRL = torqueController.step(tau_des_CTRL, tau_mea_CTRL, tau_mea_derivative_CTRL)
         # Increment control counter
         nb_ctrl += 1
-    # Simulate actuation 
+    # Simulate actuation
     tau_mea_SIMU = actuationModel.step(tau_mot_CTRL, joint_vel=sim_data.state_mea_SIMU[i,nq:nq+nv])
     # Step PyBullet simulator
     robot_simulator.send_joint_command(tau_mea_SIMU)
@@ -395,17 +415,19 @@ for i in range(sim_data.N_simu):
       count+=1
       f_err.append(np.abs(f_mea_SIMU[2] - target_force[0]))
       p_err.append(np.abs(robot_simulator.pin_robot.data.oMf[id_endeff].translation[:2] - target_position[0][:2]))
+      
     # Record data (unnoised)
-    x_mea_SIMU = np.concatenate([q_mea_SIMU, v_mea_SIMU]).T 
+    y_mea_SIMU = np.concatenate([q_mea_SIMU, v_mea_SIMU, tau_mea_SIMU[lpfStateIds]]).T 
     # Simulate sensing 
-    x_mea_no_noise_SIMU = sensingModel.step(x_mea_SIMU)
+    y_mea_no_noise_SIMU = sensingModel.step(y_mea_SIMU)
     # Record measurements of state, torque and forces 
-    sim_data.record_simu_cycle_measured(i, x_mea_SIMU, x_mea_no_noise_SIMU, tau_mea_SIMU, f_mea_SIMU)
+    sim_data.record_simu_cycle_measured(i, y_mea_SIMU, y_mea_no_noise_SIMU, f_mea_SIMU)
+
     # Display real 
     if(config['DISPLAY_EE'] and i%draw_rate==0):
       pos = robot_simulator.pin_robot.data.oMf[id_endeff].translation.copy()
       simulator_utils.display_ball(pos, RADIUS=0.03, COLOR=[0.,0.,1.,0.3])
-  
+
 # bench.plot_timer()
 # # # # # # # # # # #
 # PLOT SIM RESULTS  #
@@ -428,25 +450,27 @@ logger.warning(" Fz MAE  = "+str(np.mean(f_err)))
 logger.warning(" Pxy MAE = "+str(np.mean(p_err)))
 logger.warning("------------------------------------")
 logger.warning("------------------------------------")
+
 save_dir = '/tmp'
 save_name = config_name+\
                         '_BIAS='+str(config['SCALE_TORQUES'])+\
                         '_NOISE='+str(config['NOISE_STATE'] or config['NOISE_TORQUES'])+\
                         '_DELAY='+str(config['DELAY_OCP'] or config['DELAY_SIM'])+\
                         '_Fp='+str(sim_data.plan_freq/1000)+'_Fc='+str(sim_data.ctrl_freq/1000)+'_Fs'+str(sim_data.simu_freq/1000)
-# Extract plot data from sim data
+#  Extract plot data from sim data
 plot_data = sim_data.extract_data(frame_of_interest=frame_of_interest)
-# Plot results
+#  Plot results
 sim_data.plot_mpc_results(plot_data, which_plots=sim_data.WHICH_PLOTS,
-                                    PLOT_PREDICTIONS=True, 
-                                    pred_plot_sampling=int(sim_data.plan_freq/10),
-                                    SAVE=False,
-                                    SAVE_DIR=save_dir,
-                                    SAVE_NAME=save_name,
-                                    AUTOSCALE=False)
+                                PLOT_PREDICTIONS=True, 
+                                pred_plot_sampling=int(sim_data.plan_freq/10),
+                                SAVE=False,
+                                SAVE_DIR=save_dir,
+                                SAVE_NAME=save_name,
+                                AUTOSCALE=False)
 # Save optionally
 if(config['SAVE_DATA']):
   sim_data.save_data(sim_data, save_name=save_name, save_dir=save_dir)
+
 
 
 

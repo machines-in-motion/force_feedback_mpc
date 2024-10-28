@@ -34,15 +34,15 @@ logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
 
 import numpy as np  
 np.set_printoptions(precision=4, linewidth=180)
-RANDOM_SEED = 7 #19
+RANDOM_SEED = 1 #19
 
 from core_mpc_utils import path_utils, misc_utils, mpc_utils
 from core_mpc_utils import sim_utils as simulator_utils
 
 from croco_mpc_utils import pinocchio_utils as pin_utils
 from croco_mpc_utils.math_utils import circle_point_WORLD
-from lpf_mpc.data import OCPDataHandlerLPF, MPCDataHandlerLPF
-from lpf_mpc.ocp import OptimalControlProblemLPF, getJointAndStateIds
+from force_feedback_mpc.lpf_mpc.data import OCPDataHandlerLPF, MPCDataHandlerLPF
+from force_feedback_mpc.lpf_mpc.ocp import OptimalControlProblemLPF, getJointAndStateIds
 from croco_mpc_utils.utils import load_yaml_file
 
 import mim_solvers
@@ -52,6 +52,7 @@ import pybullet as p
 
 import time
 import pinocchio as pin
+import os
 
 
 def solveOCP(q, v, tau, solver, nb_iter, target_reach, TASK_PHASE, target_force):
@@ -125,8 +126,8 @@ def main(SAVE_DIR, TORQUE_TRACKING):
   # # # # # # # # # # # # # # # # # # # 
   # Read config file
   # config, config_name = path_utils.load_config_file(__file__, robot_name)
-  config_name = 'iiwa_LPF_sanding_MPC'
-  config = load_yaml_file('/home/skleff/ws_croco2/workspace/src/force-feedback/demos/sanding/config/iiwa_LPF_sanding_MPC.yml')
+  config_name = 'polishing_lpf'
+  config = path_utils.load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/'+config_name+'.yml')
   # Create a simulation environment & simu-pin wrapper 
   dt_simu = 1./float(config['simu_freq'])  
   q0 = np.asarray(config['q0'])

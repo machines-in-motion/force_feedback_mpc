@@ -273,6 +273,7 @@ class MPCDataHandlerLPF(MPCDataHandlerAbstract):
 
   def __init__(self, config, robot, n_lpf):
     super().__init__(config, robot)
+    self.n_lpf = n_lpf
     self.ny = self.nx + self.n_lpf
 
   # Allocate data 
