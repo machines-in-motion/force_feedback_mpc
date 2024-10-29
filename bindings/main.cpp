@@ -18,4 +18,6 @@ BOOST_PYTHON_MODULE(force_feedback_mpc_pywrap) {
     force_feedback_mpc::softcontact::exposeDAMSoftContact3DAugmentedFwdDyn(); 
     force_feedback_mpc::softcontact::exposeDAMSoftContact1DAugmentedFwdDyn(); 
     force_feedback_mpc::softcontact::exposeIAMSoftContactAugmented(); 
+
+    force_feedback_mpc::jerk::exposeStateJerk(); 
 }
