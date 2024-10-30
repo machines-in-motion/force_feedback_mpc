@@ -13,6 +13,8 @@
 #include "force_feedback_mpc/softcontact/dam3d-augmented.hpp"
 #include "force_feedback_mpc/softcontact/dam1d-augmented.hpp"
 
+#include "force_feedback_mpc/frictioncone/residual-friction-cone.hpp"
+
 namespace force_feedback_mpc{
 namespace lpf{
     void exposeStateLPF();
@@ -30,5 +32,12 @@ namespace softcontact{
     void exposeIAMSoftContactAugmented();
 } // namespace softcontact
 } // namespace force_feedback_mpc
+
+namespace force_feedback_mpc{
+namespace frictioncone{
+    void exposeResidualFrictionCone();
+} // namespace frictioncone
+} // namespace force_feedback_mpc
+
 
 #endif
