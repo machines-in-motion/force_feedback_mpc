@@ -68,20 +68,8 @@ void ResidualModelFrictionCone::calc(
   // Compute the residual of the friction cone
   d->f3d = d->contact->f.linear();
   data->r[0] = coef_ * d->f3d(2) - sqrt(d->f3d(0)*d->f3d(0) + d->f3d(1)*d->f3d(1));
+
 }
-        // F = data.shared.contacts.contacts[self.contact_name].f.vector[:3]
-
-        // self.dcone_df[0, 0] = -F[0] / np.sqrt(F[0]**2 + F[1]**2)
-        // self.dcone_df[0, 1] = -F[1] / np.sqrt(F[0]**2 + F[1]**2)
-        // self.dcone_df[0, 2] = self.mu
-
-
-        // self.df_dx = data.shared.contacts.contacts[self.contact_name].df_dx[:3]   
-        // self.df_du = data.shared.contacts.contacts[self.contact_name].df_du[:3] 
-
-        // data.Rx = self.dcone_df @ self.df_dx 
-        // data.Ru = self.dcone_df @ self.df_du
-
 
 void ResidualModelFrictionCone::calcDiff(
     const boost::shared_ptr<ResidualDataAbstract>& data,

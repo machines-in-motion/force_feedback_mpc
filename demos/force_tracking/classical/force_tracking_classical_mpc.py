@@ -104,7 +104,7 @@ def solveOCP(q, v, solver, nb_iter, target_reach, TASK_PHASE, target_force):
                     m[k].differential.costs.costs["force"].active = True
                     m[k].differential.costs.costs["force"].cost.residual.reference = fref
                     m[k].differential.constraints.changeConstraintStatus('frictionCone', True)
-
+                
         # get predicted force from rigid model (careful : expressed in LOCAL !!!)
         # jf = solver.problem.runningDatas[0].differential.multibody.contacts.contacts['contact'].f
         # jMf = solver.problem.runningDatas[0].differential.multibody.contacts.contacts['contact'].jMf
