@@ -131,6 +131,12 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   void set_force_ub(const VectorXs& inVec);
   const VectorXs& get_force_ub() const { return force_ub_; };
 
+  void set_with_friction_cone_constraint(const bool inBool) {with_friction_cone_constraint_ = inBool; };
+  const bool& get_with_friction_cone_constraint() const { return with_friction_cone_constraint_; };
+
+  void set_friction_coef(const double inDouble) {friction_coef_ = inDouble; };
+  const double& get_friction_coef() const { return friction_coef_; };
+
   // /**
   //  * @brief Return the lower bound of the inequality constraints
   //  */
@@ -180,6 +186,8 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   VectorXs force_ub_;
   VectorXs g_lb_new_;
   VectorXs g_ub_new_;
+  bool with_friction_cone_constraint_; // Add friction cone constraint on the force
+  double friction_coef_;              // Friction coefficient
 };
 
 }  // namespace softcontact

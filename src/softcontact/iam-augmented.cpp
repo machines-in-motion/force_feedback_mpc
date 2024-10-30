@@ -27,7 +27,7 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
     : Base(model->get_state(), 
            model->get_nu(),
            model->get_nr() + model->get_nc(), 
-           model->get_ng() + model->get_nc(),
+           model->get_ng() + model->get_nc() + 1,
            0.),
       differential_(model),
       time_step_(time_step),
@@ -67,14 +67,14 @@ IAMSoftContactAugmented::~IAMSoftContactAugmented() {}
 void IAMSoftContactAugmented::set_force_lb(const VectorXs& inVec){
   force_lb_ = inVec;
   g_lb_new_ =  this->get_g_lb();
-  g_lb_new_.tail(nc_) = force_lb_;
+  g_lb_new_.segment(differential_->get_ng(), nc_) = force_lb_;
   this->set_g_lb(g_lb_new_);
 }
 
 void IAMSoftContactAugmented::set_force_ub(const VectorXs& inVec){
   force_ub_ = inVec;
   g_ub_new_ =  this->get_g_ub();
-  g_ub_new_.tail(nc_) = force_ub_;
+  g_ub_new_.segment(differential_->get_ng(), nc_) = force_ub_;
   this->set_g_ub(g_ub_new_);
 }
 
@@ -164,7 +164,7 @@ void IAMSoftContactAugmented::calc(
   d->g.head(differential_->get_ng()) = diff_data_soft->g;
   // compute constraint residual
   if(with_force_constraint_){
-    d->g.tail(nc_) = f;
+    d->g.segment(differential_->get_ng(), nc_) = f;
   }
   // compute cost residual
   if (with_cost_residual_) {
@@ -198,7 +198,13 @@ void IAMSoftContactAugmented::calc(
   d->g.head(differential_->get_ng()) = diff_data_soft->g;
   // hard code force constraint residual here
   if(with_force_constraint_){
-    d->g.tail(nc_) = f;
+    d->g.segment(differential_->get_ng(), nc_) = f;
+  }
+  // hard code friction cone constraint here
+  if(with_friction_cone_constraint_){
+    d->g.tail(1) = f;
+    d->friction_cone_residual = friction_coef_ * f(2) - sqrt(f(0)*f(0) + f(1)*f(1));
+
   }
   // Update RESIDUAL
   if (with_cost_residual_) {
@@ -276,8 +282,17 @@ void IAMSoftContactAugmented::calcDiff(
   // d->Gu.resize(differential_->get_ng() + nc_, nu_);
   d->Gu.topLeftCorner(differential_->get_ng(), nu_) = diff_data_soft->Gu;
   if(with_force_constraint_){
-    d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() = double(1.);
+    // d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() = double(1.);
+    d->Gy.block(differential_->get_ng(), ndx, nc_, nc_).diagonal().array() = double(1.);
   }
+  // hard-coded friction cone constraint
+  // if(with_friction_cone_constraint_){
+  //   // compute the friction cone residual 
+  //   d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() = double(1.);
+  //   d->dcone_df[0, 0] = -f[0] / sqrt(f(0)*f(0) + f(1)*f(1));
+  //   d->dcone_df[0, 1] = -f[1] / sqrt(f(0)*f(0) + f(1)*f(1));
+  //   d->dcone_df[0, 2] = friction_coef_;
+  // }
 }
 
 

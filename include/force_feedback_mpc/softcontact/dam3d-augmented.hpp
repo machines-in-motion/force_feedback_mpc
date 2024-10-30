@@ -238,7 +238,7 @@ class DAMSoftContact3DAugmentedFwdDynamics : public DAMSoftContactAbstractAugmen
    */
   virtual bool checkData(
       const boost::shared_ptr<DifferentialActionDataAbstract>& data);
-      
+
   protected:
     using Base::Kp_;
     using Base::Kv_;
