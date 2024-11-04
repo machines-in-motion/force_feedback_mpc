@@ -27,7 +27,7 @@ void exposeIAMSoftContactAugmented() {
       "  [q+, v+, tau+] = StateLPF.integrate([q, v], [v + a * dt, a * dt] * "
       "dt, [alpha*tau + (1-alpha)*w]).",
       bp::init<boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>,
-               bp::optional<double, bool> >(
+               bp::optional<double, bool, std::vector<boost::shared_ptr<ResidualModelFrictionConeAugmented> > > >(
           bp::args("self", "diffModel", "stepTime",
                    "withCostResidual"),
           "Initialize the sympletic Euler integrator.\n\n"
@@ -112,7 +112,25 @@ void exposeIAMSoftContactAugmented() {
           bp::make_function(&IAMSoftContactAugmented::get_with_force_constraint,
                             bp::return_value_policy<bp::return_by_value>()),
           &IAMSoftContactAugmented::set_with_force_constraint,
-          "activate box constraint on the contact force (default: False)");
+          "activate box constraint on the contact force (default: False)")
+      .add_property(
+          "with_friction_cone_constraint",
+          bp::make_function(&IAMSoftContactAugmented::get_with_friction_cone_constraint,
+                            bp::return_value_policy<bp::return_by_value>()),
+          &IAMSoftContactAugmented::set_with_friction_cone_constraint,
+          "activate friction cone (Lorentz) constraint on the contact force (default: False)")
+      .add_property(
+          "friction_coef",
+          bp::make_function(&IAMSoftContactAugmented::get_friction_coef,
+                            bp::return_value_policy<bp::return_by_value>()),
+          &IAMSoftContactAugmented::set_friction_coef,
+          "friction coefficient used in the friction cone constraint (default: 0.5)")
+      .add_property(
+          "friction_constraints",
+          bp::make_function(&IAMSoftContactAugmented::set_friction_constraints,
+                            bp::return_value_policy<bp::return_by_value>()),
+          &IAMSoftContactAugmented::get_friction_constraints,
+          "friction cone constraints");
 
   bp::register_ptr_to_python<boost::shared_ptr<IADSoftContactAugmented> >();
 
@@ -130,7 +148,17 @@ void exposeIAMSoftContactAugmented() {
       .add_property("dy",
                     bp::make_getter(&IADSoftContactAugmented::dy,
                                     bp::return_internal_reference<>()),
-                    "state rate.");
+                    "state rate.")
+      .add_property(
+          "friction_cone_residual",
+          bp::make_getter(&IADSoftContactAugmented::friction_cone_residual,
+                          bp::return_value_policy<bp::return_by_value>()),
+          "friction cone residual")
+      .add_property(
+          "dcone_df",
+          bp::make_getter(&IADSoftContactAugmented::dcone_df,
+                          bp::return_value_policy<bp::return_by_value>()),
+          "friction cone residual derivative w.r.t. f");
 }
 
 }  // namespace softcontact

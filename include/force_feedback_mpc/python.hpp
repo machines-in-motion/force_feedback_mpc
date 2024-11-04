@@ -36,6 +36,7 @@ namespace softcontact{
 namespace force_feedback_mpc{
 namespace frictioncone{
     void exposeResidualFrictionCone();
+    void exposeResidualFrictionConeAugmented();
 } // namespace frictioncone
 } // namespace force_feedback_mpc
 

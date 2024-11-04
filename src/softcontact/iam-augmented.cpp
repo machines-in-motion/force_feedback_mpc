@@ -23,7 +23,8 @@ namespace softcontact {
 IAMSoftContactAugmented::IAMSoftContactAugmented(
     boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model,
     const double& time_step,
-    const bool& with_cost_residual)
+    const bool& with_cost_residual,
+    std::vector<boost::shared_ptr<ResidualModelFrictionConeAugmented>> friction_constraints)
     : Base(model->get_state(), 
            model->get_nu(),
            model->get_nr() + model->get_nc(), 
@@ -58,6 +59,20 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
   g_lb_new_ =  this->get_g_lb();
   g_ub_new_ =  this->get_g_ub();
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
+  // Friction cone constraint
+  if(friction_constraints.size() == 0){
+    with_friction_cone_constraint_ = false;
+    friction_constraints_ = {};
+  }
+  else{
+    if (nc_ != 3) {
+      throw_pretty(
+          "Invalid argument: frictio cone constraint only supported for nc=3");
+    }
+    with_friction_cone_constraint_ = true;
+    friction_constraints_ = friction_constraints;
+  }
+  // friction_coef_ = 0.5;
 }
 
 
@@ -166,6 +181,15 @@ void IAMSoftContactAugmented::calc(
   if(with_force_constraint_){
     d->g.segment(differential_->get_ng(), nc_) = f;
   }
+  // hard code friction cone constraint here
+  // iterate over friction models
+  if(with_friction_cone_constraint_ && nc_ == 3){
+    // this->friction_cone_model.calc(d->friction_cone_data, f)
+    // g.tail(ncone) = d->friction_cone_data->residual 
+    // 4 feet of solo ?
+    d->friction_cone_residual = friction_coef_ * f(2) - sqrt(f(0)*f(0) + f(1)*f(1));
+    d->g.tail(1) << d->friction_cone_residual;
+  }
   // compute cost residual
   if (with_cost_residual_) {
     d->r.head(differential_->get_nr()) = diff_data_soft->r;
@@ -201,9 +225,9 @@ void IAMSoftContactAugmented::calc(
     d->g.segment(differential_->get_ng(), nc_) = f;
   }
   // hard code friction cone constraint here
-  if(with_friction_cone_constraint_){
-    d->g.tail(1) = f;
+  if(with_friction_cone_constraint_ && nc_ == 3){
     d->friction_cone_residual = friction_coef_ * f(2) - sqrt(f(0)*f(0) + f(1)*f(1));
+    d->g.tail(1) << d->friction_cone_residual;
 
   }
   // Update RESIDUAL
@@ -286,13 +310,13 @@ void IAMSoftContactAugmented::calcDiff(
     d->Gy.block(differential_->get_ng(), ndx, nc_, nc_).diagonal().array() = double(1.);
   }
   // hard-coded friction cone constraint
-  // if(with_friction_cone_constraint_){
-  //   // compute the friction cone residual 
-  //   d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() = double(1.);
-  //   d->dcone_df[0, 0] = -f[0] / sqrt(f(0)*f(0) + f(1)*f(1));
-  //   d->dcone_df[0, 1] = -f[1] / sqrt(f(0)*f(0) + f(1)*f(1));
-  //   d->dcone_df[0, 2] = friction_coef_;
-  // }
+  if(with_friction_cone_constraint_ && nc_ == 3){
+    // compute the friction cone residual 
+    d->dcone_df[0] = -f[0] / sqrt(f(0)*f(0) + f(1)*f(1));
+    d->dcone_df[1] = -f[1] / sqrt(f(0)*f(0) + f(1)*f(1));
+    d->dcone_df[2] = friction_coef_;
+    d->Gy.bottomRightCorner(1, nc_) = d->dcone_df;
+  }
 }
 
 
@@ -324,7 +348,16 @@ void IAMSoftContactAugmented::calcDiff(
   d->Lyy.bottomRightCorner(nc_, nc_).noalias() = diff_data_soft->Lff;
   d->Gy.topLeftCorner(differential_->get_ng(), ndx) = diff_data_soft->Gx;
   if(with_force_constraint_){
-    d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() = double(1.);
+    // d->Gy.bottomRightCorner(nc_, nc_).diagonal().array() = double(1.);
+    d->Gy.block(differential_->get_ng(), ndx, nc_, nc_).diagonal().array() = double(1.);
+  }
+  // hard-coded friction cone constraint
+  if(with_friction_cone_constraint_ && nc_ == 3){
+    // compute the friction cone residual 
+    d->dcone_df[0] = -f[0] / sqrt(f(0)*f(0) + f(1)*f(1));
+    d->dcone_df[1] = -f[1] / sqrt(f(0)*f(0) + f(1)*f(1));
+    d->dcone_df[2] = friction_coef_;
+    d->Gy.bottomRightCorner(1, nc_) = d->dcone_df;
   }
 }
 

@@ -20,4 +20,5 @@ BOOST_PYTHON_MODULE(force_feedback_mpc_pywrap) {
     force_feedback_mpc::softcontact::exposeIAMSoftContactAugmented(); 
 
     force_feedback_mpc::frictioncone::exposeResidualFrictionCone(); 
+    force_feedback_mpc::frictioncone::exposeResidualFrictionConeAugmented(); 
 }

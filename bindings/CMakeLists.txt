@@ -7,6 +7,7 @@ set(${PY_NAME}_SOURCES
   softcontact/dam1d-augmented.cpp
   softcontact/iam-augmented.cpp
   frictioncone/residual-friction-cone.cpp
+  frictioncone/residual-friction-cone-augmented.cpp
   main.cpp
   )
 

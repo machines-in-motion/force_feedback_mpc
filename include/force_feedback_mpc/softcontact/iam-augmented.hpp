@@ -15,6 +15,8 @@
 #include <crocoddyl/multibody/states/multibody.hpp>
 #include <pinocchio/multibody/model.hpp>
 
+#include "force_feedback_mpc/frictioncone/residual-friction-cone-augmented.hpp"
+
 #include "state.hpp"
 #include "dam3d-augmented.hpp"
 
@@ -41,6 +43,9 @@ struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double>
     Gy.setZero();
     Gu.resize(model->get_ng(), model->get_nu());
     Gu.setZero();
+    friction_cone_residual = 0;
+    dcone_df.resize(3);
+    dcone_df.setZero();
   }
   virtual ~IADSoftContactAugmented() {}
 
@@ -66,6 +71,8 @@ struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double>
   MatrixXs& Lyu = Base::Lxu;
   MatrixXs& Gy = Base::Gx;
   MatrixXs& Gu = Base::Gu;
+  double friction_cone_residual;
+  VectorXs dcone_df;
 };
 
 class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double> {
@@ -81,11 +88,13 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   typedef typename MathBase::MatrixXs MatrixXs;
   typedef crocoddyl::StateMultibodyTpl<double> StateMultibody;
   typedef pinocchio::ModelTpl<double> PinocchioModel;
+  typedef force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented ResidualModelFrictionConeAugmented;
 
   IAMSoftContactAugmented(
       boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model,
       const double& time_step = double(1e-3),
-      const bool& with_cost_residual = true);
+      const bool& with_cost_residual = true,
+      std::vector<boost::shared_ptr<ResidualModelFrictionConeAugmented>> friction_constraints = {});
   virtual ~IAMSoftContactAugmented();
 
   virtual void calc(const boost::shared_ptr<ActionDataAbstract>& data,
@@ -188,6 +197,8 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   VectorXs g_ub_new_;
   bool with_friction_cone_constraint_; // Add friction cone constraint on the force
   double friction_coef_;              // Friction coefficient
+
+  std::vector<boost::shared_ptr<ResidualModelFrictionConeAugmented>> friction_constraints_;
 };
 
 }  // namespace softcontact

@@ -80,6 +80,7 @@ set(${PROJECT_NAME}_HEADERS
   include/${PROJECT_NAME}/softcontact/dam1d-augmented.hpp
   include/${PROJECT_NAME}/softcontact/iam-augmented.hpp
   include/${PROJECT_NAME}/frictioncone/residual-friction-cone.hpp
+  include/${PROJECT_NAME}/frictioncone/residual-friction-cone-augmented.hpp
 )
 
 set(${PROJECT_NAME}_SOURCES
@@ -91,6 +92,7 @@ set(${PROJECT_NAME}_SOURCES
   src/softcontact/dam1d-augmented.cpp
   src/softcontact/iam-augmented.cpp
   src/frictioncone/residual-friction-cone.cpp
+  src/frictioncone/residual-friction-cone-augmented.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
