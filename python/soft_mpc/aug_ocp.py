@@ -233,7 +233,7 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
     logger.warning("Set dynamics and cost reference frames to "+str(softContactModel.pinRefFrame))
     return dam
 
-  def finalize_running_model(self, runningModel, softContactModel, node_id):
+  def finalize_running_model(self, state, actuation, runningModel, softContactModel, node_id):
     '''
     Populate running model with hard-coded costs 
     '''
@@ -269,7 +269,18 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
       else:
         runningModel.force_lb = np.array([ np.asarray(self.forceLowerLimit)[softContactModel.mask] ])
         runningModel.force_ub = np.array([ np.asarray(self.forceUpperLimit)[softContactModel.mask] ])
-
+    if('frictionCone' in self.WHICH_CONSTRAINTS): 
+      # print("node_id = ", node_id)
+      self.check_attribute('frictionCoefficient')
+      self.check_attribute('frictionConeFrameName')
+      try: 
+        assert(softContactModel.nc == 3)
+      except:
+        logger.error("Soft contact model must be of dimension 3 to use the friction cone constraint")
+      fid = self.rmodel.getFrameId(self.frictionConeFrameName)
+      residual = force_feedback_mpc.ResidualModelFrictionConeAugmented(state, fid, self.frictionCoefficient, actuation.nu)
+      # import pdb; pdb.set_trace()
+      runningModel.friction_constraints = [residual]
 
   def finalize_terminal_model(self, terminalModel, softContactModel):
     ''' 
@@ -340,6 +351,7 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
   # Create IAMs
     runningModels = []
     for i in range(self.N_h):  
+        print("NODE ", i)
       # Create DAM (Contact or FreeFwd), IAM LPF and initialize costs+contacts
         costModelSum = self.create_running_cost_model(state, actuation)
         if(self.nb_constraints == 0):
@@ -350,7 +362,7 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
         # Create DAM & IAM and initialize costs+contacts+constraints
           dam = self.create_differential_action_model(state, actuation, costModelSum, softContactModel, constraintModelManager) 
         runningModels.append(force_feedback_mpc.IAMSoftContactAugmented( dam, self.dt ))
-        self.finalize_running_model(runningModels[i], softContactModel, i)
+        self.finalize_running_model(state, actuation, runningModels[i], softContactModel, i)
         # self.init_running_model(state, actuation, runningModels[i], softContactModel)
         
     # Terminal model

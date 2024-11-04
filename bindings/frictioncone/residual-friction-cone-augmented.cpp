@@ -76,7 +76,13 @@ void exposeResidualFrictionConeAugmented() {
           bp::make_function(&ResidualModelFrictionConeAugmented::get_friction_coef,
                             bp::return_value_policy<bp::return_by_value>()),
           &ResidualModelFrictionConeAugmented::set_friction_coef,
-          "Friction cone coefficient"); 
+          "Friction cone coefficient")
+      .add_property(
+          "active",
+          bp::make_function(&ResidualModelFrictionConeAugmented::get_active,
+                            bp::return_value_policy<bp::return_by_value>()),
+          &ResidualModelFrictionConeAugmented::set_active,
+          "Friction cone activeness"); 
     //   .def(CopyableVisitor<ResidualModelFrictionConeAugmented>());
 
   bp::register_ptr_to_python<

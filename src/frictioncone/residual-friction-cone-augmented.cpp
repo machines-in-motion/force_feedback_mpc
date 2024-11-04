@@ -29,6 +29,7 @@ ResidualModelFrictionConeAugmented::
         "Invalid argument: "
         << "the frame index is wrong (it does not exist in the robot)");
   }
+  active_ = true;
 }
 
 
@@ -45,6 +46,7 @@ ResidualModelFrictionConeAugmented::
         "Invalid argument: "
         << "the frame index is wrong (it does not exist in the robot)");
   }
+  active_ = true;
 }
 
 ResidualModelFrictionConeAugmented::~ResidualModelFrictionConeAugmented() {}

@@ -135,6 +135,9 @@ class ResidualModelFrictionConeAugmented
   void set_friction_coef(const double inDouble) {coef_ = inDouble; };
   const double& get_friction_coef() const { return coef_; };
 
+  void set_active(const bool inBool) {active_ = inBool; };
+  const bool& get_active() const { return active_; };
+
   /**
    * @brief Print relevant information of the contact-friction-cone residual
    *
@@ -149,6 +152,7 @@ class ResidualModelFrictionConeAugmented
  private:
   pinocchio::FrameIndex id_;  //!< Reference frame id
   double coef_;
+  bool active_;
 };
 
 

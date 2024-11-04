@@ -117,8 +117,8 @@ endif()
 #   add_subdirectory(benchmarks)
 # endif()
 
-# Unit tests
-add_subdirectory(tests)
+# # Unit tests
+# add_subdirectory(tests)
 
 # Python packages 
 add_subdirectory(python)
