@@ -27,15 +27,13 @@ void exposeIAMSoftContactAugmented() {
       "  [q+, v+, tau+] = StateLPF.integrate([q, v], [v + a * dt, a * dt] * "
       "dt, [alpha*tau + (1-alpha)*w]).",
       bp::init<boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>,
-               bp::optional<double, bool, std::vector<boost::shared_ptr<ResidualModelFrictionConeAugmented> > > >(
-          bp::args("self", "diffModel", "stepTime",
-                   "withCostResidual"),
+               bp::optional<double, bool, std::vector<boost::shared_ptr<force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented>> > >(
+          bp::args("self", "diffModel", "stepTime", "withCostResidual", "friction_constraints"),
           "Initialize the sympletic Euler integrator.\n\n"
           ":param diffModel: differential action model\n"
           ":param stepTime: step time\n"
-          ":param withCostResidual: includes the cost residuals and "
-          "derivatives\n"
-          "computation, or tau"))
+          ":param withCostResidual: includes the cost residuals and derivatives computation, or tau\n"
+          ":param friction_constraints: list of friction cone constraint residual models"))
       .def<void (IAMSoftContactAugmented::*)(
           const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
@@ -117,19 +115,12 @@ void exposeIAMSoftContactAugmented() {
           "with_friction_cone_constraint",
           bp::make_function(&IAMSoftContactAugmented::get_with_friction_cone_constraint,
                             bp::return_value_policy<bp::return_by_value>()),
-          &IAMSoftContactAugmented::set_with_friction_cone_constraint,
           "activate friction cone (Lorentz) constraint on the contact force (default: False)")
       .add_property(
-          "friction_coef",
-          bp::make_function(&IAMSoftContactAugmented::get_friction_coef,
-                            bp::return_value_policy<bp::return_by_value>()),
-          &IAMSoftContactAugmented::set_friction_coef,
-          "friction coefficient used in the friction cone constraint (default: 0.5)")
-      .add_property(
           "friction_constraints",
-          bp::make_function(&IAMSoftContactAugmented::set_friction_constraints,
+          bp::make_function(&IAMSoftContactAugmented::set_friction_cone_constraints,
                             bp::return_value_policy<bp::return_by_value>()),
-          &IAMSoftContactAugmented::get_friction_constraints,
+          &IAMSoftContactAugmented::get_friction_cone_constraints,
           "friction cone constraints");
 
   bp::register_ptr_to_python<boost::shared_ptr<IADSoftContactAugmented> >();

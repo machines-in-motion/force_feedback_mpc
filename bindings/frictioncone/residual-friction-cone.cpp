@@ -83,7 +83,13 @@ void exposeResidualFrictionCone() {
                     bp::make_function(
                         &ResidualModelFrictionCone::get_id,
                         bp::return_value_policy<bp::return_by_value>()),
-                    "frame id"); 
+                    "frame id")
+      .add_property(
+          "coef",
+          bp::make_function(&ResidualModelFrictionCone::get_friction_coef,
+                            bp::return_value_policy<bp::return_by_value>()),
+          &ResidualModelFrictionCone::set_friction_coef,
+          "Friction cone coefficient"); 
     //   .def(CopyableVisitor<ResidualModelFrictionCone>());
 
   bp::register_ptr_to_python<

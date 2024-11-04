@@ -105,32 +105,7 @@ class ResidualModelFrictionConeAugmented
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
   virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data,
-                    const Eigen::Ref<const VectorXs>& x,
-                    const Eigen::Ref<const VectorXs>& u);
-
-  /**
-   * @brief Compute the residual vector for nodes that depends only on the state
-   *
-   * It updates the residual vector based on the state only (i.e., it ignores
-   * the contact forces). This function is used in the terminal nodes of an
-   * optimal control problem.
-   *
-   * @param[in] data  Residual data
-   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
-   */
-  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data,
-                    const Eigen::Ref<const VectorXs>& x);
-
-  /**
-   * @brief Compute the Jacobians of the contact friction cone residual
-   *
-   * @param[in] data  Contact friction cone residual data
-   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
-   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
-   */
-  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
-                        const Eigen::Ref<const VectorXs>& x,
-                        const Eigen::Ref<const VectorXs>& u);
+                    const Eigen::Ref<const VectorXs>& f);
 
   /**
    * @brief Compute the Jacobian of the residual functions with respect to the
@@ -144,7 +119,7 @@ class ResidualModelFrictionConeAugmented
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
   virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
-                        const Eigen::Ref<const VectorXs>& x);
+                        const Eigen::Ref<const VectorXs>& f);
 
   /**
    * @brief Create the contact friction cone residual data
@@ -156,6 +131,9 @@ class ResidualModelFrictionConeAugmented
    * @brief Return the reference frame id
    */
   pinocchio::FrameIndex get_id() const;
+
+  void set_friction_coef(const double inDouble) {coef_ = inDouble; };
+  const double& get_friction_coef() const { return coef_; };
 
   /**
    * @brief Print relevant information of the contact-friction-cone residual

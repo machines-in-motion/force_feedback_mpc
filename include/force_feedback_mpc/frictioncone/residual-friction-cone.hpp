@@ -288,16 +288,8 @@ class ResidualModelFrictionCone
    */
   pinocchio::FrameIndex get_id() const;
 
-//   /**
-//    * @brief Return the reference contact friction cone
-//    */
-//   const FrictionCone& get_reference() const;
-
-
-//   /**
-//    * @brief Modify the reference contact friction cone
-//    */
-//   void set_reference(const FrictionCone& reference);
+  void set_friction_coef(const double inDouble) {coef_ = inDouble; };
+  const double& get_friction_coef() const { return coef_; };
 
   /**
    * @brief Print relevant information of the contact-friction-cone residual

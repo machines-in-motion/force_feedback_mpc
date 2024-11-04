@@ -94,7 +94,7 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
       boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model,
       const double& time_step = double(1e-3),
       const bool& with_cost_residual = true,
-      std::vector<boost::shared_ptr<ResidualModelFrictionConeAugmented>> friction_constraints = {});
+      const std::vector<boost::shared_ptr<ResidualModelFrictionConeAugmented>> friction_constraints = {});
   virtual ~IAMSoftContactAugmented();
 
   virtual void calc(const boost::shared_ptr<ActionDataAbstract>& data,
@@ -132,7 +132,7 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   void set_differential(boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model);
 
   void set_with_force_constraint(const bool inBool) {with_force_constraint_ = inBool; };
-  const bool& get_with_force_constraint() const { return with_force_constraint_; };
+  const bool get_with_force_constraint() const { return with_force_constraint_; };
 
   void set_force_lb(const VectorXs& inVec);
   const VectorXs& get_force_lb() const { return force_lb_; };
@@ -140,21 +140,11 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   void set_force_ub(const VectorXs& inVec);
   const VectorXs& get_force_ub() const { return force_ub_; };
 
-  void set_with_friction_cone_constraint(const bool inBool) {with_friction_cone_constraint_ = inBool; };
-  const bool& get_with_friction_cone_constraint() const { return with_friction_cone_constraint_; };
+  // void set_with_friction_cone_constraint(const bool inBool) {with_friction_cone_constraint_ = inBool; };
+  const bool get_with_friction_cone_constraint() const { return with_friction_cone_constraint_; };
 
-  void set_friction_coef(const double inDouble) {friction_coef_ = inDouble; };
-  const double& get_friction_coef() const { return friction_coef_; };
-
-  // /**
-  //  * @brief Return the lower bound of the inequality constraints
-  //  */
-  // virtual const VectorXs& get_g_lb() const;
-
-  // /**
-  //  * @brief Return the upper bound of the inequality constraints
-  //  */
-  // virtual const VectorXs& get_g_ub() const;
+  void set_friction_cone_constraints(const std::vector<boost::shared_ptr<ResidualModelFrictionConeAugmented>> frictionConstraints);
+  const std::vector<boost::shared_ptr<ResidualModelFrictionConeAugmented>> get_friction_cone_constraints() { return friction_constraints_; };
 
   /**
    * @brief Modify the lower bound of the inequality constraints
@@ -181,6 +171,8 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   using Base::unone_;               //!< Neutral state
   std::size_t nc_;                  //!< Contact model dimension
   std::size_t ny_;                  //!< Augmented state dimension : nq+nv+ntau
+
+  std::size_t nf_;                  //!< Number of friction cone constraints
 
  private:
   boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> differential_;

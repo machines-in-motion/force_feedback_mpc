@@ -70,7 +70,13 @@ void exposeResidualFrictionConeAugmented() {
                     bp::make_function(
                         &ResidualModelFrictionConeAugmented::get_id,
                         bp::return_value_policy<bp::return_by_value>()),
-                    "frame id"); 
+                    "frame id")
+      .add_property(
+          "coef",
+          bp::make_function(&ResidualModelFrictionConeAugmented::get_friction_coef,
+                            bp::return_value_policy<bp::return_by_value>()),
+          &ResidualModelFrictionConeAugmented::set_friction_coef,
+          "Friction cone coefficient"); 
     //   .def(CopyableVisitor<ResidualModelFrictionConeAugmented>());
 
   bp::register_ptr_to_python<
@@ -88,12 +94,12 @@ void exposeResidualFrictionConeAugmented() {
       .add_property(
           "dcone_df",
           bp::make_getter(&ResidualDataFrictionConeAugmented::dcone_df,
-                          bp::return_internal_reference<>()),
+                          bp::return_value_policy<bp::return_by_value>()),
           "Derivative of the friction cone residual w.r.t. soft contact force")
       .add_property(
           "residual",
           bp::make_getter(&ResidualDataFrictionConeAugmented::residual,
-                          bp::return_internal_reference<>()),
+                          bp::return_value_policy<bp::return_by_value>()),
           "Friction cone residual");
     //   .def(CopyableVisitor<ResidualDataFrictionConeAugmented>());
 }

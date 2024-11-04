@@ -24,7 +24,7 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
     boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model,
     const double& time_step,
     const bool& with_cost_residual,
-    std::vector<boost::shared_ptr<ResidualModelFrictionConeAugmented>> friction_constraints)
+    const std::vector<boost::shared_ptr<force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented>> friction_constraints)
     : Base(model->get_state(), 
            model->get_nu(),
            model->get_nr() + model->get_nc(), 
@@ -60,18 +60,26 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
   g_ub_new_ =  this->get_g_ub();
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
   // Friction cone constraint
-  if(friction_constraints.size() == 0){
-    with_friction_cone_constraint_ = false;
-    friction_constraints_ = {};
+  this->set_friction_cone_constraints(friction_constraints);
+  std::cout << " with_friction_cone_constraint = " << with_friction_cone_constraint_ << std::endl;
+  std::cout << " nf_ = " << nf_ << std::endl;
+  std::cout << " friction_constraints_.size() = " << friction_constraints_.size() << std::endl;
+  for(std::size_t i=0 ; i<friction_constraints_.size(); i++){
+    std::cout << "friction constraint " << i << " : " << std::endl;
+    std::cout << "   coef = " << friction_constraints_[i]->get_friction_coef() << std::endl;
   }
-  else{
-    if (nc_ != 3) {
-      throw_pretty(
-          "Invalid argument: frictio cone constraint only supported for nc=3");
-    }
-    with_friction_cone_constraint_ = true;
-    friction_constraints_ = friction_constraints;
-  }
+  // if(friction_constraints.size() == 0){
+  //   with_friction_cone_constraint_ = false;
+  //   friction_constraints_ = {};
+  //   nf_ = 0;
+  // }
+  // else{
+  //   if (nc_ != 3) {
+  //     throw_pretty("Invalid argument: friction cone constraint only supported for nc=3");
+  //   }
+  //   with_friction_cone_constraint_ = true;
+  //   friction_constraints_ = friction_constraints;
+  // }
   // friction_coef_ = 0.5;
 }
 
@@ -417,16 +425,6 @@ void IAMSoftContactAugmented::set_differential(
 }
 
 
-// const typename MathBaseTpl<Scalar>::VectorXs&
-// IAMSoftContactAugmented::get_g_lb() const {
-//   return g_lb_;
-// }
-
-// const typename MathBaseTpl<Scalar>::VectorXs&
-// IAMSoftContactAugmented::get_g_ub() const {
-//   return g_ub_;
-// }
-
 void IAMSoftContactAugmented::set_g_lb(const VectorXs& g_lb) {
   if (static_cast<std::size_t>(g_lb.size()) != ng_) {
     throw_pretty(
@@ -445,6 +443,33 @@ void IAMSoftContactAugmented::set_g_ub(const VectorXs& g_ub) {
                std::to_string(ng_) + ")");
   }
   g_ub_ = g_ub;
+}
+
+void IAMSoftContactAugmented::set_friction_cone_constraints(const std::vector<boost::shared_ptr<ResidualModelFrictionConeAugmented>> frictionConstraints) {
+  nf_ = 0;
+  with_friction_cone_constraint_ = false;
+  // Assert non-empty list of constraints
+  if (frictionConstraints.size() == 0) {
+    throw_pretty("There is no friction cone constraint ! Please provide a non-empty list.");
+  }
+  // Assert soft contact force dimension is 3
+  if (nc_ != 3) {
+    throw_pretty("Invalid argument: friction cone constraint only supported for nc=3");
+  }
+  // Parse friction models and assert they are well-defined
+  for(std::size_t i = 0; i != frictionConstraints.size(); ++i){
+    if(frictionConstraints[i] != nullptr){
+      friction_constraints_.push_back(frictionConstraints[i]);
+    }
+    else{
+      throw_pretty("Invalid argument: friction cone constraint" + 
+        std::to_string(i) + " not well defined (nullptr) ");
+    }
+  }
+  nf_ = friction_constraints_.size();
+  if(nf_ > 0){ 
+    with_friction_cone_constraint_ = true;
+  }
 }
 
 }  // namespace softcontact
