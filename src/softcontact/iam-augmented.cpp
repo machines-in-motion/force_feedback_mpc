@@ -185,21 +185,25 @@ void IAMSoftContactAugmented::calc(
   // std::cout << "Check constraints are active and nc_ == 3 " << std::endl;
   if(with_friction_cone_constraint_ && nc_ == 3){
     // Resize the constraint matrices of IAM 
-    // std::cout << "resize IAM for nc=" << nf_ << " friction constraints" << std::endl;
-    d->resizeIneqConstraint(this);
-    // std::cout << "g.tail(nf_) = " << d->g.tail(nf_) << std::endl;
-    // Iterate over friction models
-    // std::cout << "Loop over constraint models " << std::endl;
-    for(std::size_t i=0; i<friction_constraints_.size(); i++){
-      // std::cout << "constraint model " << i << std::endl;
-      // calc if constraint is active and data is well defined
-      if(friction_constraints_[i]->get_active() && friction_datas_[i] != nullptr){
-         friction_constraints_[i]->calc(friction_datas_[i], f);
-        //  std::cout << " fill out residual g from index " << differential_->get_ng() + nc_ + i << " to " << differential_->get_ng() + nc_ + i +1 << std::endl;
-         d->g.segment(differential_->get_ng() + nc_ + i, 1) << friction_datas_[i]->residual;
-      }
-      // fill out partial derivatives of the IAM
-    }
+
+    d->friction_cone_residual[0] = friction_coef_ * f(2) - sqrt(f(0)*f(0) + f(1)*f(1));
+    d->g.tail(1) << d->friction_cone_residual[0];
+    std::cout << " residual = " << d->friction_cone_residual[0] << std::endl;
+    // // std::cout << "resize IAM for nc=" << nf_ << " friction constraints" << std::endl;
+    // d->resizeIneqConstraint(this);
+    // // std::cout << "g.tail(nf_) = " << d->g.tail(nf_) << std::endl;
+    // // Iterate over friction models
+    // // std::cout << "Loop over constraint models " << std::endl;
+    // for(std::size_t i=0; i<friction_constraints_.size(); i++){
+    //   // std::cout << "constraint model " << i << std::endl;
+    //   // calc if constraint is active and data is well defined
+    //   if(friction_constraints_[i]->get_active() && friction_datas_[i] != nullptr){
+    //      friction_constraints_[i]->calc(friction_datas_[i], f);
+    //     //  std::cout << " fill out residual g from index " << differential_->get_ng() + nc_ + i << " to " << differential_->get_ng() + nc_ + i +1 << std::endl;
+    //      d->g.segment(differential_->get_ng() + nc_ + i, 1) << friction_datas_[i]->residual;
+    //   }
+    //   // fill out partial derivatives of the IAM
+    // }
     // std::cout << "Finished " << std::endl;
     // std::cout << "g.tail(nf_) = " << d->g.tail(nf_) << std::endl;
   }
@@ -239,8 +243,8 @@ void IAMSoftContactAugmented::calc(
   }
   // hard code friction cone constraint here
   if(with_friction_cone_constraint_ && nc_ == 3){
-    // d->friction_cone_residual = friction_coef_ * f(2) - sqrt(f(0)*f(0) + f(1)*f(1));
-    // d->g.tail(1) << d->friction_cone_residual;
+    d->friction_cone_residual[0] = friction_coef_ * f(2) - sqrt(f(0)*f(0) + f(1)*f(1));
+    d->g.tail(1) << d->friction_cone_residual[0];
   }
   // Update RESIDUAL
   if (with_cost_residual_) {
@@ -322,12 +326,14 @@ void IAMSoftContactAugmented::calcDiff(
     d->Gy.block(differential_->get_ng(), ndx, nc_, nc_).diagonal().array() = double(1.);
   }
   // hard-coded friction cone constraint
-  if(with_friction_cone_constraint_ && nc_ == 3){
+  if(with_friction_cone_constraint_ && nc_ == 3 && f.isZero(1e-3) == false){
     // compute the friction cone residual 
     d->dcone_df[0] = -f[0] / sqrt(f(0)*f(0) + f(1)*f(1));
     d->dcone_df[1] = -f[1] / sqrt(f(0)*f(0) + f(1)*f(1));
     d->dcone_df[2] = friction_coef_;
     d->Gy.bottomRightCorner(1, nc_) = d->dcone_df.transpose();
+    std::cout << " dcone_df = " << d->dcone_df << std::endl;
+
   }
 }
 
@@ -364,7 +370,7 @@ void IAMSoftContactAugmented::calcDiff(
     d->Gy.block(differential_->get_ng(), ndx, nc_, nc_).diagonal().array() = double(1.);
   }
   // hard-coded friction cone constraint
-  if(with_friction_cone_constraint_ && nc_ == 3){
+  if(with_friction_cone_constraint_ && nc_ == 3 && f.isZero(1e-3) == false){
     // compute the friction cone residual 
     d->dcone_df[0] = -f[0] / sqrt(f(0)*f(0) + f(1)*f(1));
     d->dcone_df[1] = -f[1] / sqrt(f(0)*f(0) + f(1)*f(1));

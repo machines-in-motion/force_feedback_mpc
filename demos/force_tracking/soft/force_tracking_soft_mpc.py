@@ -121,7 +121,7 @@ dt_simu = 1./float(config['simu_freq'])
 q0 = np.asarray(config['q0'])
 v0 = np.asarray(config['dq0'])
 x0 = np.concatenate([q0, v0])  
-env             = BulletEnvWithGround(dt=dt_simu, server=p.DIRECT)
+env             = BulletEnvWithGround(dt=dt_simu, server=p.GUI)
 robot_simulator = load_bullet_wrapper('iiwa_ft_sensor_shell', locked_joints=['A7'])
 env.add_robot(robot_simulator) 
 robot_simulator.reset_state(q0, v0)
@@ -378,7 +378,7 @@ for i in range(sim_data.N_simu):
     if(i >= T_CIRCLE):
       count+=1
       f_err.append(np.abs(f3d_mea_SIMU - target_force[0,0:3]))
-      p_err.append(np.abs(robot_simulator.pin_robot.data.oMf[id_endeff].translation[:2] - target_position[0][:2]))
+    #   p_err.append(np.abs(robot_simulator.pin_robot.data.oMf[id_endeff].translation[:2] - target_position[0][:2]))
     
     # Record data (unnoised)
     y_mea_SIMU = np.concatenate([q_mea_SIMU, v_mea_SIMU, f3d_mea_SIMU]).T 
@@ -405,7 +405,7 @@ logger.warning("count = "+str(count))
 logger.warning("------------------------------------")
 logger.warning("------------------------------------")
 logger.warning(" Fz MAE  = "+str(np.mean(f_err)))
-logger.warning(" Pxy MAE = "+str(np.mean(p_err)))
+# logger.warning(" Pxy MAE = "+str(np.mean(p_err)))
 logger.warning("------------------------------------")
 logger.warning("------------------------------------")
 
