@@ -63,15 +63,15 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
   friction_coef_ = 0;
   with_friction_cone_constraint_ = 0;
   // Friction cone constraint (initialize models AND datas)
-  std::cout << " nf_ BEFORE = " << nf_ << std::endl;
+  // std::cout << " nf_ BEFORE = " << nf_ << std::endl;
   this->set_friction_cone_constraints(friction_constraints); // this line allocates friction cone data !
-  std::cout << " with_friction_cone_constraint = " << with_friction_cone_constraint_ << std::endl;
-  std::cout << " nf_ = " << nf_ << std::endl;
-  std::cout << " friction_constraints_.size() = " << friction_constraints_.size() << std::endl;
+  // std::cout << " with_friction_cone_constraint = " << with_friction_cone_constraint_ << std::endl;
+  // std::cout << " nf_ = " << nf_ << std::endl;
+  // std::cout << " friction_constraints_.size() = " << friction_constraints_.size() << std::endl;
   for(std::size_t i=0 ; i<friction_constraints_.size(); i++){
-    std::cout << "friction constraint " << i << " : " << std::endl;
-    std::cout << "   coef = " << friction_constraints_[i]->get_friction_coef() << std::endl;
-    std::cout << "   active = " << friction_constraints_[i]->get_active() << std::endl;
+    // std::cout << "friction constraint " << i << " : " << std::endl;
+    // std::cout << "   coef = " << friction_constraints_[i]->get_friction_coef() << std::endl;
+    // std::cout << "   active = " << friction_constraints_[i]->get_active() << std::endl;
   }
 }
 
@@ -188,7 +188,9 @@ void IAMSoftContactAugmented::calc(
 
     d->friction_cone_residual[0] = friction_coef_ * f(2) - sqrt(f(0)*f(0) + f(1)*f(1));
     d->g.tail(1) << d->friction_cone_residual[0];
-    std::cout << " residual = " << d->friction_cone_residual[0] << std::endl;
+    // std::cout << "friction cone residual = " << d->g.tail(1) << std::endl;
+
+    // std::cout << " residual = " << d->friction_cone_residual[0] << std::endl;
     // // std::cout << "resize IAM for nc=" << nf_ << " friction constraints" << std::endl;
     // d->resizeIneqConstraint(this);
     // // std::cout << "g.tail(nf_) = " << d->g.tail(nf_) << std::endl;
@@ -332,7 +334,7 @@ void IAMSoftContactAugmented::calcDiff(
     d->dcone_df[1] = -f[1] / sqrt(f(0)*f(0) + f(1)*f(1));
     d->dcone_df[2] = friction_coef_;
     d->Gy.bottomRightCorner(1, nc_) = d->dcone_df.transpose();
-    std::cout << " dcone_df = " << d->dcone_df << std::endl;
+    // std::cout << " dcone_df = " << d->dcone_df << std::endl;
 
   }
 }
@@ -375,7 +377,7 @@ void IAMSoftContactAugmented::calcDiff(
     d->dcone_df[0] = -f[0] / sqrt(f(0)*f(0) + f(1)*f(1));
     d->dcone_df[1] = -f[1] / sqrt(f(0)*f(0) + f(1)*f(1));
     d->dcone_df[2] = friction_coef_;
-    d->Gy.bottomRightCorner(1, nc_) = d->dcone_df;
+    d->Gy.bottomRightCorner(1, nc_) = d->dcone_df.transpose();
   }
 }
 

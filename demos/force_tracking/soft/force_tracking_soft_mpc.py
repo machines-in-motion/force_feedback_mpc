@@ -82,8 +82,8 @@ def solveOCP(q, v, f, solver, nb_iter, target_reach, anchor_point, TASK_PHASE, t
         # Update OCP for contact phase
         if(TASK_PHASE == 3):
             for k in range( solver.problem.T+1 ):
-                if(k < solver.problem.T):
-                    m[k].friction_constraints[0].active = True
+                # if(k < solver.problem.T):
+                m[k].friction_constraints[0].active = True
                 m[k].differential.active_contact = True
                 m[k].differential.f_des = -target_force[k,:3]
                 m[k].differential.oPc = anchor_point
@@ -202,9 +202,9 @@ for k,m in enumerate(models):
     m.differential.costs.costs['rotation'].active = False
     m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
     #De-activate friction cone constraints initially
-    if(k<config['N_h']):
-        m.friction_constraints[0].active = False
-solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
+    # if(k<config['N_h']):
+    m.friction_constraints[0].active = False
+# solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
 
 # Setup tracking problem with circle ref EE trajectory + Warm start state = IK of circle trajectory
@@ -240,6 +240,8 @@ else:
     use = True
 torqueController   = mpc_utils.LowLevelTorqueController(config, nu=nu, use=use)
 antiAliasingFilter = mpc_utils.AntiAliasingFilter()  
+
+friction_cone_constraint_residual = []
 
 # # # # # # # # # # # #
 ### SIMULATION LOOP ###
@@ -371,9 +373,12 @@ for i in range(sim_data.N_simu):
     f_mea_SIMU = robot_simulator.end_effector_forces()[1][0]
     fz_mea_SIMU = np.array([f_mea_SIMU[2]])
     f3d_mea_SIMU = f_mea_SIMU[:3]
-    if(i%1000==0): 
+    res = np.sqrt(f3d_mea_SIMU[0]**2 + f3d_mea_SIMU[1]**2) - 0.8 * f3d_mea_SIMU[2]
+    if(i%100==0): 
       logger.info("f_mea  = "+str(f_mea_SIMU))
-      
+      print('res = ', res)
+    # print('res = ', res)
+    friction_cone_constraint_residual.append(res)
     # Compute force and position errors
     if(i >= T_CIRCLE):
       count+=1
@@ -408,26 +413,31 @@ logger.warning(" Fz MAE  = "+str(np.mean(f_err)))
 # logger.warning(" Pxy MAE = "+str(np.mean(p_err)))
 logger.warning("------------------------------------")
 logger.warning("------------------------------------")
+# print(friction_cone_constraint_residual)
 
-save_dir = '/tmp'
-save_name = config_name+\
-                        '_BIAS='+str(config['SCALE_TORQUES'])+\
-                        '_NOISE='+str(config['NOISE_STATE'] or config['NOISE_TORQUES'])+\
-                        '_DELAY='+str(config['DELAY_OCP'] or config['DELAY_SIM'])+\
-                        '_Fp='+str(sim_data.plan_freq/1000)+'_Fc='+str(sim_data.ctrl_freq/1000)+'_Fs'+str(sim_data.simu_freq/1000)
-# Extract plot data from sim data
-plot_data = sim_data.extract_data(frame_of_interest=frame_of_interest)
-# Plot results
-sim_data.plot_mpc_results(plot_data, which_plots=sim_data.WHICH_PLOTS,
-                                    PLOT_PREDICTIONS=True, 
-                                    pred_plot_sampling=int(sim_data.plan_freq/10),
-                                    SAVE=False,
-                                    SAVE_DIR=save_dir,
-                                    SAVE_NAME=save_name,
-                                    AUTOSCALE=False)
-# Save optionally
-if(config['SAVE_DATA']):
-  sim_data.save_data(sim_data, save_name=save_name, save_dir=save_dir)
+import matplotlib.pyplot as plt
+t_span = np.linspace(0, config['T_tot'], sim_data.N_simu)
+plt.plot(t_span, friction_cone_constraint_residual)
+plt.show()
+# save_dir = '/tmp'
+# save_name = config_name+\
+#                         '_BIAS='+str(config['SCALE_TORQUES'])+\
+#                         '_NOISE='+str(config['NOISE_STATE'] or config['NOISE_TORQUES'])+\
+#                         '_DELAY='+str(config['DELAY_OCP'] or config['DELAY_SIM'])+\
+#                         '_Fp='+str(sim_data.plan_freq/1000)+'_Fc='+str(sim_data.ctrl_freq/1000)+'_Fs'+str(sim_data.simu_freq/1000)
+# # Extract plot data from sim data
+# plot_data = sim_data.extract_data(frame_of_interest=frame_of_interest)
+# # Plot results
+# sim_data.plot_mpc_results(plot_data, which_plots=sim_data.WHICH_PLOTS,
+#                                     PLOT_PREDICTIONS=True, 
+#                                     pred_plot_sampling=int(sim_data.plan_freq/10),
+#                                     SAVE=False,
+#                                     SAVE_DIR=save_dir,
+#                                     SAVE_NAME=save_name,
+#                                     AUTOSCALE=False)
+# # Save optionally
+# if(config['SAVE_DATA']):
+#   sim_data.save_data(sim_data, save_name=save_name, save_dir=save_dir)
 
 
 

@@ -274,7 +274,7 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
       residual = force_feedback_mpc.ResidualModelFrictionConeAugmented(state, fid, self.frictionCoefficient, actuation.nu)
       runningModel.friction_constraints = [residual]
 
-  def finalize_terminal_model(self, terminalModel, softContactModel):
+  def finalize_terminal_model(self,state, actuation, terminalModel, softContactModel):
     ''' 
     Populate terminal model with hard-coded costs 
       All cost weights are scaled by the OCP integration step dt
@@ -303,6 +303,17 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
       terminalModel.with_force_constraint = True
       # terminalModel.force_lb = np.asarray(self.forceLowerLimit)
       # terminalModel.force_ub = np.asarray(self.forceUpperLimit)
+    if('frictionCone' in self.WHICH_CONSTRAINTS): 
+      # print("node_id = ", node_id)
+      self.check_attribute('frictionCoefficient')
+      self.check_attribute('frictionConeFrameName')
+      try: 
+        assert(softContactModel.nc == 3)
+      except:
+        logger.error("Soft contact model must be of dimension 3 to use the friction cone constraint")
+      fid = self.rmodel.getFrameId(self.frictionConeFrameName)
+      residual = force_feedback_mpc.ResidualModelFrictionConeAugmented(state, fid, self.frictionCoefficient, actuation.nu)
+      terminalModel.friction_constraints = [residual]
 
   def success_log(self, softContactModel):
     logger.info("OCP (SOFT) is ready !")
@@ -366,7 +377,7 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
       constraintModelManager = self.create_constraint_model_manager(state, actuation, self.N_h)
       dam_t = self.create_differential_action_model(state, actuation, costModelSum_t, softContactModel, constraintModelManager)  
     terminalModel = force_feedback_mpc.IAMSoftContactAugmented( dam_t, 0. )
-    self.finalize_terminal_model(terminalModel, softContactModel)
+    self.finalize_terminal_model(state, actuation, terminalModel, softContactModel)
     # self.init_terminal_model(state, actuation, terminalModel, softContactModel)
     
     logger.info("Created IAMs.")  
