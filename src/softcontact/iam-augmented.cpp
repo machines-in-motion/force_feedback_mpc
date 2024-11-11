@@ -182,26 +182,26 @@ void IAMSoftContactAugmented::calc(
     d->g.segment(differential_->get_ng(), nc_) = f;
   }
   // hard code friction cone constraint here
-  std::cout << "Check constraints are active and nc_ == 3 " << std::endl;
+  // std::cout << "Check constraints are active and nc_ == 3 " << std::endl;
   if(with_friction_cone_constraint_ && nc_ == 3){
     // Resize the constraint matrices of IAM 
-    std::cout << "resize IAM for nc=" << nf_ << " friction constraints" << std::endl;
+    // std::cout << "resize IAM for nc=" << nf_ << " friction constraints" << std::endl;
     d->resizeIneqConstraint(this);
-    std::cout << "g.tail(nf_) = " << d->g.tail(nf_) << std::endl;
+    // std::cout << "g.tail(nf_) = " << d->g.tail(nf_) << std::endl;
     // Iterate over friction models
-    std::cout << "Loop over constraint models " << std::endl;
+    // std::cout << "Loop over constraint models " << std::endl;
     for(std::size_t i=0; i<friction_constraints_.size(); i++){
-      std::cout << "constraint model " << i << std::endl;
+      // std::cout << "constraint model " << i << std::endl;
       // calc if constraint is active and data is well defined
       if(friction_constraints_[i]->get_active() && friction_datas_[i] != nullptr){
          friction_constraints_[i]->calc(friction_datas_[i], f);
-         std::cout << " fill out residual g from index " << differential_->get_ng() + nc_ + i << " to " << differential_->get_ng() + nc_ + i +1 << std::endl;
+        //  std::cout << " fill out residual g from index " << differential_->get_ng() + nc_ + i << " to " << differential_->get_ng() + nc_ + i +1 << std::endl;
          d->g.segment(differential_->get_ng() + nc_ + i, 1) << friction_datas_[i]->residual;
       }
       // fill out partial derivatives of the IAM
     }
-    std::cout << "Finished " << std::endl;
-    std::cout << "g.tail(nf_) = " << d->g.tail(nf_) << std::endl;
+    // std::cout << "Finished " << std::endl;
+    // std::cout << "g.tail(nf_) = " << d->g.tail(nf_) << std::endl;
   }
   // compute cost residual
   if (with_cost_residual_) {
@@ -239,7 +239,6 @@ void IAMSoftContactAugmented::calc(
   }
   // hard code friction cone constraint here
   if(with_friction_cone_constraint_ && nc_ == 3){
-    std::cout << " weifghwer " << std::endl;
     // d->friction_cone_residual = friction_coef_ * f(2) - sqrt(f(0)*f(0) + f(1)*f(1));
     // d->g.tail(1) << d->friction_cone_residual;
   }
@@ -284,11 +283,6 @@ void IAMSoftContactAugmented::calcDiff(
   const MatrixXs& da_du = diff_data_soft->Fu;
 
   // Fill out blocks
-  std::cout << "d->Fy : " << d->Fy.size() << std::endl;
-  std::cout << "nv : " << nv << std::endl;
-  std::cout << "ndx : " << ndx << std::endl;
-  std::cout << "da_dx.rows : " << da_dx.rows() << std::endl;
-  std::cout << "da_dx.cols : " << da_dx.cols() << std::endl;
   d->Fy.topLeftCorner(nv, ndx).noalias() = da_dx * time_step2_;
   d->Fy.block(nv, 0, nv, ndx).noalias() = da_dx * time_step_;
   d->Fy.block(0, nv, nv, nv).diagonal().array() += double(time_step_);
@@ -333,7 +327,7 @@ void IAMSoftContactAugmented::calcDiff(
     d->dcone_df[0] = -f[0] / sqrt(f(0)*f(0) + f(1)*f(1));
     d->dcone_df[1] = -f[1] / sqrt(f(0)*f(0) + f(1)*f(1));
     d->dcone_df[2] = friction_coef_;
-    d->Gy.bottomRightCorner(1, nc_) = d->dcone_df;
+    d->Gy.bottomRightCorner(1, nc_) = d->dcone_df.transpose();
   }
 }
 
@@ -484,11 +478,11 @@ void IAMSoftContactAugmented::set_friction_cone_constraints(const std::vector<bo
         std::to_string(i) + " not well defined (nullptr) ");
     }
   }
-  std::cout << "Detected " << nf_ << " active constraints " << std::endl;
+  // std::cout << "Detected " << nf_ << " active constraints " << std::endl;
   if(nf_ > 0){ 
     with_friction_cone_constraint_ = true;
   }
-  std::cout << "Set  with_friction_cone_constraint_ to" << with_friction_cone_constraint_ << std::endl;
+  // std::cout << "Set  with_friction_cone_constraint_ to" << with_friction_cone_constraint_ << std::endl;
   // update bounds of the inequality constraint
   // cstr_lb_ = 
   // cstr_ub_ = std::numeric_limits<double>::infinity()*VectorXs::Ones(nf_);

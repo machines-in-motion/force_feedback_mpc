@@ -82,6 +82,8 @@ def solveOCP(q, v, f, solver, nb_iter, target_reach, anchor_point, TASK_PHASE, t
         # Update OCP for contact phase
         if(TASK_PHASE == 3):
             for k in range( solver.problem.T+1 ):
+                if(k < solver.problem.T):
+                    m[k].friction_constraints[0].active = True
                 m[k].differential.active_contact = True
                 m[k].differential.f_des = -target_force[k,:3]
                 m[k].differential.oPc = anchor_point
@@ -89,7 +91,8 @@ def solveOCP(q, v, f, solver, nb_iter, target_reach, anchor_point, TASK_PHASE, t
                 m[k].differential.costs.costs["translation"].cost.activation.weights = np.array([1., 1., 0.])
                 m[k].differential.costs.costs["translation"].weight = 50.
                 m[k].differential.costs.costs['rotation'].active = True
-                m[k].differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)                      
+                m[k].differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)    
+
         # Update OCP for circle phase
         if(TASK_PHASE == 4):
             for k in range( solver.problem.T+1 ):
@@ -175,7 +178,6 @@ us_init = [u0 for i in range(config['N_h'])]
 # Setup Croco OCP and create solver
 ocp = OptimalControlProblemSoftContactAugmented(robot, config).initialize(y0, softContactModel)
 solver = mim_solvers.SolverCSQP(ocp)
-solver.with_callbacks         = config['with_callbacks']
 solver.use_filter_line_search = config['use_filter_line_search']
 solver.filter_size            = config['filter_size']
 solver.warm_start             = config['warm_start']
@@ -200,9 +202,9 @@ for k,m in enumerate(models):
     m.differential.costs.costs['rotation'].active = False
     m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
     #De-activate friction cone constraints initially
-    if(k>0 and k<config['N_h']):
+    if(k<config['N_h']):
         m.friction_constraints[0].active = False
-
+solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
 
 # Setup tracking problem with circle ref EE trajectory + Warm start state = IK of circle trajectory

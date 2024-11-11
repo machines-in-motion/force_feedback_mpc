@@ -94,7 +94,7 @@ oPc_offset: [0., 0., 0.]
 
 # Constraints 
 # to select from the list : 'stateBox', 'ctrlBox', 'translationBox', 'None'
-WHICH_CONSTRAINTS: ['frictionCone']
+# WHICH_CONSTRAINTS: ['frictionCone']
 frictionCoefficient: 0.8
 frictionConeFrameName: 'contact'
 

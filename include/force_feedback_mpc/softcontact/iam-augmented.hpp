@@ -82,15 +82,15 @@ struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double>
   // Re-size the constraint size according to friction constraints size
   template <class Model>
   void resizeIneqConstraint(Model* const model) {
-    std::cout << "BEFORE friction_cone_residual = " << friction_cone_residual.size() << std::endl;
-    std::cout << "BEFORE dcone_df = " << dcone_df.size() << std::endl;
-    std::cout << "BEFORE g = " << g.size() << std::endl;
-    std::cout << "BEFORE G = " << Gy.size() << std::endl;
-    std::cout << "BEFORE G = " << Gu.size() << std::endl;
+    // std::cout << "BEFORE friction_cone_residual = " << friction_cone_residual.size() << std::endl;
+    // std::cout << "BEFORE dcone_df = " << dcone_df.size() << std::endl;
+    // std::cout << "BEFORE g = " << g.size() << std::endl;
+    // std::cout << "BEFORE G = " << Gy.size() << std::endl;
+    // std::cout << "BEFORE G = " << Gu.size() << std::endl;
     VectorXs g_lb_old_ =  model->get_g_lb();
     VectorXs g_ub_old_ =  model->get_g_ub();
-    std::cout << "BEFORE g_lb = " << g_lb_old_ << std::endl;
-    std::cout << "BEFORE g_ub = " << g_ub_old_ << std::endl;
+    // std::cout << "BEFORE g_lb = " << g_lb_old_ << std::endl;
+    // std::cout << "BEFORE g_ub = " << g_ub_old_ << std::endl;
     const std::size_t ndx = model->get_differential()->get_state()->get_ndx();
     const std::size_t nu = model->get_differential()->get_nu();
     const std::size_t nf = model->get_nf();
@@ -98,18 +98,18 @@ struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double>
     g.conservativeResize(ng);
     Gy.conservativeResize(ng, ndx);
     Gu.conservativeResize(ng, nu);
-    std::cout << "Size after = " << Gy.size() << std::endl;
+    // std::cout << "Size after = " << Gy.size() << std::endl;
     // new bounds (add friction cone bounds)
     VectorXs g_lb_new_ =  model->get_g_lb();
     VectorXs g_ub_new_ =  model->get_g_ub();
-    std::cout << "AFTER g_lb = " << g_lb_new_ << std::endl;
-    std::cout << "AFTER g_ub = " << g_ub_new_ << std::endl;
+    // std::cout << "AFTER g_lb = " << g_lb_new_ << std::endl;
+    // std::cout << "AFTER g_ub = " << g_ub_new_ << std::endl;
     // this->set_g_lb(-std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
     // this->set_g_ub(std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
     g_lb_new_.tail(nf) = 0.*VectorXs::Ones(nf);
     g_ub_new_.tail(nf) = std::numeric_limits<double>::infinity()*VectorXs::Ones(nf);
-    std::cout << "AFTER g_lb_new_ = " << g_lb_new_ << std::endl;
-    std::cout << "AFTER g_ub_new_ = " << g_ub_new_ << std::endl;
+    // std::cout << "AFTER g_lb_new_ = " << g_lb_new_ << std::endl;
+    // std::cout << "AFTER g_ub_new_ = " << g_ub_new_ << std::endl;
   // temp variable used to update the force bounds
 
 
