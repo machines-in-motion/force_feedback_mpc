@@ -72,20 +72,20 @@ def solveOCP(q, v, f, solver, nb_iter, target_reach, anchor_point, TASK_PHASE, t
         if(TASK_PHASE == 1):
             for k in range( solver.problem.T+1 ):
                 m[k].differential.costs.costs["translation"].active = True
-                m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
+                m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach
         # Update OCP for "increase weights" phase
         if(TASK_PHASE == 2):
             for k in range( solver.problem.T+1 ):
                 w = min(2.*k , 10.)
-                m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
+                m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach
                 m[k].differential.costs.costs["translation"].weight = w
         # Update OCP for contact phase
         if(TASK_PHASE == 3):
             for k in range( solver.problem.T+1 ):
                 m[k].differential.active_contact = True
-                m[k].differential.f_des = np.array([-target_force[k]])
+                m[k].differential.f_des = -target_force[k,:3]
                 m[k].differential.oPc = anchor_point
-                m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
+                m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach
                 m[k].differential.costs.costs["translation"].cost.activation.weights = np.array([1., 1., 0.])
                 m[k].differential.costs.costs["translation"].weight = 50.
                 m[k].differential.costs.costs['rotation'].active = True
@@ -94,8 +94,8 @@ def solveOCP(q, v, f, solver, nb_iter, target_reach, anchor_point, TASK_PHASE, t
         if(TASK_PHASE == 4):
             for k in range( solver.problem.T+1 ):
                 m[k].differential.costs.costs["translation"].weight = 150. 
-                m[k].differential.f_des = np.array([-target_force[k]]) 
-                m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach[k]
+                m[k].differential.f_des = -target_force[k,:3] 
+                m[k].differential.costs.costs["translation"].cost.residual.reference = target_reach
         # Solve OCP 
         solver.solve(xs_init, us_init, maxiter=nb_iter, isFeasible=False)
         # Send solution to parent process + riccati gains
@@ -174,21 +174,34 @@ xs_init = [y0 for i in range(config['N_h']+1)]
 us_init = [u0 for i in range(config['N_h'])] 
 # Setup Croco OCP and create solver
 ocp = OptimalControlProblemSoftContactAugmented(robot, config).initialize(y0, softContactModel)
-solver = mim_solvers.SolverSQP(ocp)
+solver = mim_solvers.SolverCSQP(ocp)
+solver.with_callbacks         = config['with_callbacks']
+solver.use_filter_line_search = config['use_filter_line_search']
+solver.filter_size            = config['filter_size']
+solver.warm_start             = config['warm_start']
+solver.termination_tolerance  = config['solver_termination_tolerance']
+solver.max_qp_iters           = config['max_qp_iter']
+solver.eps_abs                = config['qp_termination_tol_abs']
+solver.eps_rel                = config['qp_termination_tol_rel']
+solver.warm_start_y           = config['warm_start_y']
+solver.reset_rho              = config['reset_rho']  
+solver.mu_dynamic             = config["mu_dynamic"]
+solver.mu_constraint          = config["mu_constraint"]
 solver.regMax                 = 1e6
 solver.reg_max                = 1e6
-solver.termination_tolerance  = 0.0001 
-solver.use_filter_line_search = True
-solver.filter_size            = config['maxiter']
 # !!! Deactivate all costs & contact models initially !!!
 models = list(solver.problem.runningModels) + [solver.problem.terminalModel]
 for k,m in enumerate(models):
+    print(m.differential.costs)
     m.differential.costs.costs["translation"].active = False
     m.differential.active_contact = False
-    m.differential.f_des = np.zeros(1)
+    m.differential.f_des = np.zeros(3)
     m.differential.cost_ref = pin.LOCAL_WORLD_ALIGNED
     m.differential.costs.costs['rotation'].active = False
     m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
+    #De-activate friction cone constraints initially
+    if(k>0 and k<config['N_h']):
+        m.friction_constraints[0].active = False
 
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
 
@@ -204,7 +217,7 @@ N_ramp  = int((config['T_RAMP'] - config['T_CONTACT']) / dt_simu)
 target_force_traj             = np.zeros((N_total, 3))
 target_force_traj[:N_ramp, 2] = [F_MIN + (F_MAX - F_MIN)*i/N_ramp for i in range(N_ramp)]
 target_force_traj[N_ramp:, 2] = F_MAX
-target_force                  = np.zeros(config['N_h']+1)
+target_force                  = np.zeros((config['N_h']+1,3))
 target_position = oPc.copy() 
 
 # # # # # # # # # # #
@@ -289,10 +302,9 @@ for i in range(sim_data.N_simu):
         TASK_PHASE = 3
     if(0 <= time_to_contact and time_to_contact%OCP_TO_CTRL_RATIO == 0):
         tf  = time_to_contact + (config['N_h']+1)*OCP_TO_CTRL_RATIO
-        target_force = target_force_traj[time_to_contact:tf:OCP_TO_CTRL_RATIO, 2]
+        target_force = target_force_traj[time_to_contact:tf:OCP_TO_CTRL_RATIO, 0:3]
     if(time_to_circle == 0): 
         logger.warning("Entering circle phase")
-  
     # If circle tracking phase enters the MPC horizon, start updating models from the end with tracking models      
     if(0 <= time_to_circle and time_to_circle <= NH_SIMU):
         TASK_PHASE = 4
@@ -356,17 +368,18 @@ for i in range(sim_data.N_simu):
     robot_simulator.forward_robot(q_mea_SIMU, v_mea_SIMU)
     f_mea_SIMU = robot_simulator.end_effector_forces()[1][0]
     fz_mea_SIMU = np.array([f_mea_SIMU[2]])
+    f3d_mea_SIMU = f_mea_SIMU[:3]
     if(i%1000==0): 
       logger.info("f_mea  = "+str(f_mea_SIMU))
       
     # Compute force and position errors
     if(i >= T_CIRCLE):
       count+=1
-      f_err.append(np.abs(f_mea_SIMU[2] - target_force[0]))
+      f_err.append(np.abs(f3d_mea_SIMU - target_force[0,0:3]))
       p_err.append(np.abs(robot_simulator.pin_robot.data.oMf[id_endeff].translation[:2] - target_position[0][:2]))
     
     # Record data (unnoised)
-    y_mea_SIMU = np.concatenate([q_mea_SIMU, v_mea_SIMU, fz_mea_SIMU]).T 
+    y_mea_SIMU = np.concatenate([q_mea_SIMU, v_mea_SIMU, f3d_mea_SIMU]).T 
     # Simulate sensing 
     y_mea_no_noise_SIMU = sensingModel.step(y_mea_SIMU)
     # Record measurements of state, torque and forces 

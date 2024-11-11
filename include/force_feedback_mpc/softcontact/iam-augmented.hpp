@@ -43,9 +43,13 @@ struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double>
     Gy.setZero();
     Gu.resize(model->get_ng(), model->get_nu());
     Gu.setZero();
+    // if(model->get_with_friction_cone_constraint() && model->get_nc() == 3){
     friction_cone_residual.resize(model->get_nf());
-    dcone_df.resize(model->get_nf(), 3);
+    // std::cout << "model get_nf() = " << model->get_nf() << std::endl;
+    // dcone_df.resize(model->get_nf(), 3);
+    dcone_df.resize(3);
     dcone_df.setZero();
+    // }
   }
   virtual ~IADSoftContactAugmented() {}
 

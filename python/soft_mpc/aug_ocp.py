@@ -48,11 +48,13 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
     '''
     if(not hasattr(self, 'WHICH_CONSTRAINTS')):
       self.nb_constraints = 0
+      self.WHICH_CONSTRAINTS = []
     else:
-      if('None' in self.WHICH_CONSTRAINTS):
+      if(self.WHICH_CONSTRAINTS == [] or self.WHICH_CONSTRAINTS == [''] or self.WHICH_CONSTRAINTS == ['None']):
         self.nb_constraints = 0
       else:
         self.nb_constraints = len(self.WHICH_CONSTRAINTS)
+    logger.debug("Detected "+str(self.nb_constraints)+" constraints in YAML.")
 
   def create_constraint_model_manager(self, state, actuation, node_id):
     '''
@@ -124,6 +126,7 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
       costModelSum.addCost("translation", frameTranslationCost, self.frameTranslationWeight)
     # End-effector orientation 
     if('rotation' in self.WHICH_COSTS):
+      logger.debug("Create rotation cost")
       frameRotationCost = self.create_frame_rotation_cost(state, actuation)
       costModelSum.addCost("rotation", frameRotationCost, self.frameRotationWeight)
     
@@ -170,25 +173,14 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
     '''
     # 3D contact
     if(softContactModel.nc == 3):
-      # # If there is friction
-      # if(self.check_attribute('mu')):
-      #   self.check_attribute('eps')
-      #   logger.warning("Simulate dynamic friction for lateral forces : mu="+str(self.mu)+", eps="+str(self.eps))
-      #   dam = DAMSoft3DAugmentedFriction(state, 
-      #                           actuation, 
-      #                           crocoddyl.CostModelSum(state, nu=actuation.nu),
-      #                           softContactModel.frameId, 
-      #                           softContactModel.Kp,
-      #                           softContactModel.Kv,
-      #                           softContactModel.oPc,
-      #                           softContactModel.pinRefFrame )
-      #   dam.mu = self.mu
-      #   dam.eps = self.eps
-      # else:
+      logger.warning("Detected nc = 3")
       if(constraintModelManager is None):
+        logger.warning("Detected 0 constraints")
+        # import pdb; pdb.set_trace()
         dam = force_feedback_mpc.DAMSoftContact3DAugmentedFwdDynamics(state, 
                                 actuation, 
-                                crocoddyl.CostModelSum(state, nu=actuation.nu),
+                                # crocoddyl.CostModelSum(state, nu=actuation.nu),
+                                costModelSum,
                                 softContactModel.frameId, 
                                 softContactModel.Kp,
                                 softContactModel.Kv,
@@ -196,7 +188,8 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
       else:
         dam = force_feedback_mpc.DAMSoftContact3DAugmentedFwdDynamics(state, 
                                 actuation, 
-                                crocoddyl.CostModelSum(state, nu=actuation.nu),
+                                # crocoddyl.CostModelSum(state, nu=actuation.nu),
+                                costModelSum,
                                 softContactModel.frameId, 
                                 softContactModel.Kp,
                                 softContactModel.Kv,
@@ -279,7 +272,6 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
         logger.error("Soft contact model must be of dimension 3 to use the friction cone constraint")
       fid = self.rmodel.getFrameId(self.frictionConeFrameName)
       residual = force_feedback_mpc.ResidualModelFrictionConeAugmented(state, fid, self.frictionCoefficient, actuation.nu)
-      # import pdb; pdb.set_trace()
       runningModel.friction_constraints = [residual]
 
   def finalize_terminal_model(self, terminalModel, softContactModel):
@@ -362,6 +354,7 @@ class OptimalControlProblemSoftContactAugmented(OptimalControlProblemAbstract):
         # Create DAM & IAM and initialize costs+contacts+constraints
           dam = self.create_differential_action_model(state, actuation, costModelSum, softContactModel, constraintModelManager) 
         runningModels.append(force_feedback_mpc.IAMSoftContactAugmented( dam, self.dt ))
+        # import pdb; pdb.set_trace()
         self.finalize_running_model(state, actuation, runningModels[i], softContactModel, i)
         # self.init_running_model(state, actuation, runningModels[i], softContactModel)
         

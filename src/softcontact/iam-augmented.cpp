@@ -284,6 +284,11 @@ void IAMSoftContactAugmented::calcDiff(
   const MatrixXs& da_du = diff_data_soft->Fu;
 
   // Fill out blocks
+  std::cout << "d->Fy : " << d->Fy.size() << std::endl;
+  std::cout << "nv : " << nv << std::endl;
+  std::cout << "ndx : " << ndx << std::endl;
+  std::cout << "da_dx.rows : " << da_dx.rows() << std::endl;
+  std::cout << "da_dx.cols : " << da_dx.cols() << std::endl;
   d->Fy.topLeftCorner(nv, ndx).noalias() = da_dx * time_step2_;
   d->Fy.block(nv, 0, nv, ndx).noalias() = da_dx * time_step_;
   d->Fy.block(0, nv, nv, nv).diagonal().array() += double(time_step_);

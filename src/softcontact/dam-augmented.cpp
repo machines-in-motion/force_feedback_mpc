@@ -35,13 +35,16 @@ DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDy
     const Vector3s& oPc,
     const std::size_t nc,
     boost::shared_ptr<ConstraintModelManager> constraints)
-    : DAMBase(state, actuation->get_nu(), costs->get_nr(), constraints->get_ng(), constraints->get_nh()),
+    : DAMBase(state, 
+              actuation->get_nu(), 
+              costs->get_nr(), 
+              constraints ? constraints->get_ng() : 0,
+              constraints ? constraints->get_nh() : 0),
       actuation_(actuation),
       costs_(costs),
       constraints_(constraints),
       pinocchio_(*state->get_pinocchio().get()),
-      without_armature_(true),
-      armature_(VectorXs::Zero(state->get_nv())) {
+      without_armature_(true) {
   if (this->get_costs()->get_nu() != this->get_nu()) {
     throw_pretty("Invalid argument: "
                  << "Costs doesn't have the same control dimension (it should be " + std::to_string(this->get_nu()) + ")");

@@ -14,6 +14,7 @@
 #include "force_feedback_mpc/softcontact/dam1d-augmented.hpp"
 
 #include "force_feedback_mpc/frictioncone/residual-friction-cone.hpp"
+#include "force_feedback_mpc/frictioncone/residual-friction-cone-augmented.hpp"
 
 namespace force_feedback_mpc{
 namespace lpf{

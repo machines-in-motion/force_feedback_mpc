@@ -9,13 +9,21 @@
 #include "force_feedback_mpc/python.hpp"
 #include "force_feedback_mpc/softcontact/iam-augmented.hpp"
 
+#include <eigenpy/std-vector.hpp>
+
 namespace force_feedback_mpc {
 namespace softcontact {
 
 namespace bp = boost::python;
 
+using eigenpy::StdVectorPythonVisitor;
+
 void exposeIAMSoftContactAugmented() {
-  
+
+  typedef boost::shared_ptr<force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented> ResidualModelFrictionConeAugmentedPtr;
+  StdVectorPythonVisitor<std::vector<ResidualModelFrictionConeAugmentedPtr>, true>::expose(
+      "StdVec_FrictionC one");
+
   bp::register_ptr_to_python<boost::shared_ptr<IAMSoftContactAugmented> >();
   
   bp::class_<IAMSoftContactAugmented, bp::bases<crocoddyl::ActionModelAbstract> >(
@@ -116,13 +124,18 @@ void exposeIAMSoftContactAugmented() {
           bp::make_function(&IAMSoftContactAugmented::get_with_friction_cone_constraint,
                             bp::return_value_policy<bp::return_by_value>()),
           "activate friction cone (Lorentz) constraint on the contact force (default: False)")
+    //   .add_property(
+    //       "friction_constraints",
+    //       bp::make_function(&IAMSoftContactAugmented::set_friction_cone_constraints,
+    //                      bp::return_value_policy<bp::return_by_value>()),
+    //       bp::make_function(&IAMSoftContactAugmented::get_friction_cone_constraints,
+    //                       bp::return_value_policy<bp::return_by_value>()), // Change this as needed
+    //       "friction cone constraints");
       .add_property(
           "friction_constraints",
-          bp::make_function(&IAMSoftContactAugmented::set_friction_cone_constraints,
-                         bp::return_value_policy<bp::return_by_value>()),
           bp::make_function(&IAMSoftContactAugmented::get_friction_cone_constraints,
-                          bp::return_value_policy<bp::return_by_value>()), // Change this as needed
-          "friction cone constraints");
+                            bp::return_value_policy<bp::return_by_value>()),
+          &IAMSoftContactAugmented::set_friction_cone_constraints, "friction cone constraint");
     //   .add_property(
     //       "friction_constraints",
     //       bp::make_function(&IAMSoftContactAugmented::set_friction_cone_constraints,

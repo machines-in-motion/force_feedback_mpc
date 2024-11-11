@@ -45,15 +45,26 @@ T_CIRCLE: 3.
 contact_plane_offset: [0., 0., 0.034] #0.034]
 
 # General 
-SOLVER: 'sqp'                                      # Solver (fddp or sqp)
-use_filter_line_search: True                       # Filter line-search ? 
-solver_termination_tolerance: 0.0001               # Tolerance on KKT residual 
 dt: 0.003                                          # OCP integration step 
 N_h: 5                                             # Horizon length in nodes
 maxiter: 8                                         # Max number of iterations in DDP
 solver_termination_tolerance: 0.0001               # Tolerance on KKT residual 
 q0: [0., 1.0471975511965976, 0., -1.1344640137963142, 0.2,  0.7853981633974483]               # Initial robot joint configuration
 dq0: [0.,0.,0.,0.,0.,0.]                         # Initial robot joint velocity
+
+# CSSQP solver parameters
+with_callbacks: True
+use_filter_line_search: True
+filter_size: 10
+warm_start: False
+max_qp_iter: 200     
+mu_dynamic: 10
+mu_constraint: 10
+qp_termination_tol_abs: 0.0005
+qp_termination_tol_rel: 0
+warm_start_y: False 
+reset_rho: False
+
 
 # Pin model frame name of the end-effector 
 #   - Used for frame-related costs and plots generation
@@ -76,6 +87,7 @@ USE_LATERAL_FRICTION: False
 
 # Constraints 
 # to select from the list : 'stateBox', 'ctrlBox', 'translationBox', 'None'
+# WHICH_CONSTRAINTS: []
 WHICH_CONSTRAINTS: ['frictionCone']
 frictionCoefficient: 0.8
 frictionConeFrameName: 'contact'
@@ -85,16 +97,17 @@ frictionConeFrameName: 'contact'
 # Cost function composition (a.k.a which terms will be actually used in the OCP)
 # to select from the list : 'stateReg', 'ctrlReg', 'ctrlRegGrav', 'stateLim', 'ctrlLim'
 #                           'force', 'friction', 'translation', 'velocity', 'placement'
-WHICH_COSTS: ['force', 'stateReg', 'ctrlRegGrav']  
+WHICH_COSTS: ['force', 'forceRateReg', 'translation', 'velocity', 'stateReg', 'ctrlRegGrav', 'rotation']  
+
 
 # Cost function weights and activations
  # 'force' : end-effector frame force (translation + rotation)
-frameForceWeight: [0.01] # 0.001 ok at 500hz
-frameForceWeightTerminal: [0.05] # 0.0083 ok at 500hz
+frameForceWeight: [0, 0, 0.0012] # 0.001 ok at 500hz
+frameForceWeightTerminal: [0, 0, 0.005] # 0.0083 ok at 500hz
 frameForceRef: [0., 0., 50, 0., 0., 0.]    
 frameForceFrameName: 'contact'
 forceCostRefFrame: 'LOCAL_WORLD_ALIGNED'
-forceRateRegWeight: [0.0000006]
+forceRateRegWeight: [0, 0, 0.0000009]
 
 
 
@@ -115,10 +128,11 @@ frameTranslationWeightTerminal: 100.
 alpha_quadflatlog: 0.01
 frameTranslationRef: 'DEFAULT'
 frameTranslationFrameName: 'contact'
-frameCircleTrajectoryRadius: 0.07  # in m
+frameCircleTrajectoryRadius: 0.1  # in m
 frameCircleTrajectoryVelocity: 3 # in rad/s
 numberOfRounds: 10
 CIRCLE_LOCAL_PLANE: 'XY'
+
 
  # 'velocity' : end-effector frame velocity (translation + rotation)
 frameVelocityWeights:  [1., 1., 1., 1., 1., 1.]
