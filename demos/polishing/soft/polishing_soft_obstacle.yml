@@ -3,7 +3,7 @@
 
 
 # MPC & sim parameters
-simu_freq: 2000               # Simulation frequency in Hz
+simu_freq: 1000               # Simulation frequency in Hz
 ctrl_freq: 1000               # Control frequency
 plan_freq: 500                # Planning frequency
 T_tot: 6.                           # Simu duration (s)
@@ -82,20 +82,27 @@ contactFrameName: 'contact'
 contactType: '1Dz'    
 pinRefFrame: 'LOCAL_WORLD_ALIGNED' 
 
-# Constraints 
-# to select from the list : 'stateBox', 'ctrlBox', 'translationBox', 'None'
-WHICH_CONSTRAINTS: ['forceBox']
+
+
+# Constraints
+# to select from the list : 'stateBox', 'ctrlBox', 'translationBox', 'collisionBox', 'forceBox', 'None'
+WHICH_CONSTRAINTS: ['collisionBox']
+
+  # 'forceBox' : box constraint on soft contact force (1d or 3d)
 forceConstraintType: '1Dz'
 forceConstraintFrameName: 'contact'
 forceConstraintReferenceFrame: 'LOCAL_WORLD_ALIGNED'
 forceLowerLimit: [0, 0, 0, 0, 0, 0]
 forceUpperLimit: [0, 0, 25, 0, 0, 0]
+
+  # 'ctrlBox' : box constraint on torque control input
 ctrlLimit: 'DEFAULT'
+
+  # 'stateBox' : box constraint on position-velocity state
 stateLowerLimit: [-2.07, -1.46, -2.07, -1.46, -2.07, -1.46, -1.03, -1.03, -1.22, -0.91, -1.58, -1.64]
 stateUpperLimit: [2.07, 1.46, 2.07, 1.46 , 2.07, 1.46,       1.03, 1.03, 1.22, 0.91, 1.58, 1.64]
-# stateLowerLimit: [-1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000] #-1.03, -1.03, -1.22, -0.91, -1.58, -1.64]
-# stateUpperLimit: [1000, 1000, 1000, 1000, 1000, 1000,       1000, 1000, 1000, 1000, 1000, 1000]
-# Collision constraint
+
+  # 'collisionBox' : box constraint on collision distance between capsules
 safetyMargin: 0.
 collisionPairs:         
 - ["L2_capsule_1", "obstacle1"] # rod
@@ -112,12 +119,12 @@ collisionPairs:
 - ["L6_capsule_0", "obstacle2"]
 - ["L6_capsule_1", "obstacle2"]
 - ["L7_capsule_0", "obstacle2"]
-
 OBSTACLE1_POSE: [1., 0.15, 0.3]
 OBSTACLE2_POSE: [0.5, 0., 0.]
 OBSTACLE_RADIUS1: [1, 0.1, 0.1]
 OBSTACLE_RADIUS2: [1, 1, 0.1]
 LENGTH1         : 0.76 # measured rod (real)
+
 
 # Cost function composition (a.k.a which terms will be actually used in the OCP)
 # to select from the list : 'stateReg', 'ctrlReg', 'ctrlRegGrav', 'stateLim', 'ctrlLim'

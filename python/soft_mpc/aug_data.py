@@ -152,7 +152,7 @@ class MPCDataHandlerSoftContactAugmented(MPCDataHandlerClassical):
     # Get nodes
     super().record_cost_references(nb_plan, ocpSolver)
     m = ocpSolver.problem.runningModels[0]
-    self.f_ee_ref[nb_plan, :self.nc] = m.differential.f_des
+    self.f_ee_ref[nb_plan, :self.nc] = -m.differential.f_des
 
 
   def record_simu_cycle_measured(self, nb_simu, y_mea_SIMU, y_mea_no_noise_SIMU, tau_mea_SIMU):

@@ -64,14 +64,16 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
   with_friction_cone_constraint_ = 0;
   // Friction cone constraint (initialize models AND datas)
   // std::cout << " nf_ BEFORE = " << nf_ << std::endl;
-  this->set_friction_cone_constraints(friction_constraints); // this line allocates friction cone data !
-  // std::cout << " with_friction_cone_constraint = " << with_friction_cone_constraint_ << std::endl;
-  // std::cout << " nf_ = " << nf_ << std::endl;
-  // std::cout << " friction_constraints_.size() = " << friction_constraints_.size() << std::endl;
-  for(std::size_t i=0 ; i<friction_constraints_.size(); i++){
-    // std::cout << "friction constraint " << i << " : " << std::endl;
-    // std::cout << "   coef = " << friction_constraints_[i]->get_friction_coef() << std::endl;
-    // std::cout << "   active = " << friction_constraints_[i]->get_active() << std::endl;
+  if(nc_ == 3){
+    this->set_friction_cone_constraints(friction_constraints); // this line allocates friction cone data !
+    // std::cout << " with_friction_cone_constraint = " << with_friction_cone_constraint_ << std::endl;
+    // std::cout << " nf_ = " << nf_ << std::endl;
+    // std::cout << " friction_constraints_.size() = " << friction_constraints_.size() << std::endl;
+    for(std::size_t i=0 ; i<friction_constraints_.size(); i++){
+      // std::cout << "friction constraint " << i << " : " << std::endl;
+      // std::cout << "   coef = " << friction_constraints_[i]->get_friction_coef() << std::endl;
+      // std::cout << "   active = " << friction_constraints_[i]->get_active() << std::endl;
+    }
   }
 }
 
@@ -465,9 +467,9 @@ void IAMSoftContactAugmented::set_friction_cone_constraints(const std::vector<bo
   //   throw_pretty("There is no friction cone constraint ! Please provide a non-empty list.");
   // }
   // Assert soft contact force dimension is 3
-  if (nc_ != 3) {
-    throw_pretty("Invalid argument: friction cone constraint only supported for nc=3");
-  }
+  // if (nc_ != 3) {
+  //   throw_pretty("Invalid argument: friction cone constraint only supported for nc=3");
+  // }
   // Parse friction models and assert they are well-defined
   for(std::size_t i = 0; i != frictionConstraints.size(); ++i){
     if(frictionConstraints[i] != nullptr){
