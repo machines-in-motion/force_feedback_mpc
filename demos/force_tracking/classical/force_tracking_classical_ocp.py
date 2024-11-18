@@ -18,14 +18,14 @@ The goal of this script is to setup OCP (a.k.a. play with weights)
 import sys
 sys.path.append('.')
 
-from core_mpc_utils.misc_utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
+from croco_mpc_utils.misc_utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
 logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
 
 
 import numpy as np  
 np.set_printoptions(precision=4, linewidth=180)
 
-from core_mpc_utils import path_utils, misc_utils
+from force_feedback_mpc.core_mpc_utils import path_utils, misc_utils
 
 from croco_mpc_utils import pinocchio_utils as pin_utils
 from croco_mpc_utils.ocp_data import OCPDataHandlerClassical

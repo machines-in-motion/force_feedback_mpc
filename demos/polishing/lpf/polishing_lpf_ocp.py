@@ -26,7 +26,7 @@ import numpy as np
 np.set_printoptions(precision=4, linewidth=180)
 
 
-from core_mpc_utils import path_utils, misc_utils
+from force_feedback_mpc.core_mpc_utils import path_utils, misc_utils
 
 from croco_mpc_utils import pinocchio_utils as pin_utils
 from croco_mpc_utils.math_utils import circle_point_WORLD

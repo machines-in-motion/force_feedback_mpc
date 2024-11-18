@@ -5,6 +5,7 @@ find_package(Python3 COMPONENTS Interpreter REQUIRED)
 set(PYTHON_PACKAGES
     lpf_mpc
     soft_mpc
+    core_mpc_utils
 )
 
 # Install the __init__.py files and modules for each sub-package

@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from core_mpc_utils.misc_utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
+from croco_mpc_utils.utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
 logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
 
 
@@ -100,7 +100,7 @@ class LowLevelTorqueController:
       # Optional PID feedback term 
       if(self.TORQUE_TRACKING and len(measured_torque) !=0):
           # print(self.TORQUE_TRACKING)
-          self.err_P = measured_torque - reference_torque              
+          self.err_P = measured_torque - reference_torque             
           self.err_I += self.err_P
           self.err_D = measured_torque_derivative                 
           motor_torque -= 1.*self.gain_P.dot(self.err_P) 

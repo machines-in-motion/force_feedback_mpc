@@ -1,220 +1,18 @@
 import numpy as np
 import pinocchio as pin
+import hppfcl
 
-from core_mpc_utils.misc_utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
+from croco_mpc_utils.utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
 logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
 
 # Check installed pkg
-import importlib
-FOUND_PYBULLET_PKG            = importlib.util.find_spec("pybullet")               is not None
-FOUND_ROB_PROP_KUKA_PKG       = importlib.util.find_spec("robot_properties_kuka")  is not None
-FOUND_ROB_PROP_TALOS_PKG      = importlib.util.find_spec("robot_properties_talos") is not None
-FOUND_BULLET_UTILS_PKG        = importlib.util.find_spec("bullet_utils")           is not None
-# FOUND_EXAMPLE_ROBOT_DATA_PKG  = importlib.util.find_spec("example_robot_data")     is not None
+import importlib.util
+FOUND_PYBULLET_PKG = importlib.util.find_spec("pybullet") is not None
 
 if(FOUND_PYBULLET_PKG): 
     import pybullet as p
 else:
     logger.error('You need to install PyBullet ( https://pypi.org/project/pybullet/ )')
-
-if(FOUND_BULLET_UTILS_PKG):
-    from bullet_utils.env import BulletEnvWithGround
-else:
-    logger.error('You need to install bullet_utils ( https://github.com/machines-in-motion/bullet_utils )')
-
-
-# Global & default settings (change CAREFULLY)
-SUPPORTED_ROBOTS         = ['iiwa', 'iiwa_reduced', 'talos_arm', 'talos_reduced']
-
-TALOS_DEFAULT_MESH_PATH  = '/opt/openrobots/share'
-
-IIWA_DEFAULT_BASE_POS = [0, 0, 0]
-IIWA_DEFAULT_BASE_RPY = [0, 0, 0]
-
-TALOS_ARM_DEFAULT_BASE_POS = [0, 0, 0]
-TALOS_ARM_DEFAULT_BASE_RPY = [0, 0, 0]
-
-TALOS_REDUCED_DEFAULT_BASE_POS = [0, 0, 1.02]
-TALOS_REDUCED_DEFAULT_BASE_RPY = [0, 0, 0]
-
-
-
-# Load robot in PyBullet environment 
-def init_bullet_simulation(robot_name, dt=1e3, x0=None):
-    '''
-    Initialize a PyBullet simulation environment with robot SUPPORTED_ROBOTS
-      INPUT:
-        robot_name : robot name in SUPPORTED_ROBOTS (string)
-        dt         : simulator time step (double)
-        x0         : initial robot state (q0,v0) (vector nq+nv)
-    '''
-    if(robot_name not in SUPPORTED_ROBOTS):
-        logger.error("Specified robot not supported ! Select a robot in "+str(SUPPORTED_ROBOTS))
-    else:
-        if(robot_name == 'iiwa'):
-            return init_iiwa_bullet(dt=dt, x0=x0)
-        elif(robot_name == 'talos_arm'):
-            return init_talos_arm_bullet(dt=dt, x0=x0)
-        elif(robot_name == 'talos_reduced'):
-            return init_talos_reduced_bullet(dt=dt, x0=x0)
-        elif(robot_name == 'iiwa_reduced'):
-            return init_iiwa_reduced_bullet(dt=dt, x0=x0)
-
-
-# Load KUKA arm in PyBullet environment
-def init_iiwa_bullet(dt=1e3, x0=None, pos=IIWA_DEFAULT_BASE_POS, orn=IIWA_DEFAULT_BASE_RPY):
-    '''
-    Loads KUKA LBR iiwa model in PyBullet simulator
-    using the PinBullet wrapper to simplify interactions
-      INPUT:
-        dt      : simulator time step (double)
-        x0      : initial robot state (q0,v0) (vector nq+nv)
-        pos     : position of the kuka base in simulator WORLD frame (vector3)
-        orn     : orientation of the kuka base in simulator WORLD frame ()
-    '''
-    if(FOUND_ROB_PROP_KUKA_PKG):
-        try: 
-            from robot_properties_kuka.iiwaWrapper import IiwaRobot as IiwaRobot
-            from robot_properties_kuka.config import IiwaConfig
-        except:
-            logger.error("The IiwaRobot was not found.")
-    else:
-        logger.error('You need to install robot_properties_kuka ( https://github.com/machines-in-motion/robot_properties_kuka )')
-    logger.info("Initializing KUKA iiwa in PyBullet simulator...\n")
-    # Create PyBullet sim environment + initialize sumulator
-    env = BulletEnvWithGround(p.DIRECT, dt=dt)
-    orn_quat = p.getQuaternionFromEuler(orn)
-    base_placement = pin.XYZQUATToSE3(pos + list(orn_quat))
-    config = IiwaConfig()
-    robot_simulator = env.add_robot(IiwaRobot(config, pos, orn_quat))
-    # Initialize
-    if(x0 is None):
-        q0 = np.array([0.1, 0.7, 0., 0.7, -0.5, 1.5, 0.]) 
-        dq0 = np.zeros(robot_simulator.pin_robot.model.nv)
-    else:
-        q0 = x0[:robot_simulator.pin_robot.model.nq]
-        dq0 = x0[robot_simulator.pin_robot.model.nv:]
-    robot_simulator.reset_state(q0, dq0)
-    robot_simulator.forward_robot(q0, dq0)
-    return env, robot_simulator, base_placement
-
-
-# Load TALOS arm in PyBullet environment
-def init_talos_arm_bullet(dt=1e3, x0=None, pos=TALOS_ARM_DEFAULT_BASE_POS, orn=TALOS_ARM_DEFAULT_BASE_RPY):
-    '''
-    Loads TALOS left arm model in PyBullet simulator
-    using the PinBullet wrapper to simplify interactions
-      INPUT:
-        dt        : simulator time step
-        x0        : initial robot state (pos and vel)
-    '''
-    if(FOUND_ROB_PROP_TALOS_PKG):
-        try:
-            from robot_properties_talos.talosArmWrapper import TalosArmRobot
-        except:
-            logger.error("The wrapper TalosArmRobot was not found.")
-    else:
-        logger.error('You need to install robot_properties_talos ( https://github.com/machines-in-motion/robot_properties_talos )')
-    # Info log
-    logger.info("Initializing TALOS left arm in PyBullet simulator...\n")
-    # Create PyBullet sim environment + initialize sumulator
-    env = BulletEnvWithGround(p.GUI, dt=dt)
-    orn_quat = p.getQuaternionFromEuler(orn)
-    base_placement = pin.XYZQUATToSE3(pos + list(orn_quat)) 
-    robot_simulator = env.add_robot(TalosArmRobot(pos, orn_quat))
-    # Initialize
-    if(x0 is None):
-        q0 = np.array([2., 0., 0., 0., 0., 0., 0.])
-        dq0 = np.zeros(robot_simulator.pin_robot.model.nv)
-    else:
-        q0 = x0[:robot_simulator.pin_robot.model.nq]
-        dq0 = x0[robot_simulator.pin_robot.model.nv:]
-    robot_simulator.reset_state(q0, dq0)
-    robot_simulator.forward_robot(q0, dq0)
-    return env, robot_simulator, base_placement
-
-
-# Load TALOS arm in PyBullet environment
-def init_talos_reduced_bullet(dt=1e3, x0=None, pos=TALOS_REDUCED_DEFAULT_BASE_POS, orn=TALOS_REDUCED_DEFAULT_BASE_RPY):
-    '''
-    Loads TALOS left arm model in PyBullet simulator
-    using the PinBullet wrapper to simplify interactions
-      INPUT:
-        dt        : simulator time step
-        x0        : initial robot state (pos and vel)
-    '''
-    if(FOUND_ROB_PROP_TALOS_PKG):
-        try:
-            from robot_properties_talos.talosReducedWrapper import TalosReducedRobot
-        except:
-            logger.error("The wrapper TalosReducedRobot was not found.")
-    else:
-        logger.error('You need to install robot_properties_talos ( https://github.com/machines-in-motion/robot_properties_talos )')
-    logger.info("Initializing TALOS reduced model in PyBullet simulator...\n")
-    # Create PyBullet sim environment + initialize sumulator
-    env = BulletEnvWithGround(p.DIRECT, dt=dt)
-    orn_quat = p.getQuaternionFromEuler(orn)
-    base_placement = pin.XYZQUATToSE3(pos + list(orn_quat)) 
-    robot_simulator = env.add_robot(TalosReducedRobot(pos, orn_quat))
-    # Initialize
-    if(x0 is None):
-        q0 = np.array([2., 0., 0., 0., 0., 0., 0.])
-        dq0 = np.zeros(robot_simulator.pin_robot.model.nv)
-    else:
-        q0 = x0[:robot_simulator.pin_robot.model.nq]
-        dq0 = x0[robot_simulator.pin_robot.model.nv:]
-    robot_simulator.reset_state(q0, dq0)
-    robot_simulator.forward_robot(q0, dq0)
-    # To allow collisions with all parts of the robot if there is a contact surface (for contact & sanding tasks)
-    # for i in range(p.getNumJoints(robot_simulator.robotId)):
-    #     robot_simulator.bullet_endeff_ids.append(i)
-    # robot_simulator.endeff_names = [] 
-    return env, robot_simulator, base_placement
-
-
-# Load TALOS arm in PyBullet environment
-def init_iiwa_reduced_bullet(dt=1e3, x0=None, pos=IIWA_DEFAULT_BASE_POS, orn=IIWA_DEFAULT_BASE_RPY):
-    '''
-    Loads IIWA reduced arm model in PyBullet simulator
-    using the PinBullet wrapper to simplify interactions
-      INPUT:
-        dt        : simulator time step
-        x0        : initial robot state (pos and vel)
-    '''
-    if(FOUND_ROB_PROP_KUKA_PKG):
-        try: 
-            from robot_properties_kuka.iiwaReducedWrapper import IiwaReducedRobot
-            from robot_properties_kuka.config import IiwaReducedConfig
-        except:
-            logger.error("The IiwaReducedRobot was not found.")
-    else:
-        logger.error('You need to install robot_properties_kuka ( https://github.com/machines-in-motion/robot_properties_kuka )')
-    logger.info("Initializing KUKA iiwa in PyBullet simulator...\n")
-    controlled_joints =  ['A1', 'A2', 'A3', 'A4', 'A5', 'A6']
-    logger.info("Reduced model with controlled joints = "+str(controlled_joints))
-    qref = np.zeros(7)
-    config = IiwaReducedConfig()
-    # Create PyBullet sim environment + initialize sumulator
-    env = BulletEnvWithGround(p.GUI, dt=dt)
-    orn_quat = p.getQuaternionFromEuler(orn)
-    base_placement = pin.XYZQUATToSE3(pos + list(orn_quat)) 
-    robot_simulator = env.add_robot(IiwaReducedRobot(config, controlled_joints, qref, pos, orn_quat))
-    # Initialize
-    if(x0 is None):
-        q0 = qref[:len(controlled_joints)]
-        dq0 = np.zeros(robot_simulator.pin_robot.model.nv)
-    else:
-        q0 = x0[:robot_simulator.pin_robot.model.nq]
-        dq0 = x0[robot_simulator.pin_robot.model.nv:]
-    robot_simulator.reset_state(q0, dq0)
-    robot_simulator.forward_robot(q0, dq0)
-    # To allow collisions with all parts of the robot if there is a contact surface (for contact & sanding tasks)
-    # for i in range(p.getNumJoints(robot_simulator.robotId)):
-    #     robot_simulator.bullet_endeff_ids.append(i)
-    # robot_simulator.endeff_names = [] 
-    return env, robot_simulator, base_placement
-
-
 
 
 # PROTOTYPE  : angular part does not work for now
@@ -280,7 +78,6 @@ def get_contact_joint_torques(pybullet_simulator, id_endeff):
     jac = pybullet_simulator.pin_robot.data.J
     joint_torques = jac.T @ wrench
     return joint_torques
-
 
 
 
@@ -353,7 +150,7 @@ def display_contact_surface(M, robotId=1, radius=.5, length=0.0, bullet_endeff_i
       # Desactivate collisions for all links
       for i in range(p.getNumJoints(robotId)):
             p.setCollisionFilterPair(contactId, robotId, -1, i, 1) # 0
-            # logger.info("Set collision pair ("+str(contactId)+","+str(robotId)+"."+str(i)+") to True")
+            logger.info("Set collision pair ("+str(contactId)+","+str(robotId)+"."+str(i)+") to True")
     #   # activate collisions only for EE ids
     #   for ee_id in bullet_endeff_ids:
     #         p.setCollisionFilterPair(contactId, robotId, -1, ee_id, 1)
@@ -438,10 +235,169 @@ def set_contact_restitution(bodyId, Ks, Kd, linkId=-1):
   p.changeDynamics(bodyId, linkId, restitution=0.2) 
   logger.info("Set restitution of body n°"+str(bodyId)+" (link n°"+str(linkId)+") to "+str(Ks)) 
 
+def display_box(M, EXTENTS, COLOR=[0.662, 0.662, 0.662, 1.0]) -> int:
+    '''
+    Create a cube visual object in PyBullet.
+    INPUT:
+        M       : cube pose (SE3)
+        EXTENTS : cube extents (tuple/list of 3 scalars for x, y, z dimensions)
+        COLOR   : cube color (RGBA)
+    '''
+    # Convert the pose to the PyBullet format
+    QUAT = pin.SE3ToXYZQUAT(M)
+
+    HALF_EXTENT = (EXTENTS[0]/2, EXTENTS[1]/2, EXTENTS[2]/2)
+    visualShapeIdCUBE = p.createVisualShape(
+        shapeType=p.GEOM_BOX,
+        halfExtents=HALF_EXTENT,  # Specify the half extents for the cube
+        rgbaColor=COLOR
+    )
+
+    cubeId = p.createMultiBody(
+        baseMass=0,
+        baseInertialFramePosition=[0, 0, 0],
+        baseVisualShapeIndex=visualShapeIdCUBE,
+        basePosition=QUAT[:3],
+        baseOrientation=QUAT[3:],
+        useMaximalCoordinates=True,
+    )
+
+    return cubeId
+
+def display_capsule(M, RADIUS, LENGTH, COLOR=[1., 0., 0., 1.]) -> int:
+    '''
+    Create a capsule visual object in PyBullet
+    INPUT:
+        M               : capsule pose (SE3)
+        RADIUS          : capsule radius (scalar)
+        LEGNTH          : capsule length (scalar)
+        COLOR           : capsule color (RGBA)
+    '''
+    quat = pin.SE3ToXYZQUAT(M)
+    visualShapeIdCAPS = p.createVisualShape(
+        p.GEOM_CAPSULE,
+        radius=RADIUS,
+        length=LENGTH,
+        rgbaColor=COLOR,
+        visualFramePosition=np.zeros(3),
+        visualFrameOrientation=np.zeros(3),
+    )
+    capsId = p.createMultiBody(
+        baseMass=0,
+        baseInertialFramePosition=[0, 0, 0],
+        baseVisualShapeIndex=visualShapeIdCAPS,
+        basePosition=quat[:3],
+        baseOrientation=quat[3:],
+        useMaximalCoordinates=True,
+    )
+    return capsId
+
+def create_box_obstacle(OBSTACLE_POSE, EXTENTS, name="obstacle"):
+    '''
+    Create a spherical obstacle geometric model
+    '''
+    # Creating the hppfcl shape
+    # EXTENT2 = (EXTENTS[0], EXTENTS[1], EXTENTS[2])
+    OBSTACLE = hppfcl.Box(*EXTENTS)
+    # Adding the shape to the collision model
+    OBSTACLE_GEOM_OBJECT = pin.GeometryObject(
+        name,
+        0,
+        0,
+        OBSTACLE,
+        OBSTACLE_POSE,
+    )
+    return OBSTACLE_GEOM_OBJECT
+
+def create_caps_obstacle(OBSTACLE_POSE, RADIUS, LENGTH, name="obstacle"):
+    '''
+    Create a capsule obstacle geometric model
+    '''
+    capsule_geom = hppfcl.Capsule(RADIUS, LENGTH)
+    OBSTACLE_GEOM_OBJECT = pin.GeometryObject(name, 0, 0, capsule_geom, OBSTACLE_POSE)
+    return OBSTACLE_GEOM_OBJECT
+
+def transform_model_into_capsules(cmodel):
+    """Modifying the collision model to transform the spheres/cylinders into capsules which makes it easier to have a fully constrained robot."""
+    collision_model_reduced_copy = cmodel.copy()
+    list_names_capsules = []
+
+    # Going through all the goemetry objects in the collision model
+    for geom_object in collision_model_reduced_copy.geometryObjects:
+        if isinstance(geom_object.geometry, hppfcl.Cylinder):
+            # Sometimes for one joint there are two cylinders, which need to be defined by two capsules for the same link.
+            # Hence the name convention here.
+            if (geom_object.name[:-1] + "capsule_0") in list_names_capsules:
+                name = geom_object.name[:-1] + "capsule_" + "1"
+            else:
+                name = geom_object.name[:-1] + "capsule_" + "0"
+            list_names_capsules.append(name)
+            placement = geom_object.placement
+            parentJoint = geom_object.parentJoint
+            parentFrame = geom_object.parentFrame
+            geometry = geom_object.geometry
+            geom = pin.GeometryObject(
+                name,
+                parentFrame,
+                parentJoint,
+                hppfcl.Capsule(geometry.radius, geometry.halfLength),
+                placement,
+            )
+            geom.meshColor = np.array([249, 136, 126, 125]) / 255
+            cmodel.addGeometryObject(geom)
+            cmodel.removeGeometryObject(geom_object.name)
+        elif (
+            isinstance(geom_object.geometry, hppfcl.Sphere)
+            and "link" in geom_object.name
+        ):
+            cmodel.removeGeometryObject(geom_object.name)
+    logger.debug("8")
+    return cmodel
+
+def setup_obstacle_collision(robot_simulator, pin_robot, config):
+ 
+  # Creating the obstacle
+  OBSTACLE1_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE1_POSE"]))
+  OBSTACLE2_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE2_POSE"]))
+  OBSTACLE_RADIUS1      = config["OBSTACLE_RADIUS1"]
+  OBSTACLE_RADIUS2      = tuple(config["OBSTACLE_RADIUS2"])
+  OBSTACLE1_GEOM_OBJECT = create_box_obstacle(OBSTACLE1_POSE, OBSTACLE_RADIUS1, name="obstacle1")
+  OBSTACLE2_GEOM_OBJECT = create_box_obstacle(OBSTACLE2_POSE, OBSTACLE_RADIUS2, name="obstacle2")
+  logger.debug("7")
+
+  # Adding obstacle to collision model (pinocchio)
+  pin_robot.collision_model = transform_model_into_capsules(pin_robot.collision_model)
+  logger.debug("9")
+  pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
+  pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
+  
+  # display in pybullet + add to collision model 
+  capsule_id = display_box(OBSTACLE1_POSE, OBSTACLE_RADIUS1)
+  display_box(OBSTACLE2_POSE, OBSTACLE_RADIUS2)
+  robot_simulator.pin_robot.collision_model = transform_model_into_capsules(robot_simulator.pin_robot.collision_model)
+  robot_simulator.pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
+  robot_simulator.pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
+  return capsule_id
 
 
+def setup_obstacle_collision_no_sim(pin_robot, config):
+ 
+  # Creating the obstacle
+  OBSTACLE1_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE1_POSE"]))
+  OBSTACLE2_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE2_POSE"]))
+  OBSTACLE_RADIUS1      = config["OBSTACLE_RADIUS1"]
+  OBSTACLE_RADIUS2      = tuple(config["OBSTACLE_RADIUS2"])
+  OBSTACLE1_GEOM_OBJECT = create_box_obstacle(OBSTACLE1_POSE, OBSTACLE_RADIUS1, name="obstacle1")
+  OBSTACLE2_GEOM_OBJECT = create_box_obstacle(OBSTACLE2_POSE, OBSTACLE_RADIUS2, name="obstacle2")
+  logger.debug("7")
 
+  # Adding obstacle to collision model (pinocchio)
+  pin_robot.collision_model = transform_model_into_capsules(pin_robot.collision_model)
+  logger.debug("9")
+  pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
+  pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
 
+    # head = SimHead(robot_simulator, vicon_name='cube10', with_sliders=False)
 # def rotationMatrixFromTwoVectors(a, b):
 #     a_copy = a / np.linalg.norm(a)
 #     b_copy = b / np.linalg.norm(b)

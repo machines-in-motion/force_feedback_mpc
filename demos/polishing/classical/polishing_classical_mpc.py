@@ -36,8 +36,8 @@ np.set_printoptions(precision=4, linewidth=180)
 RANDOM_SEED = 1 #19
 
 
-from core_mpc_utils import mpc_utils, path_utils
-from core_mpc_utils import sim_utils as simulator_utils
+from force_feedback_mpc.core_mpc_utils import mpc_utils, path_utils
+from force_feedback_mpc.core_mpc_utils import sim_utils as simulator_utils
 
 from croco_mpc_utils import pinocchio_utils as pin_utils
 from croco_mpc_utils.ocp_data import MPCDataHandlerClassical, OCPDataHandlerClassical
