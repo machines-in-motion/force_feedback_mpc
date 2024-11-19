@@ -260,6 +260,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
   d->oRf = d->pinocchio.oMf[frameId_].rotation();
   // Actuation calcDiff
   this->get_actuation()->calcDiff(d->multibody.actuation, x, u);
+  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   
   // If contact is active, compute ABA derivatives + force
   if(active_contact_){
@@ -444,6 +445,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
     }
   }
 
+  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
   // Constraints on multibody state x=(q,v)
   if (this->get_constraints() != nullptr) {
     this->get_constraints()->calcDiff(d->constraints, x, u);

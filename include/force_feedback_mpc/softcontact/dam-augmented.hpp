@@ -504,3 +504,34 @@ class DAMSoftContactAbstractAugmentedFwdDynamics
 
 
 #endif  // FORCE_FEEDBACK_MPC_SOFTCONTACT_AUGMENTED_FWDDYN_HPP_
+
+// Same logic as in Proxsuite and Pinocchio to check eigen malloc
+#ifdef FORCE_FEEDBACK_MPC_EIGEN_CHECK_MALLOC
+#ifndef EIGEN_RUNTIME_NO_MALLOC
+#define EIGEN_RUNTIME_NO_MALLOC_WAS_NOT_DEFINED
+#define EIGEN_RUNTIME_NO_MALLOC
+#endif
+#endif
+
+
+#include <Eigen/Core>
+#include <cassert>
+
+#ifdef FORCE_FEEDBACK_MPC_EIGEN_CHECK_MALLOC
+#ifdef EIGEN_RUNTIME_NO_MALLOC_WAS_NOT_DEFINED
+#undef EIGEN_RUNTIME_NO_MALLOC
+#undef EIGEN_RUNTIME_NO_MALLOC_WAS_NOT_DEFINED
+#endif
+#endif
+
+// Check memory allocation for Eigen
+#ifdef FORCE_FEEDBACK_MPC_EIGEN_CHECK_MALLOC
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC(allowed)                                       \
+  ::Eigen::internal::set_is_malloc_allowed(allowed)
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED() FORCE_FEEDBACK_MPC_EIGEN_MALLOC(true)
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED() FORCE_FEEDBACK_MPC_EIGEN_MALLOC(false)
+#else
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC(allowed)
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED()
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED()
+#endif

@@ -351,23 +351,24 @@ def transform_model_into_capsules(cmodel):
             and "link" in geom_object.name
         ):
             cmodel.removeGeometryObject(geom_object.name)
-    logger.debug("8")
     return cmodel
 
 def setup_obstacle_collision(robot_simulator, pin_robot, config):
  
   # Creating the obstacle
-  OBSTACLE1_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE1_POSE"]))
-  OBSTACLE2_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE2_POSE"]))
+  OBSTACLE1_XYZQUAT = np.array(config["OBSTACLE1_POSE"])
+  OBSTACLE2_XYZQUAT = np.array(config["OBSTACLE2_POSE"])
+  OBSTACLE1_POSE    = pin.XYZQUATToSE3(OBSTACLE1_XYZQUAT)
+  OBSTACLE2_POSE    = pin.XYZQUATToSE3(OBSTACLE2_XYZQUAT)
+#   OBSTACLE1_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE1_POSE"]))
+#   OBSTACLE2_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE2_POSE"]))
   OBSTACLE_RADIUS1      = config["OBSTACLE_RADIUS1"]
   OBSTACLE_RADIUS2      = tuple(config["OBSTACLE_RADIUS2"])
   OBSTACLE1_GEOM_OBJECT = create_box_obstacle(OBSTACLE1_POSE, OBSTACLE_RADIUS1, name="obstacle1")
   OBSTACLE2_GEOM_OBJECT = create_box_obstacle(OBSTACLE2_POSE, OBSTACLE_RADIUS2, name="obstacle2")
-  logger.debug("7")
 
   # Adding obstacle to collision model (pinocchio)
   pin_robot.collision_model = transform_model_into_capsules(pin_robot.collision_model)
-  logger.debug("9")
   pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
   pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
   
@@ -383,17 +384,19 @@ def setup_obstacle_collision(robot_simulator, pin_robot, config):
 def setup_obstacle_collision_no_sim(pin_robot, config):
  
   # Creating the obstacle
-  OBSTACLE1_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE1_POSE"]))
-  OBSTACLE2_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE2_POSE"]))
+  OBSTACLE1_XYZQUAT = np.array(config["OBSTACLE1_POSE"])
+  OBSTACLE2_XYZQUAT = np.array(config["OBSTACLE2_POSE"])
+  OBSTACLE1_POSE    = pin.XYZQUATToSE3(OBSTACLE1_XYZQUAT)
+  OBSTACLE2_POSE    = pin.XYZQUATToSE3(OBSTACLE2_XYZQUAT)
+#   OBSTACLE1_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE1_POSE"]))
+#   OBSTACLE2_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE2_POSE"]))
   OBSTACLE_RADIUS1      = config["OBSTACLE_RADIUS1"]
   OBSTACLE_RADIUS2      = tuple(config["OBSTACLE_RADIUS2"])
   OBSTACLE1_GEOM_OBJECT = create_box_obstacle(OBSTACLE1_POSE, OBSTACLE_RADIUS1, name="obstacle1")
   OBSTACLE2_GEOM_OBJECT = create_box_obstacle(OBSTACLE2_POSE, OBSTACLE_RADIUS2, name="obstacle2")
-  logger.debug("7")
 
   # Adding obstacle to collision model (pinocchio)
   pin_robot.collision_model = transform_model_into_capsules(pin_robot.collision_model)
-  logger.debug("9")
   pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
   pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
 
