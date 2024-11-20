@@ -65,7 +65,7 @@ endif()
 
 if(CHECK_RUNTIME_MALLOC)
   message(STATUS "Check if some memory allocations are performed at runtime.")
-  add_definitions(-DMIM_SOLVERS_EIGEN_CHECK_MALLOC)
+  add_definitions(-DFORCE_FEEDBACK_MPC_EIGEN_CHECK_MALLOC)
   add_definitions(-DEIGEN_RUNTIME_NO_MALLOC)
 endif()
 

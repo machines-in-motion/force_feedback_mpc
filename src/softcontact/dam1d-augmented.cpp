@@ -261,6 +261,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
   // Actuation calcDiff
   this->get_actuation()->calcDiff(d->multibody.actuation, x, u);
   FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
+  // Eigen::internal::set_is_malloc_allowed(false);
   
   // If contact is active, compute ABA derivatives + force
   if(active_contact_){
@@ -445,6 +446,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
     }
   }
 
+  // Eigen::internal::set_is_malloc_allowed(true);
   FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
   // Constraints on multibody state x=(q,v)
   if (this->get_constraints() != nullptr) {
