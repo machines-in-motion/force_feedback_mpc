@@ -1,48 +1,3 @@
-# MPC parameters for EE reaching task aug soft contact
-# + PyBullet or Raisim simulation
-
-
-# MPC & sim parameters
-simu_freq: 1000               # Simulation frequency in Hz
-ctrl_freq: 1000               # Control frequency
-plan_freq: 500                # Planning frequency
-T_tot: 6.                           # Simu duration (s)
-# Simulation options
-DELAY_SIM: False                 # Add delay in reference torques (low-level)
-DELAY_OCP: False                 # Add delay in OCP solution (i.e. ~1ms resolution time)
-SCALE_TORQUES: False             # Affine scaling of reference torque
-NOISE_TORQUES: False             # Add Gaussian noise on reference torques
-NOISE_STATE: False               # Add Gaussian noise on the measured state 
-STATIC_FRICTION: False          # Simulate static friction torque
-VISCOUS_FRICTION: False         # Simulate viscous friction torque
-TORQUE_TRACKING: False           # Low-level torque tracking with a PI controller
-SAVE_DATA: True                 # Save plot_data to npz
-RECORD_SOLVER_DATA: True       # Keep trace of Vxx, Riccati gains, reg, Jacobian etc. (more data to save)
-INIT_LOG: True                  # Initial logs summarizing parameters
-init_log_display_time: 1        # How long (s) to display the initial logs ?
-LOG: True                       # Logs during simulation
-log_rate: 1000                  # Display sim status once very 'log_rate' sim cycles
-WHICH_PLOTS: ['force', 'control' ]   # Which plots to generate after the simulation
-# WHICH_PLOTS: ['all']   # Which plots to generate after the simulation
-TILT_SURFACE: True              # Tilt contact surface 
-TILT_PITCH_LOCAL_DEG: 6.      # Tilt angle of the contact surface
-RICCATI: False 
-DISPLAY_EE: False             # Display target and actual EE position as balls in PyBullet
-
-USE_LATERAL_FRICTION: True 
-
-# Start of the reaching phase
-T_REACH: 0.
-# Start of the tracking phase
-T_TRACK: 0.5
-# Start of the contact phase
-T_CONTACT: 1.
-# End of ramp
-T_RAMP: 2.
-# Start of the circle tracking phase
-T_CIRCLE: 3.
-
-
 # OCP 
 dt: 0.03                                          # OCP integration step 
 N_h: 5                                             # Horizon length in nodes
@@ -51,9 +6,7 @@ solver_termination_tolerance: 0.0001               # Tolerance on KKT residual
 q0: [0., 1.0471975511965976, 0., -1.1344640137963142, 0.2,  0.7853981633974483]               # Initial robot joint configuration
 dq0: [0.,0.,0.,0.,0.,0.]                         # Initial robot joint velocity
 
-
 # CSSQP solver parameters
-# SOLVER: 'cssqp'
 with_callbacks: True
 use_filter_line_search: True
 filter_size: 10
@@ -73,7 +26,6 @@ reset_rho: False
 frame_of_interest: 'contact'
 
 # SOFT CONTACT MODEL
-RESET_ANCHOR_POINT: True
 Kp: [1000] 
 Kv: [100]
 contactPosition: [0.65, 0., 0.1]  
@@ -86,7 +38,7 @@ pinRefFrame: 'LOCAL_WORLD_ALIGNED'
 
 # Constraints
 # to select from the list : 'stateBox', 'ctrlBox', 'translationBox', 'collisionBox', 'forceBox', 'None'
-WHICH_CONSTRAINTS: ['collisionBox']
+WHICH_CONSTRAINTS: ['collisionBox', 'forceBox', 'ctrlBox']
 
   # 'forceBox' : box constraint on soft contact force (1d or 3d)
 forceConstraintType: '1Dz'
@@ -141,8 +93,6 @@ frameForceFrameName: 'contact'
 forceCostRefFrame: 'LOCAL_WORLD_ALIGNED'
 forceRateRegWeight: [0.0000006]
 
-
-
  # 'stateReg' : state regularization  
 stateRegWeights: [20., 20., 20., 10., 10., 10, 2., 2., 2., 2., 2., 2.]
 stateRegWeight: 0.02 
@@ -160,10 +110,6 @@ frameTranslationWeightTerminal: 100.
 alpha_quadflatlog: 0.01
 frameTranslationRef: 'DEFAULT'
 frameTranslationFrameName: 'contact'
-frameCircleTrajectoryRadius: 0.07  # in m
-frameCircleTrajectoryVelocity: 3 # in rad/s
-numberOfRounds: 10
-CIRCLE_LOCAL_PLANE: 'XY'
 
  # 'velocity' : end-effector frame velocity (translation + rotation)
 frameVelocityWeights:  [1., 1., 1., 1., 1., 1.]
@@ -172,8 +118,6 @@ frameVelocityWeightTerminal: 1
 frameVelocityRef: 'DEFAULT'    
 frameVelocityFrameName: 'contact'
 
-
-
  # 'rotation' : end-effector frame orientation
 frameRotationWeights:  [1., 1., 1.]
 frameRotationWeight: 20. #0.05
@@ -181,26 +125,3 @@ frameRotationWeightTerminal: 20. #0.1 #1.
 frameRotationRef: 'DEFAULT'
 frameRotationFrameName: 'contact'
 
-# # # # # # # # # # # # # # # # # # # # # #
-# Low-level simulation (actuation model)  #
-# # # # # # # # # # # # # # # # # # # # # #
-  # Scaling of desired torque
-alpha_min: 0.8
-alpha_max: 1.2
-beta_min: 2.
-beta_max: 2.
-  # White noise on desired torque and measured state
-var_u: [0.03, 0.03, 0.02, 0.02, 0.01, 0.01]
-var_q: 0.001 
-var_v: 0.001 
-var_aug: [0.01]
-  # Buffer for torque delay
-delay_OCP_ms: 5    
-delay_sim_cycle: 1 
-  # Static & viscous friction
-static_friction_max_torque: 1.
-viscous_friction_slope: 0.5
-  # Proportional-integral torque control gains
-Kp_low: [0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
-Ki_low: [0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
-Kd_low: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]

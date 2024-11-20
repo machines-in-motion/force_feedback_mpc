@@ -35,7 +35,6 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
       time_step2_(time_step * time_step),
       with_cost_residual_(with_cost_residual),
       nf_(friction_constraints.size()) {
-  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Downcast DAM state (abstract --> multibody)
   boost::shared_ptr<StateMultibody> state =
       boost::static_pointer_cast<StateMultibody>(model->get_state());
@@ -59,7 +58,6 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
   // temp variable used to update the force bounds
   g_lb_new_ =  this->get_g_lb();
   g_ub_new_ =  this->get_g_ub();
-  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
   friction_coef_ = 0;
   with_friction_cone_constraint_ = 0;
   // Friction cone constraint (initialize models AND datas)
@@ -113,7 +111,7 @@ void IAMSoftContactAugmented::calc(
                  << "u has wrong dimension (it should be " +
                         std::to_string(nu_) + ")");
   }
-
+  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
   boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
   boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = boost::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
@@ -216,6 +214,7 @@ void IAMSoftContactAugmented::calc(
     d->r.head(differential_->get_nr()) = diff_data_soft->r;
     d->r.tail(nc_) = diff_data_soft->f_residual;
   }
+  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }  // calc
 
 
@@ -229,6 +228,7 @@ void IAMSoftContactAugmented::calc(
                  << "y has wrong dimension (it should be " +
                         std::to_string(ny_) + ")");
   }
+  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
   boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
   boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = boost::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
@@ -255,6 +255,7 @@ void IAMSoftContactAugmented::calc(
     d->r.head(differential_->get_nr()) = diff_data_soft->r;
     d->r.tail(nc_) = diff_data_soft->f_residual;
   }
+  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }  // calc
 
 
@@ -277,6 +278,7 @@ void IAMSoftContactAugmented::calcDiff(
                  << "u has wrong dimension (it should be " +
                         std::to_string(nu_) + ")");
   }
+  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
 
   // Static casting the data
   boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
@@ -339,6 +341,7 @@ void IAMSoftContactAugmented::calcDiff(
     // std::cout << " dcone_df = " << d->dcone_df << std::endl;
 
   }
+  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
 
@@ -353,6 +356,8 @@ void IAMSoftContactAugmented::calcDiff(
                  << "y has wrong dimension (it should be " +
                         std::to_string(ny_) + ")");
   }
+  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
+
   // Static casting the data
   boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
   boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = boost::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
@@ -381,6 +386,7 @@ void IAMSoftContactAugmented::calcDiff(
     d->dcone_df[2] = friction_coef_;
     d->Gy.bottomRightCorner(1, nc_) = d->dcone_df.transpose();
   }
+  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
 

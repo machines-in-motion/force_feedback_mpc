@@ -58,6 +58,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
     throw_pretty("Invalid argument: "
                  << "u has wrong dimension (it should be " + std::to_string(this->get_nu()) + ")");
   }
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   Data* d = static_cast<Data*>(data.get());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(this->get_state()->get_nq());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(this->get_state()->get_nv());
@@ -88,7 +89,9 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
       d->u_drift = d->multibody.actuation->tau - d->pinocchio.nle;
       //  Compute jacobian transpose lambda
       pinocchio::getFrameJacobian(this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL, d->lJ);
-      d->xout.noalias() = d->Minv * d->u_drift + d->Minv * d->lJ.topRows(3).transpose() * d->pinForce.linear(); 
+      d->xout.noalias() = d->Minv * d->u_drift;
+      d->tmp_mat_.noalias() = d->Minv * d->lJ.topRows(3).transpose();
+      d->xout.noalias() += d->tmp_mat_ * d->pinForce.linear(); 
     // ABA without armature
     } else {
       d->xout = pinocchio::aba(this->get_pinocchio(), d->pinocchio, q, v, d->multibody.actuation->tau, d->fext); 
@@ -172,6 +175,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
     d->constraints->resize(this, d);
     this->get_constraints()->calc(d->constraints, x, u);
   }
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
 
@@ -188,6 +192,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
     throw_pretty("Invalid argument: "
                  << "f has wrong dimension (it should be " + std::to_string(this->get_nc()) + ")");
   }
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   Data* d = static_cast<Data*>(data.get());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(this->get_state()->get_nq());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(this->get_state()->get_nv());
@@ -230,6 +235,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
     d->constraints->resize(this, d);
     this->get_constraints()->calc(d->constraints, x);
   }
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
 
@@ -253,6 +259,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
                  << "u has wrong dimension (it should be " + std::to_string(this->get_nu()) + ")");
   }
 
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   const std::size_t nv = this->get_state()->get_nv();
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(this->get_state()->get_nq());
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(nv);
@@ -260,9 +267,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
   d->oRf = d->pinocchio.oMf[frameId_].rotation();
   // Actuation calcDiff
   this->get_actuation()->calcDiff(d->multibody.actuation, x, u);
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
-  // Eigen::internal::set_is_malloc_allowed(false);
-  
+
   // If contact is active, compute ABA derivatives + force
   if(active_contact_){
     // Compute Jacobian
@@ -276,16 +281,21 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
                                                                   d->aba_dq, d->aba_dv, d->aba_dtau);
       d->Fx.leftCols(nv) = d->aba_dq;
       d->Fx.rightCols(nv) = d->aba_dv; 
-      d->Fx += d->aba_dtau * d->multibody.actuation->dtau_dx;
-      d->Fu = d->aba_dtau * d->multibody.actuation->dtau_du;
+      d->Fx.noalias() += d->aba_dtau * d->multibody.actuation->dtau_dx;
+      d->Fu.noalias() = d->aba_dtau * d->multibody.actuation->dtau_du;
       // Compute derivatives of d->xout (ABA) w.r.t. f in LOCAL 
-      d->aba_df3d = d->aba_dtau * d->lJ.topRows(3).transpose() * jMf_.rotation() * Matrix3s::Identity();
-      d->aba_df = d->aba_df3d.col(this->get_type());
+      d->tmp_mat_.noalias() = d->aba_dtau * d->lJ.topRows(3).transpose(); // (nv,3) = (nv,nv) (nv,3) 
+      d->aba_df3d.noalias() = d->tmp_mat_ * jMf_.rotation(); //* Matrix3s::Identity();
+      d->aba_df.noalias() = d->aba_df3d.col(this->get_type());
       // Skew term added to RNEA derivatives when force is expressed in LWA
       if(ref_ != pinocchio::LOCAL){
-          d->Fx.leftCols(nv)+= d->aba_dtau * d->lJ.topRows(3).transpose() * pinocchio::skew(d->oRf.transpose() * d->f3d) * d->lJ.bottomRows(3);
+          d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;                // vec3
+          pinocchio::skew(d->tmp_vec_, d->tmp_skew_);                         // (3,3) 
+          d->tmp_mat2_.noalias() = d->tmp_skew_ * d->lJ.bottomRows(3);        // (3,nv) = (3,3) (3,nv) 
+          d->Fx.leftCols(nv).noalias() += d->tmp_mat_ * d->tmp_mat2_;         // (nv,3) (3,nv) = (nv,nv)
           // Rotate dABA/df
-          d->aba_df3d = d->aba_df3d * d->oRf.transpose();
+          d->tmp_mat_.noalias() = d->aba_df3d * d->oRf.transpose();
+          d->aba_df3d = d->tmp_mat_;
           d->aba_df = d->aba_df3d.col(this->get_type());
       }
     // With armature
@@ -296,14 +306,19 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
         d->Fx.noalias() = d->Minv * d->dtau_dx;
         d->Fu.noalias() = d->Minv * d->multibody.actuation->dtau_du;
         // Compute derivatives of d->xout (ABA) w.r.t. f in LOCAL 
-        d->aba_df3d = d->Minv * d->lJ.topRows(3).transpose() * jMf_.rotation() * Matrix3s::Identity();
+        d->tmp_mat_.noalias() = d->Minv * d->lJ.topRows(3).transpose(); // (nv,3) = (nv,nv) (nv,3) 
+        d->aba_df3d.noalias() = d->tmp_mat_ * jMf_.rotation(); //* Matrix3s::Identity();
         d->aba_df = d->aba_df3d.col(this->get_type());
         // Skew term added to RNEA derivatives when force is expressed in LWA
         if(ref_ != pinocchio::LOCAL){
-            d->Fx.leftCols(nv)+= d->Minv * d->lJ.topRows(3).transpose() * pinocchio::skew(d->oRf.transpose() * d->f3d) * d->lJ.bottomRows(3);
+            d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;                // vec3
+            pinocchio::skew(d->tmp_vec_, d->tmp_skew_);                         // (3,3) 
+            d->tmp_mat2_.noalias() = d->tmp_skew_ * d->lJ.bottomRows(3);        // (3,nv) = (3,3) (3,nv) 
+            d->Fx.leftCols(nv).noalias() += d->tmp_mat_ * d->tmp_mat2_;         // (nv,3) (3,nv) = (nv,nv)
             // Rotate dABA/df
-          d->aba_df3d = d->aba_df3d * d->oRf.transpose();
-          d->aba_df = d->aba_df3d.col(this->get_type());
+            d->tmp_mat_.noalias() = d->aba_df3d * d->oRf.transpose();
+            d->aba_df3d = d->tmp_mat_;
+            d->aba_df = d->aba_df3d.col(this->get_type());
         }
       }
 
@@ -315,15 +330,18 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
     // Derivatives of spatial acc w.r.t. (x, f, u)
     pinocchio::getFrameAccelerationDerivatives(this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL, 
                                                     d->v_dv, d->a_dq, d->a_dv, d->a_da);
-    d->da_dx.topRows(3).leftCols(nv) = d->a_dq.topRows(3) + d->a_da.topRows(3) * d->Fx.leftCols(nv); 
-    d->da_dx.topRows(3).rightCols(nv) = d->a_dv.topRows(3) + d->a_da.topRows(3) * d->Fx.rightCols(nv); 
-    d->da_du.topRows(3) = d->a_da.topRows(3) * d->Fu;
-    d->da_df3d.topRows(3) = d->a_da.topRows(3) * d->aba_df3d;
+    d->da_dx.topRows(3).leftCols(nv) = d->a_dq.topRows(3); 
+    d->da_dx.topRows(3).leftCols(nv).noalias() += d->a_da.topRows(3) * d->Fx.leftCols(nv); 
+    d->da_dx.topRows(3).rightCols(nv) = d->a_dv.topRows(3);
+    d->da_dx.topRows(3).rightCols(nv).noalias() += d->a_da.topRows(3) * d->Fx.rightCols(nv); 
+    d->da_du.topRows(3).noalias() = d->a_da.topRows(3) * d->Fu;
+    d->da_df3d.topRows(3).noalias() = d->a_da.topRows(3) * d->aba_df3d;
     d->da_df.topRows(3) = d->da_df3d.topRows(3).col(this->get_type());
     // Derivatives of fdot w.r.t. (x,f,u)
-    d->dfdt3d_dx = -Kp_(0)*d->lv_dx.topRows(3) - Kv_(0)*d->da_dx.topRows(3);
-    d->dfdt3d_du = -Kv_(0)*d->da_du.topRows(3);
-    d->dfdt3d_df = -Kv_(0)*d->da_df3d.topRows(3).col(this->get_type());
+    d->dfdt3d_dx.noalias() = -Kp_(0)*d->lv_dx.topRows(3);
+    d->dfdt3d_dx.noalias() -= Kv_(0)*d->da_dx.topRows(3);
+    d->dfdt3d_du.noalias() = -Kv_(0)*d->da_du.topRows(3);
+    d->dfdt3d_df.noalias() = -Kv_(0)*d->da_df3d.topRows(3).col(this->get_type());
     d->dfdt_dx = d->dfdt3d_dx.row(this->get_type());
     d->dfdt_du = d->dfdt3d_du.row(this->get_type());
     d->dfdt_df = d->dfdt3d_df.row(this->get_type());
@@ -333,10 +351,14 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
     //Rotate dfout_dx if not LOCAL 
     if(ref_ != pinocchio::LOCAL){
         pinocchio::getFrameJacobian(this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL_WORLD_ALIGNED, d->oJ);
-        d->dfdt3d_dx.leftCols(nv) = d->oRf * d->dfdt3d_dx_copy.leftCols(nv)- pinocchio::skew(d->oRf * d->fout3d_copy) * d->oJ.bottomRows(3);
-        d->dfdt3d_dx.rightCols(nv) = d->oRf * d->dfdt3d_dx_copy.rightCols(nv);
-        d->dfdt3d_du = d->oRf * d->dfdt3d_du_copy;
-        d->dfdt3d_df = d->oRf * d->dfdt3d_df_copy;
+        d->tmp_vec_.noalias() = d->oRf * d->fout3d_copy;             // vec3
+        pinocchio::skew(d->tmp_vec_, d->tmp_skew_);                  // (3,3)
+        d->tmp_mat2_.noalias() = d->tmp_skew_ * d->oJ.bottomRows(3); // (3,nv)
+        d->dfdt3d_dx.leftCols(nv).noalias() = d->oRf * d->dfdt3d_dx_copy.leftCols(nv);
+        d->dfdt3d_dx.leftCols(nv).noalias() -= d->tmp_mat2_;
+        d->dfdt3d_dx.rightCols(nv).noalias() = d->oRf * d->dfdt3d_dx_copy.rightCols(nv);
+        d->dfdt3d_du.noalias() = d->oRf * d->dfdt3d_du_copy;
+        d->dfdt3d_df.noalias() = d->oRf * d->dfdt3d_df_copy;
         d->dfdt_dx = d->dfdt3d_dx.row(this->get_type());
         d->dfdt_du = d->dfdt3d_du.row(this->get_type());
         d->dfdt_df = d->dfdt3d_df.row(this->get_type());
@@ -350,8 +372,8 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
                                                       d->aba_dq, d->aba_dv, d->aba_dtau);
       d->Fx.leftCols(nv) = d->aba_dq;
       d->Fx.rightCols(nv) = d->aba_dv;
-      d->Fx += d->aba_dtau * d->multibody.actuation->dtau_dx;
-      d->Fu = d->aba_dtau * d->multibody.actuation->dtau_du;
+      d->Fx.noalias() += d->aba_dtau * d->multibody.actuation->dtau_dx;
+      d->Fu.noalias() = d->aba_dtau * d->multibody.actuation->dtau_du;
     } else {
       pinocchio::computeRNEADerivatives(this->get_pinocchio(), d->pinocchio, q, v, d->xout);
       d->dtau_dx.leftCols(nv) = d->multibody.actuation->dtau_dx.leftCols(nv) - d->pinocchio.dtau_dq;
@@ -377,11 +399,11 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
       Rq *= -1;
       d->tau_grav_residual_x += d->multibody.actuation->dtau_dx;
       d->tau_grav_residual_u = d->multibody.actuation->dtau_du;
-      d->Lx += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_x;
-      d->Lu += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_u;
-      d->Lxx += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_x;
-      d->Lxu += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_u;
-      d->Luu += tau_grav_weight_ * d->tau_grav_residual_u.transpose() * d->tau_grav_residual_u;
+      d->Lx.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_x;
+      d->Lu.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_u;
+      d->Lxx.noalias() += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_x;
+      d->Lxu.noalias() += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_u;
+      d->Luu.noalias() += tau_grav_weight_ * d->tau_grav_residual_u.transpose() * d->tau_grav_residual_u;
     }
   }
 
@@ -390,22 +412,28 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
     if(with_force_cost_){
       if(cost_ref_ != ref_){
         if(cost_ref_ == pinocchio::LOCAL){
-          d->f_residual = d->oRf.transpose()(this->get_type(), this->get_type())*f - force_des_;
+          d->f_residual.noalias() = d->oRf.transpose()(this->get_type(), this->get_type())*f;
+          d->f_residual -= force_des_;
           d->f_residual_f(0,0) = d->oRf.transpose()(this->get_type(), this->get_type());
-          d->Lf = d->f_residual.transpose() * force_weight_(0) * d->f_residual_f;
-          Eigen::Block<MatrixXs, Eigen::Dynamic, Eigen::Dynamic, false> Rq = d->f_residual_x.topLeftCorner(nc_, nv);
-          Rq = (pinocchio::skew(d->oRf.transpose() * d->f3d) * d->lJ.bottomRows(3) ).row(this->get_type());
-          d->Lx += d->f_residual.transpose() * force_weight_(0) * d->f_residual_x;
-          d->Lff = force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
+          d->Lf.noalias() = force_weight_(0) * d->f_residual.transpose() * d->f_residual_f;
+          d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;
+          pinocchio::skew(d->tmp_vec_, d->tmp_skew_);
+          d->tmp_mat2_.noalias() = d->tmp_skew_ * d->lJ.bottomRows(3);
+          d->f_residual_x.topLeftCorner(nc_, nv) = d->tmp_mat2_.row(this->get_type());
+          d->Lx.noalias() += force_weight_(0) * d->f_residual.transpose() * d->f_residual_x;
+          d->Lff.noalias() = force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
         }
         else{
-          d->f_residual = d->oRf(this->get_type(), this->get_type()) * f - force_des_;
+          d->f_residual.noalias() = d->oRf(this->get_type(), this->get_type()) * f;
+          d->f_residual -= force_des_;
           d->f_residual_f(0,0) = d->oRf(this->get_type(), this->get_type());
-          d->Lf = d->f_residual.transpose() * force_weight_(0) * d->f_residual_f;
-          Eigen::Block<MatrixXs, Eigen::Dynamic, Eigen::Dynamic, false> Rq = d->f_residual_x.topLeftCorner(nc_, nv);
-          Rq = (pinocchio::skew(d->oRf * d->f3d) * d->oJ.bottomRows(3)).row(this->get_type());
-          d->Lx += d->f_residual.transpose() * force_weight_(0) * (pinocchio::skew(d->oRf * d->f3d).row(this->get_type())) * d->f_residual_x;
-          d->Lff = force_weight_(0)  * d->f_residual_f.transpose() * d->f_residual_f;
+          d->Lf.noalias() = force_weight_(0) * d->f_residual.transpose() * d->f_residual_f;
+          d->tmp_vec_.noalias() = d->oRf * d->f3d;
+          pinocchio::skew(d->tmp_vec_, d->tmp_skew_);
+          d->tmp_mat2_.noalias() = d->tmp_skew_ * d->oJ.bottomRows(3);
+          d->f_residual_x.topLeftCorner(nc_, nv) = d->tmp_mat2_.row(this->get_type());
+          d->Lx.noalias() += force_weight_(0) * d->f_residual.transpose() * (d->tmp_skew_.row(this->get_type())) * d->f_residual_x;
+          d->Lff.noalias() = force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
         }
       }
       else{
@@ -424,34 +452,36 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
       d->tau_grav_residual_u = d->multibody.actuation->dtau_du;
       d->tau_grav_residual_f = d->lJ.row(this->get_type()).transpose(); 
       if(ref_ != pinocchio::LOCAL){
-        d->tau_grav_residual_f = (d->lJ.topRows(3).transpose() * d->oRf.row(this->get_type()).transpose()); //*= d->oRf.row(this->get_type()).transpose();  
-        d->tau_grav_residual_x.topLeftCorner(nv, nv) += (d->lJ.topRows(3)).transpose() * pinocchio::skew(d->oRf.transpose() * d->f3d) * d->lJ.bottomRows(3);
+        d->tau_grav_residual_f.noalias() = (d->lJ.topRows(3).transpose() * d->oRf.row(this->get_type()).transpose()); //*= d->oRf.row(this->get_type()).transpose();  
+        d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;         // vec3
+        pinocchio::skew(d->tmp_vec_, d->tmp_skew_);                  // (3,3)
+        d->tmp_mat2_.noalias() = d->tmp_skew_ * d->lJ.bottomRows(3); // (3,nv)
+        d->tau_grav_residual_x.topLeftCorner(nv, nv).noalias() += (d->lJ.topRows(3)).transpose() * d->tmp_mat2_;
       }
       // Add cost partials (approx. Hessian with jac^T jac)
-      d->Lf += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_f; 
-      d->Lff += tau_grav_weight_ * d->tau_grav_residual_f.transpose() * d->tau_grav_residual_f; 
-      d->Lx += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_x;
-      d->Lu += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_u;
-      d->Lxx += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_x;
-      d->Lxu += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_u;
-      d->Luu += tau_grav_weight_ * d->tau_grav_residual_u.transpose() * d->tau_grav_residual_u;
+      d->Lf.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_f; 
+      d->Lff.noalias() += tau_grav_weight_ * d->tau_grav_residual_f.transpose() * d->tau_grav_residual_f; 
+      d->Lx.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_x;
+      d->Lu.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_u;
+      d->Lxx.noalias() += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_x;
+      d->Lxu.noalias() += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_u;
+      d->Luu.noalias() += tau_grav_weight_ * d->tau_grav_residual_u.transpose() * d->tau_grav_residual_u;
     }
     if(with_force_rate_reg_cost_){
-      d->Lf += d->fout.transpose() * force_rate_reg_weight_(0) * d->dfdt_df ;    
-      d->Lff +=  d->dfdt_df.transpose() * force_rate_reg_weight_(0) * d->dfdt_df;  
-      d->Lx += d->fout.transpose() * force_rate_reg_weight_(0) * d->dfdt_dx;
-      d->Lxx +=  d->dfdt_dx.transpose() * force_rate_reg_weight_(0) * d->dfdt_dx;
-      d->Lu += d->fout.transpose() * force_rate_reg_weight_(0) * d->dfdt_du;
-      d->Luu +=  d->dfdt_du.transpose() * force_rate_reg_weight_(0) * d->dfdt_du;
+      d->Lf.noalias() += force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_df ;    
+      d->Lff.noalias() +=  force_rate_reg_weight_(0) * d->dfdt_df.transpose() * d->dfdt_df;  
+      d->Lx.noalias() += force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_dx;
+      d->Lxx.noalias() +=  force_rate_reg_weight_(0) * d->dfdt_dx.transpose() * d->dfdt_dx;
+      d->Lu.noalias() += force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_du;
+      d->Luu.noalias() +=  force_rate_reg_weight_(0) * d->dfdt_du.transpose() * d->dfdt_du;
     }
   }
 
-  // Eigen::internal::set_is_malloc_allowed(true);
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
   // Constraints on multibody state x=(q,v)
   if (this->get_constraints() != nullptr) {
     this->get_constraints()->calcDiff(d->constraints, x, u);
   }
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
 
@@ -468,6 +498,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
     throw_pretty("Invalid argument: "
                  << "f has wrong dimension (it should be " + std::to_string(this->get_nc()) + ")");
   }
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(this->get_state()->get_nq());
   const std::size_t nv = this->get_state()->get_nv();
   Data* d = static_cast<Data*>(data.get());
@@ -488,22 +519,29 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
     if(with_force_cost_){
       if(cost_ref_ != ref_){
         if(cost_ref_ == pinocchio::LOCAL){
-          d->f_residual = d->oRf.transpose()(this->get_type(), this->get_type())*f - force_des_;
+          d->f_residual.noalias() = d->oRf.transpose()(this->get_type(), this->get_type())*f;
+          d->f_residual -= force_des_;
           d->f_residual_f(0,0) = d->oRf.transpose()(this->get_type(), this->get_type());
-          d->Lf = d->f_residual.transpose() * force_weight_(0) * d->f_residual_f;
-          Eigen::Block<MatrixXs, Eigen::Dynamic, Eigen::Dynamic, false> Rq = d->f_residual_x.topLeftCorner(nc_, nv);
-          Rq = (pinocchio::skew(d->oRf.transpose() * d->f3d) * d->lJ.bottomRows(3)).row(this->get_type());
-          d->Lx += d->f_residual.transpose() * force_weight_(0) * d->f_residual_x;
-          d->Lff = force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
+          d->Lf.noalias() = force_weight_(0) * d->f_residual.transpose() * d->f_residual_f;
+          d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;
+          pinocchio::skew(d->tmp_vec_, d->tmp_skew_);
+          d->tmp_mat2_.noalias() = d->tmp_skew_ * d->lJ.bottomRows(3);
+          d->f_residual_x.topLeftCorner(nc_, nv) = d->tmp_mat2_.row(this->get_type());
+          d->Lx.noalias() +=  force_weight_(0) * d->f_residual.transpose() * d->f_residual_x;
+          d->Lff.noalias() = force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
         }
         else{
-          d->f_residual = d->oRf(this->get_type(), this->get_type()) * f - force_des_;
+          d->f_residual.noalias() = d->oRf(this->get_type(), this->get_type()) * f;
+          d->f_residual -= force_des_;
           d->f_residual_f(0,0) = d->oRf(this->get_type(), this->get_type());
-          d->Lf = d->f_residual.transpose() * force_weight_(0) * d->f_residual_f;
-          Eigen::Block<MatrixXs, Eigen::Dynamic, Eigen::Dynamic, false> Rq = d->f_residual_x.topLeftCorner(nc_, nv);
-          Rq = (pinocchio::skew(d->oRf * d->f3d) * d->oJ.bottomRows(3)).row(this->get_type());
-          d->Lx += d->f_residual.transpose() * force_weight_(0) * (pinocchio::skew(d->oRf * d->f3d).row(this->get_type())) * d->f_residual_x;
-          d->Lff = force_weight_(0)  * d->f_residual_f.transpose() * d->f_residual_f;
+          d->Lf.noalias() = force_weight_(0) * d->f_residual.transpose() * d->f_residual_f;
+          d->tmp_vec_.noalias() = d->oRf * d->f3d;
+          pinocchio::skew(d->tmp_vec_, d->tmp_skew_);
+          d->tmp_mat2_.noalias() = d->tmp_skew_ * d->oJ.bottomRows(3);
+          d->f_residual_x.topLeftCorner(nc_, nv) = d->tmp_mat2_.row(this->get_type());
+          d->tmp_mat3_.noalias() = (d->tmp_skew_.row(this->get_type())) * d->f_residual_x;
+          d->Lx.noalias() += force_weight_(0) * d->f_residual.transpose() * d->tmp_mat3_;
+          d->Lff.noalias() = force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
         }
       }
       else{
@@ -521,20 +559,23 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
       d->tau_grav_residual_x += d->multibody.actuation->dtau_dx;
       d->tau_grav_residual_f = d->lJ.row(this->get_type()).transpose(); 
       if(ref_ != pinocchio::LOCAL){
-        d->tau_grav_residual_f = (d->lJ.topRows(3).transpose() * d->oRf.row(this->get_type()).transpose()); 
-        d->tau_grav_residual_x.topLeftCorner(nv, nv) += (d->lJ.topRows(3)).transpose() * pinocchio::skew(d->oRf.transpose() *d->f3d) * d->lJ.bottomRows(3);
+        d->tau_grav_residual_f.noalias() = (d->lJ.topRows(3).transpose() * d->oRf.row(this->get_type()).transpose()); 
+        d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;
+        pinocchio::skew(d->tmp_vec_, d->tmp_skew_);
+        d->tmp_mat2_.noalias() = d->tmp_skew_ * d->lJ.bottomRows(3);
+        d->tau_grav_residual_x.topLeftCorner(nv, nv).noalias() += (d->lJ.topRows(3)).transpose() * d->tmp_mat2_;
       }
       // Add cost partials (approx. Hessian with jac^T jac)
-      d->Lf += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_f; 
-      d->Lff += tau_grav_weight_ * d->tau_grav_residual_f.transpose() * d->tau_grav_residual_f; 
-      d->Lx += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_x;
-      d->Lxx += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_x;
+      d->Lf.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_f; 
+      d->Lff.noalias() += tau_grav_weight_ * d->tau_grav_residual_f.transpose() * d->tau_grav_residual_f; 
+      d->Lx.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_x;
+      d->Lxx.noalias() += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_x;
     }
     if(with_force_rate_reg_cost_){
-      d->Lf += d->fout.transpose() * force_rate_reg_weight_(0) * d->dfdt_df ;    
-      d->Lff +=  d->dfdt_df.transpose() * force_rate_reg_weight_(0) * d->dfdt_df;  
-      d->Lx += d->fout.transpose() * force_rate_reg_weight_(0) * d->dfdt_dx;
-      d->Lxx +=  d->dfdt_dx.transpose() * force_rate_reg_weight_(0) * d->dfdt_dx;
+      d->Lf.noalias() += force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_df ;    
+      d->Lff.noalias() += force_rate_reg_weight_(0) * d->dfdt_df.transpose() * d->dfdt_df;  
+      d->Lx.noalias() += force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_dx;
+      d->Lxx.noalias() += force_rate_reg_weight_(0) * d->dfdt_dx.transpose() * d->dfdt_dx;
     }
   }
 
@@ -542,6 +583,7 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
   if (this->get_constraints() != nullptr) {
     this->get_constraints()->calcDiff(d->constraints, x);
   }
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
 

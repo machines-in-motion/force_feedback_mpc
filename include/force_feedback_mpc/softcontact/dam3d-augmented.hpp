@@ -36,7 +36,15 @@ struct DADSoftContact3DAugmentedFwdDynamics
 
   template <class Model>
   explicit DADSoftContact3DAugmentedFwdDynamics(Model* const model)
-      : Base(model) {}
+      : Base(model),
+        tmp_mat_(model->get_state()->get_nv(), 3),
+        tmp_mat2_(3, model->get_state()->get_nv())
+        {
+    tmp_mat_.setZero();
+    tmp_mat2_.setZero();
+    tmp_vec_.setZero();
+    tmp_skew_.setZero();
+    }
 
   using Base::pinocchio;
   using Base::multibody;
@@ -114,6 +122,12 @@ struct DADSoftContact3DAugmentedFwdDynamics
   using Base::g;
   using Base::Gx;
   using Base::Gu;
+
+  // tmp 
+  Vector3s tmp_vec_;
+  Matrix3s tmp_skew_;
+  MatrixXs tmp_mat_;
+  MatrixXs tmp_mat2_;
 };
 
 

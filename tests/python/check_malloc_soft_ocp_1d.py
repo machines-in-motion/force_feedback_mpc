@@ -43,7 +43,7 @@ import os
 ### LOAD ROBOT MODEL and SIMU ENV ### 
 # # # # # # # # # # # # # # # # # # # 
 # Read config file
-config_name = 'polishing_soft_obstacle'
+config_name = 'soft_ocp_1d'
 config = path_utils.load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/'+config_name+'.yml')
 # Create a simulation environment & simu-pin wrapper 
 q0 = np.asarray(config['q0'])
@@ -77,8 +77,6 @@ softContactModel.print()
 
 MASK = softContactModel.mask
 y0 = np.concatenate([ x0, np.array([f0[MASK]]) ])  
-RESET_ANCHOR_POINT = bool(config['RESET_ANCHOR_POINT'])
-anchor_point = oPc.copy()
 
 # # # # # # # # # 
 ### OCP SETUP ###
@@ -111,34 +109,44 @@ solver.reg_max                = 1e6
 # !!! Deactivate all costs & contact models initially !!!
 models = list(solver.problem.runningModels) + [solver.problem.terminalModel]
 datas = list(solver.problem.runningDatas) + [solver.problem.terminalData]
-for k,m in enumerate(models):
-    m.differential.costs.costs["translation"].active = False
-    m.differential.active_contact = False
-    m.differential.f_des = np.zeros(1)
-    m.differential.cost_ref = pin.LOCAL_WORLD_ALIGNED
-    m.differential.ref = pin.LOCAL_WORLD_ALIGNED
-    m.differential.costs.costs['rotation'].active = False
-    m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
-    # FORCE CONSTRAINT STUFF
-    # # if(k!=0):
-    # # m.force_lb =  np.array([-10000.])
-    # m.with_force_constraint = True
-    #     # m.force_lb = np.array([-10000.])
-    #     # m.force_ub = np.array([10000.])
-    # # m.force_ub =  np.array([10000.])
-    # COLLISION CONSTRAINT STUFF
-    # set each collision constraint bounds to [0, inf]
-    for col_idx in range(len(robot.collision_model.collisionPairs)):
-        # only populates the bounds of the constraint item (not the manager)
-        m.differential.constraints.constraints['collisionBox_' + str(col_idx)].constraint.updateBounds(
-                    np.array([0.]),
-                    np.array([np.inf])) 
-        # needed to pass the bounds to the manager
-        m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
-        # need to set explicitly the IAM bounds
-        # m.g_lb = -0.0001*np.ones([m.ng]) # needs to be slightly negative (bug to investigate)
-        m.g_lb = np.zeros([m.ng]) # needs to be slightly negative (bug to investigate)
-        m.g_ub = np.array([np.inf]*m.ng)
-# wfhwef
-# solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
+
+# # test DAM 
+# for k,m in enumerate(models):
+#     d = datas[k]
+m = models[0]
+d = datas[0]
+for cost_ref in [pin.LOCAL, pin.LOCAL_WORLD_ALIGNED]:
+    for ref in [pin.LOCAL, pin.LOCAL_WORLD_ALIGNED]:
+        for active_contact in [True, False]:
+            for with_armature in [True, False]:
+                for with_gravity_torque_reg in [True, False]:
+                    for with_force_cost in [True, False]:
+                        for with_force_rate_reg_cost in [True, False]:
+                            # print("Node " + str(k) + 
+                            print("cost ref = " + str(cost_ref) + ", dyn. ref = " + str(ref) + \
+                                ", active_ct = " + str(active_contact) + ", armature = " + str(with_armature) + \
+                                ", grav_cost = " + str(with_gravity_torque_reg) + ", force_cost = " + str(with_force_cost) + \
+                                ", force_rate_cost = " + str(with_force_rate_reg_cost))
+                            # Set attributes
+                            m.differential.cost_ref                 = cost_ref
+                            m.differential.ref                      = ref
+                            m.differential.active_contact           = active_contact
+                            m.differential.with_armature            = with_armature
+                            m.differential.with_gravity_torque_reg  = with_gravity_torque_reg
+                            m.differential.with_force_cost          = with_force_cost
+                            m.differential.with_force_rate_reg_cost = with_force_rate_reg_cost
+                            # Check calc
+                            # print("        > Check DAM.calc")
+                            m.differential.calc(d.differential, x0, f0[-softContactModel.nc:], u0)
+                            # print("        > Check DAM.calcDiff")
+                            m.differential.calcDiff(d.differential, x0, f0[-softContactModel.nc:], u0)
+                            for with_force_constraint in [True, False]:   
+                                print("force_cstr = "+str(with_force_constraint))   
+                                m.with_force_constraint = with_force_constraint
+                                # print("        > Check IAM.calc")
+                                m.calc(d, y0, u0)
+                                # print("        > Check IAM.calcDiff")
+                                m.calcDiff(d, y0, u0)
+
+solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)

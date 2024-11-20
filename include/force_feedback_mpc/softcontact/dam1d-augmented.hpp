@@ -46,7 +46,10 @@ struct DADSoftContact1DAugmentedFwdDynamics
         dfdt3d_df(3, 1),
         dfdt3d_dx_copy(3, model->get_state()->get_ndx()),
         dfdt3d_du_copy(3, model->get_nu()),
-        dfdt3d_df_copy(3, 1)
+        dfdt3d_df_copy(3, 1),
+        tmp_mat_(model->get_state()->get_nv(), 3),
+        tmp_mat2_(3, model->get_state()->get_nv()),
+        tmp_mat3_(1, model->get_state()->get_ndx())
         {
     aba_df3d.setZero();
     aba_df3d_copy.setZero();
@@ -61,6 +64,11 @@ struct DADSoftContact1DAugmentedFwdDynamics
     dfdt3d_dx_copy.setZero();
     dfdt3d_du_copy.setZero();
     dfdt3d_df_copy.setZero();
+    tmp_vec_.setZero();
+    tmp_mat_.setZero();
+    tmp_mat2_.setZero();
+    tmp_mat3_.setZero();
+    tmp_skew_.setZero();
   }
 
   using Base::pinocchio;
@@ -152,6 +160,13 @@ struct DADSoftContact1DAugmentedFwdDynamics
   using Base::g;
   using Base::Gx;
   using Base::Gu;
+
+  // tmp 
+  Vector3s tmp_vec_;
+  Matrix3s tmp_skew_;
+  MatrixXs tmp_mat_;
+  MatrixXs tmp_mat2_;
+  MatrixXs tmp_mat3_;
 };
 
 
