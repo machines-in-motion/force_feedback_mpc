@@ -356,30 +356,32 @@ def transform_model_into_capsules(cmodel):
 def setup_obstacle_collision(robot_simulator, pin_robot, config):
  
   # Creating the obstacle 
-  OBSTACLE1_XYZQUAT = np.array(config["OBSTACLE1_POSE"])
-  OBSTACLE1_POSE    = pin.XYZQUATToSE3(OBSTACLE1_XYZQUAT)
-  OBSTACLE_RADIUS1  = config["OBSTACLE_RADIUS1"]
-  OBSTACLE1_GEOM_OBJECT = create_caps_obstacle(OBSTACLE1_POSE, OBSTACLE_RADIUS1[0], OBSTACLE_RADIUS1[1], name="obstacle1")
+  OBSTACLE_XYZQUAT     = np.array(config["OBSTACLE_POSE"])
+  OBSTACLE_POSE        = pin.XYZQUATToSE3(OBSTACLE_XYZQUAT)
+  OBSTACLE_RADIUS      = config["OBSTACLE_RADIUS"]
+  OBSTACLE_LENGTH      = config["OBSTACLE_LENGTH"]
+  OBSTACLE_GEOM_OBJECT = create_caps_obstacle(OBSTACLE_POSE, OBSTACLE_RADIUS, OBSTACLE_LENGTH, name="obstacle1")
   # Adding obstacle to collision model (pinocchio)
   pin_robot.collision_model = transform_model_into_capsules(pin_robot.collision_model)
-  pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
+  pin_robot.collision_model.addGeometryObject(OBSTACLE_GEOM_OBJECT)
   # display in pybullet + add to collision model 
   # !!! Careful : need to transform pybullet so that it matches pinocchio obstacle
   # see e.g. https://github.com/ajordana/value_function/blob/main/kuka_dgh/plots/visualizer.py
-  OBSTACLE1_POSE.rotation = pin.rpy.rpyToMatrix(np.pi/2, 0,0) @ OBSTACLE1_POSE.rotation
-  capsule_id = display_capsule(OBSTACLE1_POSE, OBSTACLE_RADIUS1[0], OBSTACLE_RADIUS1[1])
+#   OBSTACLE_POSE.rotation = pin.rpy.rpyToMatrix(np.pi/2, 0,0) @ OBSTACLE_POSE.rotation
+  capsule_id = display_capsule(OBSTACLE_POSE, OBSTACLE_RADIUS, OBSTACLE_LENGTH)
   robot_simulator.pin_robot.collision_model = transform_model_into_capsules(robot_simulator.pin_robot.collision_model)
-  robot_simulator.pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
+  robot_simulator.pin_robot.collision_model.addGeometryObject(OBSTACLE_GEOM_OBJECT)
   return capsule_id
 
 
 def setup_obstacle_collision_no_sim(pin_robot, config):
  
   # Creating the obstacle
-  OBSTACLE1_XYZQUAT = np.array(config["OBSTACLE1_POSE"])
-  OBSTACLE1_POSE    = pin.XYZQUATToSE3(OBSTACLE1_XYZQUAT)
-  OBSTACLE_RADIUS1      = config["OBSTACLE_RADIUS1"]
-  OBSTACLE1_GEOM_OBJECT = create_box_obstacle(OBSTACLE1_POSE, OBSTACLE_RADIUS1, name="obstacle1")
+  OBSTACLE_XYZQUAT     = np.array(config["OBSTACLE_POSE"])
+  OBSTACLE_POSE        = pin.XYZQUATToSE3(OBSTACLE_XYZQUAT)
+  OBSTACLE_RADIUS      = config["OBSTACLE_RADIUS"]
+  OBSTACLE_LENGTH      = config["OBSTACLE_LENGTH"]
+  OBSTACLE_GEOM_OBJECT = create_caps_obstacle(OBSTACLE_POSE, OBSTACLE_RADIUS, OBSTACLE_LENGTH, name="obstacle1")
   # Adding obstacle to collision model (pinocchio)
   pin_robot.collision_model = transform_model_into_capsules(pin_robot.collision_model)
-  pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
+  pin_robot.collision_model.addGeometryObject(OBSTACLE_GEOM_OBJECT)
