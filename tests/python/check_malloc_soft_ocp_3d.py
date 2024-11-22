@@ -38,6 +38,7 @@ import time
 import pinocchio as pin
 import os
 
+VERBOSE = False
 
 # # # # # # # # # # # # # # # # # # #
 ### LOAD ROBOT MODEL and SIMU ENV ### 
@@ -117,11 +118,11 @@ for cost_ref in [pin.LOCAL, pin.LOCAL_WORLD_ALIGNED]:
                 for with_gravity_torque_reg in [True, False]:
                     for with_force_cost in [True, False]:
                         for with_force_rate_reg_cost in [True, False]:
-                            # print("Node " + str(k) + 
-                            print("cost ref = " + str(cost_ref) + ", dyn. ref = " + str(ref) + \
-                                ", active_ct = " + str(active_contact) + ", armature = " + str(with_armature) + \
-                                ", grav_cost = " + str(with_gravity_torque_reg) + ", force_cost = " + str(with_force_cost) + \
-                                ", force_rate_cost = " + str(with_force_rate_reg_cost))
+                            if(VERBOSE):
+                                print("cost ref = " + str(cost_ref) + ", dyn. ref = " + str(ref) + \
+                                    ", active_ct = " + str(active_contact) + ", armature = " + str(with_armature) + \
+                                    ", grav_cost = " + str(with_gravity_torque_reg) + ", force_cost = " + str(with_force_cost) + \
+                                    ", force_rate_cost = " + str(with_force_rate_reg_cost))
                             # Set attributes
                             m.differential.cost_ref                 = cost_ref
                             m.differential.ref                      = ref
@@ -136,15 +137,19 @@ for cost_ref in [pin.LOCAL, pin.LOCAL_WORLD_ALIGNED]:
                             # print("        > Check DAM.calcDiff")
                             m.differential.calcDiff(d.differential, x0, f0[-softContactModel.nc:], u0)
                             for with_force_constraint in [True, False]:   
-                                for with_friction_cone_constraint in [True, False]:   
-                                    print("force_cstr    = "+str(with_force_constraint))   
-                                    print("friction_cstr = "+str(with_friction_cone_constraint))   
+                                for with_friction_cone_constraint in [True, False]:
+                                    if(VERBOSE):   
+                                        print("force_cstr    = "+str(with_force_constraint))   
+                                        print("friction_cstr = "+str(with_friction_cone_constraint))   
                                     m.with_force_constraint = with_force_constraint
                                     m.friction_constraints[0].active = with_friction_cone_constraint
                                     # print("        > Check IAM.calc")
                                     m.calc(d, y0, u0)
                                     # print("        > Check IAM.calcDiff")
                                     m.calcDiff(d, y0, u0)
+if(VERBOSE):
+    solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 
-solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
+
+print("OK.")

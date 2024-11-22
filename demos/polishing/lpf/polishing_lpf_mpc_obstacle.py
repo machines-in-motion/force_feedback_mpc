@@ -28,7 +28,7 @@ The actuation dynamics is modeled as a low pass filter (LPF) in the optimization
 import sys
 sys.path.append('.')
 
-from croco_mpc_utils.misc_utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
+from croco_mpc_utils.utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
 logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
 
 
@@ -161,6 +161,7 @@ contact_surface_bulletId = simulator_utils.display_contact_surface(pin.SE3(np.ey
 # Make the contact soft (e.g. tennis ball or sponge on the robot)
 simulator_utils.set_lateral_friction(contact_surface_bulletId, 0.5)
 simulator_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 10000, 500)
+
 # Create obstacle
 capsule_id = simulator_utils.setup_obstacle_collision(robot_simulator, robot, config)
 
@@ -220,10 +221,10 @@ for k,m in enumerate(models):
         # needed to pass the bounds to the manager
         m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
         # need to set explicitly the IAM bounds
-        m.g_lb = -0.001*np.ones([m.ng]) # needs to be slightly negative (bug to investigate)
+        m.g_lb = np.zeros([m.ng]) # needs to be slightly negative (bug to investigate)
         m.g_ub = np.array([np.inf]*m.ng)
 
-# solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
+solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
 # Setup tracking problem with circle ref EE trajectory + Warm start state = IK of circle trajectory
 OCP_TO_CTRL_RATIO = int(config['dt']/dt_simu)

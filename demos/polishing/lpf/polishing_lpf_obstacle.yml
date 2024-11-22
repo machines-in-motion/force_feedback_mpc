@@ -95,13 +95,25 @@ pinRefFrame: 'LOCAL_WORLD_ALIGNED'
 
 USE_LATERAL_FRICTION: True 
 
-# Constraints 
-# to select from the list : 'stateBox', 'ctrlBox', 'translationBox', 'None'
+# Constraints
+# to select from the list : 'stateBox', 'ctrlBox', 'translationBox', 'collisionBox', 'forceBox', 'None'
 WHICH_CONSTRAINTS: ['collisionBox']
-# ctrlLimit: 'DEFAULT'
-# stateLowerLimit: [-2.07, -1.46, -2.07, -1.46, -2.07, -1.46, -1.03, -1.03, -1.22, -0.91, -1.58, -1.64]
-# stateUpperLimit: [2.07, 1.46, 2.07, 1.46 , 2.07, 1.46,       1.03, 1.03, 1.22, 0.91, 1.58, 1.64]
-# Collision constraint
+
+  # 'forceBox' : box constraint on soft contact force (1d or 3d)
+forceConstraintType: '1Dz'
+forceConstraintFrameName: 'contact'
+forceConstraintReferenceFrame: 'LOCAL_WORLD_ALIGNED'
+forceLowerLimit: [0, 0, 0, 0, 0, 0]
+forceUpperLimit: [0, 0, 25, 0, 0, 0]
+
+  # 'ctrlBox' : box constraint on torque control input
+ctrlLimit: 'DEFAULT'
+
+  # 'stateBox' : box constraint on position-velocity state
+stateLowerLimit: [-2.07, -1.46, -2.07, -1.46, -2.07, -1.46, -1.03, -1.03, -1.22, -0.91, -1.58, -1.64]
+stateUpperLimit: [2.07, 1.46, 2.07, 1.46 , 2.07, 1.46,       1.03, 1.03, 1.22, 0.91, 1.58, 1.64]
+
+  # 'collisionBox' : box constraint on collision distance between capsules
 safetyMargin: 0.
 collisionPairs:         
 - ["L2_capsule_1", "obstacle1"] # rod
@@ -112,18 +124,9 @@ collisionPairs:
 - ["L6_capsule_0", "obstacle1"]
 - ["L6_capsule_1", "obstacle1"]
 - ["L7_capsule_0", "obstacle1"]
-- ["L4_capsule_0", "obstacle2"] # table
-- ["L4_capsule_1", "obstacle2"]
-- ["L5_capsule_0", "obstacle2"]
-- ["L6_capsule_0", "obstacle2"]
-- ["L6_capsule_1", "obstacle2"]
-- ["L7_capsule_0", "obstacle2"]
-
-OBSTACLE1_POSE: [1., 0.15, 0.3]
-OBSTACLE2_POSE: [0.5, 0., 0.]
-OBSTACLE_RADIUS1: [1, 0.1, 0.1]
-OBSTACLE_RADIUS2: [1, 1, 0.1]
-LENGTH1         : 0.76 # measured rod (real)
+OBSTACLE_POSE: [0.8, 0.05, 0.35, 0., 0.70710678,  0, 0.70710678]
+OBSTACLE_RADIUS: 0.02
+OBSTACLE_LENGTH: 0.7
 
 # Cost function composition (a.k.a which terms will be actually used in the OCP)
 # to select from the list : 'stateReg', 'ctrlReg', 'ctrlRegGrav', 'stateLim', 'ctrlLim'
