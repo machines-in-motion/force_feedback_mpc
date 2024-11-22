@@ -355,29 +355,21 @@ def transform_model_into_capsules(cmodel):
 
 def setup_obstacle_collision(robot_simulator, pin_robot, config):
  
-  # Creating the obstacle
+  # Creating the obstacle 
   OBSTACLE1_XYZQUAT = np.array(config["OBSTACLE1_POSE"])
-  OBSTACLE2_XYZQUAT = np.array(config["OBSTACLE2_POSE"])
   OBSTACLE1_POSE    = pin.XYZQUATToSE3(OBSTACLE1_XYZQUAT)
-  OBSTACLE2_POSE    = pin.XYZQUATToSE3(OBSTACLE2_XYZQUAT)
-#   OBSTACLE1_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE1_POSE"]))
-#   OBSTACLE2_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE2_POSE"]))
-  OBSTACLE_RADIUS1      = config["OBSTACLE_RADIUS1"]
-  OBSTACLE_RADIUS2      = tuple(config["OBSTACLE_RADIUS2"])
-  OBSTACLE1_GEOM_OBJECT = create_box_obstacle(OBSTACLE1_POSE, OBSTACLE_RADIUS1, name="obstacle1")
-  OBSTACLE2_GEOM_OBJECT = create_box_obstacle(OBSTACLE2_POSE, OBSTACLE_RADIUS2, name="obstacle2")
-
+  OBSTACLE_RADIUS1  = config["OBSTACLE_RADIUS1"]
+  OBSTACLE1_GEOM_OBJECT = create_caps_obstacle(OBSTACLE1_POSE, OBSTACLE_RADIUS1[0], OBSTACLE_RADIUS1[1], name="obstacle1")
   # Adding obstacle to collision model (pinocchio)
   pin_robot.collision_model = transform_model_into_capsules(pin_robot.collision_model)
   pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
-  pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
-  
   # display in pybullet + add to collision model 
-  capsule_id = display_box(OBSTACLE1_POSE, OBSTACLE_RADIUS1)
-  display_box(OBSTACLE2_POSE, OBSTACLE_RADIUS2)
+  # !!! Careful : need to transform pybullet so that it matches pinocchio obstacle
+  # see e.g. https://github.com/ajordana/value_function/blob/main/kuka_dgh/plots/visualizer.py
+  OBSTACLE1_POSE.rotation = pin.rpy.rpyToMatrix(np.pi/2, 0,0) @ OBSTACLE1_POSE.rotation
+  capsule_id = display_capsule(OBSTACLE1_POSE, OBSTACLE_RADIUS1[0], OBSTACLE_RADIUS1[1])
   robot_simulator.pin_robot.collision_model = transform_model_into_capsules(robot_simulator.pin_robot.collision_model)
   robot_simulator.pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
-  robot_simulator.pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
   return capsule_id
 
 
@@ -385,76 +377,9 @@ def setup_obstacle_collision_no_sim(pin_robot, config):
  
   # Creating the obstacle
   OBSTACLE1_XYZQUAT = np.array(config["OBSTACLE1_POSE"])
-  OBSTACLE2_XYZQUAT = np.array(config["OBSTACLE2_POSE"])
   OBSTACLE1_POSE    = pin.XYZQUATToSE3(OBSTACLE1_XYZQUAT)
-  OBSTACLE2_POSE    = pin.XYZQUATToSE3(OBSTACLE2_XYZQUAT)
-#   OBSTACLE1_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE1_POSE"]))
-#   OBSTACLE2_POSE        = pin.SE3(np.eye(3), np.array(config["OBSTACLE2_POSE"]))
   OBSTACLE_RADIUS1      = config["OBSTACLE_RADIUS1"]
-  OBSTACLE_RADIUS2      = tuple(config["OBSTACLE_RADIUS2"])
   OBSTACLE1_GEOM_OBJECT = create_box_obstacle(OBSTACLE1_POSE, OBSTACLE_RADIUS1, name="obstacle1")
-  OBSTACLE2_GEOM_OBJECT = create_box_obstacle(OBSTACLE2_POSE, OBSTACLE_RADIUS2, name="obstacle2")
-
   # Adding obstacle to collision model (pinocchio)
   pin_robot.collision_model = transform_model_into_capsules(pin_robot.collision_model)
   pin_robot.collision_model.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
-  pin_robot.collision_model.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
-
-    # head = SimHead(robot_simulator, vicon_name='cube10', with_sliders=False)
-# def rotationMatrixFromTwoVectors(a, b):
-#     a_copy = a / np.linalg.norm(a)
-#     b_copy = b / np.linalg.norm(b)
-#     a_cross_b = np.cross(a_copy, b_copy, axis=0)
-#     s = np.linalg.norm(a_cross_b)
-#     if s == 0:
-#         return np.eye(3)
-#     c = a_copy.dot(b_copy) 
-#     ab_skew = pin.skew(a_cross_b)
-#     return np.eye(3) + ab_skew + ( (1 - c) / (s**2) ) * ab_skew.dot(ab_skew) 
-
-# def weighted_moving_average(series, lookback = None):
-#     if not lookback:
-#         lookback = len(series)
-#     if len(series) == 0:
-#         return 0
-#     assert 0 < lookback <= len(series)
-
-#     wma = 0
-#     lookback_offset = len(series) - lookback
-#     for index in range(lookback + lookback_offset - 1, lookback_offset - 1, -1):
-#         weight = index - lookback_offset + 1
-#         wma += series[index] * weight
-#     return wma / ((lookback ** 2 + lookback) / 2)
-
-# def hull_moving_average(series, lookback):
-#     assert lookback > 0
-#     hma_series = []
-#     for k in range(int(lookback ** 0.5), -1, -1):
-#         s = series[:-k or None]
-#         wma_half = weighted_moving_average(s, min(lookback // 2, len(s)))
-#         wma_full = weighted_moving_average(s, min(lookback, len(s)))
-#         hma_series.append(wma_half * 2 - wma_full)
-#     return weighted_moving_average(hma_series)
-
-# N = 500
-# X = np.linspace(-10,10,N)
-# Y = np.vstack([np.sin(X), np.cos(X)]).T
-# W = Y + np.vstack([np.random.normal(0., .2, N), np.random.normal(0, .2, N)]).T
-# Z = Y.copy()
-# lookback=50
-# for i in range(N):
-#     if(i==0):
-#         pass
-#     else:
-#         Z[i,:] = hull_moving_average(W[:i,:], min(lookback,i))
-# fig, ax = plt.subplots(1,2)
-# ax[0].plot(X, Y[:,0], 'b-', label='ground truth')
-# ax[0].plot(X, W[:,0], 'g-', label='noised data')
-# ax[0].plot(X, Z[:,0], 'r-', label='HMA') 
-# ax[1].plot(X, Y[:,1], 'b-', label='ground truth')
-# ax[1].plot(X, W[:,1], 'g-', label='noised data')
-# ax[1].plot(X, Z[:,1], 'r-', label='HMA') 
-# ax[0].legend()
-# plt.show()
-
-
