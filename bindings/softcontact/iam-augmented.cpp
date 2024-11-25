@@ -124,24 +124,11 @@ void exposeIAMSoftContactAugmented() {
           bp::make_function(&IAMSoftContactAugmented::get_with_friction_cone_constraint,
                             bp::return_value_policy<bp::return_by_value>()),
           "activate friction cone (Lorentz) constraint on the contact force (default: False)")
-    //   .add_property(
-    //       "friction_constraints",
-    //       bp::make_function(&IAMSoftContactAugmented::set_friction_cone_constraints,
-    //                      bp::return_value_policy<bp::return_by_value>()),
-    //       bp::make_function(&IAMSoftContactAugmented::get_friction_cone_constraints,
-    //                       bp::return_value_policy<bp::return_by_value>()), // Change this as needed
-    //       "friction cone constraints");
       .add_property(
           "friction_constraints",
           bp::make_function(&IAMSoftContactAugmented::get_friction_cone_constraints,
                             bp::return_value_policy<bp::return_by_value>()),
           &IAMSoftContactAugmented::set_friction_cone_constraints, "friction cone constraint");
-    //   .add_property(
-    //       "friction_constraints",
-    //       bp::make_function(&IAMSoftContactAugmented::set_friction_cone_constraints,
-    //                         bp::return_value_policy<bp::return_by_value>()),
-    //       &IAMSoftContactAugmented::get_friction_cone_constraints,
-    //       "friction cone constraints");
 
   bp::register_ptr_to_python<boost::shared_ptr<IADSoftContactAugmented> >();
 

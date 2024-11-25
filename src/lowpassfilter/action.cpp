@@ -123,14 +123,33 @@ IntegratedActionModelLPF::IntegratedActionModelLPF(
   tauLim_weight_ = double(0.);
   tauReg_residual_.resize(ntau_);
   tauLim_residual_.resize(ntau_);
-  // Set constraint bounds (add ntau dimension for lpf torques constraints)
   // no constraints initially
+  with_lpf_torque_constraint_ = false;
+  lpf_torque_lb_ = -std::numeric_limits<double>::infinity()*VectorXs::Ones(ntau_);
+  lpf_torque_ub_ = std::numeric_limits<double>::infinity()*VectorXs::Ones(ntau_);
   this->set_g_lb(-std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
   this->set_g_ub(std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
+  // temp variable used to update the force bounds
+  g_lb_new_ =  this->get_g_lb();
+  g_ub_new_ =  this->get_g_ub();
 }
 
 
 IntegratedActionModelLPF::~IntegratedActionModelLPF() {}
+
+void IntegratedActionModelLPF::set_lpf_torque_lb(const VectorXs& inVec){
+  lpf_torque_lb_ = inVec;
+  g_lb_new_ = this->get_g_lb();
+  g_lb_new_.segment(differential_->get_ng(), ntau_) = lpf_torque_lb_;
+  this->set_g_lb(g_lb_new_);
+}
+
+void IntegratedActionModelLPF::set_lpf_torque_ub(const VectorXs& inVec){
+  lpf_torque_ub_ = inVec;
+  g_ub_new_ = this->get_g_ub();
+  g_ub_new_.segment(differential_->get_ng(), ntau_) = lpf_torque_ub_;
+  this->set_g_ub(g_ub_new_);
+}
 
 
 void IntegratedActionModelLPF::calc(
@@ -560,9 +579,10 @@ void IntegratedActionModelLPF::calcDiff(
     }  // tauLim !=0
     // Constraint partials for LPF torque dimensions
     d->Gy.topLeftCorner(differential_->get_ng(), ndx) = d->differential->Gx;
-    d->Gu.resize(differential_->get_ng(), nu_);
+    d->Gu.topLeftCorner(differential_->get_ng(), nu_) = d->differential->Gu;
+    // d->Gu.resize(differential_->get_ng(), nu_);
     if(with_lpf_torque_constraint_){
-      d->Gy.bottomRightCorner(ntau_, ntau_).diagonal().array() += double(1.);
+      d->Gy.bottomRightCorner(ntau_, ntau_).diagonal().array() = double(1.);
     }
 
   }    // tau integration
@@ -915,6 +935,25 @@ void IntegratedActionModelLPF::set_differential(
   Base::set_u_ub(differential_->get_u_ub());
 }
 
+void IntegratedActionModelLPF::set_g_lb(const VectorXs& g_lb) {
+  if (static_cast<std::size_t>(g_lb.size()) != ng_) {
+    throw_pretty(
+        "Invalid argument: "
+        << "inequality lower bound has wrong dimension (it should be " +
+               std::to_string(ng_) + ")");
+  }
+  g_lb_ = g_lb;
+}
+
+void IntegratedActionModelLPF::set_g_ub(const VectorXs& g_ub) {
+  if (static_cast<std::size_t>(g_ub.size()) != ng_) {
+    throw_pretty(
+        "Invalid argument: "
+        << "inequality upper bound has wrong dimension (it should be " +
+               std::to_string(ng_) + ")");
+  }
+  g_ub_ = g_ub;
+}
 
 void IntegratedActionModelLPF::set_control_reg_cost(
     const double& weight, const VectorXs& ref) {

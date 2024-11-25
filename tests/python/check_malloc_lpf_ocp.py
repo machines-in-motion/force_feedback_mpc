@@ -24,9 +24,8 @@ from force_feedback_mpc.core_mpc_utils import path_utils, misc_utils, mpc_utils
 
 from croco_mpc_utils import pinocchio_utils as pin_utils
 
-from force_feedback_mpc.soft_mpc.aug_ocp import OptimalControlProblemSoftContactAugmented
-from force_feedback_mpc.soft_mpc.aug_data import OCPDataHandlerSoftContactAugmented
-from force_feedback_mpc.soft_mpc.utils import SoftContactModel1D
+from force_feedback_mpc.lpf_mpc.data import OCPDataHandlerLPF
+from force_feedback_mpc.lpf_mpc.ocp import OptimalControlProblemLPF, getJointAndStateIds
 from croco_mpc_utils.utils import load_yaml_file
 
 import mim_solvers
@@ -43,7 +42,7 @@ import os
 ### LOAD ROBOT MODEL and SIMU ENV ### 
 # # # # # # # # # # # # # # # # # # # 
 # Read config file
-config_name = 'soft_ocp_3d'
+config_name = 'lpf_ocp_1d'
 config = path_utils.load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/'+config_name+'.yml')
 # Create a simulation environment & simu-pin wrapper 
 q0 = np.asarray(config['q0'])
@@ -60,39 +59,26 @@ id_endeff = robot.model.getFrameId(frame_of_interest)
 from force_feedback_mpc.core_mpc_utils import sim_utils
 sim_utils.setup_obstacle_collision_no_sim(robot, config)
 
-# Contact model
-oPc=np.asarray(config['contactPosition']) + np.asarray(config['oPc_offset'])
-softContactModel = SoftContactModel1D(Kp=np.asarray(config['Kp']), 
-                                      Kv=np.asarray(config['Kv']), 
-                                      oPc=oPc,
-                                      frameId=id_endeff, 
-                                      contactType=config['contactType'], 
-                                      pinRef=config['pinRefFrame'])
-
-# Measure initial force in pybullet
-f0 = np.zeros(6)
-assert(softContactModel.nc == 1)
-assert(softContactModel.pinRefFrame == pin.LOCAL_WORLD_ALIGNED)
-softContactModel.print()
-
-MASK = softContactModel.mask
-y0 = np.concatenate([ x0, np.array([f0[MASK]]) ])  
-RESET_ANCHOR_POINT = bool(config['RESET_ANCHOR_POINT'])
-anchor_point = oPc.copy()
-
 # # # # # # # # # 
 ### OCP SETUP ###
-# # # # # # # # #
-# Compute initial gravity compensation torque torque   
-f_ext0 = [pin.Force.Zero() for _ in robot.model.joints] # pin_utils.get_external_joint_torques(contact_placement, f0, robot)   
-y0 = np.concatenate([x0, f0[-softContactModel.nc:]])  
-u0 = pin_utils.get_tau(q0, v0, np.zeros(nq), f_ext0, robot.model, np.zeros(nq))
+# # # # # # # # # 
+# Apply masks on joints to extract LPF joints
+u0 = pin_utils.get_u_grav(q0, robot.model)
+lpf_joint_names = robot.model.names[1:] #['A1', 'A2', 'A3', 'A4'] #  #
+_, lpfStateIds = getJointAndStateIds(robot.model, lpf_joint_names)
+n_lpf = len(lpf_joint_names)
+_, nonLpfStateIds = getJointAndStateIds(robot.model, list(set(robot.model.names[1:]) - set(lpf_joint_names)) )
+logger.debug("LPF state ids ")
+logger.debug(lpfStateIds)
+logger.debug("Non LPF state ids ")
+logger.debug(nonLpfStateIds)
+y0 = np.concatenate([x0, u0[lpfStateIds]])
+      
+# Init shooting problem and solver
+ocp = OptimalControlProblemLPF(robot, config, lpf_joint_names).initialize(y0)
 # Warmstart and solve
-xs_init = [y0 for i in range(config['N_h']+1)]
-us_init = [u0 for i in range(config['N_h'])] 
-# Setup Croco OCP and create solver
-ocp = OptimalControlProblemSoftContactAugmented(robot, config).initialize(y0, softContactModel)
-
+xs_init = [y0 for _ in range(config['N_h']+1)] 
+us_init = [u0 for _ in range(config['N_h'])]
 solver = mim_solvers.SolverCSQP(ocp)
 solver.with_callbacks         = config['with_callbacks']
 solver.use_filter_line_search = config['use_filter_line_search']
@@ -108,47 +94,38 @@ solver.mu_dynamic             = config["mu_dynamic"]
 solver.mu_constraint          = config["mu_constraint"]
 solver.regMax                 = 1e6
 solver.reg_max                = 1e6
-# !!! Deactivate all costs & contact models initially !!!
-models = list(solver.problem.runningModels) + [solver.problem.terminalModel]
+models = list(ocp.runningModels) + [ocp.terminalModel]
 datas = list(solver.problem.runningDatas) + [solver.problem.terminalData]
+for k,m in enumerate(models):
+    m.differential.costs.costs["translation"].active = False
+    m.differential.contacts.changeContactStatus("contact", False)
+    m.differential.costs.costs['rotation'].active = False
+    m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
+    # set each collision constraint bounds to [0, inf]
+    if(k!=0 and k!= config['N_h']):
+        m.differential.constraints.constraints['forceBox'].constraint.updateBounds(
+                    np.array([0.]),
+                    np.array([25])) 
+        m.differential.constraints.changeConstraintStatus('forceBox', True)
+    for col_idx in range(len(robot.collision_model.collisionPairs)):
+        # only populates the bounds of the constraint item (not the manager)
+        m.differential.constraints.constraints['collisionBox_' + str(col_idx)].constraint.updateBounds(
+                    np.array([0.]),
+                    np.array([np.inf])) 
+        # needed to pass the bounds to the manager
+        m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
 
-# # test DAM 
-# for k,m in enumerate(models):
-#     d = datas[k]
 m = models[0]
 d = datas[0]
-for cost_ref in [pin.LOCAL, pin.LOCAL_WORLD_ALIGNED]:
-    for ref in [pin.LOCAL, pin.LOCAL_WORLD_ALIGNED]:
-        for active_contact in [True, False]:
-            for with_armature in [True, False]:
-                for with_gravity_torque_reg in [True, False]:
-                    for with_force_cost in [True, False]:
-                        for with_force_rate_reg_cost in [True, False]:
-                            # print("Node " + str(k) + 
-                            print("cost ref = " + str(cost_ref) + ", dyn. ref = " + str(ref) + \
-                                ", active_ct = " + str(active_contact) + ", armature = " + str(with_armature) + \
-                                ", grav_cost = " + str(with_gravity_torque_reg) + ", force_cost = " + str(with_force_cost) + \
-                                ", force_rate_cost = " + str(with_force_rate_reg_cost))
-                            # Set attributes
-                            m.differential.cost_ref                 = cost_ref
-                            m.differential.ref                      = ref
-                            m.differential.active_contact           = active_contact
-                            m.differential.with_armature            = with_armature
-                            m.differential.with_gravity_torque_reg  = with_gravity_torque_reg
-                            m.differential.with_force_cost          = with_force_cost
-                            m.differential.with_force_rate_reg_cost = with_force_rate_reg_cost
-                            # Check calc
-                            # print("        > Check DAM.calc")
-                            m.differential.calc(d.differential, x0, f0[-softContactModel.nc:], u0)
-                            # print("        > Check DAM.calcDiff")
-                            m.differential.calcDiff(d.differential, x0, f0[-softContactModel.nc:], u0)
-                            for with_force_constraint in [True, False]:   
-                                print("force_cstr = "+str(with_force_constraint))   
-                                m.with_force_constraint = with_force_constraint
-                                # print("        > Check IAM.calc")
-                                m.calc(d, y0, u0)
-                                # print("        > Check IAM.calcDiff")
-                                m.calcDiff(d, y0, u0)
+for with_armature in [True, False]:
+    # Check calc of IAM LPF
+    for with_lpf_torque_constraint in [True, False]:   
+        print("torque_cstr = "+str(with_lpf_torque_constraint))   
+        m.with_lpf_torque_constraint = with_lpf_torque_constraint
+        print("        > Check IAM.calc")
+        m.calc(d, y0, u0)
+        print("        > Check IAM.calcDiff")
+        m.calcDiff(d, y0, u0)
 
 
 # for k,m in enumerate(models):

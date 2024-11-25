@@ -212,6 +212,11 @@ for k,m in enumerate(models):
     m.differential.contacts.changeContactStatus("contact", False)
     m.differential.costs.costs['rotation'].active = False
     m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
+    # if(k!= 0  and k!= config['N_h']):
+    #     m.differential.constraints.constraints['forceBox'].constraint.updateBounds(
+    #                 np.array([0.]),
+    #                 np.array([25])) 
+    #     m.differential.constraints.changeConstraintStatus('forceBox', True)
     # set each collision constraint bounds to [0, inf]
     for col_idx in range(len(robot.collision_model.collisionPairs)):
         # only populates the bounds of the constraint item (not the manager)
@@ -220,9 +225,6 @@ for k,m in enumerate(models):
                     np.array([np.inf])) 
         # needed to pass the bounds to the manager
         m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
-        # need to set explicitly the IAM bounds
-        m.g_lb = np.zeros([m.ng]) # needs to be slightly negative (bug to investigate)
-        m.g_ub = np.array([np.inf]*m.ng)
 
 solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)

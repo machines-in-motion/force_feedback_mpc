@@ -34,7 +34,6 @@ logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
 import numpy as np  
 np.set_printoptions(precision=4, linewidth=180)
 RANDOM_SEED = 1 #19
-logger.debug("1")
 
 
 from force_feedback_mpc.core_mpc_utils import mpc_utils, path_utils
@@ -56,7 +55,6 @@ import time
 import pinocchio as pin
 
 import os
-logger.debug("2")
 
 def solveOCP(q, v, solver, nb_iter, target_reach, TASK_PHASE, target_force):
         # print(target_force)
@@ -96,7 +94,7 @@ def solveOCP(q, v, solver, nb_iter, target_reach, TASK_PHASE, target_force):
                     m[k].differential.costs.costs["force"].active = True
                     m[k].differential.costs.costs["force"].cost.residual.reference = fref
                 # if(k!=solver.problem.T and k != 0):
-                    m[k].differential.constraints.changeConstraintStatus('forceBox', True)
+                #     m[k].differential.constraints.changeConstraintStatus('forceBox', True)
                 
         # Update OCP for circle phase
         if(TASK_PHASE == 4):
@@ -113,13 +111,14 @@ def solveOCP(q, v, solver, nb_iter, target_reach, TASK_PHASE, target_force):
                     fref = pin.Force(np.array([0., 0., target_force[k], 0., 0., 0.]))
                     m[k].differential.costs.costs["force"].active = True
                     m[k].differential.costs.costs["force"].cost.residual.reference = fref
+                # if(k!=solver.problem.T and k != 0):
+                #     m[k].differential.constraints.changeConstraintStatus('forceBox', True)
         # Solve OCP 
         solver.solve(xs_init, us_init, maxiter=nb_iter, isFeasible=False)
         # Send solution to parent process + riccati gains
         solve_time = time.time()
         return solver.us[0], solver.xs[1], solver.K[0], solve_time - t, solver.iter, solver.KKT
 
-logger.debug("3")
 
 TORQUE_TRACKING=0
 # def main(SAVE_DIR, TORQUE_TRACKING):
@@ -141,13 +140,12 @@ env.add_robot(robot_simulator)
 robot_simulator.reset_state(q0, v0)
 robot_simulator.forward_robot(q0, v0)
 robot = robot_simulator.pin_robot
-logger.debug("4")
+
 # Get dimensions 
 nq, nv = robot.model.nq, robot.model.nv; nu = nq
 # Placement of LOCAL end-effector frame w.r.t. WORLD frame
 frame_of_interest = config['frame_of_interest']
 id_endeff = robot.model.getFrameId(frame_of_interest)
-logger.debug("5")
 # EE translation target : contact point + vertical offset (radius of the ee ball)
 oPc = np.asarray(config['contactPosition']) + np.asarray(config['oPc_offset'])
 simulator_utils.display_ball(oPc, RADIUS=0.02, COLOR=[1.,0.,0.,0.2])
@@ -163,9 +161,10 @@ contact_surface_bulletId = simulator_utils.display_contact_surface(pin.SE3(np.ey
 # Make the contact soft (e.g. tennis ball or sponge on the robot)
 simulator_utils.set_lateral_friction(contact_surface_bulletId, 0.5)
 simulator_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 10000, 500)
-logger.debug("6")
+
 # Create obstacle
 capsule_id = simulator_utils.setup_obstacle_collision(robot_simulator, robot, config)
+
 # # # # # # # # # 
 ### OCP SETUP ###
 # # # # # # # # # 
@@ -199,14 +198,12 @@ for k,m in enumerate(models):
     m.differential.contacts.changeContactStatus("contact", False)
     m.differential.costs.costs['rotation'].active = False
     m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
+    # if(k!= 0  and k!= config['N_h']):
+    #     m.differential.constraints.constraints['forceBox'].constraint.updateBounds(
+    #                 np.array([0.]),
+    #                 np.array([25])) 
+    #     m.differential.constraints.changeConstraintStatus('forceBox', True)
     # set each collision constraint bounds to [0, inf]
-  
-    if(k!= config['N_h']):
-        m.differential.constraints.constraints['forceBox'].constraint.updateBounds(
-                    np.array([0.]),
-                    np.array([25])) 
-        m.differential.constraints.changeConstraintStatus('forceBox', True)
-
     for col_idx in range(len(robot.collision_model.collisionPairs)):
         # only populates the bounds of the constraint item (not the manager)
         m.differential.constraints.constraints['collisionBox_' + str(col_idx)].constraint.updateBounds(

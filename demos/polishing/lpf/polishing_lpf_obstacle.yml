@@ -63,7 +63,6 @@ qp_termination_tol_abs: 0.0005
 qp_termination_tol_rel: 0
 warm_start_y: False 
 reset_rho: False
-                      # Initial robot joint velocity
 
 # LPF 
 LPF_TYPE: 0                            # (0) ZOH (1) Euler (2) exact EMA

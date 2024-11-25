@@ -41,6 +41,10 @@ class IntegratedActionDataLPF : public crocoddyl::ActionDataAbstract {
     differential = model->get_differential()->createData();
     const std::size_t& ndy = model->get_state()->get_ndx();
     dy = VectorXs::Zero(ndy);
+    Gy.resize(model->get_ng(), model->get_state()->get_ndx());
+    Gy.setZero();
+    Gu.resize(model->get_ng(), model->get_nu());
+    Gu.setZero();
     // for wlim cost
     activation = boost::static_pointer_cast<ActivationDataQuadraticBarrier>(
         model->activation_model_tauLim_->createData());
@@ -147,10 +151,10 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
   void set_with_lpf_torque_constraint(const bool inBool) {with_lpf_torque_constraint_ = inBool; };
   const bool& get_with_lpf_torque_constraint() const { return with_lpf_torque_constraint_; };
 
-  void set_lpf_torque_lb(const VectorXs& inVec) { lpf_torque_lb_ = inVec; };
+  void set_lpf_torque_lb(const VectorXs& inVec); //{ lpf_torque_lb_ = inVec; };
   const VectorXs& get_lpf_torque_lb() const { return lpf_torque_lb_; };
 
-  void set_lpf_torque_ub(const VectorXs& inVec) { lpf_torque_ub_ = inVec; };
+  void set_lpf_torque_ub(const VectorXs& inVec); // { lpf_torque_ub_ = inVec; };
   const VectorXs& get_lpf_torque_ub() const { return lpf_torque_ub_; };
   
   // hard-coded costs
@@ -159,6 +163,17 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
   void set_control_lim_cost(const double& cost_weight_w_lim);
 
   void compute_alpha(const double& fc);
+
+  /**
+   * @brief Modify the lower bound of the inequality constraints
+   */
+  void set_g_lb(const VectorXs& g_lb);
+
+  /**
+   * @brief Modify the upper bound of the inequality constraints
+   */
+  void set_g_ub(const VectorXs& g_ub);
+
 
  protected:
   using Base::has_control_limits_;  //!< Indicates whether any of the control
