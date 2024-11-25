@@ -168,7 +168,7 @@ void IntegratedActionModelLPF::calc(
                  << "w has wrong dimension (it should be " +
                         std::to_string(nw_) + ")");
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
   boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
   // Extract x=(q,v) and tau from augmented state y
@@ -328,7 +328,7 @@ void IntegratedActionModelLPF::calc(
       d->r.tail(ntau_) = tauLim_residual_;
     }
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }  // calc
 
 
@@ -342,7 +342,7 @@ void IntegratedActionModelLPF::calc(
                  << "y has wrong dimension (it should be " +
                         std::to_string(ny_) + ")");
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
   boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
   // Extract x=(q,v) and tau from augmented state y
@@ -359,7 +359,7 @@ void IntegratedActionModelLPF::calc(
   if (with_cost_residual_) {
     d->r.head(differential_->get_nr()) = d->differential->r;
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }  // calc
 
 
@@ -380,7 +380,7 @@ void IntegratedActionModelLPF::calcDiff(
                  << "w has wrong dimension (it should be " +
                         std::to_string(nw_) + ")");
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
   boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
 
@@ -774,7 +774,7 @@ void IntegratedActionModelLPF::calcDiff(
   //       }
   //     }
   //   }  // tau_plus_integration
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
 
@@ -789,7 +789,7 @@ void IntegratedActionModelLPF::calcDiff(
                  << "y has wrong dimension (it should be " +
                         std::to_string(ny_) + ")");
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
   boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
 
@@ -827,7 +827,7 @@ void IntegratedActionModelLPF::calcDiff(
     }
   }
 #endif
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
 

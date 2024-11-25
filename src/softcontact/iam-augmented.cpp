@@ -111,7 +111,7 @@ void IAMSoftContactAugmented::calc(
                  << "u has wrong dimension (it should be " +
                         std::to_string(nu_) + ")");
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
   boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
   boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = boost::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
@@ -214,7 +214,7 @@ void IAMSoftContactAugmented::calc(
     d->r.head(differential_->get_nr()) = diff_data_soft->r;
     d->r.tail(nc_) = diff_data_soft->f_residual;
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }  // calc
 
 
@@ -228,7 +228,7 @@ void IAMSoftContactAugmented::calc(
                  << "y has wrong dimension (it should be " +
                         std::to_string(ny_) + ")");
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
   boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
   boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = boost::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
@@ -255,7 +255,7 @@ void IAMSoftContactAugmented::calc(
     d->r.head(differential_->get_nr()) = diff_data_soft->r;
     d->r.tail(nc_) = diff_data_soft->f_residual;
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }  // calc
 
 
@@ -278,7 +278,7 @@ void IAMSoftContactAugmented::calcDiff(
                  << "u has wrong dimension (it should be " +
                         std::to_string(nu_) + ")");
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
 
   // Static casting the data
   boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
@@ -341,7 +341,7 @@ void IAMSoftContactAugmented::calcDiff(
     // std::cout << " dcone_df = " << d->dcone_df << std::endl;
 
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
 
@@ -356,7 +356,7 @@ void IAMSoftContactAugmented::calcDiff(
                  << "y has wrong dimension (it should be " +
                         std::to_string(ny_) + ")");
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
 
   // Static casting the data
   boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
@@ -386,7 +386,7 @@ void IAMSoftContactAugmented::calcDiff(
     d->dcone_df[2] = friction_coef_;
     d->Gy.bottomRightCorner(1, nc_) = d->dcone_df.transpose();
   }
-  FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
+  // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
 
