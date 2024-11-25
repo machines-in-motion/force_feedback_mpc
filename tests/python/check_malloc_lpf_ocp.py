@@ -96,24 +96,25 @@ solver.regMax                 = 1e6
 solver.reg_max                = 1e6
 models = list(ocp.runningModels) + [ocp.terminalModel]
 datas = list(solver.problem.runningDatas) + [solver.problem.terminalData]
-for k,m in enumerate(models):
-    m.differential.costs.costs["translation"].active = False
-    m.differential.contacts.changeContactStatus("contact", False)
-    m.differential.costs.costs['rotation'].active = False
-    m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
-    # set each collision constraint bounds to [0, inf]
-    if(k!=0 and k!= config['N_h']):
-        m.differential.constraints.constraints['forceBox'].constraint.updateBounds(
-                    np.array([0.]),
-                    np.array([25])) 
-        m.differential.constraints.changeConstraintStatus('forceBox', True)
-    for col_idx in range(len(robot.collision_model.collisionPairs)):
-        # only populates the bounds of the constraint item (not the manager)
-        m.differential.constraints.constraints['collisionBox_' + str(col_idx)].constraint.updateBounds(
-                    np.array([0.]),
-                    np.array([np.inf])) 
-        # needed to pass the bounds to the manager
-        m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
+# oeirhf
+# for k,m in enumerate(models):
+#     m.differential.costs.costs["translation"].active = False
+#     m.differential.contacts.changeContactStatus("contact", False)
+#     m.differential.costs.costs['rotation'].active = False
+#     m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
+#     # set each collision constraint bounds to [0, inf]
+#     if(k!=0 and k!= config['N_h']):
+#         m.differential.constraints.constraints['forceBox'].constraint.updateBounds(
+#                     np.array([0.]),
+#                     np.array([25])) 
+#         m.differential.constraints.changeConstraintStatus('forceBox', True)
+#     for col_idx in range(len(robot.collision_model.collisionPairs)):
+#         # only populates the bounds of the constraint item (not the manager)
+#         m.differential.constraints.constraints['collisionBox_' + str(col_idx)].constraint.updateBounds(
+#                     np.array([0.]),
+#                     np.array([np.inf])) 
+#         # needed to pass the bounds to the manager
+#         m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
 
 m = models[0]
 d = datas[0]
@@ -122,37 +123,7 @@ for with_armature in [True, False]:
     for with_lpf_torque_constraint in [True, False]:   
         print("torque_cstr = "+str(with_lpf_torque_constraint))   
         m.with_lpf_torque_constraint = with_lpf_torque_constraint
-        print("        > Check IAM.calc")
+        # print("        > Check IAM.calc")
         m.calc(d, y0, u0)
-        print("        > Check IAM.calcDiff")
+        # print("        > Check IAM.calcDiff")
         m.calcDiff(d, y0, u0)
-
-
-# for k,m in enumerate(models):
-#     m.differential.active_contact = False
-#     m.differential.f_des = np.zeros(1)
-#     m.differential.cost_ref = pin.LOCAL_WORLD_ALIGNED
-#     m.differential.ref     = pin.LOCAL_WORLD_ALIGNED
-#     # FORCE CONSTRAINT STUFF
-#     # # if(k!=0):
-#     # # m.force_lb =  np.array([-10000.])
-#     # m.with_force_constraint = True
-#     #     # m.force_lb = np.array([-10000.])
-#     #     # m.force_ub = np.array([10000.])
-#     # # m.force_ub =  np.array([10000.])
-#     # COLLISION CONSTRAINT STUFF
-#     # set each collision constraint bounds to [0, inf]
-#     for col_idx in range(len(robot.collision_model.collisionPairs)):
-#         # only populates the bounds of the constraint item (not the manager)
-#         m.differential.constraints.constraints['collisionBox_' + str(col_idx)].constraint.updateBounds(
-#                     np.array([0.]),
-#                     np.array([np.inf])) 
-#         # needed to pass the bounds to the manager
-#         m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
-#         # need to set explicitly the IAM bounds
-#         # m.g_lb = -0.0001*np.ones([m.ng]) # needs to be slightly negative (bug to investigate)
-#         m.g_lb = np.zeros([m.ng]) # needs to be slightly negative (bug to investigate)
-#         m.g_ub = np.array([np.inf]*m.ng)
-# # wfhwef
-# solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
-# solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)

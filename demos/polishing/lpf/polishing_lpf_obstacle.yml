@@ -123,7 +123,7 @@ collisionPairs:
 - ["L6_capsule_0", "obstacle1"]
 - ["L6_capsule_1", "obstacle1"]
 - ["L7_capsule_0", "obstacle1"]
-OBSTACLE_POSE: [0.8, 0.05, 0.35, 0., 0.70710678,  0, 0.70710678]
+OBSTACLE_POSE: [0.8, 0.06, 0.35, 0., 0.70710678,  0, 0.70710678]
 OBSTACLE_RADIUS: 0.02
 OBSTACLE_LENGTH: 0.7
 

@@ -212,21 +212,15 @@ for k,m in enumerate(models):
     m.differential.contacts.changeContactStatus("contact", False)
     m.differential.costs.costs['rotation'].active = False
     m.differential.costs.costs['rotation'].cost.residual.reference = pin.utils.rpyToMatrix(np.pi, 0., np.pi)
-    # if(k!= 0  and k!= config['N_h']):
-    #     m.differential.constraints.constraints['forceBox'].constraint.updateBounds(
-    #                 np.array([0.]),
-    #                 np.array([25])) 
-    #     m.differential.constraints.changeConstraintStatus('forceBox', True)
-    # set each collision constraint bounds to [0, inf]
-    for col_idx in range(len(robot.collision_model.collisionPairs)):
-        # only populates the bounds of the constraint item (not the manager)
-        m.differential.constraints.constraints['collisionBox_' + str(col_idx)].constraint.updateBounds(
-                    np.array([0.]),
-                    np.array([np.inf])) 
-        # needed to pass the bounds to the manager
-        m.differential.constraints.changeConstraintStatus('collisionBox_' + str(col_idx), True)
-
-solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
+    # need calc because constraint manager and DAM bounds are somehow not initialized properly
+    m.calc(datas[k], y0, u0)
+    # Now set manually the IAM augmented bounds
+    lpf_lb = -robot_simulator.pin_robot.model.effortLimit[lpfStateIds]
+    lpf_ub = robot_simulator.pin_robot.model.effortLimit[lpfStateIds]
+    m.g_lb = np.concatenate([m.differential.g_lb, lpf_lb])
+    m.g_ub = np.concatenate([m.differential.g_ub, lpf_ub])
+    
+# solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=100, isFeasible=False)
 # Setup tracking problem with circle ref EE trajectory + Warm start state = IK of circle trajectory
 OCP_TO_CTRL_RATIO = int(config['dt']/dt_simu)
