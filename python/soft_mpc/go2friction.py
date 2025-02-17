@@ -319,7 +319,7 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
         data = DADSoftContactDynamics_Go2(self)
         return data
 
-    def calc(self, data, x, f, u, ):
+    def calc(self, data, x, f, u):
         '''
         Compute joint acceleration based on state, force and torques
         '''
@@ -333,7 +333,7 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
 
         if(self.active_contact):
             # Compute contact wrench in spatial coordinates
-            data.fext      = self.contacts.calc(dad, f)
+            data.fext      = self.contacts.calc(data, f)
             data.fext_copy = data.fext.copy()
             # Compute joint acceleration 
             data.xout = pin.aba(self.pinocchio, data.pinocchio, q, v, data.multibody.actuation.tau, data.fext) 
@@ -346,6 +346,22 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
         pin.updateGlobalPlacements(self.pinocchio, data.pinocchio)
         # Cost calc 
         self.costs.calc(data.costs, x, u) 
+        data.cost = data.costs.cost
+
+        # Add hard-coded cost
+        if(self.active_contact and self.with_force_cost):
+            # Compute force residual and add force cost to total cost
+            data.f_residual = f - self.f_des
+            data.cost       += 0.5 * self.f_weight * data.f_residual.T @ data.f_residual
+
+    def calc(self, data, x, f):
+        '''
+        Compute joint acceleration based on state, force and torques
+        '''
+        q = x[:self.state.nq]
+        v = x[self.state.nq:]
+        pin.computeAllTerms(self.pinocchio, data.pinocchio, q, v)
+        self.costs.calc(data.costs, x) 
         data.cost = data.costs.cost
 
         # Add hard-coded cost
@@ -400,6 +416,23 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             data.Lf         = self.f_weight * data.f_residual.T
             data.Lff        = self.f_weight * np.eye(self.contacts.nc_tot)
 
+    def calcDiff(self, data, x, f):
+        '''
+        Compute derivatives 
+        '''
+        q = x[:self.state.nq]
+        v = x[self.state.nq:]
+        self.costs.calcDiff(data.costs, x)
+        data.Lx = data.costs.Lx
+        data.Lu = data.costs.Lu
+        data.Lxx = data.costs.Lxx
+        data.Lxu = data.costs.Lxu
+        data.Luu = data.costs.Luu
+        # add hard-coded cost
+        if(self.active_contact and self.with_force_cost):
+            data.f_residual = f - self.f_des
+            data.Lf         = self.f_weight * data.f_residual.T
+            data.Lff        = self.f_weight * np.eye(self.contacts.nc_tot)
 
 # Custom Differential Action Data class for go2+arm
 class DADSoftContactDynamics_Go2(crocoddyl.DifferentialActionDataAbstract):
@@ -529,6 +562,34 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
                 cone_residual_i = fc.calc(contact_force_i)
                 data.g[ng_dam + nf + i] = cone_residual_i
 
+    def calc(self, data, y):
+        nx = self.differential.state.nx
+        nv = self.differential.state.nv
+        nq = self.differential.state.nq
+        ng_dam = self.differential.ng
+        nf = self.nf
+        x = y[:nx]
+        f = y[-nf:]
+        # q = x[:self.state.nq]
+        v = x[-nv:]
+        self.differential.calc(data.differential, x, f) 
+        a = data.differential.xout
+        fdot = data.differential.fout
+        data.dx = np.zeros(data.dx.shape)
+        data.cost = self.dt*data.differential.cost
+        # Compute cost residual
+        if(self.withCostResidual):
+            data.r = data.differential.r
+        # Compute force constraint residual
+        if(self.with_force_constraint):
+            data.g[self.differential.ng: self.differential.ng+nf] = f
+        # Compute friction cone constraint residual
+        if(self.with_friction_cone_constraint):
+            for i, fc in enumerate(self.frictionConeConstaints):
+                contact_force_i = f[3*i:3*(i+1)]
+                cone_residual_i = fc.calc(contact_force_i)
+                data.g[ng_dam + nf + i] = cone_residual_i
+
     def calcDiff(self, data, y, u):
         nx = self.differential.state.nx
         ndx = self.differential.state.ndx
@@ -591,6 +652,43 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
         data.Lu = data.differential.Lu*self.dt
         data.Luu = data.differential.Luu*self.dt
 
+        data.Gx[0:ng_dam, 0:ndx] = data.differential.Gx
+        data.Gu[0:ng_dam, 0:nu] = data.differential.Gu
+        if(self.with_force_constraint):
+            data.Gx[ng_dam:ng_dam+nf, ndx:ndx+nf] = np.eye(nf)
+        # Compute friction cone constraint residual partials
+        if(self.with_friction_cone_constraint):
+            for i, fc in enumerate(self.frictionConeConstaints):
+                contact_force_i      = f[3*i:3*(i+1)]
+                if(np.linalg.norm(contact_force_i)>1e-3):
+                    cone_residual_diff_i = fc.calcDiff(contact_force_i)
+                    data.Gx[ng_dam+nf+i:ng_dam+nf+i+1, ndx+nf+3*i:ndx+nf+3*(i+1)] = cone_residual_diff_i
+
+    def calcDiff(self, data, y):
+        nx = self.differential.state.nx
+        ndx = self.differential.state.ndx
+        nv = self.differential.state.nv
+        nu = self.differential.nu
+        nf = self.nf
+        ng_dam = self.differential.ng
+        x = y[:nx]
+        f = y[-nf:]
+
+        # Calc forward dyn derivatives
+        self.differential.calcDiff(data.differential, x, f)
+        # state_->Jintegrate(x, d->dx, d->Fx, d->Fx, first, addto);
+        self.stateSoft.Jintegrate(y, data.dx, data.Fx)  # add identity to Fx = d(x+dx)/dx = d(q,v)/d(q,v)
+        # data.Fx (nu, nu).diagonal().array() -=
+        #     Scalar(1.);  // remove identity from Ftau (due to stateLPF.Jintegrate)
+        data.Fx[-nf:, -nf:] -= np.eye(nf)
+        # d->Lx.noalias() = time_step_ * d->differential->Lx;
+        data.Lx[:ndx] = data.differential.Lx*self.dt
+        data.Lx[-nf:] = data.differential.Lf*self.dt
+        data.Lxx[:ndx,:ndx] = data.differential.Lxx*self.dt
+        data.Lxx[-nf:,-nf:] = data.differential.Lff*self.dt
+        data.Lxu[:ndx, :nu] = data.differential.Lxu*self.dt
+        data.Lu = data.differential.Lu*self.dt
+        data.Luu = data.differential.Luu*self.dt
         data.Gx[0:ng_dam, 0:ndx] = data.differential.Gx
         data.Gu[0:ng_dam, 0:nu] = data.differential.Gu
         if(self.with_force_constraint):
@@ -682,7 +780,7 @@ f0 = np.zeros(3*5)
 u0 = np.zeros(actuation.nu)
 y0 = np.concatenate([x0, f0])
 comDes = []
-N_ocp = 10 #250
+N_ocp = 100 #250
 dt = 0.02
 T = N_ocp * dt
 radius = 0.065
@@ -734,16 +832,32 @@ for t in range(N_ocp+1):
     
     dam = DAMSoftContactDynamics3D_Go2(state, actuation, costModel, constraintModelManager)
     dad = dam.createData()
-
     dam.calc(dad, x0, f0, u0)
-    
-    dam.calcDiff(dad, x0, f0, u0)
-    
-    iam = IAMSoftContactDynamics3D_Go2(dam, dt=dt, withCostResidual=True, frictionConeConstaints=frictionConeConstaints)
-    iad = iam.createData()
+    # dam.calcDiff(dad, x0, f0, u0)
+    # iam = IAMSoftContactDynamics3D_Go2(dam, dt=dt, withCostResidual=True, frictionConeConstaints=frictionConeConstaints)
+    # iad = iam.createData()
+    # iam.calc(iad, y0, u0)
+    # iam.calcDiff(iad, y0, u0)
+    # # iam = IAMSoftContactDynamics3D_Go2(dam, dt=dt, withCostResidual=True, frictionConeConstaints=frictionConeConstaints)
+    # # iad = iam.createData()
+    # # iam.calc(iad, y0, u0)
+    # # running_models += [iam]
 
-    iam.calc(iad, y0, u0)
-    iam.calcDiff(iad, y0, u0)
+import mim_solvers
+# Create shooting problem
+ocp = crocoddyl.ShootingProblem(y0, running_models[:-1], running_models[-1])
 
-    # model = crocoddyl.IntegratedActionModelEuler(dmodel, dt)
-    # running_models += [model]
+solver = mim_solvers.SolverCSQP(ocp)
+solver.max_qp_iters = 1000
+max_iter = 500
+solver.with_callbacks = True
+solver.use_filter_line_search = False
+solver.termination_tolerance = 1e-4
+solver.eps_abs = 1e-6
+solver.eps_rel = 1e-6
+
+xs = [y0]*(solver.problem.T + 1)
+us = [u0]*solver.problem.T
+# us = solver.problem.quasiStatic([x0]*solver.problem.T) 
+solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
+solver.solve(xs, us, max_iter)   
