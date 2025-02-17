@@ -128,14 +128,11 @@ class ViscoElasticContact3d_Multiple:
         self.nv        = self.state.nv
         # number of contact models
         self.nc        = len(self.contacts) 
-        print("Number of contact models : ", self.nc)
         # total contact space dimension
         self.nc_tot    = np.sum(np.array([ct.nc for ct in self.contacts])) 
-        print("Total contact dimension : ", self.nc_tot)
         self.Jc        = np.zeros((self.nc_tot, self.nv))
         self.fext      = [pin.Force.Zero() for _ in range(self.pinocchio.njoints)]
         self.fext_copy = [pin.Force.Zero() for _ in range(self.pinocchio.njoints)]
-        print("Total contact Jacobian size = ", self.Jc.shape)
         self.fout      = np.zeros(self.nc_tot)
         self.fout_copy = np.zeros(self.nc_tot)
         # Active if at least 1 contact is active
@@ -504,6 +501,7 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
         nx = self.differential.state.nx
         nv = self.differential.state.nv
         nq = self.differential.state.nq
+        ng_dam = self.differential.ng
         nf = self.nf
         x = y[:nx]
         f = y[-nf:]
@@ -525,10 +523,11 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
         if(self.with_force_constraint):
             data.g[self.differential.ng: self.differential.ng+nf] = f
         # Compute friction cone constraint residual
-        print(data.g.shape)
         if(self.with_friction_cone_constraint):
             for i, fc in enumerate(self.frictionConeConstaints):
-                data.g[self.ng + nf + i] = fc.calc(f[3*i:3*(i+1)])
+                contact_force_i = f[3*i:3*(i+1)]
+                cone_residual_i = fc.calc(contact_force_i)
+                data.g[ng_dam + nf + i] = cone_residual_i
 
     def calcDiff(self, data, y, u):
         nx = self.differential.state.nx
@@ -565,7 +564,7 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
         data.Fx[:nv, -nf:] = data.differential.dABA_df * self.dt**2
         data.Fx[nv:ndx, -nf:] = data.differential.dABA_df * self.dt
         # New block from augmented dynamics (bottom right corner)
-        data.Fx[-nf:,-nf:] = np.eye(3) + data.differential.dfdt_df*self.dt
+        data.Fx[-nf:,-nf:] = np.eye(nf) + data.differential.dfdt_df*self.dt
         # New block from augmented dynamics (bottom left corner)
         data.Fx[-nf:, :ndx] = data.differential.dfdt_dx * self.dt
         
@@ -593,15 +592,16 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
         data.Luu = data.differential.Luu*self.dt
 
         data.Gx[0:ng_dam, 0:ndx] = data.differential.Gx
-        # data.Gu.resize(differential_->get_ng() + nc_, nu_);
         data.Gu[0:ng_dam, 0:nu] = data.differential.Gu
         if(self.with_force_constraint):
             data.Gx[ng_dam:ng_dam+nf, ndx:ndx+nf] = np.eye(nf)
         # Compute friction cone constraint residual partials
         if(self.with_friction_cone_constraint):
             for i, fc in enumerate(self.frictionConeConstaints):
-                # data.dcone_df[self.ng + nf + i, :] = fc.calcDiff(f[3*i:3*(i+1)]).T
-                data.Gx[ng_dam+nf+i:ng_dam+nf+i+1, ndx+nf+3*i:ndx+nf+3*(i+1)] = fc.calcDiff(f[3*i:3*(i+1)]).T
+                contact_force_i      = f[3*i:3*(i+1)]
+                if(np.linalg.norm(contact_force_i)>1e-3):
+                    cone_residual_diff_i = fc.calcDiff(contact_force_i)
+                    data.Gx[ng_dam+nf+i:ng_dam+nf+i+1, ndx+nf+3*i:ndx+nf+3*(i+1)] = cone_residual_diff_i
 
 class IADSoftContactDynamics3D_Go2(crocoddyl.ActionDataAbstract): 
     '''
