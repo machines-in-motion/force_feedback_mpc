@@ -219,7 +219,8 @@ class FrictionConeConstraint:
 # Custom state model that includes the soft contact force
 class StateSoftContact3D(crocoddyl.StateAbstract):
     def __init__(self, rmodel, nc):
-        crocoddyl.StateAbstract.__init__(self, rmodel.nq + rmodel.nv + nc, 2*rmodel.nv + nc)
+        # crocoddyl.StateAbstract.__init__(self, rmodel.nq + rmodel.nv + nc, 2*rmodel.nv + nc)
+        super().__init__(rmodel.nq + rmodel.nv + nc, 2*rmodel.nv + nc)
         self.pinocchio = rmodel
         self.nc = nc
         self.nv = (self.ndx - self.nc)//2
@@ -230,18 +231,31 @@ class StateSoftContact3D(crocoddyl.StateAbstract):
     def diff(self, y0, y1):
         yout = np.zeros(self.ny)
         nq = self.pinocchio.nq
-        # nv = self.pinocchio.nv
-        yout[:nq] = pin.difference(self.pinocchio, y0[:nq], y1[:nq])
-        yout[nq:] = y1[nq:] - y0[nq:]
+        nv = self.pinocchio.nv
+        nc = self.nc
+        yout[:nv] = pin.difference(self.pinocchio, y0[:nq], y1[:nq])
+        yout[-nc:] = y1[-nc:] - y0[-nc:]
         return yout
 
     def integrate(self, y, dy):
         yout = np.zeros(self.ndy)
         nq = self.pinocchio.nq
         nv = self.pinocchio.nv
+        nc = self.nc
         yout[:nq] = pin.integrate(self.pinocchio, y[:nq], dy[:nv])
-        yout[nv:] = y[nq:] + dy[nv:]
+        yout[-nc:] = y[-nc:] + dy[-nc:]
         return yout
+
+    def Jdiff(self, y0, y1, Jfirst, Jsecond, firstsecond):
+        nq = self.pinocchio.nq
+        nv = self.pinocchio.nv
+        nc = self.pinocchio.nc
+        pin.dDifference(self.pinocchio, y0[:nq], y1[:nq], Jfirst[:nv, :nv], pin.ARG0)
+        pin.dDifference(self.pinocchio, y0[:nq], y1[:nq], Jsecond[:nv, :nv], pin.ARG0)
+        Jfirst[nv:nv+nv, nv:nv+nv] -= np.eye(nv)  # -1 on diagonal block
+        Jfirst[-nc:, -nc:] -= np.eye(nc)  # -1 on bottom-right diagonal block
+        Jsecond[nv:nv+nv, nv:nv+nv] += np.eye(nv)  # +1 on diagonal block
+        Jsecond[-nc:, -nc:] += np.eye(nc)  # +1 on bottom-right diagonal block
 
     def Jintegrate(self, y, dy, Jfirst):
         '''
@@ -319,120 +333,110 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
         data = DADSoftContactDynamics_Go2(self)
         return data
 
-    def calc(self, data, x, f, u):
+    def calc(self, data, x, f, u=None):
         '''
         Compute joint acceleration based on state, force and torques
         '''
         q = x[:self.state.nq]
         v = x[self.state.nq:]
-        pin.computeAllTerms(self.pinocchio, data.pinocchio, q, v)
-        pin.forwardKinematics(self.pinocchio, data.pinocchio, q, v, np.zeros(self.state.nv))
-        pin.updateFramePlacements(self.pinocchio, data.pinocchio)
-        # Actuation calc
-        self.actuation.calc(data.multibody.actuation, x, u)
+        if(u is not None):
+            pin.computeAllTerms(self.pinocchio, data.pinocchio, q, v)
+            pin.forwardKinematics(self.pinocchio, data.pinocchio, q, v, np.zeros(self.state.nv))
+            pin.updateFramePlacements(self.pinocchio, data.pinocchio)
+            # Actuation calc
+            self.actuation.calc(data.multibody.actuation, x, u)
 
-        if(self.active_contact):
-            # Compute contact wrench in spatial coordinates
-            data.fext      = self.contacts.calc(data, f)
-            data.fext_copy = data.fext.copy()
-            # Compute joint acceleration 
-            data.xout = pin.aba(self.pinocchio, data.pinocchio, q, v, data.multibody.actuation.tau, data.fext) 
-            # Compute time derivative of contact force : need to forward kin with current acc
-            pin.forwardKinematics(self.pinocchio, data.pinocchio, q, v, data.xout)
-            data.fout = self.contacts.calc_fdot(data)
+            if(self.active_contact):
+                # Compute contact wrench in spatial coordinates
+                data.fext      = self.contacts.calc(data, f)
+                data.fext_copy = data.fext.copy()
+                # Compute joint acceleration 
+                data.xout = pin.aba(self.pinocchio, data.pinocchio, q, v, data.multibody.actuation.tau, data.fext) 
+                # Compute time derivative of contact force : need to forward kin with current acc
+                pin.forwardKinematics(self.pinocchio, data.pinocchio, q, v, data.xout)
+                data.fout = self.contacts.calc_fdot(data)
+            else:
+                data.xout = pin.aba(self.pinocchio, data.pinocchio, q, v, data.multibody.actuation.tau)
+
+            pin.updateGlobalPlacements(self.pinocchio, data.pinocchio)
+            # Cost calc 
+            self.costs.calc(data.costs, x, u) 
+            data.cost = data.costs.cost
+
+            # Add hard-coded cost
+            if(self.active_contact and self.with_force_cost):
+                # Compute force residual and add force cost to total cost
+                data.f_residual = f - self.f_des
+                data.cost       += 0.5 * self.f_weight * data.f_residual.T @ data.f_residual
         else:
-            data.xout = pin.aba(self.pinocchio, data.pinocchio, q, v, data.multibody.actuation.tau)
+            pin.computeAllTerms(self.pinocchio, data.pinocchio, q, v)
+            self.costs.calc(data.costs, x) 
+            data.cost = data.costs.cost
 
-        pin.updateGlobalPlacements(self.pinocchio, data.pinocchio)
-        # Cost calc 
-        self.costs.calc(data.costs, x, u) 
-        data.cost = data.costs.cost
+            # Add hard-coded cost
+            if(self.active_contact and self.with_force_cost):
+                # Compute force residual and add force cost to total cost
+                data.f_residual = f - self.f_des
+                data.cost       += 0.5 * self.f_weight * data.f_residual.T @ data.f_residual
 
-        # Add hard-coded cost
-        if(self.active_contact and self.with_force_cost):
-            # Compute force residual and add force cost to total cost
-            data.f_residual = f - self.f_des
-            data.cost       += 0.5 * self.f_weight * data.f_residual.T @ data.f_residual
-
-    def calc(self, data, x, f):
-        '''
-        Compute joint acceleration based on state, force and torques
-        '''
-        q = x[:self.state.nq]
-        v = x[self.state.nq:]
-        pin.computeAllTerms(self.pinocchio, data.pinocchio, q, v)
-        self.costs.calc(data.costs, x) 
-        data.cost = data.costs.cost
-
-        # Add hard-coded cost
-        if(self.active_contact and self.with_force_cost):
-            # Compute force residual and add force cost to total cost
-            data.f_residual = f - self.f_des
-            data.cost       += 0.5 * self.f_weight * data.f_residual.T @ data.f_residual
-
-    def calcDiff(self, data, x, f, u):
+    def calcDiff(self, data, x, f, u=None):
         '''
         Compute derivatives 
         '''
         q = x[:self.state.nq]
         v = x[self.state.nq:]
         # Actuation calcDiff
-        self.actuation.calcDiff(data.multibody.actuation, x, u)
+        if(u is not None):
+            self.actuation.calcDiff(data.multibody.actuation, x, u)
 
-        if(self.active_contact):      
-            # Derivatives of data.xout (ABA) w.r.t. x and u in LOCAL (same in WORLD)
-            aba_dq, aba_dv, aba_dtau = pin.computeABADerivatives(self.pinocchio, data.pinocchio, q, v, data.multibody.actuation.tau, data.fext)
-            data.Fx[:,:self.state.nv] = aba_dq 
-            data.Fx[:,self.state.nv:] = aba_dv 
-            data.Fx += data.pinocchio.Minv @ data.multibody.actuation.dtau_dx
-            data.Fu = aba_dtau @ data.multibody.actuation.dtau_du
+            if(self.active_contact):      
+                # Derivatives of data.xout (ABA) w.r.t. x and u in LOCAL (same in WORLD)
+                aba_dq, aba_dv, aba_dtau = pin.computeABADerivatives(self.pinocchio, data.pinocchio, q, v, data.multibody.actuation.tau, data.fext)
+                data.Fx[:,:self.state.nv] = aba_dq 
+                data.Fx[:,self.state.nv:] = aba_dv 
+                data.Fx += data.pinocchio.Minv @ data.multibody.actuation.dtau_dx
+                data.Fu = aba_dtau @ data.multibody.actuation.dtau_du
 
-            # Update ABA derivatives with soft contact model contribution
-            self.contacts.update_ABAderivatives(data, f)
+                # Update ABA derivatives with soft contact model contribution
+                self.contacts.update_ABAderivatives(data, f)
 
-            # Derivatives of data.fout in LOCAL : important >> UPDATE FORWARD KINEMATICS with data.xout
-            pin.computeAllTerms(self.pinocchio, data.pinocchio, q, v)
-            pin.forwardKinematics(self.pinocchio, data.pinocchio, q, v, data.xout)
-            pin.updateFramePlacements(self.pinocchio, data.pinocchio)
-            self.contacts.calcDiff(data)
+                # Derivatives of data.fout in LOCAL : important >> UPDATE FORWARD KINEMATICS with data.xout
+                pin.computeAllTerms(self.pinocchio, data.pinocchio, q, v)
+                pin.forwardKinematics(self.pinocchio, data.pinocchio, q, v, data.xout)
+                pin.updateFramePlacements(self.pinocchio, data.pinocchio)
+                self.contacts.calcDiff(data)
 
+            else:
+                # Computing the free forward dynamics with ABA derivatives
+                aba_dq, aba_dv, aba_dtau = pin.computeABADerivatives(self.pinocchio, data.pinocchio, q, v, data.multibody.actuation.tau)
+                data.Fx[:,:self.state.nv] = aba_dq 
+                data.Fx[:,self.state.nv:] = aba_dv 
+                data.Fx += data.pinocchio.Minv @ data.multibody.actuation.dtau_dx
+                data.Fu = aba_dtau @ data.multibody.actuation.dtau_du
+            assert(np.linalg.norm(aba_dtau - data.pinocchio.Minv) <1e-4)
+            self.costs.calcDiff(data.costs, x, u)
+            data.Lx = data.costs.Lx
+            data.Lu = data.costs.Lu
+            data.Lxx = data.costs.Lxx
+            data.Lxu = data.costs.Lxu
+            data.Luu = data.costs.Luu
+            # add hard-coded cost
+            if(self.active_contact and self.with_force_cost):
+                data.f_residual = f - self.f_des
+                data.Lf         = self.f_weight * data.f_residual.T
+                data.Lff        = self.f_weight * np.eye(self.contacts.nc_tot)
         else:
-            # Computing the free forward dynamics with ABA derivatives
-            aba_dq, aba_dv, aba_dtau = pin.computeABADerivatives(self.pinocchio, data.pinocchio, q, v, data.multibody.actuation.tau)
-            data.Fx[:,:self.state.nv] = aba_dq 
-            data.Fx[:,self.state.nv:] = aba_dv 
-            data.Fx += data.pinocchio.Minv @ data.multibody.actuation.dtau_dx
-            data.Fu = aba_dtau @ data.multibody.actuation.dtau_du
-        assert(np.linalg.norm(aba_dtau - data.pinocchio.Minv) <1e-4)
-        self.costs.calcDiff(data.costs, x, u)
-        data.Lx = data.costs.Lx
-        data.Lu = data.costs.Lu
-        data.Lxx = data.costs.Lxx
-        data.Lxu = data.costs.Lxu
-        data.Luu = data.costs.Luu
-        # add hard-coded cost
-        if(self.active_contact and self.with_force_cost):
-            data.f_residual = f - self.f_des
-            data.Lf         = self.f_weight * data.f_residual.T
-            data.Lff        = self.f_weight * np.eye(self.contacts.nc_tot)
-
-    def calcDiff(self, data, x, f):
-        '''
-        Compute derivatives 
-        '''
-        q = x[:self.state.nq]
-        v = x[self.state.nq:]
-        self.costs.calcDiff(data.costs, x)
-        data.Lx = data.costs.Lx
-        data.Lu = data.costs.Lu
-        data.Lxx = data.costs.Lxx
-        data.Lxu = data.costs.Lxu
-        data.Luu = data.costs.Luu
-        # add hard-coded cost
-        if(self.active_contact and self.with_force_cost):
-            data.f_residual = f - self.f_des
-            data.Lf         = self.f_weight * data.f_residual.T
-            data.Lff        = self.f_weight * np.eye(self.contacts.nc_tot)
+            self.costs.calcDiff(data.costs, x)
+            data.Lx = data.costs.Lx
+            data.Lu = data.costs.Lu
+            data.Lxx = data.costs.Lxx
+            data.Lxu = data.costs.Lxu
+            data.Luu = data.costs.Luu
+            # add hard-coded cost
+            if(self.active_contact and self.with_force_cost):
+                data.f_residual = f - self.f_des
+                data.Lf         = self.f_weight * data.f_residual.T
+                data.Lff        = self.f_weight * np.eye(self.contacts.nc_tot)
 
 # Custom Differential Action Data class for go2+arm
 class DADSoftContactDynamics_Go2(crocoddyl.DifferentialActionDataAbstract):
@@ -481,7 +485,8 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
         nr = int(dam.costs.nr + 3)     # ef force cost)
         ng = int(dam.ng + nf + len(frictionConeConstaints))
         nh = int(0)
-        crocoddyl.ActionModelAbstract.__init__(self, crocoddyl.StateVector(dam.state.nq + dam.state.nv + nf), nu, nr, ng, nh)
+        # crocoddyl.ActionModelAbstract.__init__(self, crocoddyl.StateVector(dam.state.nq + dam.state.nv + nf), nu, nr, ng, nh)
+        crocoddyl.ActionModelAbstract.__init__(self, crocoddyl.StateAbstract(dam.state.nq + dam.state.nv + nf, dam.state.ndx + nf), nu, nr, ng, nh)
         self.differential = dam
         self.stateSoft = StateSoftContact3D(dam.pinocchio, nf)
         self.nf = nf
@@ -530,7 +535,7 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
         data = IADSoftContactDynamics3D_Go2(self)
         return data
     
-    def calc(self, data, y, u):
+    def calc(self, data, y, u=None):
         nx = self.differential.state.nx
         nv = self.differential.state.nv
         nq = self.differential.state.nq
@@ -541,56 +546,47 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
         # q = x[:self.state.nq]
         v = x[-nv:]
         # self.control.calc(data.control, 0., u)
-        self.differential.calc(data.differential, x, f, u) 
-        a = data.differential.xout
-        fdot = data.differential.fout
-        data.dx[:nv] = v*self.dt + a*self.dt**2
-        data.dx[nv:2*nv] = a*self.dt
-        data.dx[-nf:] = fdot*self.dt
-        data.xnext = self.stateSoft.integrate(y, data.dx)
-        data.cost = self.dt*data.differential.cost
-        # Compute cost residual
-        if(self.withCostResidual):
-            data.r = data.differential.r
-        # Compute force constraint residual
-        if(self.with_force_constraint):
-            data.g[self.differential.ng: self.differential.ng+nf] = f
-        # Compute friction cone constraint residual
-        if(self.with_friction_cone_constraint):
-            for i, fc in enumerate(self.frictionConeConstaints):
-                contact_force_i = f[3*i:3*(i+1)]
-                cone_residual_i = fc.calc(contact_force_i)
-                data.g[ng_dam + nf + i] = cone_residual_i
+        if(u is not None):
+            self.differential.calc(data.differential, x, f, u) 
+            a = data.differential.xout
+            fdot = data.differential.fout
+            data.dx[:nv] = v*self.dt + a*self.dt**2
+            data.dx[nv:2*nv] = a*self.dt
+            data.dx[-nf:] = fdot*self.dt
+            data.xnext = self.stateSoft.integrate(y, data.dx)
+            data.cost = self.dt*data.differential.cost
+            # Compute cost residual
+            if(self.withCostResidual):
+                data.r = data.differential.r
+            # Compute force constraint residual
+            if(self.with_force_constraint):
+                data.g[self.differential.ng: self.differential.ng+nf] = f
+            # Compute friction cone constraint residual
+            if(self.with_friction_cone_constraint):
+                for i, fc in enumerate(self.frictionConeConstaints):
+                    contact_force_i = f[3*i:3*(i+1)]
+                    cone_residual_i = fc.calc(contact_force_i)
+                    data.g[ng_dam + nf + i] = cone_residual_i
+        else:
+            self.differential.calc(data.differential, x, f) 
+            a = data.differential.xout
+            fdot = data.differential.fout
+            data.dx = np.zeros(data.dx.shape)
+            data.cost = self.dt*data.differential.cost
+            # Compute cost residual
+            if(self.withCostResidual):
+                data.r = data.differential.r
+            # Compute force constraint residual
+            if(self.with_force_constraint):
+                data.g[self.differential.ng: self.differential.ng+nf] = f
+            # Compute friction cone constraint residual
+            if(self.with_friction_cone_constraint):
+                for i, fc in enumerate(self.frictionConeConstaints):
+                    contact_force_i = f[3*i:3*(i+1)]
+                    cone_residual_i = fc.calc(contact_force_i)
+                    data.g[ng_dam + nf + i] = cone_residual_i
 
-    def calc(self, data, y):
-        nx = self.differential.state.nx
-        nv = self.differential.state.nv
-        nq = self.differential.state.nq
-        ng_dam = self.differential.ng
-        nf = self.nf
-        x = y[:nx]
-        f = y[-nf:]
-        # q = x[:self.state.nq]
-        v = x[-nv:]
-        self.differential.calc(data.differential, x, f) 
-        a = data.differential.xout
-        fdot = data.differential.fout
-        data.dx = np.zeros(data.dx.shape)
-        data.cost = self.dt*data.differential.cost
-        # Compute cost residual
-        if(self.withCostResidual):
-            data.r = data.differential.r
-        # Compute force constraint residual
-        if(self.with_force_constraint):
-            data.g[self.differential.ng: self.differential.ng+nf] = f
-        # Compute friction cone constraint residual
-        if(self.with_friction_cone_constraint):
-            for i, fc in enumerate(self.frictionConeConstaints):
-                contact_force_i = f[3*i:3*(i+1)]
-                cone_residual_i = fc.calc(contact_force_i)
-                data.g[ng_dam + nf + i] = cone_residual_i
-
-    def calcDiff(self, data, y, u):
+    def calcDiff(self, data, y, u=None):
         nx = self.differential.state.nx
         ndx = self.differential.state.ndx
         nv = self.differential.state.nv
@@ -601,105 +597,97 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
         f = y[-nf:]
 
         # Calc forward dyn derivatives
-        self.differential.calcDiff(data.differential, x, f, u)
-        da_dx = data.differential.Fx 
-        da_du = data.differential.Fu
+        if(u is not None):
+            self.differential.calcDiff(data.differential, x, f, u)
+            da_dx = data.differential.Fx 
+            da_du = data.differential.Fu
 
-        # Fill out blocks
-        # d->Fx.topRows(nv).noalias() = da_dx * time_step2_;
-        data.Fx[:nv,:ndx] = da_dx*self.dt**2
-       
-        # d->Fx.bottomRows(nv).noalias() = da_dx * time_step_;
-        data.Fx[nv:ndx, :ndx] = da_dx*self.dt
+            # Fill out blocks
+            # d->Fx.topRows(nv).noalias() = da_dx * time_step2_;
+            data.Fx[:nv,:ndx] = da_dx*self.dt**2
         
-        # d->Fx.topRightCorner(nv, nv).diagonal().array() += Scalar(time_step_);
-        data.Fx[:nv, nv:ndx] += self.dt * np.eye(nv)
-        
-        # d->Fu.topRows(nv).noalias() = time_step2_ * d->da_du;
-        data.Fu[:nv, :] = da_du * self.dt**2
-        
-        # d->Fu.bottomRows(nv).noalias() = time_step_ * d->da_du;
-        data.Fu[nv:ndx, :] = da_du * self.dt
-        
-        # New block from augmented dynamics (top right corner)
-        data.Fx[:nv, -nf:] = data.differential.dABA_df * self.dt**2
-        data.Fx[nv:ndx, -nf:] = data.differential.dABA_df * self.dt
-        # New block from augmented dynamics (bottom right corner)
-        data.Fx[-nf:,-nf:] = np.eye(nf) + data.differential.dfdt_df*self.dt
-        # New block from augmented dynamics (bottom left corner)
-        data.Fx[-nf:, :ndx] = data.differential.dfdt_dx * self.dt
-        
-        data.Fu[-nf:, :] = data.differential.dfdt_du * self.dt
+            # d->Fx.bottomRows(nv).noalias() = da_dx * time_step_;
+            data.Fx[nv:ndx, :ndx] = da_dx*self.dt
+            
+            # d->Fx.topRightCorner(nv, nv).diagonal().array() += Scalar(time_step_);
+            data.Fx[:nv, nv:ndx] += self.dt * np.eye(nv)
+            
+            # d->Fu.topRows(nv).noalias() = time_step2_ * d->da_du;
+            data.Fu[:nv, :] = da_du * self.dt**2
+            
+            # d->Fu.bottomRows(nv).noalias() = time_step_ * d->da_du;
+            data.Fu[nv:ndx, :] = da_du * self.dt
+            
+            # New block from augmented dynamics (top right corner)
+            data.Fx[:nv, -nf:] = data.differential.dABA_df * self.dt**2
+            data.Fx[nv:ndx, -nf:] = data.differential.dABA_df * self.dt
+            # New block from augmented dynamics (bottom right corner)
+            data.Fx[-nf:,-nf:] = np.eye(nf) + data.differential.dfdt_df*self.dt
+            # New block from augmented dynamics (bottom left corner)
+            data.Fx[-nf:, :ndx] = data.differential.dfdt_dx * self.dt
+            
+            data.Fu[-nf:, :] = data.differential.dfdt_du * self.dt
 
-        # state_->JintegrateTransport(x, d->dx, d->Fx, second);
-        self.stateSoft.JintegrateTransport(y, data.dx, data.Fx, crocoddyl.Jcomponent.second)
-        
-        # state_->Jintegrate(x, d->dx, d->Fx, d->Fx, first, addto);
-        self.stateSoft.Jintegrate(y, data.dx, data.Fx)  # add identity to Fx = d(x+dx)/dx = d(q,v)/d(q,v)
-        # data.Fx (nu, nu).diagonal().array() -=
-        #     Scalar(1.);  // remove identity from Ftau (due to stateLPF.Jintegrate)
-        data.Fx[-nf:, -nf:] -= np.eye(nf)
+            # state_->JintegrateTransport(x, d->dx, d->Fx, second);
+            self.stateSoft.JintegrateTransport(y, data.dx, data.Fx, crocoddyl.Jcomponent.second)
+            
+            # state_->Jintegrate(x, d->dx, d->Fx, d->Fx, first, addto);
+            self.stateSoft.Jintegrate(y, data.dx, data.Fx)  # add identity to Fx = d(x+dx)/dx = d(q,v)/d(q,v)
+            # data.Fx (nu, nu).diagonal().array() -=
+            #     Scalar(1.);  // remove identity from Ftau (due to stateLPF.Jintegrate)
+            data.Fx[-nf:, -nf:] -= np.eye(nf)
 
-        # state_->JintegrateTransport(x, d->dx, d->Fu, second);
-        self.stateSoft.JintegrateTransport(y, data.dx, data.Fu, crocoddyl.Jcomponent.second)
+            # state_->JintegrateTransport(x, d->dx, d->Fu, second);
+            self.stateSoft.JintegrateTransport(y, data.dx, data.Fu, crocoddyl.Jcomponent.second)
 
-        # d->Lx.noalias() = time_step_ * d->differential->Lx;
-        data.Lx[:ndx] = data.differential.Lx*self.dt
-        data.Lx[-nf:] = data.differential.Lf*self.dt
-        data.Lxx[:ndx,:ndx] = data.differential.Lxx*self.dt
-        data.Lxx[-nf:,-nf:] = data.differential.Lff*self.dt
-        data.Lxu[:ndx, :nu] = data.differential.Lxu*self.dt
-        data.Lu = data.differential.Lu*self.dt
-        data.Luu = data.differential.Luu*self.dt
+            # d->Lx.noalias() = time_step_ * d->differential->Lx;
+            data.Lx[:ndx] = data.differential.Lx*self.dt
+            data.Lx[-nf:] = data.differential.Lf*self.dt
+            data.Lxx[:ndx,:ndx] = data.differential.Lxx*self.dt
+            data.Lxx[-nf:,-nf:] = data.differential.Lff*self.dt
+            data.Lxu[:ndx, :nu] = data.differential.Lxu*self.dt
+            data.Lu = data.differential.Lu*self.dt
+            data.Luu = data.differential.Luu*self.dt
 
-        data.Gx[0:ng_dam, 0:ndx] = data.differential.Gx
-        data.Gu[0:ng_dam, 0:nu] = data.differential.Gu
-        if(self.with_force_constraint):
-            data.Gx[ng_dam:ng_dam+nf, ndx:ndx+nf] = np.eye(nf)
-        # Compute friction cone constraint residual partials
-        if(self.with_friction_cone_constraint):
-            for i, fc in enumerate(self.frictionConeConstaints):
-                contact_force_i      = f[3*i:3*(i+1)]
-                if(np.linalg.norm(contact_force_i)>1e-3):
-                    cone_residual_diff_i = fc.calcDiff(contact_force_i)
-                    data.Gx[ng_dam+nf+i:ng_dam+nf+i+1, ndx+nf+3*i:ndx+nf+3*(i+1)] = cone_residual_diff_i
-
-    def calcDiff(self, data, y):
-        nx = self.differential.state.nx
-        ndx = self.differential.state.ndx
-        nv = self.differential.state.nv
-        nu = self.differential.nu
-        nf = self.nf
-        ng_dam = self.differential.ng
-        x = y[:nx]
-        f = y[-nf:]
-
-        # Calc forward dyn derivatives
-        self.differential.calcDiff(data.differential, x, f)
-        # state_->Jintegrate(x, d->dx, d->Fx, d->Fx, first, addto);
-        self.stateSoft.Jintegrate(y, data.dx, data.Fx)  # add identity to Fx = d(x+dx)/dx = d(q,v)/d(q,v)
-        # data.Fx (nu, nu).diagonal().array() -=
-        #     Scalar(1.);  // remove identity from Ftau (due to stateLPF.Jintegrate)
-        data.Fx[-nf:, -nf:] -= np.eye(nf)
-        # d->Lx.noalias() = time_step_ * d->differential->Lx;
-        data.Lx[:ndx] = data.differential.Lx*self.dt
-        data.Lx[-nf:] = data.differential.Lf*self.dt
-        data.Lxx[:ndx,:ndx] = data.differential.Lxx*self.dt
-        data.Lxx[-nf:,-nf:] = data.differential.Lff*self.dt
-        data.Lxu[:ndx, :nu] = data.differential.Lxu*self.dt
-        data.Lu = data.differential.Lu*self.dt
-        data.Luu = data.differential.Luu*self.dt
-        data.Gx[0:ng_dam, 0:ndx] = data.differential.Gx
-        data.Gu[0:ng_dam, 0:nu] = data.differential.Gu
-        if(self.with_force_constraint):
-            data.Gx[ng_dam:ng_dam+nf, ndx:ndx+nf] = np.eye(nf)
-        # Compute friction cone constraint residual partials
-        if(self.with_friction_cone_constraint):
-            for i, fc in enumerate(self.frictionConeConstaints):
-                contact_force_i      = f[3*i:3*(i+1)]
-                if(np.linalg.norm(contact_force_i)>1e-3):
-                    cone_residual_diff_i = fc.calcDiff(contact_force_i)
-                    data.Gx[ng_dam+nf+i:ng_dam+nf+i+1, ndx+nf+3*i:ndx+nf+3*(i+1)] = cone_residual_diff_i
+            data.Gx[0:ng_dam, 0:ndx] = data.differential.Gx
+            data.Gu[0:ng_dam, 0:nu] = data.differential.Gu
+            if(self.with_force_constraint):
+                data.Gx[ng_dam:ng_dam+nf, ndx:ndx+nf] = np.eye(nf)
+            # Compute friction cone constraint residual partials
+            if(self.with_friction_cone_constraint):
+                for i, fc in enumerate(self.frictionConeConstaints):
+                    contact_force_i      = f[3*i:3*(i+1)]
+                    if(np.linalg.norm(contact_force_i)>1e-3):
+                        cone_residual_diff_i = fc.calcDiff(contact_force_i)
+                        data.Gx[ng_dam+nf+i:ng_dam+nf+i+1, ndx+nf+3*i:ndx+nf+3*(i+1)] = cone_residual_diff_i
+        # u = none
+        else:
+            # Calc forward dyn derivatives
+            self.differential.calcDiff(data.differential, x, f)
+            # state_->Jintegrate(x, d->dx, d->Fx, d->Fx, first, addto);
+            self.stateSoft.Jintegrate(y, data.dx, data.Fx)  # add identity to Fx = d(x+dx)/dx = d(q,v)/d(q,v)
+            # data.Fx (nu, nu).diagonal().array() -=
+            #     Scalar(1.);  // remove identity from Ftau (due to stateLPF.Jintegrate)
+            data.Fx[-nf:, -nf:] -= np.eye(nf)
+            # d->Lx.noalias() = time_step_ * d->differential->Lx;
+            data.Lx[:ndx] = data.differential.Lx*self.dt
+            data.Lx[-nf:] = data.differential.Lf*self.dt
+            data.Lxx[:ndx,:ndx] = data.differential.Lxx*self.dt
+            data.Lxx[-nf:,-nf:] = data.differential.Lff*self.dt
+            data.Lxu[:ndx, :nu] = data.differential.Lxu*self.dt
+            data.Lu = data.differential.Lu*self.dt
+            data.Luu = data.differential.Luu*self.dt
+            data.Gx[0:ng_dam, 0:ndx] = data.differential.Gx
+            data.Gu[0:ng_dam, 0:nu] = data.differential.Gu
+            if(self.with_force_constraint):
+                data.Gx[ng_dam:ng_dam+nf, ndx:ndx+nf] = np.eye(nf)
+            # Compute friction cone constraint residual partials
+            if(self.with_friction_cone_constraint):
+                for i, fc in enumerate(self.frictionConeConstaints):
+                    contact_force_i      = f[3*i:3*(i+1)]
+                    if(np.linalg.norm(contact_force_i)>1e-3):
+                        cone_residual_diff_i = fc.calcDiff(contact_force_i)
+                        data.Gx[ng_dam+nf+i:ng_dam+nf+i+1, ndx+nf+3*i:ndx+nf+3*(i+1)] = cone_residual_diff_i
 
 class IADSoftContactDynamics3D_Go2(crocoddyl.ActionDataAbstract): 
     '''
@@ -831,17 +819,14 @@ for t in range(N_ocp+1):
                               FrictionConeConstraint(state, rhFootId, MU)]
     
     dam = DAMSoftContactDynamics3D_Go2(state, actuation, costModel, constraintModelManager)
-    dad = dam.createData()
-    dam.calc(dad, x0, f0, u0)
+    # dad = dam.createData()
+    # dam.calc(dad, x0, f0, u0)
     # dam.calcDiff(dad, x0, f0, u0)
-    # iam = IAMSoftContactDynamics3D_Go2(dam, dt=dt, withCostResidual=True, frictionConeConstaints=frictionConeConstaints)
+    iam = IAMSoftContactDynamics3D_Go2(dam, dt=dt, withCostResidual=True, frictionConeConstaints=frictionConeConstaints)
     # iad = iam.createData()
     # iam.calc(iad, y0, u0)
     # iam.calcDiff(iad, y0, u0)
-    # # iam = IAMSoftContactDynamics3D_Go2(dam, dt=dt, withCostResidual=True, frictionConeConstaints=frictionConeConstaints)
-    # # iad = iam.createData()
-    # # iam.calc(iad, y0, u0)
-    # # running_models += [iam]
+    running_models += [iam]
 
 import mim_solvers
 # Create shooting problem
@@ -858,6 +843,7 @@ solver.eps_rel = 1e-6
 
 xs = [y0]*(solver.problem.T + 1)
 us = [u0]*solver.problem.T
+
 # us = solver.problem.quasiStatic([x0]*solver.problem.T) 
 solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs, us, max_iter)   
