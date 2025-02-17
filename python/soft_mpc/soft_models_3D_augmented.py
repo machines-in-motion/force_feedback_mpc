@@ -7,7 +7,7 @@ as well d(ABA)/df . Also df/dt and its derivatives are implemented
 In the IAM , a simple Euler integration (explicit) is used for the contact force
 and the partials are aggregated using DAM partials.
 '''
-from core_mpc_utils.misc_utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
+from croco_mpc_utils.utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
 logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
 
 import numpy as np
@@ -67,14 +67,18 @@ class StateSoftContact3D(crocoddyl.StateAbstract):
 
 # Integrated action model and data 
 class IAMSoftContactDynamics3D(crocoddyl.ActionModelAbstract): #IntegratedActionModelAbstract
-    def __init__(self, dam, dt=1e-3, withCostResidual=True):
+    def __init__(self, dam, dt=1e-3, withCostResidual=True, frictionConeConstaints = []):
         # crocoddyl.ActionModelAbstract.__init__(self, dam.state, dam.nu, dam.costs.nr + 3)
         crocoddyl.ActionModelAbstract.__init__(self, crocoddyl.StateVector(dam.state.nq + dam.state.nv + 3), dam.nu, dam.costs.nr + 3)
         self.differential = dam
-        # self.state = StateSoftContact3D(dam.pinocchio, 3)
         self.stateSoft = StateSoftContact3D(dam.pinocchio, 3)
         self.dt = dt
         self.withCostResidual = withCostResidual
+        self.withForceConstraint = False
+        self.force_lb = np.array([-np.inf]*self.differential.nc)
+        self.force_ub = np.array([np.inf]*self.differential.nc)
+        if(len(frictionConeConstaints)==0):
+            self.withFrictionConeConstraint = False
 
     def createData(self):
         data = IADSoftContactDynamics3D(self)
@@ -92,7 +96,7 @@ class IAMSoftContactDynamics3D(crocoddyl.ActionModelAbstract): #IntegratedAction
         # q = x[:self.state.nq]
         v = x[-nv:]
         # self.control.calc(data.control, 0., u)
-        self.differential.calc(data.differential, x, f, u) #data.control.w)
+        self.differential.calc(data.differential, x, f, u) 
         a = data.differential.xout
         fdot = data.differential.fout
         data.dx[:nv] = v*self.dt + a*self.dt**2
@@ -102,7 +106,40 @@ class IAMSoftContactDynamics3D(crocoddyl.ActionModelAbstract): #IntegratedAction
         data.cost = self.dt*data.differential.cost
         if(self.withCostResidual):
             data.r = data.differential.r
+        # # compute constraint residual
+        # if(self.with_force_constraint):
+        #     data.g[self.differential.ng: self.differential.ng+nc] = f
+        # if(self.withFrictionConeConstraint){
+        #     # Resize the constraint matrices of IAM 
+        #     data.friction_cone_residual[0] = friction_coef_ * f(2) - sqrt(f(0)*f(0) + f(1)*f(1));
+        #     data.g.tail(1) << d->friction_cone_residual[0];
+        #     // std::cout << "friction cone residual = " << d->g.tail(1) << std::endl;
 
+        #     # std::cout << " residual = " << d->friction_cone_residual[0] << std::endl;
+        #     # // std::cout << "resize IAM for nc=" << nf_ << " friction constraints" << std::endl;
+        #     # d->resizeIneqConstraint(this);
+        #     # // std::cout << "g.tail(nf_) = " << d->g.tail(nf_) << std::endl;
+        #     # // Iterate over friction models
+        #     # // std::cout << "Loop over constraint models " << std::endl;
+        #     # for(std::size_t i=0; i<friction_constraints_.size(); i++){
+        #     #   // std::cout << "constraint model " << i << std::endl;
+        #     #   // calc if constraint is active and data is well defined
+        #     #   if(friction_constraints_[i]->get_active() && friction_datas_[i] != nullptr){
+        #     #      friction_constraints_[i]->calc(friction_datas_[i], f);
+        #     #     //  std::cout << " fill out residual g from index " << differential_->get_ng() + nc_ + i << " to " << differential_->get_ng() + nc_ + i +1 << std::endl;
+        #     #      d->g.segment(differential_->get_ng() + nc_ + i, 1) << friction_datas_[i]->residual;
+        #     #   }
+        #     #   // fill out partial derivatives of the IAM
+        #     # }
+        #     # std::cout << "Finished " << std::endl;
+        #     # std::cout << "g.tail(nf_) = " << d->g.tail(nf_) << std::endl;
+        # }
+        # # // compute cost residual
+        # # if (with_cost_residual_) {
+        # #     d->r.head(differential_->get_nr()) = diff_data_soft->r;
+        # #     d->r.tail(nc_) = diff_data_soft->f_residual;
+        # # }
+            
 
     def calcDiff(self, data, y, u):
         nx = self.differential.state.nx
@@ -192,9 +229,15 @@ class DAMSoftContactDynamics3D(crocoddyl.DifferentialActionModelAbstract):
     '''
     Computes the forward dynamics under visco-elastic (spring damper) force
     '''
-    def __init__(self, stateMultibody, actuationModel, costModelSum, frameId, Kp=1e3, Kv=60, oPc=np.zeros(3), pinRefFrame=pin.LOCAL):
+    def __init__(self, stateMultibody, actuationModel, costModelSum, frameId, Kp=1e3, Kv=60, oPc=np.zeros(3), pinRefFrame=pin.LOCAL, constraintModelManager=None):
         # super(DAMSoftContactDynamics, self).__init__(stateMultibody, actuationModel.nu, costModelSum.nr)
-        crocoddyl.DifferentialActionModelAbstract.__init__(self, stateMultibody, actuationModel.nu, costModelSum.nr)
+        if(constraintModelManager is None):
+            ng = 0
+            nh = 0
+        else:
+            ng = constraintModelManager.ng
+            nh = constraintModelManager.nh
+        crocoddyl.DifferentialActionModelAbstract.__init__(self, stateMultibody, actuationModel.nu, costModelSum.nr, ng, nh)
         self.Kp = Kp 
         self.Kv = Kv
         self.pinRef = pinRefFrame
@@ -205,6 +248,8 @@ class DAMSoftContactDynamics3D(crocoddyl.DifferentialActionModelAbstract):
         # To complete DAMAbstract into sth like DAMFwdDyn
         self.actuation = actuationModel
         self.costs = costModelSum
+        if(constraintModelManager is not None):
+            self.constraints = constraintModelManager
         self.pinocchio = stateMultibody.pinocchio
         # hard coded costs 
         self.with_force_cost = False
@@ -213,6 +258,15 @@ class DAMSoftContactDynamics3D(crocoddyl.DifferentialActionModelAbstract):
 
         self.parentId = self.pinocchio.frames[self.frameId].parent
         self.jMf = self.pinocchio.frames[self.frameId].placement
+
+        # Hard-coded cost on force and gravity reg
+        self.with_force_cost = False
+        self.force_weight = np.zeros(self.nc)
+        self.force_rate_reg_weight = np.zeros(self.nc)
+        self.force_des = np.zeros(self.nc)
+        self.with_gravity_torque_reg = False
+        self.tau_grav_weight = 0.
+        self.with_force_rate_reg_cost = False
 
     def set_active_contact(self, active):
         self.active_contact = active
@@ -238,12 +292,13 @@ class DAMSoftContactDynamics3D(crocoddyl.DifferentialActionModelAbstract):
         q = x[:self.state.nq]
         v = x[self.state.nq:]
         pin.computeAllTerms(self.pinocchio, data.pinocchio, q, v)
-        pin.forwardKinematics(self.pinocchio, data.pinocchio, q, v, np.zeros(self.state.nq))
+        pin.forwardKinematics(self.pinocchio, data.pinocchio, q, v, np.zeros(self.state.nv))
         pin.updateFramePlacements(self.pinocchio, data.pinocchio)
         oRf = data.pinocchio.oMf[self.frameId].rotation
         # Actuation calc
         self.actuation.calc(data.multibody.actuation, x, u)
 
+        # Compute forward dynamics ddq = ABA(q,dq,tau,fext)
         if(self.active_contact):
             # Compute external wrench for LOCAL f
             data.fext[self.parentId] = self.jMf.act(pin.Force(f, np.zeros(3)))
@@ -251,6 +306,7 @@ class DAMSoftContactDynamics3D(crocoddyl.DifferentialActionModelAbstract):
             # Rotate if not f not in LOCAL
             if(self.pinRef != pin.LOCAL):
                 data.fext[self.parentId] = self.jMf.act(pin.Force(oRf.T @ f, np.zeros(3)))
+            
             data.xout = pin.aba(self.pinocchio, data.pinocchio, q, v, data.multibody.actuation.tau, data.fext) 
 
             # Compute time derivative of contact force : need to forward kin with current acc
@@ -270,14 +326,25 @@ class DAMSoftContactDynamics3D(crocoddyl.DifferentialActionModelAbstract):
             # data.fout = np.zeros(3)
 
         pin.updateGlobalPlacements(self.pinocchio, data.pinocchio)
-        # Cost calc 
+        
+        # Computing the cost value and residuals
         self.costs.calc(data.costs, x, u) 
         data.cost = data.costs.cost
+        # d->residual.head(this->get_costs()->get_nr()) = d->r;
+
         # Add hard-coded cost
         if(self.with_force_cost):
             # Compute force residual and add force cost to total cost
             data.f_residual = f - self.f_des
             data.cost += 0.5 * self.f_weight * data.f_residual.T @ data.f_residual
+        #TODO : gravity torque reg cost ( in contact and not in contact)
+        #TODO : force rate reg cost
+        
+        # Constraints (on multibody state x=(q,v))
+        if (self.constraints is not None):
+            # data.constraints.resize(self, data)
+            self.constraints.calc(data.constraints, x, u)
+
         return data.xout, data.fout, data.cost
 
     def calcDiff(self, data, x, f, u):
@@ -355,7 +422,13 @@ class DAMSoftContactDynamics3D(crocoddyl.DifferentialActionModelAbstract):
             data.f_residual = f - self.f_des
             data.Lf = self.f_weight * data.f_residual.T
             data.Lff = self.f_weight * np.eye(3)
-
+        # TODO: gravity torque reg cost 
+        # TODO: force rate reg cost
+        
+        # Constraints (on multibody state x=(q,v))
+        if (self.constraints is not None):
+            # data.constraints.resize(self, data)
+            self.constraints.calcDiff(data.constraints, x, u)
 
 
 class DADSoftContactDynamics(crocoddyl.DifferentialActionDataAbstract):
@@ -391,5 +464,32 @@ class DADSoftContactDynamics(crocoddyl.DifferentialActionDataAbstract):
         self.pinocchio  = am.pinocchio.createData()
         self.actuation_data = am.actuation.createData()
         self.multibody = crocoddyl.DataCollectorActMultibody(self.pinocchio, self.actuation_data)
-        self.costs = am.costs.createData(crocoddyl.DataCollectorMultibody(self.pinocchio))
-        
+        # self.costs = am.costs.createData(crocoddyl.DataCollectorMultibody(self.pinocchio))
+        self.costs = am.costs.createData(self.multibody)
+        if(am.constraints is not None):
+            self.constraints = am.constraints.createData(self.multibody)    
+
+
+from mim_robots.robot_loader import load_pinocchio_wrapper
+robot = load_pinocchio_wrapper('iiwa')
+state = crocoddyl.StateMultibody(robot.model)
+actuation = crocoddyl.ActuationModelFull(state)
+costs = crocoddyl.CostModelSum(state, actuation.nu)
+constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
+frameId = robot.model.getFrameId('contact')
+Kp = 0 ; Kv = 0 ; oPc = np.zeros(3)
+
+# Test create data 
+dam = DAMSoftContactDynamics3D(state, actuation, costs, frameId, Kp, Kv, oPc, pin.LOCAL_WORLD_ALIGNED, constraintModelManager)
+dad = dam.createData()
+
+# Test calc and calcDiff
+q = pin.randomConfiguration(robot.model)
+v = np.zeros(robot.model.nv)
+x = np.concatenate([q, v])
+u = np.random.rand(actuation.nu)
+f = np.random.rand(3)
+dam.calc(dad, x, f, u)
+dam.calcDiff(dad, x, f, u)
+
+print(" >>>> TEST iiwa PASSED. ")
