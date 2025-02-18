@@ -41,7 +41,7 @@ class ViscoElasticContact3D:
         self.dfdt_dx   = np.zeros((self.nc, self.state.ndx))
         self.dfdt_du   = np.zeros((self.nc, self.actuation.nu))
         self.dfdt_df   = np.zeros((self.nc, self.nc))  
-
+        
     def calc(self, dad, f):
         '''
         Calculate the contact force spatial wrench 
@@ -195,11 +195,10 @@ class ViscoElasticContact3d_Multiple:
 
 # 3D Friction cone constraint
 class FrictionConeConstraint:
-    def __init__(self, state, frameId, coef):
+    def __init__(self, frameId, coef):
         self.nc           = 3
         self.nr           = 1
         self.active       = True
-        self.state        = state
         self.frameId      = frameId
         self.coef         = coef
         self.residual     = np.zeros(self.nr)
@@ -223,11 +222,10 @@ class FrictionConeConstraint:
 
 # 3D force box constraint
 class ForceBoxConstraint:
-    def __init__(self, state, frameId, lb, ub):
+    def __init__(self, frameId, lb, ub):
         self.nc          = 3
         self.nr          = 3
         self.active      = True
-        self.state       = state
         self.frameId     = frameId
         self.residual    = np.zeros(self.nr)
         self.residual_df = np.zeros((self.nr,self.nc))
@@ -245,46 +243,67 @@ class ForceBoxConstraint:
 
 # 3D force constraint manager
 class ForceConstraintManager:
-    def __init__(self, state, actuation, constraints):
-        self.state       = state
-        self.actuation   = actuation
+    def __init__(self, constraints, contacts):
         self.constraints = constraints
         self.nr          = np.sum(np.array([cstr.nr for cstr in self.constraints])) 
-        self.nc          = np.sum(np.array([cstr.nc for cstr in self.constraints])) 
-        # print("force constraint manager nr = ", self.nr)
-        # print("force constraint manager nc = ", self.nc)
+
+        # Check that contact models are defined at the same frames
+        assert(contacts is not None)
+        self.contacts            = contacts.contacts
+        assert(len(self.contacts)>0)
+        # for each constraint 
+        for cstr in self.constraints:
+            found = False
+            # check that a contact model is defined at the same frame
+            for ct in self.contacts:
+                if(ct.frameId == cstr.frameId):
+                    found = True           
+            if(found == False):
+                print("ERROR : no contact model was found that matches the constraint on frame ", cstr.frameId)
+            assert(found == True)
+        
+        # Construct mapping from contact models to constraint residuals
+        self.contact_to_cstr_map = {}
+        self.contact_to_nr_map = {}
+        for ct in self.contacts:
+            self.contact_to_cstr_map[ct.frameId] = []
+            self.contact_to_nr_map[ct.frameId] = 0
+            for cstr in self.constraints:
+                if(cstr.frameId == ct.frameId):
+                    self.contact_to_cstr_map[ct.frameId].append(cstr)
+                    self.contact_to_nr_map[ct.frameId] += cstr.nr
+        # print("MAP cstr = \ns", self.contact_to_cstr_map)
+        # print("MAP nr = \ns", self.contact_to_nr_map)
+
+        self.nc          = np.sum(np.array([cstr.nc for cstr in self.contacts])) 
+
         self.residual    = np.zeros(self.nr)
-        self.residual_df = np.zeros((self.nr,self.nc))
+        self.residual_df = np.zeros((self.nr, self.nc))
+        
         # check constraints types
-        self.has_force_constraint         = False
-        self.n_force = 0
-        self.has_friction_cone_constraint = False
-        self.n_cone  = 0
-        for elt in constraints:
-            if(isinstance(elt, ForceBoxConstraint)):
-                self.has_force_constraint = True
-                self.n_force += 1
-            if(isinstance(elt, FrictionConeConstraint)):
-                self.has_friction_cone_constraint = True
-                self.n_cone += 1
+        self.has_force_constraint = False
+        if(len(constraints)>0):
+            self.has_force_constraint = True
         self.lb = np.concatenate([cstr.lb for cstr in self.constraints])
         self.ub = np.concatenate([cstr.ub for cstr in self.constraints])
-        # print("manager lb = ", self.lb)
-        # print("manager ub = ", self.ub)
 
     def calc(self, f):
         '''
-            f : stack of 3d forces
+            f : stack of 3d forces for each contact model
             output > stacked constraint residuals
         '''
         nc_i = 0
-        nr_i = 0
-        # Compute & stack spatial forces
-        for cstr in self.constraints:
-            if(cstr.active):
-                self.residual[nr_i:nr_i+cstr.nr] = cstr.calc(f[nc_i:nc_i+cstr.nc])
-            nr_i += cstr.nr
-            nc_i += cstr.nc
+        # For each contact model
+        for ct in self.contacts:
+            # Current residual index
+            nr_i   = 0
+            # For each constraint active at this model
+            for cstr in self.contact_to_cstr_map[ct.frameId]:
+                # Compute the constraint residual
+                self.residual[nr_i:nr_i+cstr.nr] = cstr.calc(f[nc_i:nc_i+ct.nc])
+                nr_i += cstr.nr
+            nc_i += ct.nc
+        # For each constraint, stack residual 
         return self.residual
 
     def calcDiff(self, f):
@@ -293,19 +312,168 @@ class ForceConstraintManager:
             output > stacked constraint Jacobians
         '''
         nc_i = 0
-        nr_i = 0
-        # Compute & stack spatial forces
-        for cstr in self.constraints:
-            if(cstr.active):
-                self.residual_df[nr_i:nr_i+cstr.nr, nc_i:nc_i+cstr.nc] = cstr.calcDiff(f[nc_i:nc_i+cstr.nc])
-            nr_i += cstr.nr
-            nc_i += cstr.nc
-        return self.residual
- 
+        # For each contact model
+        for ct in self.contacts:
+            # Current residual index
+            nr_i   = 0
+            # For each constraint active at this model
+            for cstr in self.contact_to_cstr_map[ct.frameId]:
+                # Compute the constraint residual
+                self.residual_df[nr_i:nr_i+cstr.nr, nc_i:nc_i+cstr.nc] = cstr.calcDiff(f[nc_i:nc_i+ct.nc])
+                nr_i += cstr.nr
+            nc_i += ct.nc
+        # For each constraint, stack residual 
+        return self.residual_df
+
+
+# 3D Force cost 
+class ForceCost:
+    def __init__(self, state, frameId, f_des, f_weight, pinRef):
+        self.frameId       = frameId
+        self.state         = state
+        self.f_des         = f_des
+        self.f_weight      = f_weight
+        self.f_residual    = np.zeros(3)
+        self.f_residual_x  = np.zeros((3,state.ndx))
+        self.f_cost        = 0.
+        self.Lf            = np.zeros(3)
+        self.Lff           = np.zeros((3,3))
+        self.pinRef        = pinRef
+        self.nr = 3 # cost residual dimension
+        self.nc = 3 # force dimension
+
+    def calc(self, dad, f, pinRefDyn):
+        # Placement of contact frame in WORLD
+        oRf = dad.pinocchio.oMf[self.frameId].rotation
+        # Compute force residual and add force cost to total cost
+        if(self.pinRef != pinRefDyn):
+            if(self.pinRef == pin.LOCAL):
+                self.f_residual = oRf.T * f - self.f_des
+            else:
+                self.f_residual = oRf * f - self.f_des
+        else:
+            self.f_residual = f - self.f_des
+        self.f_cost     = 0.5 * self.f_weight * self.f_residual.T @ self.f_residual
+        return self.f_cost
+    
+    def calcDiff(self, dad, f, pinRefDyn):
+        # Placement of contact frame in WORLD
+        oRf = dad.pinocchio.oMf[self.frameId].rotation
+        lJ = pin.getFrameJacobian(self.state.pinocchio, dad.pinocchio, self.frameId, pin.LOCAL)  
+        # Compute force residual and add force cost to total cost
+        if(self.pinRef != pinRefDyn):
+            if(self.pinRef == pin.LOCAL):
+                self.f_residual = oRf.T * f - self.f_des
+                self.Lf = self.f_residual.T * self.f_weight * oRf.T
+                self.residual_x[:3, :state.nv] = pin.skew(oRf.T * f) * lJ[3:]
+                dad.Lx += self.f_residual.T * self.f_weight * self.f_residual_x
+                self.Lff = self.f_weight * oRf * oRf.T
+            else:
+                self.f_residual = oRf * f - self.f_des
+                self.Lf = self.f_residual.T * self.f_weight * oRf
+                self.residual_x[:3, :state.nv] = pin.skew(oRf * f) * self.oJ.bottomRows(3)
+                dad.Lx += self.f_residual.T * self.f_weight * pin.skew(oRf * f) * self.f_residual_x
+                self.Lff = self.f_weight * oRf.T * oRf
+        else:
+            self.f_residual = f - self.f_des
+            self.Lf = self.f_residual.T * self.f_weight
+            self.Lff = self.f_weight 
+        self.f_residual = f - self.f_des
+        # self.f_cost     = 0.5 * self.f_weight * self.f_residual.T @ self.f_residual
+        return self.Lf, self.Lff
+
+class ForceCostManager:
+    def __init__(self, forceCosts, contacts):
+        self.forceCosts = forceCosts
+        self.nr          = np.sum(np.array([cost.nr for cost in self.forceCosts])) 
+
+        # Check that contact models are defined at the same frames
+        assert(contacts is not None)
+        self.contacts            = contacts.contacts
+        assert(len(self.contacts)>0)
+        # for each constraint 
+        for cost in self.forceCosts:
+            found = False
+            # check that a contact model is defined at the same frame
+            for ct in self.contacts:
+                if(ct.frameId == cost.frameId):
+                    found = True           
+            if(found == False):
+                print("ERROR : no contact model was found that matches the constraint on frame ", cost.frameId)
+            assert(found == True)
+        
+        # Construct mapping from contact models to constraint residuals
+        self.contact_to_cost_map = {}
+        self.contact_to_nr_map = {}
+        for ct in self.contacts:
+            self.contact_to_cost_map[ct.frameId] = []
+            self.contact_to_nr_map[ct.frameId] = 0
+            for cost in self.forceCosts:
+                if(cost.frameId == ct.frameId):
+                    self.contact_to_cost_map[ct.frameId].append(cost)
+                    self.contact_to_nr_map[ct.frameId] += cost.nr
+        # print("MAP cost = \ns", self.contact_to_cost_map)
+        # print("MAP nr = \ns", self.contact_to_nr_map)
+
+        self.nc          = np.sum(np.array([cost.nc for cost in self.contacts])) 
+
+        self.cost = 0.
+        self.Lf            = np.zeros(self.nc)
+        self.Lff           = np.zeros((self.nc,self.nc))
+        print("force cost residual nr = ", self.nr)
+
+
+    def calc(self, dad, f):
+        '''
+            dad       : differential action data (soft contact 3d)
+            f         : stack of 3d forces
+            pinRefDyn : reference frame in which the dynamics is expressed
+        output > stacked cost residuals
+        '''
+        nc_i = 0
+        # For each contact model
+        for ct in self.contacts:
+            pinRefDyn = ct.pinRef
+            # Current residual index
+            nr_i   = 0
+            # For each constraint active at this model
+            for cost in self.contact_to_cost_map[ct.frameId]:
+                # Compute the constraint residual
+                self.cost += cost.calc(dad, f[nc_i:nc_i+ct.nc], pinRefDyn)
+                nr_i += cost.nr
+            nc_i += ct.nc
+        # For each constraint, stack residual 
+        return self.cost
+
+    def calcDiff(self, dad, f):
+        '''
+            dad       : differential action data (soft contact 3d)
+            f         : stack of 3d forces
+            pinRefDyn : reference frame in which the dynamics is expressed
+        output > stacked cost Jacobians
+        '''
+        nc_i = 0
+        # For each contact model
+        for ct in self.contacts:
+            pinRefDyn = ct.pinRef
+            # Current residual index
+            nr_i   = 0
+            # For each constraint active at this model
+            for cost in self.contact_to_cost_map[ct.frameId]:
+                # Compute the constraint residual
+                Lf_ct, Lff_ct = cost.calcDiff(dad, f[nc_i:nc_i+ct.nc], pinRefDyn)
+                self.Lf[nc_i:nc_i+cost.nc] = Lf_ct
+                self.Lff[nr_i:nr_i+cost.nr, nc_i:nc_i+cost.nc] = Lff_ct
+                nr_i += cost.nr
+            nc_i += ct.nc
+        # For each constraint, stack residual 
+        return self.Lf, self.Lff
+
+
 
 # Custom Differential Action Model (DAM) for Go2+arm (5 soft 3D contacts with the environment)
 class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
-    def __init__(self, stateMultibody, actuationModel, costModelSum, softContactModelsStack=None, constraintModelManager=None):
+    def __init__(self, stateMultibody, actuationModel, costModelSum, softContactModelsStack=None, constraintModelManager=None, forceCostManager=None):
         '''
             stateMultibody         : crocoddyl.stateMultibody
             actuationModel         : crocoddyl.actuationModelFloatingBase
@@ -349,9 +517,13 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
         self.constraints = constraintModelManager
         self.pinocchio   = stateMultibody.pinocchio
         # hard coded costs 
-        self.with_force_cost = True
-        self.f_des           = np.zeros(self.nc_tot)
-        self.f_weight        = 0.001
+        self.forceCosts = forceCostManager
+        if(self.forceCosts is None):
+            self.nr_f            = 0
+            self.with_force_cost = False
+        else:
+            self.nr_f            = self.forceCosts.nr
+            self.with_force_cost = True
         # Init constraint bounds
         if(self.constraints is not None):
             self.init_cstr_bounds()
@@ -408,9 +580,17 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             data.cost = data.costs.cost
             # Add hard-coded cost
             if(self.active_contact and self.with_force_cost):
-                # Compute force residual and add force cost to total cost
-                data.f_residual = f - self.f_des
-                data.cost       += 0.5 * self.f_weight * data.f_residual.T @ data.f_residual
+                data.cost += self.forceCosts.calc(data, f)
+                # # Compute force residual and add force cost to total cost
+                # if(self.force_cost_ref != self.pinRef):
+                #     if(self.force_cost_ref == pin.LOCAL):
+                #         data.f_residual = data.oRf.T * f - self.f_des
+                #     else:
+                #         data.f_residual = data.oRf * f - self.f_des
+                # else:
+                #     data.f_residual = f - self.f_des
+                # data.f_residual = f - self.f_des
+                # data.cost       += 0.5 * self.f_weight * data.f_residual.T @ data.f_residual
             # constraints
             if(self.constraints is not None):
                 self.constraints.calc(data.constraints, x, u)
@@ -422,9 +602,17 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             data.cost = data.costs.cost
             # Add hard-coded cost
             if(self.active_contact and self.with_force_cost):
-                # Compute force residual and add force cost to total cost
-                data.f_residual = f - self.f_des
-                data.cost       += 0.5 * self.f_weight * data.f_residual.T @ data.f_residual
+                data.cost += self.forceCosts.calc(data, f)
+                # # Compute force residual and add force cost to total cost
+                # if(self.force_cost_ref != self.pinRef):
+                #     if(self.force_cost_ref == pin.LOCAL):
+                #         data.f_residual = data.oRf.T * f - self.f_des
+                #     else:
+                #         data.f_residual = data.oRf * f - self.f_des
+                # else:
+                #     data.f_residual = f - self.f_des
+                # data.f_residual = f - self.f_des
+                # data.cost       += 0.5 * self.f_weight * data.f_residual.T @ data.f_residual
             # constraints
             if(self.constraints is not None):
                 self.constraints.calc(data.constraints, x)
@@ -472,9 +660,10 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             data.Luu = data.costs.Luu
             # add hard-coded cost
             if(self.active_contact and self.with_force_cost):
-                data.f_residual = f - self.f_des
-                data.Lf         = self.f_weight * data.f_residual.T
-                data.Lff        = self.f_weight * np.eye(self.nc_tot)
+                data.Lf, data.Lff = self.forceCosts.calcDiff(data, f)
+                # data.f_residual = f - self.f_des
+                # data.Lf         = self.f_weight * data.f_residual.T
+                # data.Lff        = self.f_weight * np.eye(self.nc_tot)
             # constraints
             if(self.constraints is not None):
                 self.constraints.calcDiff(data.constraints, x, u)
@@ -488,9 +677,10 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             data.Luu = data.costs.Luu
             # add hard-coded cost
             if(self.active_contact and self.with_force_cost):
-                data.f_residual = f - self.f_des
-                data.Lf         = self.f_weight * data.f_residual.T
-                data.Lff        = self.f_weight * np.eye(self.nc_tot)
+                data.Lf, data.Lff = self.forceCosts.calcDiff(data, f)
+                # data.f_residual = f - self.f_des
+                # data.Lf         = self.f_weight * data.f_residual.T
+                # data.Lff        = self.f_weight * np.eye(self.nc_tot)
             # constraints
             if(self.constraints is not None):
                 self.constraints.calcDiff(data.constraints, x)
@@ -577,7 +767,7 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
             self.with_force_constraint = self.forceConstraints.has_force_constraint
             self.force_g_lb            = self.forceConstraints.lb
             self.force_g_ub            = self.forceConstraints.ub
-            self.nc_f = self.forceConstraints.nc  
+            self.nc_f                  = self.forceConstraints.nc  
         
         # Combine custom force constraint bounds with Crocoddyl constraint bounds 
         if(dam.constraints is not None):
@@ -598,9 +788,7 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
         nf = self.nf
         x = y[:nx]
         f = y[-nf:]
-        # q = x[:self.state.nq]
         v = x[-nv:]
-        # self.control.calc(data.control, 0., u)
         if(u is not None):
             self.differential.calc(data.differential, x, f, u) 
             a = data.differential.xout
@@ -616,14 +804,6 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
             # Compute force constraint residual
             if(self.with_force_constraint):
                 data.g[ng_dam: ng_dam+ng_f] = self.forceConstraints.calc(f)
-            # if(self.with_force_constraint):
-            #     data.g[self.differential.ng: self.differential.ng+nf] = f
-            # # Compute friction cone constraint residual
-            # if(self.with_friction_cone_constraint):
-            #     for i, fc in enumerate(self.frictionConeConstaints):
-            #         contact_force_i = f[3*i:3*(i+1)]
-            #         cone_residual_i = fc.calc(contact_force_i)
-            #         data.g[ng_dam + nf + i] = cone_residual_i
         else:
             self.differential.calc(data.differential, x, f) 
             a = data.differential.xout
@@ -635,15 +815,6 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
                 data.r = data.differential.r
             if(self.with_force_constraint):
                 data.g[ng_dam: ng_dam+ng_f] = self.forceConstraints.calc(f)
-            # # Compute force constraint residual
-            # if(self.with_force_constraint):
-            #     data.g[self.differential.ng: self.differential.ng+nf] = f
-            # # Compute friction cone constraint residual
-            # if(self.with_friction_cone_constraint):
-            #     for i, fc in enumerate(self.frictionConeConstaints):
-            #         contact_force_i = f[3*i:3*(i+1)]
-            #         cone_residual_i = fc.calc(contact_force_i)
-            #         data.g[ng_dam + nf + i] = cone_residual_i
 
     def calcDiff(self, data, y, u=None):
         nx = self.differential.state.nx
@@ -686,35 +857,19 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
             data.Lxu[:ndx, :nu] = data.differential.Lxu*self.dt
             data.Lu = data.differential.Lu*self.dt
             data.Luu = data.differential.Luu*self.dt
-            data.Gx[0:ng_dam, 0:ndx] = data.differential.Gx
-            data.Gu[0:ng_dam, 0:nu] = data.differential.Gu
+            if(ng_dam>0): # otherwise dimension issue 
+                data.Gx[0:ng_dam, 0:ndx] = data.differential.Gx
+                data.Gu[0:ng_dam, 0:nu] = data.differential.Gu
             if(self.with_force_constraint):
-                # print("ng_dam = ", ng_dam)
-                # print("ng_f = ", ng_f)
-                # print("ndx = ", ndx)
-                # print("self.nc_f = ", self.nc_f)
-                # print(data.Gx[ng_dam:ng_dam+ng_f, ndx:ndx+self.nc_f].shape)
-                # print(self.forceConstraints.calcDiff(f).shape)
-                data.Gx[ng_dam:ng_dam+ng_f, ndx:] = self.forceConstraints.calcDiff(f)
-            # if(self.with_force_constraint):
-            #     data.Gx[ng_dam:ng_dam+nf, ndx:ndx+nf] = np.eye(nf)
-            # # Compute friction cone constraint residual partials
-            # if(self.with_friction_cone_constraint):
-            #     for i, fc in enumerate(self.frictionConeConstaints):
-            #         contact_force_i      = f[3*i:3*(i+1)]
-            #         if(np.linalg.norm(contact_force_i)>1e-3):
-            #             cone_residual_diff_i = fc.calcDiff(contact_force_i)
-            #             data.Gx[ng_dam+nf+i:ng_dam+nf+i+1, ndx+nf+3*i:ndx+nf+3*(i+1)] = cone_residual_diff_i
-        # u = none
+                if(ng_dam>0):
+                    data.Gx[ng_dam:ng_dam+ng_f, ndx:ndx+self.nc_f] = self.forceConstraints.calcDiff(f)
+                else:
+                    data.Gx[ndx:ndx+self.nc_f] = self.forceConstraints.calcDiff(f)
         else:
             # Calc forward dyn derivatives
             self.differential.calcDiff(data.differential, x, f)
-            # state_->Jintegrate(x, d->dx, d->Fx, d->Fx, first, addto);
             data.Fx += self.stateSoft.Jintegrate(y, data.dx, crocoddyl.Jcomponent.first).tolist()[0]  # add identity to Fx = d(x+dx)/dx = d(q,v)/d(q,v)
-            # data.Fx (nu, nu).diagonal().array() -=
-            #     Scalar(1.);  // remove identity from Ftau (due to stateLPF.Jintegrate)
             data.Fx[ndx:, ndx:] -= np.eye(nf)
-            # d->Lx.noalias() = time_step_ * d->differential->Lx;
             data.Lx[:ndx] = data.differential.Lx*self.dt
             data.Lx[ndx:] = data.differential.Lf*self.dt
             data.Lxx[:ndx,:ndx] = data.differential.Lxx*self.dt
@@ -722,19 +877,14 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
             data.Lxu[:ndx, :nu] = data.differential.Lxu*self.dt
             data.Lu = data.differential.Lu*self.dt
             data.Luu = data.differential.Luu*self.dt
-            data.Gx[0:ng_dam, 0:ndx] = data.differential.Gx
-            data.Gu[0:ng_dam, 0:nu] = data.differential.Gu
+            if(ng_dam>0): # otherwise dimension issue
+                data.Gx[0:ng_dam, 0:ndx] = data.differential.Gx
+                data.Gu[0:ng_dam, 0:nu] = data.differential.Gu
             if(self.with_force_constraint):
-                data.Gx[ng_dam:ng_dam+ng_f, ndx:ndx+self.nc_f] = self.forceConstraints.calcDiff(f)
-            # if(self.with_force_constraint):
-            #     data.Gx[ng_dam:ng_dam+nf, ndx:ndx+nf] = np.eye(nf)
-            # # Compute friction cone constraint residual partials
-            # if(self.with_friction_cone_constraint):
-            #     for i, fc in enumerate(self.frictionConeConstaints):
-            #         contact_force_i      = f[3*i:3*(i+1)]
-            #         if(np.linalg.norm(contact_force_i)>1e-3):
-            #             cone_residual_diff_i = fc.calcDiff(contact_force_i)
-            #             data.Gx[ng_dam+nf+i:ng_dam+nf+i+1, ndx+nf+3*i:ndx+nf+3*(i+1)] = cone_residual_diff_i
+                if(ng_dam>0):
+                    data.Gx[ng_dam:ng_dam+ng_f, ndx:ndx+self.nc_f] = self.forceConstraints.calcDiff(f)
+                else:
+                    data.Gx[ndx:ndx+self.nc_f] = self.forceConstraints.calcDiff(f)
 
 class IADSoftContactDynamics3D_Go2(crocoddyl.ActionDataAbstract): 
     '''
@@ -767,8 +917,8 @@ actuation              = crocoddyl.ActuationModelFull(state)
 # costs                  = crocoddyl.CostModelSum(state, actuation.nu)
 # constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
 frameId                = robot.model.getFrameId('contact')
-Kp                     = 1000
-Kv                     = 100 
+Kp                     = 10
+Kv                     = 10 
 oPc                    = np.array([0.65, 0., 0.01])
 
 # Initial conditions
@@ -776,11 +926,13 @@ q = np.array([0., 1.05, 0., -1.13, 0.2,  0.79, 0.]) # pin.randomConfiguration(ro
 v = np.zeros(robot.model.nv)
 x = np.concatenate([q, v])
 u = np.random.rand(actuation.nu)
+MU = 0.1 # friction coeff
 CONTACT    = True
-CONSTRAINT = True
-FRICTION_C = False
-FORCE_C    = False
-BOTH_C     = True
+CONSTRAINT = False
+FRICTION_C = True
+FORCE_C    = False   
+BOTH_C     = False
+FORCE_COST = True   
 if(CONTACT):
     f = np.random.rand(3)
 else:
@@ -802,31 +954,44 @@ for i in range(N):
     costs.addCost("stateReg", xRegCost, 1e-2)
     costs.addCost("ctrlReg", uRegCost, 1e-5)
 
-    # Contact models
-    ef_contact = ViscoElasticContact3d_Multiple(state, actuation, [ViscoElasticContact3D(state, actuation, frameId, oPc, Kp, Kv, pin.LOCAL_WORLD_ALIGNED)]) 
-    
+    # Soft contact models 
+    if(CONTACT):
+        softContactModelsStack = ViscoElasticContact3d_Multiple(state, actuation, [ViscoElasticContact3D(state, actuation, frameId, oPc, Kp, Kv, pin.LOCAL_WORLD_ALIGNED)]) 
+    else:
+        softContactModelsStack = None
+
     # Standard constraints 
-    constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
-    uBoxCstr = crocoddyl.ConstraintModelResidual(state, crocoddyl.ResidualModelControl(state, actuation.nu), -robot.model.effortLimit, robot.model.effortLimit)  
-    constraintModelManager.addConstraint("ctrlBox", uBoxCstr)
+    if(CONSTRAINT):
+        constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
+        uBoxCstr = crocoddyl.ConstraintModelResidual(state, crocoddyl.ResidualModelControl(state, actuation.nu), -robot.model.effortLimit, robot.model.effortLimit)  
+        constraintModelManager.addConstraint("ctrlBox", uBoxCstr)
+    else:
+        constraintModelManager = None
 
-    # Custom force constraints
+    if(FORCE_COST):
+        forceCostManager = ForceCostManager([ForceCost(state, frameId, np.array([0]*3), 0., pin.LOCAL_WORLD_ALIGNED)], softContactModelsStack)
+    else:
+        forceCostManager = None
+
+    dam = DAMSoftContactDynamics3D_Go2(state, actuation, costs, softContactModelsStack, constraintModelManager, forceCostManager)
+
+    # Setup force cost
+    dam.with_force_cost = True
+    dam.f_des           = np.array([0.,0.,50])
+    dam.f_weight        = 0.001
+    
+    # Custom force constraints for IAM
     if(FORCE_C):
-        forceConstraintManager = ForceConstraintManager(state, actuation, [ForceBoxConstraint(state, frameId, np.array([-np.inf]*3), np.array([np.inf]*3))])
-    if(FRICTION_C):
-        forceConstraintManager = ForceConstraintManager(state, actuation, [FrictionConeConstraint(state, frameId, 0.7)])
-    if(BOTH_C):
-        forceConstraintManager = ForceConstraintManager(state, actuation, [FrictionConeConstraint(state, frameId, 0.7),
-                                                         ForceBoxConstraint(state, frameId, np.array([-np.inf]*3), np.array([np.inf]*3))])
+        forceConstraintManager = ForceConstraintManager([ForceBoxConstraint(frameId, np.array([-np.inf]*3), np.array([np.inf]*3))], softContactModelsStack)
+    elif(FRICTION_C):
+        forceConstraintManager = ForceConstraintManager([FrictionConeConstraint(frameId, MU)], softContactModelsStack)
+    elif(BOTH_C):
+        forceConstraintManager = ForceConstraintManager([FrictionConeConstraint(frameId, MU),
+                                                         ForceBoxConstraint(frameId, np.array([-np.inf]*3), np.array([np.inf]*3))], softContactModelsStack)
+    else:
+        forceConstraintManager = None
 
-    if(CONTACT and CONSTRAINT):
-        dam = DAMSoftContactDynamics3D_Go2(state, actuation, costs, ef_contact, constraintModelManager)
-    if(CONTACT and not CONSTRAINT):
-        dam = DAMSoftContactDynamics3D_Go2(state, actuation, costs, ef_contact)
-    if(not CONTACT and CONSTRAINT):
-        dam = DAMSoftContactDynamics3D_Go2(state, actuation, costs, softContactModelsStack=None, constraintModelManager=constraintModelManager)
-    if(not CONTACT and not CONSTRAINT):
-        dam = DAMSoftContactDynamics3D_Go2(state, actuation, costs)
+
 
     # # need to call constraintManager.calc to properly initialize its g_lb, g_ub
     # dad = dam.createData()
@@ -836,10 +1001,7 @@ for i in range(N):
     # dam.g_ub = dam.constraints.g_ub
     # # dam.calcDiff(dad, x, f, u)
 
-    if(FORCE_C or FRICTION_C or BOTH_C):
-        iam = IAMSoftContactDynamics3D_Go2(dam, dt=0.02, withCostResidual=True, forceConstraintManager=forceConstraintManager)
-    else:
-        iam = IAMSoftContactDynamics3D_Go2(dam, dt=0.02, withCostResidual=True)
+    iam = IAMSoftContactDynamics3D_Go2(dam, dt=0.02, withCostResidual=True, forceConstraintManager=forceConstraintManager)
 
     # iad = iam.createData()
     # iam.calc(iad, y, u)
@@ -862,15 +1024,14 @@ solver = mim_solvers.SolverCSQP(ocp)
 solver.max_qp_iters = 1000
 max_iter = 500
 solver.with_callbacks = True
-solver.use_filter_line_search = True
+solver.use_filter_line_search = False
 solver.termination_tolerance = 1e-4
 solver.eps_abs = 1e-6
 solver.eps_rel = 1e-6
 
 xs = [y]*(solver.problem.T + 1)
-us = [u]*solver.problem.T
-
-# us = solver.problem.quasiStatic([x0]*solver.problem.T) 
+# us = [u]*solver.problem.T
+us = solver.problem.quasiStatic([y]*solver.problem.T) 
 solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs, us, max_iter)   
 
