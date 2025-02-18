@@ -475,11 +475,15 @@ actuation = crocoddyl.ActuationModelFull(state)
 costs = crocoddyl.CostModelSum(state, actuation.nu)
 constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
 frameId = robot.model.getFrameId('contact')
-Kp = 0 ; Kv = 0 ; oPc = np.zeros(3)
+Kp = 0. ; Kv = 0. ; oPc = np.zeros(3)
 
 # Test create data 
 dam = DAMSoftContactDynamics3D(state, actuation, costs, frameId, Kp, Kv, oPc, pin.LOCAL_WORLD_ALIGNED, constraintModelManager)
 dad = dam.createData()
+
+# dam_cpp = force_feedback_mpc.DAMSoftContact3DAugmentedFwdDynamics(state, actuation, costs, frameId, np.array([Kp, Kp, Kp]), np.array([Kv, Kv, Kv]), oPc, constraintModelManager)
+# # dad_cpp = force_feedback_mpc.DADSoftContact3DAugmentedFwdDynamics(dam_cpp)
+# dad_cpp = dam_cpp.createData()
 
 # Test calc and calcDiff
 q = pin.randomConfiguration(robot.model)

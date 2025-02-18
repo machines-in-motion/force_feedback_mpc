@@ -277,7 +277,7 @@ class FrictionConeConstraint:
 
 # Custom Differential Action Model (DAM) for Go2+arm (5 soft 3D contacts with the environment)
 class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
-    def __init__(self, stateMultibody, actuationModel, costModelSum, constraintModelManager=None):
+    def __init__(self, stateMultibody, actuationModel, costModelSum, softContactModelsStack=None, constraintModelManager=None):
         '''
             stateMultibody         : crocoddyl.stateMultibody
             actuationModel         : crocoddyl.actuationModelFloatingBase
@@ -305,25 +305,23 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
         self.lhFootId  = stateMultibody.pinocchio.getFrameId(ee_frame_names[2])
         self.rhFootId  = stateMultibody.pinocchio.getFrameId(ee_frame_names[3])
         self.efId      = stateMultibody.pinocchio.getFrameId(ee_frame_names[4])
-        # Soft contact models 3d 
-        lf_contact = ViscoElasticContact3D(stateMultibody, actuationModel, self.lfFootId, self.oPc, self.Kp, self.Kv, self.pinRef)
-        rf_contact = ViscoElasticContact3D(stateMultibody, actuationModel, self.rfFootId, self.oPc, self.Kp, self.Kv, self.pinRef)
-        lh_contact = ViscoElasticContact3D(stateMultibody, actuationModel, self.lhFootId, self.oPc, self.Kp, self.Kv, self.pinRef)
-        rh_contact = ViscoElasticContact3D(stateMultibody, actuationModel, self.rhFootId, self.oPc, self.Kp, self.Kv, self.pinRef)
-        ef_contact = ViscoElasticContact3D(stateMultibody, actuationModel, self.efId, self.oPc, self.Kp, self.Kv, self.pinRef)
-        # Contact models stack
-        self.contacts = ViscoElasticContact3d_Multiple(stateMultibody, actuationModel, [lf_contact, rf_contact, lh_contact, rh_contact, ef_contact])
-        assert(self.contacts.nc == 5)
-        assert(self.contacts.nc_tot == 15)
-        self.active_contact = self.contacts.active
-        assert(self.contacts.active == True)
+        # Soft contact models (3d) stack
+        self.contacts = softContactModelsStack 
+        if(softContactModelsStack is None):
+            self.active_contact = False
+            self.nc_tot = 0
+            self.nc = 0
+        else:
+            self.active_contact = self.contacts.active
+            self.nc_tot = self.contacts.nc_tot
+            self.nc = self.contacts.nc
         # To complete DAMAbstract into sth like DAMFwdDyn
         self.actuation = actuationModel
         self.costs     = costModelSum
         self.pinocchio = stateMultibody.pinocchio
         # hard coded costs 
         self.with_force_cost = True
-        self.f_des           = np.zeros(self.contacts.nc_tot)
+        self.f_des           = np.zeros(self.nc_tot)
         self.f_weight        = 0.001
         
     def createData(self):
@@ -384,8 +382,6 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             if(self.constraints is not None):
                 self.constraints.calc(data.constraints, x)
 
-
-
     def calcDiff(self, data, x, f, u=None):
         '''
         Compute derivatives 
@@ -431,7 +427,7 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             if(self.active_contact and self.with_force_cost):
                 data.f_residual = f - self.f_des
                 data.Lf         = self.f_weight * data.f_residual.T
-                data.Lff        = self.f_weight * np.eye(self.contacts.nc_tot)
+                data.Lff        = self.f_weight * np.eye(self.nc_tot)
             # constraints
             if(self.constraints is not None):
                 self.constraints.calcDiff(data.constraints, x, u)
@@ -446,7 +442,7 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             if(self.active_contact and self.with_force_cost):
                 data.f_residual = f - self.f_des
                 data.Lf         = self.f_weight * data.f_residual.T
-                data.Lff        = self.f_weight * np.eye(self.contacts.nc_tot)
+                data.Lff        = self.f_weight * np.eye(self.nc_tot)
             # constraints
             if(self.constraints is not None):
                 self.constraints.calcDiff(data.constraints, x)
@@ -460,24 +456,24 @@ class DADSoftContactDynamics_Go2(crocoddyl.DifferentialActionDataAbstract):
         # super().__init__(am)
         crocoddyl.DifferentialActionDataAbstract.__init__(self, am)
         # Force model + derivatives
-        self.fout      = np.zeros(am.contacts.nc_tot)
-        self.fout_copy = np.zeros(am.contacts.nc_tot)
-        self.dfdt_dx   = np.zeros((am.contacts.nc_tot,am.state.ndx))
-        self.dfdt_du   = np.zeros((am.contacts.nc_tot,am.nu))
-        self.dfdt_df   = np.zeros((am.contacts.nc_tot,am.contacts.nc_tot))  
+        self.fout      = np.zeros(am.nc_tot)
+        self.fout_copy = np.zeros(am.nc_tot)
+        self.dfdt_dx   = np.zeros((am.nc_tot,am.state.ndx))
+        self.dfdt_du   = np.zeros((am.nc_tot,am.nu))
+        self.dfdt_df   = np.zeros((am.nc_tot,am.nc_tot))  
         # ABA model derivatives
         self.Fx = np.zeros((am.state.nv, am.state.ndx))
         self.Fu = np.zeros((am.state.nv, am.nu))
-        self.dABA_df = np.zeros((am.state.nv, am.contacts.nc_tot))
+        self.dABA_df = np.zeros((am.state.nv, am.nc_tot))
         # Cost derivatives
         self.Lx = np.zeros(am.state.ndx)
         self.Lu = np.zeros(am.actuation.nu)
         self.Lxx = np.zeros((am.state.ndx, am.state.ndx))
         self.Lxu = np.zeros((am.state.ndx, am.actuation.nu))
         self.Luu = np.zeros((am.actuation.nu, am.actuation.nu))
-        self.Lf = np.zeros(am.contacts.nc_tot)
-        self.Lff = np.zeros((am.contacts.nc_tot, am.contacts.nc_tot))
-        self.f_residual = np.zeros(am.contacts.nc_tot)
+        self.Lf = np.zeros(am.nc_tot)
+        self.Lff = np.zeros((am.nc_tot, am.nc_tot))
+        self.f_residual = np.zeros(am.nc_tot)
         # External spatial force in body coordinates
         self.fext = [pin.Force.Zero() for _ in range(am.pinocchio.njoints)]
         self.fext_copy = [pin.Force.Zero() for _ in range(am.pinocchio.njoints)]
@@ -494,8 +490,8 @@ import force_feedback_mpc
 class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedActionModelAbstract
     def __init__(self, dam, dt=1e-3, withCostResidual=True, frictionConeConstaints = []):
         nu = int(dam.nu)
-        nc = int(dam.contacts.nc)      # number of contact models (5)
-        nf = int(dam.contacts.nc_tot)  # contact space dimension (5x3 = 15)
+        nc = int(dam.nc)      # number of contact models (5)
+        nf = int(dam.nc_tot)  # contact space dimension (5x3 = 15)
         nr = int(dam.costs.nr + 3)     # ef force cost)
         ng = int(dam.ng + nf + len(frictionConeConstaints))
         # crocoddyl.ActionModelAbstract.__init__(self, crocoddyl.StateAbstract(dam.state.nq + dam.state.nv + nf, dam.state.ndx + nf), nu, nr, ng, 0)
@@ -570,7 +566,7 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
             fdot = data.differential.fout
             data.dx[:nv] = v*self.dt + a*self.dt**2
             data.dx[nv:2*nv] = a*self.dt
-            data.dx[-nf:] = fdot*self.dt
+            data.dx[2*nv:] = fdot*self.dt
             data.xnext = self.stateSoft.integrate(y, data.dx)
             data.cost = self.dt*data.differential.cost
             # Compute cost residual
@@ -628,25 +624,25 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
             data.Fu[nv:ndx, :] = da_du * self.dt
             
             # New block from augmented dynamics (top right corner)
-            data.Fx[:nv, -nf:] = data.differential.dABA_df * self.dt**2
-            data.Fx[nv:ndx, -nf:] = data.differential.dABA_df * self.dt
+            data.Fx[:nv, ndx:] = data.differential.dABA_df * self.dt**2
+            data.Fx[nv:ndx, ndx:] = data.differential.dABA_df * self.dt
             # New block from augmented dynamics (bottom right corner)
-            data.Fx[-nf:,-nf:] = np.eye(nf) + data.differential.dfdt_df*self.dt
+            data.Fx[ndx:,ndx:] = np.eye(nf) + data.differential.dfdt_df*self.dt
             # New block from augmented dynamics (bottom left corner)
-            data.Fx[-nf:, :ndx] = data.differential.dfdt_dx * self.dt
+            data.Fx[ndx:, :ndx] = data.differential.dfdt_dx * self.dt
             
-            data.Fu[-nf:, :] = data.differential.dfdt_du * self.dt
+            data.Fu[ndx:, :] = data.differential.dfdt_du * self.dt
 
             self.stateSoft.JintegrateTransport(y, data.dx, data.Fx, crocoddyl.Jcomponent.second)
             data.Fx += self.stateSoft.Jintegrate(y, data.dx, crocoddyl.Jcomponent.first).tolist()[0]  # add identity to Fx = d(x+dx)/dx = d(q,v)/d(q,v)
-            data.Fx[-nf:, -nf:] -= np.eye(nf) # remove identity from Ftau (due to stateSoft.Jintegrate)
+            data.Fx[ndx:, ndx:] -= np.eye(nf) # remove identity from Ftau (due to stateSoft.Jintegrate)
             self.stateSoft.JintegrateTransport(y, data.dx, data.Fu, crocoddyl.Jcomponent.second)
 
             # d->Lx.noalias() = time_step_ * d->differential->Lx;
             data.Lx[:ndx] = data.differential.Lx*self.dt
-            data.Lx[-nf:] = data.differential.Lf*self.dt
+            data.Lx[ndx:] = data.differential.Lf*self.dt
             data.Lxx[:ndx,:ndx] = data.differential.Lxx*self.dt
-            data.Lxx[-nf:,-nf:] = data.differential.Lff*self.dt
+            data.Lxx[ndx:,ndx:] = data.differential.Lff*self.dt
             data.Lxu[:ndx, :nu] = data.differential.Lxu*self.dt
             data.Lu = data.differential.Lu*self.dt
             data.Luu = data.differential.Luu*self.dt
@@ -670,12 +666,12 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
             data.Fx += self.stateSoft.Jintegrate(y, data.dx, crocoddyl.Jcomponent.first).tolist()[0]  # add identity to Fx = d(x+dx)/dx = d(q,v)/d(q,v)
             # data.Fx (nu, nu).diagonal().array() -=
             #     Scalar(1.);  // remove identity from Ftau (due to stateLPF.Jintegrate)
-            data.Fx[-nf:, -nf:] -= np.eye(nf)
+            data.Fx[ndx:, ndx:] -= np.eye(nf)
             # d->Lx.noalias() = time_step_ * d->differential->Lx;
             data.Lx[:ndx] = data.differential.Lx*self.dt
-            data.Lx[-nf:] = data.differential.Lf*self.dt
+            data.Lx[ndx:] = data.differential.Lf*self.dt
             data.Lxx[:ndx,:ndx] = data.differential.Lxx*self.dt
-            data.Lxx[-nf:,-nf:] = data.differential.Lff*self.dt
+            data.Lxx[ndx:,ndx:] = data.differential.Lff*self.dt
             data.Lxu[:ndx, :nu] = data.differential.Lxu*self.dt
             data.Lu = data.differential.Lu*self.dt
             data.Luu = data.differential.Luu*self.dt
@@ -723,9 +719,10 @@ costs = crocoddyl.CostModelSum(state, actuation.nu)
 constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
 frameId = robot.model.getFrameId('contact')
 Kp = 0 ; Kv = 0 ; oPc = np.zeros(3)
+ef_contact = ViscoElasticContact3d_Multiple(state, actuation, [ViscoElasticContact3D(state, actuation, frameId, oPc, Kp, Kv, pin.LOCAL_WORLD_ALIGNED)]) 
 
 # Test create data 
-dam = DAMSoftContactDynamics3D_Go2(state, actuation, costs, frameId, Kp, Kv, oPc, pin.LOCAL_WORLD_ALIGNED, constraintModelManager)
+dam = DAMSoftContactDynamics3D_Go2(state, actuation, costs) # ef_contact) #, constraintModelManager)
 dad = dam.createData()
 
 # Test calc and calcDiff
@@ -733,9 +730,39 @@ q = pin.randomConfiguration(robot.model)
 v = np.zeros(robot.model.nv)
 x = np.concatenate([q, v])
 u = np.random.rand(actuation.nu)
-f = np.random.rand(3)
+f = np.random.rand(0)
 dam.calc(dad, x, f, u)
 dam.calcDiff(dad, x, f, u)
+
+# friction cone 
+# frictionConeConstaints = [FrictionConeConstraint(state, frameId, 0.7)]
+iam = IAMSoftContactDynamics3D_Go2(dam, dt=0.01, withCostResidual=True) # frictionConeConstaints=frictionConeConstaints)
+iad = iam.createData()
+y = np.concatenate([x, f])
+iam.calc(iad, y, u)
+iam.calcDiff(iad, y, u)
+
+import mim_solvers
+# Create shooting problem
+ocp = crocoddyl.ShootingProblem(y, [iam]*10, iam)
+# ocp.x0 = y
+
+solver = mim_solvers.SolverCSQP(ocp)
+solver.max_qp_iters = 1000
+max_iter = 500
+solver.with_callbacks = True
+solver.use_filter_line_search = True
+solver.termination_tolerance = 1e-4
+solver.eps_abs = 1e-6
+solver.eps_rel = 1e-6
+
+xs = [y]*(solver.problem.T + 1)
+us = [u]*solver.problem.T
+
+# us = solver.problem.quasiStatic([x0]*solver.problem.T) 
+solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
+solver.solve(xs, us, max_iter)   
+
 
 # import force_feedback_mpc
 # # TEST go2 with arm
@@ -834,7 +861,17 @@ dam.calcDiff(dad, x, f, u)
 #     ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
 #     ef_track = crocoddyl.CostModelResidual(state, ef_activation, ef_residual)
 #     costModel.addCost("efTrack", ef_track, 1e5)
-        
+
+#     # Soft contact models 3d 
+#     lf_contact = ViscoElasticContact3D(state, actuation, lfFootId, oPc, Kp, Kv, pinRef)
+#     rf_contact = ViscoElasticContact3D(state, actuation, rfFootId, oPc, Kp, Kv, pinRef)
+#     lh_contact = ViscoElasticContact3D(state, actuation, lhFootId, oPc, Kp, Kv, pinRef)
+#     rh_contact = ViscoElasticContact3D(state, actuation, rhFootId, oPc, Kp, Kv, pinRef)
+#     ef_contact = ViscoElasticContact3D(state, actuation, efId, oPc, Kp, Kv, pinRef)
+#     # Stack models
+#     softContactModelStack = ViscoElasticContact3d_Multiple(state, actuation, [lf_contact, rf_contact, lh_contact, rh_contact, ef_contact])
+
+#     # Constraints stack
 #     # constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
 
 #     # Friction cone constraint models
@@ -843,7 +880,7 @@ dam.calcDiff(dad, x, f, u)
 #                               FrictionConeConstraint(state, lhFootId, MU),
 #                               FrictionConeConstraint(state, rhFootId, MU)]
     
-#     dam = DAMSoftContactDynamics3D_Go2(state, actuation, costModel) #, constraintModelManager)
+#     dam = DAMSoftContactDynamics3D_Go2(state, actuation, costModel, softContactModelStack) #, constraintModelManager)
 #     # dad = dam.createData()
 #     # dam.calc(dad, x0, f0, u0)
 #     # dam.calcDiff(dad, x0, f0, u0)
