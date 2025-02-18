@@ -729,9 +729,9 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
         self.ng_f             = ng_f                                                           # Custom force contraint dimension
         self.ng_dam           = self.differential.ng                                           # crocoddyl constraint manager dimension
         assert(self.ng == self.ng_dam + self.ng_f)
-        print("Total constrain dim = ", self.ng)
-        print("Force constrain dim = ", self.ng_f)
-        print("DAM constrain dim   = ", self.ng_dam)
+        # print("Total constrain dim = ", self.ng)
+        # print("Force constrain dim = ", self.ng_f)
+        # print("DAM constrain dim   = ", self.ng_dam)
         self.dt               = dt
         
         self.withCostResidual = withCostResidual
@@ -1146,7 +1146,7 @@ solver = mim_solvers.SolverCSQP(ocp)
 solver.max_qp_iters = 1000
 max_iter = 500
 solver.with_callbacks = True
-solver.use_filter_line_search = True
+solver.use_filter_line_search = False
 solver.termination_tolerance = 1e-4
 solver.eps_abs = 1e-6
 solver.eps_rel = 1e-6
@@ -1161,6 +1161,88 @@ solver.solve(xs, us, max_iter)
 
 
 
+
+
+
+# Extract OCP Solution 
+nq, nv, N = rmodel.nq, rmodel.nv, len(xs) 
+jointPos_sol = []
+jointVel_sol = []
+jointAcc_sol = []
+jointTorques_sol = []
+centroidal_sol = []
+force_sol = []
+xs, us = solver.xs, solver.us
+x = []
+for time_idx in range (N):
+    q, v = xs[time_idx][:nq], xs[time_idx][nq:nq+nv]
+    f = xs[time_idx][nq+nv:]
+    pin.framesForwardKinematics(rmodel, rdata, q)
+    pin.computeCentroidalMomentum(rmodel, rdata, q, v)
+    centroidal_sol += [
+        np.concatenate(
+            [pin.centerOfMass(rmodel, rdata, q, v), np.array(rdata.hg.linear), np.array(rdata.hg.angular)]
+            )
+            ]
+    jointPos_sol += [q]
+    jointVel_sol += [v]
+    force_sol    += [f]
+    x += [xs[time_idx]]
+    if time_idx < N-1:
+        jointAcc_sol +=  [solver.problem.runningDatas[time_idx].xnext[nq::]] 
+        jointTorques_sol += [us[time_idx]]
+
+sol = {'x':x, 'centroidal':centroidal_sol, 'jointPos':jointPos_sol, 
+                    'jointVel':jointVel_sol, 'jointAcc':jointAcc_sol, 'force':force_sol,
+                    'jointTorques':jointTorques_sol}       
+
+# Extract contact forces by hand
+sol['FL_FOOT_contact'] = [force_sol[i][0:3] for i in range(N)]     
+sol['FR_FOOT_contact'] = [force_sol[i][3:6] for i in range(N)]     
+sol['HL_FOOT_contact'] = [force_sol[i][6:9] for i in range(N)]     
+sol['HR_FOOT_contact'] = [force_sol[i][9:12] for i in range(N)]     
+sol['Link6'  ] = [force_sol[i][12:15] for i in range(N)]     
+
+# Plotting 
+import matplotlib.pyplot as plt
+constrained_sol = sol
+time_lin = np.linspace(0, T, solver.problem.T+1)
+fig, axs = plt.subplots(4, 3, constrained_layout=True)
+for i, frame_idx in enumerate(supportFeetIds):
+    ct_frame_name = rmodel.frames[frame_idx].name + "_contact"
+    forces = np.array(constrained_sol[ct_frame_name])
+    axs[i, 0].plot(time_lin, forces[:, 0], label="Fx")
+    axs[i, 1].plot(time_lin, forces[:, 1], label="Fy")
+    axs[i, 2].plot(time_lin, forces[:, 2], label="Fz")
+    # Add friction cone constraints 
+    Fz_lb = (1./MU)*np.sqrt(forces[:, 0]**2 + forces[:, 1]**2)
+    # Fz_ub = np.zeros(time_lin.shape)
+    # axs[i, 2].plot(time_lin, Fz_ub, 'k-.', label='ub')
+    axs[i, 2].plot(time_lin, Fz_lb, 'k-.', label='lb')
+    axs[i, 0].grid()
+    axs[i, 1].grid()
+    axs[i, 2].grid()
+    axs[i, 0].set_ylabel(ct_frame_name)
+axs[0, 0].legend()
+axs[0, 1].legend()
+axs[0, 2].legend()
+
+axs[3, 0].set_xlabel(r"$F_x$")
+axs[3, 1].set_xlabel(r"$F_y$")
+axs[3, 2].set_xlabel(r"$F_z$")
+fig.suptitle('Force', fontsize=16)
+
+
+comDes = np.array(comDes)
+centroidal_sol = np.array(constrained_sol['centroidal'])
+plt.figure()
+plt.plot(comDes[:, 0], comDes[:, 1], "--", label="reference")
+plt.plot(centroidal_sol[:, 0], centroidal_sol[:, 1], label="solution")
+plt.legend()
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("COM trajectory")
+plt.show()
 
 
 
