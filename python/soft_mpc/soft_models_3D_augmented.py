@@ -241,8 +241,7 @@ class DAMSoftContactDynamics3D(crocoddyl.DifferentialActionModelAbstract):
         # To complete DAMAbstract into sth like DAMFwdDyn
         self.actuation = actuationModel
         self.costs = costModelSum
-        if(constraintModelManager is not None):
-            self.constraints = constraintModelManager
+        self.constraints = constraintModelManager
         self.pinocchio = stateMultibody.pinocchio
         # hard coded costs 
         self.with_force_cost = False
@@ -468,41 +467,112 @@ class DADSoftContactDynamics(crocoddyl.DifferentialActionDataAbstract):
             self.constraints = am.constraints.createData(self.multibody)    
 
 
+# from mim_robots.robot_loader import load_pinocchio_wrapper
+# robot = load_pinocchio_wrapper('iiwa')
+# state = crocoddyl.StateMultibody(robot.model)
+# actuation = crocoddyl.ActuationModelFull(state)
+# costs = crocoddyl.CostModelSum(state, actuation.nu)
+# constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
+# frameId = robot.model.getFrameId('contact')
+# Kp = 0. ; Kv = 0. ; oPc = np.zeros(3)
+
+# # Test create data 
+# dam = DAMSoftContactDynamics3D(state, actuation, costs, frameId, Kp, Kv, oPc, pin.LOCAL_WORLD_ALIGNED, constraintModelManager)
+# dad = dam.createData()
+
+# # dam_cpp = force_feedback_mpc.DAMSoftContact3DAugmentedFwdDynamics(state, actuation, costs, frameId, np.array([Kp, Kp, Kp]), np.array([Kv, Kv, Kv]), oPc, constraintModelManager)
+# # # dad_cpp = force_feedback_mpc.DADSoftContact3DAugmentedFwdDynamics(dam_cpp)
+# # dad_cpp = dam_cpp.createData()
+
+# # Test calc and calcDiff
+# q = pin.randomConfiguration(robot.model)
+# v = np.zeros(robot.model.nv)
+# x = np.concatenate([q, v])
+# u = np.random.rand(actuation.nu)
+# f = np.random.rand(3)
+# dam.calc(dad, x, f, u)
+# dam.calcDiff(dad, x, f, u)
+
+# y = np.concatenate([x,f])
+# iam = IAMSoftContactDynamics3D(dam)
+# iad = iam.createData()
+# iam.calc(iad, y, u)
+# iam.calcDiff(iad, y, u)
+
+# # Create shooting problem
+# ocp = crocoddyl.ShootingProblem(y, [iam]*10, iam)
+# import mim_solvers
+# solver = mim_solvers.SolverCSQP(ocp)
+# solver.max_qp_iters = 1000
+# max_iter = 500
+# solver.with_callbacks = True
+# solver.use_filter_line_search = True
+# solver.termination_tolerance = 1e-4
+# solver.eps_abs = 1e-6
+# solver.eps_rel = 1e-6
+
+# xs = [y]*(solver.problem.T + 1)
+# us = [u]*solver.problem.T
+# # us = solver.problem.quasiStatic([x0]*solver.problem.T) 
+# solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
+# solver.solve(xs, us, max_iter)   
+
+
 from mim_robots.robot_loader import load_pinocchio_wrapper
-robot = load_pinocchio_wrapper('iiwa')
-state = crocoddyl.StateMultibody(robot.model)
-actuation = crocoddyl.ActuationModelFull(state)
-costs = crocoddyl.CostModelSum(state, actuation.nu)
-constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
-frameId = robot.model.getFrameId('contact')
-Kp = 0. ; Kv = 0. ; oPc = np.zeros(3)
+robot                  = load_pinocchio_wrapper('iiwa')
+state                  = crocoddyl.StateMultibody(robot.model)
+actuation              = crocoddyl.ActuationModelFull(state)
+# costs                  = crocoddyl.CostModelSum(state, actuation.nu)
+# constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
+frameId                = robot.model.getFrameId('contact')
+Kp                     = 1000
+Kv                     = 100 
+oPc                    = np.array([0.65, 0., 0.01])
 
-# Test create data 
-dam = DAMSoftContactDynamics3D(state, actuation, costs, frameId, Kp, Kv, oPc, pin.LOCAL_WORLD_ALIGNED, constraintModelManager)
-dad = dam.createData()
-
-# dam_cpp = force_feedback_mpc.DAMSoftContact3DAugmentedFwdDynamics(state, actuation, costs, frameId, np.array([Kp, Kp, Kp]), np.array([Kv, Kv, Kv]), oPc, constraintModelManager)
-# # dad_cpp = force_feedback_mpc.DADSoftContact3DAugmentedFwdDynamics(dam_cpp)
-# dad_cpp = dam_cpp.createData()
-
-# Test calc and calcDiff
-q = pin.randomConfiguration(robot.model)
+# Initial conditions
+q = np.array([0., 1.05, 0., -1.13, 0.2,  0.79, 0.]) # pin.randomConfiguration(robot.model)
 v = np.zeros(robot.model.nv)
 x = np.concatenate([q, v])
 u = np.random.rand(actuation.nu)
 f = np.random.rand(3)
-dam.calc(dad, x, f, u)
-dam.calcDiff(dad, x, f, u)
+y = np.concatenate([x, f])
 
-y = np.concatenate([x,f])
-iam = IAMSoftContactDynamics3D(dam)
-iad = iam.createData()
-iam.calc(iad, y, u)
-iam.calcDiff(iad, y, u)
+N             = 10
+runningModels = []
+for i in range(N):
+    # Costs
+    costs = crocoddyl.CostModelSum(state, actuation.nu)
+    xRegCost = crocoddyl.CostModelResidual(state, 
+                                          crocoddyl.ActivationModelWeightedQuad(np.ones(state.nx)**2), 
+                                          crocoddyl.ResidualModelState(state, x, actuation.nu))
+    uRegCost = crocoddyl.CostModelResidual(state, 
+                                          crocoddyl.ActivationModelWeightedQuad(np.ones(actuation.nu)**2), 
+                                          crocoddyl.ResidualModelControlGrav(state))
+    costs.addCost("stateReg", xRegCost, 1e-2)
+    costs.addCost("ctrlReg", uRegCost, 1e-5)
 
-# Create shooting problem
-ocp = crocoddyl.ShootingProblem(y, [iam]*10, iam)
+    # Constraints
+    constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
+    uBoxCstr = crocoddyl.ConstraintModelResidual(state, crocoddyl.ResidualModelControl(state, actuation.nu), -robot.model.effortLimit, robot.model.effortLimit)  
+    constraintModelManager.addConstraint("ctrlBox", uBoxCstr)
+
+    dam = DAMSoftContactDynamics3D(state, actuation, costs, frameId, Kp, Kv, oPc, constraintModelManager)
+
+    # dad = dam.createData()
+    # dam.calc(dad, x, f, u)
+    # dam.calcDiff(dad, x, f, u)
+    iam = IAMSoftContactDynamics3D(dam)
+    # iad = iam.createData()
+    # iam.calc(iad, y, u)
+    # iam.calcDiff(iad, y, u)
+    
+    runningModels.append(iam)
+
 import mim_solvers
+# Create shooting problem
+ocp = crocoddyl.ShootingProblem(y, runningModels, runningModels[-1])
+# ocp.x0 = y
+
 solver = mim_solvers.SolverCSQP(ocp)
 solver.max_qp_iters = 1000
 max_iter = 500
@@ -514,6 +584,7 @@ solver.eps_rel = 1e-6
 
 xs = [y]*(solver.problem.T + 1)
 us = [u]*solver.problem.T
+
 # us = solver.problem.quasiStatic([x0]*solver.problem.T) 
 solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs, us, max_iter)   
