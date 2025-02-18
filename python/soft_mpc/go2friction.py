@@ -15,7 +15,7 @@ import force_feedback_mpc
 
 # 3D soft contact model 
 class ViscoElasticContact3D:
-    def __init__(self, state, actuation, frameId, oPc=np.zeros(3), Kp=10, Kv=0, pinRef=pin.LOCAL):
+    def __init__(self, state, actuation, frameId, oPc=np.zeros(3), Kp=10, Kv=0, pinRef=pin.LOCAL_WORLD_ALIGNED):
         self.active = True
         self.nc = 3
         self.name = ""
@@ -493,7 +493,6 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
         self.Kp        = 1e3
         self.Kv        = 1e2
         self.oPc       = np.zeros(3)
-        self.pinRef    = pin.LOCAL_WORLD_ALIGNED
         ee_frame_names = ['FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT', 'Link6']
         self.lfFootId  = stateMultibody.pinocchio.getFrameId(ee_frame_names[0])
         self.rfFootId  = stateMultibody.pinocchio.getFrameId(ee_frame_names[1])
@@ -581,16 +580,6 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             # Add hard-coded cost
             if(self.active_contact and self.with_force_cost):
                 data.cost += self.forceCosts.calc(data, f)
-                # # Compute force residual and add force cost to total cost
-                # if(self.force_cost_ref != self.pinRef):
-                #     if(self.force_cost_ref == pin.LOCAL):
-                #         data.f_residual = data.oRf.T * f - self.f_des
-                #     else:
-                #         data.f_residual = data.oRf * f - self.f_des
-                # else:
-                #     data.f_residual = f - self.f_des
-                # data.f_residual = f - self.f_des
-                # data.cost       += 0.5 * self.f_weight * data.f_residual.T @ data.f_residual
             # constraints
             if(self.constraints is not None):
                 self.constraints.calc(data.constraints, x, u)
@@ -603,16 +592,6 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             # Add hard-coded cost
             if(self.active_contact and self.with_force_cost):
                 data.cost += self.forceCosts.calc(data, f)
-                # # Compute force residual and add force cost to total cost
-                # if(self.force_cost_ref != self.pinRef):
-                #     if(self.force_cost_ref == pin.LOCAL):
-                #         data.f_residual = data.oRf.T * f - self.f_des
-                #     else:
-                #         data.f_residual = data.oRf * f - self.f_des
-                # else:
-                #     data.f_residual = f - self.f_des
-                # data.f_residual = f - self.f_des
-                # data.cost       += 0.5 * self.f_weight * data.f_residual.T @ data.f_residual
             # constraints
             if(self.constraints is not None):
                 self.constraints.calc(data.constraints, x)
@@ -926,7 +905,7 @@ q = np.array([0., 1.05, 0., -1.13, 0.2,  0.79, 0.]) # pin.randomConfiguration(ro
 v = np.zeros(robot.model.nv)
 x = np.concatenate([q, v])
 u = np.random.rand(actuation.nu)
-MU = 0.1 # friction coeff
+MU = 0.7 # friction coeff
 CONTACT    = True
 CONSTRAINT = False
 FRICTION_C = True
@@ -964,21 +943,22 @@ for i in range(N):
     if(CONSTRAINT):
         constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
         uBoxCstr = crocoddyl.ConstraintModelResidual(state, crocoddyl.ResidualModelControl(state, actuation.nu), -robot.model.effortLimit, robot.model.effortLimit)  
+        xlb = np.concatenate([robot.model.lowerPositionLimit, [-np.inf]*robot.model.nv])
+        xub = np.concatenate([robot.model.upperPositionLimit, [np.inf]*robot.model.nv])
+        xBoxCstr = crocoddyl.ConstraintModelResidual(state, crocoddyl.ResidualModelState(state, actuation.nu), xlb, xub)  
         constraintModelManager.addConstraint("ctrlBox", uBoxCstr)
+        constraintModelManager.addConstraint("stateBox", xBoxCstr)
     else:
         constraintModelManager = None
-
+    
+    # Custom force cost in DAM
     if(FORCE_COST):
         forceCostManager = ForceCostManager([ForceCost(state, frameId, np.array([0]*3), 0., pin.LOCAL_WORLD_ALIGNED)], softContactModelsStack)
     else:
         forceCostManager = None
 
+    # Create DAM with soft contact models, force costs + standard cost & constraints
     dam = DAMSoftContactDynamics3D_Go2(state, actuation, costs, softContactModelsStack, constraintModelManager, forceCostManager)
-
-    # Setup force cost
-    dam.with_force_cost = True
-    dam.f_des           = np.array([0.,0.,50])
-    dam.f_weight        = 0.001
     
     # Custom force constraints for IAM
     if(FORCE_C):
@@ -991,26 +971,8 @@ for i in range(N):
     else:
         forceConstraintManager = None
 
-
-
-    # # need to call constraintManager.calc to properly initialize its g_lb, g_ub
-    # dad = dam.createData()
-    # dam.calc(dad, x, f, u)
-    # # Set the bounds of DAM
-    # dam.g_lb = dam.constraints.g_lb
-    # dam.g_ub = dam.constraints.g_ub
-    # # dam.calcDiff(dad, x, f, u)
-
-    iam = IAMSoftContactDynamics3D_Go2(dam, dt=0.02, withCostResidual=True, forceConstraintManager=forceConstraintManager)
-
-    # iad = iam.createData()
-    # iam.calc(iad, y, u)
-    # iam.calcDiff(iad, y, u)
-    # weoifweifo
-
-    # Might have to override the constraint bounds
-    # iam.g_lb = np.zeros([m.ng]) # needs to be slightly negative (bug to investigate)
-    # iam.g_ub = np.array([np.inf]*m.ng)
+    # Create custom IAM with force constraints
+    iam = IAMSoftContactDynamics3D_Go2(dam, dt=0.01, withCostResidual=True, forceConstraintManager=forceConstraintManager)
 
     runningModels.append(iam)
 
