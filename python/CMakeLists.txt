@@ -11,14 +11,14 @@ set(PYTHON_PACKAGES
 # Install the __init__.py files and modules for each sub-package
 foreach(PACKAGE ${PYTHON_PACKAGES})
     install(FILES ${PACKAGE}/__init__.py
-            DESTINATION ${Python3_SITELIB}/${PROJECT_NAME}/${PACKAGE})
+            DESTINATION ${PYTHON_SITELIB}/${PROJECT_NAME}/${PACKAGE})
     
     file(GLOB MODULES "${PACKAGE}/*.py")
     
     foreach(MODULE ${MODULES})
         get_filename_component(MODULE_NAME ${MODULE} NAME)
         install(FILES ${MODULE}
-                DESTINATION ${Python3_SITELIB}/${PROJECT_NAME}/${PACKAGE})
+                DESTINATION ${PYTHON_SITELIB}/${PROJECT_NAME}/${PACKAGE})
         
         # add_custom_target(
         #     "${MODULE_NAME}"
