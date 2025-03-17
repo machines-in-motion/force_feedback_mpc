@@ -351,9 +351,9 @@ class ForceCost:
         # Compute force residual and add force cost to total cost
         if(self.pinRef != pinRefDyn):
             if(self.pinRef == pin.LOCAL):
-                self.f_residual = oRf.T * f - self.f_des
+                self.f_residual = oRf.T @ f - self.f_des
             else:
-                self.f_residual = oRf * f - self.f_des
+                self.f_residual = oRf @ f - self.f_des
         else:
             self.f_residual = f - self.f_des
         self.f_cost     = 0.5 * self.f_residual.T @ self.f_weight @ self.f_residual
@@ -366,16 +366,16 @@ class ForceCost:
         # Compute force residual and add force cost to total cost
         if(self.pinRef != pinRefDyn):
             if(self.pinRef == pin.LOCAL):
-                self.f_residual = oRf.T * f - self.f_des
+                self.f_residual = oRf.T @ f - self.f_des
                 self.Lf = self.f_residual.T @ self.f_weight @ oRf.T
-                self.residual_x[:3, :self.state.nv] = pin.skew(oRf.T * f) * lJ[3:]
+                self.f_residual_x[:3, :self.state.nv] = pin.skew(oRf.T @ f) @ lJ[3:]
                 dad.Lx += self.f_residual.T @ self.f_weight @ self.f_residual_x
                 self.Lff = self.f_weight @ oRf @ oRf.T
             else:
-                self.f_residual = oRf * f - self.f_des
+                self.f_residual = oRf @ f - self.f_des
                 self.Lf = self.f_residual.T @ self.f_weight @ oRf
-                self.residual_x[:3, :self.state.nv] = pin.skew(oRf * f) * self.oJ.bottomRows(3)
-                dad.Lx += self.f_residual.T @ self.f_weight @ pin.skew(oRf * f) * self.f_residual_x
+                self.f_residual_x[:3, :self.state.nv] = pin.skew(oRf @ f) @ self.oJ.bottomRows(3)
+                dad.Lx += self.f_residual.T @ self.f_weight @ pin.skew(oRf @ f) @ self.f_residual_x
                 self.Lff = self.f_weight @ oRf.T @ oRf
         else:
             self.f_residual = f - self.f_des
@@ -436,6 +436,7 @@ class ForceCostManager:
         output > stacked cost residuals
         '''
         nc_i = 0
+        self.cost = 0
         # For each contact model
         for ct in self.contacts:
             pinRefDyn = ct.pinRef
@@ -758,8 +759,11 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
         if(dam.constraints is not None):
             self.g_lb = np.concatenate([dam.g_lb, self.force_g_lb])
             self.g_ub = np.concatenate([dam.g_ub, self.force_g_ub])
-            print(self.g_lb)
-            print(self.g_ub)
+        else:
+            if(self.forceConstraints is not None):
+                self.g_lb = self.force_g_lb
+                self.g_ub = self.force_g_ub
+
     def createData(self):
         data = IADSoftContactDynamics3D_Go2(self)
         return data
@@ -799,6 +803,7 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
             if(self.withCostResidual):
                 data.r = data.differential.r
             if(self.with_force_constraint):
+                # print( self.forceConstraints.calc(f))
                 data.g[ng_dam: ng_dam+ng_f] = self.forceConstraints.calc(f)
 
     def calcDiff(self, data, y, u=None):
