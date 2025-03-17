@@ -46,10 +46,10 @@ x0 =  np.concatenate([q0, np.zeros(rmodel.nv)])
 
 pinocchio.forwardKinematics(rmodel, rdata, q0)
 pinocchio.updateFramePlacements(rmodel, rdata)
-rfFootPos0 = rdata.oMf[rfFootId].translation
-rhFootPos0 = rdata.oMf[rhFootId].translation
 lfFootPos0 = rdata.oMf[lfFootId].translation
+rfFootPos0 = rdata.oMf[rfFootId].translation
 lhFootPos0 = rdata.oMf[lhFootId].translation 
+rhFootPos0 = rdata.oMf[rhFootId].translation
 efPos0 = rdata.oMf[efId].translation
 comRef = (rfFootPos0 + rhFootPos0 + lfFootPos0 + lhFootPos0) / 4
 comRef[2] = pinocchio.centerOfMass(rmodel, rdata, q0)[2].item() 
@@ -65,8 +65,8 @@ f0 = np.zeros(3*5)
 u0 = np.zeros(actuation.nu)
 y0 = np.concatenate([x0, f0])
 comDes = []
-N_ocp = 100
-dt = 0.01
+N_ocp = 20
+dt = 0.02
 T = N_ocp * dt
 radius = 0.0
 for t in range(N_ocp+1):
@@ -116,9 +116,9 @@ for t in range(N_ocp+1):
     ef_rot_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
     ef_rot_track = crocoddyl.CostModelResidual(state, ef_rot_activation, ef_rotation_residual)
     if t == N_ocp:
-        costModel.addCost("efRotTrack", ef_rot_track, 1e5)
+        costModel.addCost("efRotTrack", ef_rot_track, 1e-1*dt)
     else:
-        costModel.addCost("efRotTrack", ef_rot_track, 1e1)
+        costModel.addCost("efRotTrack", ef_rot_track, 1e-1)
 
     # Soft contact models 3d 
     lf_contact = ViscoElasticContact3D(state, actuation, lfFootId, rdata.oMf[lfFootId].translation, Kp, Kv, pinRef)
@@ -130,35 +130,45 @@ for t in range(N_ocp+1):
     softContactModelsStack = ViscoElasticContact3d_Multiple(state, actuation, [lf_contact, rf_contact, lh_contact, rh_contact, ef_contact])
 
     # Constraints stack
-    constraintModelManager = None # crocoddyl.ConstraintModelManager(state, actuation.nu)
+    constraintModelManager = None 
+    # crocoddyl.ConstraintModelManager(state, actuation.nu)
 
     # Custom force cost in DAM
-    forceCostManager = ForceCostManager([ForceCost(state, efId, np.array([0, 0., 0.]), 0.1, pin.LOCAL_WORLD_ALIGNED)], softContactModelsStack)
+    if t == N_ocp:
+        forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3*dt, pinRef) ], softContactModelsStack)
+    else:
+        forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3, pinRef) ], softContactModelsStack)
 
     # Create DAM with soft contact models, force costs + standard cost & constraints
     dam = DAMSoftContactDynamics3D_Go2(state, actuation, costModel, softContactModelsStack, constraintModelManager, forceCostManager)
 
     # Friction cone constraint models
-    forceConstraintManager = None
-    # ForceConstraintManager([FrictionConeConstraint(lfFootId, MU),
-    #                                                  FrictionConeConstraint(rfFootId, MU),
-    #                                                  FrictionConeConstraint(lhFootId, MU),
-    #                                                  FrictionConeConstraint(rhFootId, MU)], 
-    #                                                     softContactModelsStack)
+    lb = np.array([0, 0, 0])
+    ub = np.array([np.inf, np.inf, np.inf])
+    forceConstraintManager = \
+    ForceConstraintManager([
+                            FrictionConeConstraint(lfFootId, MU),
+                            FrictionConeConstraint(rfFootId, MU),
+                            FrictionConeConstraint(lhFootId, MU),
+                            FrictionConeConstraint(rhFootId, MU)],
+                            # ForceBoxConstraint(efId, ub, lb)], 
+                                softContactModelsStack)
 
     iam = IAMSoftContactDynamics3D_Go2(dam, dt=dt, withCostResidual=True, forceConstraintManager=forceConstraintManager)
     running_models += [iam]
 
 import mim_solvers
+
 # Create shooting problem
 ocp = crocoddyl.ShootingProblem(y0, running_models[:-1], running_models[-1])
 ocp.x0 = y0
 
 solver = mim_solvers.SolverCSQP(ocp)
-solver.max_qp_iters = 1000
-max_iter = 500
+solver.max_qp_iters = 500
+max_iter = 100
 solver.with_callbacks = True
 solver.use_filter_line_search = False
+# solver.mu_constraint = 1e-1
 solver.termination_tolerance = 1e-4
 solver.eps_abs = 1e-6
 solver.eps_rel = 1e-6
@@ -170,7 +180,7 @@ us = [u0]*solver.problem.T
 solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs, us, max_iter)   
 
-
+print(solver.constraint_norm)
 # Extract OCP Solution 
 nq, nv, N = rmodel.nq, rmodel.nv, len(xs) 
 jointPos_sol = []
@@ -218,9 +228,9 @@ fig, axs = plt.subplots(4, 3, constrained_layout=True)
 for i, frame_idx in enumerate(supportFeetIds):
     ct_frame_name = rmodel.frames[frame_idx].name + "_contact"
     forces = np.array(constrained_sol[ct_frame_name])
-    axs[i, 0].plot(time_lin, forces[:, 0], label="Fx")
-    axs[i, 1].plot(time_lin, forces[:, 1], label="Fy")
-    axs[i, 2].plot(time_lin, forces[:, 2], label="Fz")
+    axs[i, 0].plot(time_lin, forces[:, 0], label="Fx", marker='.')
+    axs[i, 1].plot(time_lin, forces[:, 1], label="Fy", marker='.')
+    axs[i, 2].plot(time_lin, forces[:, 2], label="Fz", marker='.')
     # Add friction cone constraints 
     Fz_lb = (1./MU)*np.sqrt(forces[:, 0]**2 + forces[:, 1]**2)
     # Fz_ub = np.zeros(time_lin.shape)
@@ -238,6 +248,17 @@ axs[3, 0].set_xlabel(r"$F_x$")
 axs[3, 1].set_xlabel(r"$F_y$")
 axs[3, 2].set_xlabel(r"$F_z$")
 fig.suptitle('Force', fontsize=16)
+
+ee_force = np.array(constrained_sol['Link6'])
+fig, axs = plt.subplots(3, 1, constrained_layout=True)
+axs[0].plot(time_lin, ee_force[:, 0], label="End-effector force", marker='.')
+axs[0].set_ylabel("F_x")
+axs[1].plot(time_lin, ee_force[:, 1], marker='.')
+axs[1].set_ylabel("F_y")
+axs[2].plot(time_lin, ee_force[:, 2], marker='.')
+axs[2].set_ylabel("F_z")
+axs[2].set_xlabel("time")
+fig.legend()
 
 
 comDes = np.array(comDes)
