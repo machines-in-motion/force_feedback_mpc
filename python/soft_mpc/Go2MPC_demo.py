@@ -19,7 +19,7 @@ from soft_multicontact_api import FrictionConeConstraint, ForceConstraintManager
 from soft_multicontact_api import ForceCost, ForceCostManager
 from soft_multicontact_api import DAMSoftContactDynamics3D_Go2, IAMSoftContactDynamics3D_Go2
 
-from Go2MPC_wrapper import Go2MPC, getForceSensor
+from Go2MPC_wrapper import Go2MPC, getForceSensor, setGroundFriction, plot_ocp_solution_with_cones
 from Go2Py.sim.mujoco import Go2Sim
 
 # Instantiate the simulator
@@ -30,168 +30,152 @@ robot.updateHeightMap(map)
 
 # Instantiate the solver
 assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
-mpc = Go2MPC(assets_path, HORIZON=20, friction_mu=0.1)
+MU = 0.75
+mpc = Go2MPC(assets_path, HORIZON=10, friction_mu=MU)
 mpc.initialize()
+mpc.max_iterations=100
 mpc.solve()
 m = list(mpc.solver.problem.runningModels) + [mpc.solver.problem.terminalModel]
 
-# # Reset the robot
-# state = mpc.getSolution(0)
-# robot.pos0 = state['position']
-# robot.rot0 = state['orientation']
-# robot.q0 = state['q']
-# robot.reset()
+# plot_ocp_solution_with_cones(mpc)
 
+# Reset the robot
+state = mpc.getSolution(0)
+robot.pos0 = state['position']
+robot.rot0 = state['orientation']
+robot.q0 = state['q']
+robot.reset()
 
-# # Solve for as many iterations as needed for the first step
-# mpc.max_iterations=10 #500
+# Solve for as many iterations as needed for the first step
+mpc.max_iterations=10
 
-# Nsim = 50
+Nsim = 50
 # measured_forces = []
-# forces = np.linspace(0, 50, Nsim) 
-# # breakpoint()
-# WITH_INTEGRAL = True
-# if(WITH_INTEGRAL):
-#     err_f = 0
-#     Ki = 0.1
-#     err_f6d = np.zeros(6)
-# for i in range(Nsim):
-#     print("Step ", i)
-#     # set the force setpoint
-#     for action_model in m:
-#         action_model.differential.costs.costs['contact_force_track'].cost.residual.reference.linear[:] = np.array([-forces[i], 0, 0])
+measured_forces_dict = {}
+predicted_forces_dict = {}
+frame_name_to_mujoco_sensor = {'FL_FOOT': 'FL_force_site', 
+                               'FR_FOOT': 'FR_force_site', 
+                               'HL_FOOT': 'RL_force_site', 
+                               'HR_FOOT': 'RR_force_site', 
+                               'Link6': 'EF_force_site'}
+frame_name_to_sol_map = {'FL_FOOT': 'f_lf', 
+                         'FR_FOOT': 'f_rf', 
+                         'HL_FOOT': 'f_lh', 
+                         'HR_FOOT': 'f_rh', 
+                         'Link6': 'f_ee'}
+sol_to_force_id_map = {'f_lf': 0, 
+                       'f_rf': 3, 
+                       'f_lh': 6, 
+                       'f_rh': 9, 
+                       'f_ee': 12}
 
-#     state = robot.getJointStates()
-#     q = state['q']
-#     dq = state['dq']
-#     t, quat = robot.getPose()
-#     v = robot.data.qvel[:3]
-#     omega = robot.data.qvel[3:6]
-#     q = np.hstack([q, np.zeros(2)])
-#     dq = np.hstack([dq, np.zeros(2)])
-#     solution = mpc.updateAndSolve(t, quat, q, v, omega, dq)
-#     # Reduce the max iteration count to ensure real-time execution
-#     mpc.max_iterations=10
-#     q = solution['q']
-#     dq = solution['dq']
-#     tau = solution['tau'].squeeze()
-#     kp = np.ones(18)*0.
-#     kv = np.ones(18)*0.
-#     # Step the physics
-#     force_site_to_sensor_idx = {'FL_force_site': 0, 'FR_force_site': 1, 'RL_force_site': 2, 'RR_force_site': 3, 'EF_force_site': 4}
-#     force_sensor_site = 'EF_force_site'
-#     f_mea = getForceSensor(robot.model, robot.data, force_sensor_site).squeeze().copy()
-#     measured_forces.append(f_mea)
-#     # compute the force integral error and map it to joint torques
-#     if(WITH_INTEGRAL):
-#         err_f6d[0] += Ki * (forces[i] - f_mea[0])
-#         pin.computeAllTerms(mpc.rmodel, mpc.rdata, mpc.xs[0][:mpc.rmodel.nq], mpc.xs[0][mpc.rmodel.nq:])
-#         J = pin.getFrameJacobian(mpc.rmodel, mpc.rdata, mpc.armEEId, pin.LOCAL_WORLD_ALIGNED)
-#         tau_int = J[:,6:].T @ err_f6d 
-#         print(tau_int)
-#         tau += tau_int
-#     for j in range(int(mpc.dt//robot.dt)):
-#         robot.setCommands(q, dq, kp, kv, tau)
-#         robot.step()
+for fname in mpc.ee_frame_names:
+    measured_forces_dict[fname]  = []
+    predicted_forces_dict[fname] = []
+
+# measured_forces_FR = []
+desired_forces = []
+joint_torques = []
+f_des_z = np.array([10.]*Nsim) 
+
+# Set ground friction in Mujoco
+setGroundFriction(robot.model, robot.data, MU)
+
+# Main simulation loop
+f_mea_all = np.zeros(3*5)
+for i in range(Nsim):
+    print("Step ", i)
+    # set the force setpoint
+    f_des_3d = np.array([-f_des_z[i], 0, 0])
+    desired_forces.append(f_des_3d)
+    # for action_model in m:
+    #     action_model.differential.costs.costs['contact_force_track'].cost.residual.reference.linear[:] = f_des_3d
+    # Get state from simulation
+    state = robot.getJointStates()
+    q = state['q']
+    dq = state['dq']
+    t, quat = robot.getPose()
+    v = robot.data.qvel[:3]
+    omega = robot.data.qvel[3:6]
+    q = np.hstack([q, np.zeros(2)])
+    dq = np.hstack([dq, np.zeros(2)])
+    # Solve OCP
+    for fname in mpc.ee_frame_names:
+        f_mea = -getForceSensor(robot.model, robot.data, frame_name_to_mujoco_sensor[fname]).squeeze().copy()
+        measured_forces_dict[fname].append(f_mea)
+        id_f = sol_to_force_id_map[frame_name_to_sol_map[fname]]
+        f_mea_all[id_f:id_f+3] = f_mea
+        # print("Extract name ", fname, " , Mujoco sensor = ", frame_name_to_mujoco_sensor[fname], " id = ", id_f, " sol name = ", frame_name_to_sol_map[fname] )
+        # print("value = ", f_mea)
+    solution = mpc.updateAndSolve(t, quat, q, v, omega, dq, f_mea_all)
+    for fname in mpc.ee_frame_names:
+        predicted_forces_dict[fname].append(solution[frame_name_to_sol_map[fname]])
+    # Save the solution
+    q = solution['q']
+    dq = solution['dq']
+    tau = solution['tau'].squeeze()
+    kp = np.ones(18)*0.
+    kv = np.ones(18)*0.
+    # Step the physics
+    for j in range(int(mpc.dt//robot.dt)):
+        robot.setCommands(q, dq, kp, kv, tau)
+        robot.step()
 
 # measured_forces = np.array(measured_forces)
+desired_forces = np.array(desired_forces)
+joint_torques = np.array(joint_torques)
+for fname in mpc.ee_frame_names:
+    measured_forces_dict[fname] = np.array(measured_forces_dict[fname])
+    predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
 
-# # Visualize the measured force against the desired
-# import matplotlib.pyplot as plt
+# Visualize the measured force against the desired
+import matplotlib.pyplot as plt
+time_span = np.linspace(0, (Nsim-1)*1e-3, Nsim)
+# EE FORCES
+fig, axs = plt.subplots(3, 1, constrained_layout=True)
+axs[0].plot(time_span, measured_forces_dict['Link6'][:,0],linewidth=4, color='r', marker='o',  label="Fx mea")
+axs[0].plot(time_span, desired_forces[:,0], linewidth=4, color='b', marker='o', label="Fx des")
+axs[1].plot(time_span, measured_forces_dict['Link6'][:,1],linewidth=4, color='r', marker='o',  label="Fy mea")
+axs[1].plot(time_span, desired_forces[:,1], linewidth=4, color='b', marker='o', label="Fy des")
+axs[2].plot(time_span, measured_forces_dict['Link6'][:,2],linewidth=4, color='r', marker='o',  label="Fz mea")
+axs[2].plot(time_span, desired_forces[:,2], linewidth=4, color='b', marker='o', label="Fz des")
+for i in range(3):
+    axs[i].legend()
+    axs[i].grid()
+fig.suptitle('Contact force at the end-effector', fontsize=16)
+
+# FEET FORCES (measured and predicted, with friction constraint lower bound on Fz)
+fig, axs = plt.subplots(3, 4, constrained_layout=True)
+for i,fname in enumerate(mpc.ee_frame_names[:-1]):
+    # x,y
+    axs[0, i].plot(time_span, measured_forces_dict[fname][:,0], linewidth=4, color='r', marker='o', label="Fx measured")
+    axs[0, i].plot(time_span, predicted_forces_dict[fname][:,0], linewidth=4, color='b', marker='o', alpha=0.25, label="Fx predicted")
+    axs[1, i].plot(time_span, measured_forces_dict[fname][:,1], linewidth=4, color='r', marker='o', label="Fy measured")
+    axs[1, i].plot(time_span, predicted_forces_dict[fname][:,1], linewidth=4, color='b', marker='o', alpha=0.25, label="Fy predicted")
+    axs[0, i].legend()
+    # axs[0, i].title(fname)
+    axs[0, i].grid()
+    axs[1, i].legend()
+    axs[1, i].grid()
+
+    # z
+    Fz_lb_mea = (1./MU)*np.sqrt(measured_forces_dict[fname][:, 0]**2 + measured_forces_dict[fname][:, 1]**2)
+    Fz_lb_pred = (1./MU)*np.sqrt(predicted_forces_dict[fname][:, 0]**2 + predicted_forces_dict[fname][:, 1]**2)
+    axs[2, i].plot(time_span, measured_forces_dict[fname][:,2], linewidth=4, color='r', marker='o', label="Fz measured")
+    axs[2, i].plot(time_span, predicted_forces_dict[fname][:,2], linewidth=4, color='b', marker='o', alpha=0.25, label="Fz predicted")
+    axs[2, i].plot(time_span, Fz_lb_mea, '--', linewidth=4, color='k',  alpha=0.5, label="Fz friction constraint (lower bound)")
+    # axs[2, i].plot(time_span, Fz_lb_pred, '--', linewidth=4, color='b', alpha=0.2, label="Fz friction lb (pred)")
+    axs[2, i].legend()
+    axs[2, i].grid()
+
+# for i in range(3):
+#     axs[i].legend()
+#     axs[i].grid()
+fig.suptitle('Contact forces at feet FL, FR, HL, HR', fontsize=16)
+
+
 # plt.plot(measured_forces[:300,0], '*')
 # plt.plot(forces,'k')
-# plt.show()
-# robot.close()
-
-
-
-
-# required to extract and plot solution
-rmodel = mpc.rmodel
-rdata = mpc.rdata
-solver = mpc.solver
-xs = mpc.solver.xs 
-supportFeetIds = mpc.supportFeetIds
-T = mpc.HORIZON
-MU = mpc.friction_mu
-comDes = mpc.comDes
-
-# Extract OCP Solution 
-nq, nv, N = rmodel.nq, rmodel.nv, len(xs) 
-jointPos_sol = []
-jointVel_sol = []
-jointAcc_sol = []
-jointTorques_sol = []
-centroidal_sol = []
-force_sol = []
-xs, us = solver.xs, solver.us
-x = []
-for time_idx in range (N):
-    q, v = xs[time_idx][:nq], xs[time_idx][nq:nq+nv]
-    f = xs[time_idx][nq+nv:]
-    pin.framesForwardKinematics(rmodel, rdata, q)
-    pin.computeCentroidalMomentum(rmodel, rdata, q, v)
-    centroidal_sol += [
-        np.concatenate(
-            [pin.centerOfMass(rmodel, rdata, q, v), np.array(rdata.hg.linear), np.array(rdata.hg.angular)]
-            )
-            ]
-    jointPos_sol += [q]
-    jointVel_sol += [v]
-    force_sol    += [f]
-    x += [xs[time_idx]]
-    if time_idx < N-1:
-        jointAcc_sol +=  [solver.problem.runningDatas[time_idx].xnext[nq::]] 
-        jointTorques_sol += [us[time_idx]]
-
-sol = {'x':x, 'centroidal':centroidal_sol, 'jointPos':jointPos_sol, 
-                    'jointVel':jointVel_sol, 'jointAcc':jointAcc_sol, 'force':force_sol,
-                    'jointTorques':jointTorques_sol}       
-
-# Extract contact forces by hand
-sol['FL_FOOT_contact'] = [force_sol[i][0:3] for i in range(N)]     
-sol['FR_FOOT_contact'] = [force_sol[i][3:6] for i in range(N)]     
-sol['HL_FOOT_contact'] = [force_sol[i][6:9] for i in range(N)]     
-sol['HR_FOOT_contact'] = [force_sol[i][9:12] for i in range(N)]     
-sol['Link6'] = [force_sol[i][12:15] for i in range(N)]     
-
-# Plotting 
-import matplotlib.pyplot as plt
-constrained_sol = sol
-time_lin = np.linspace(0, T, solver.problem.T+1)
-fig, axs = plt.subplots(4, 3, constrained_layout=True)
-for i, frame_idx in enumerate(supportFeetIds):
-    ct_frame_name = rmodel.frames[frame_idx].name + "_contact"
-    forces = np.array(constrained_sol[ct_frame_name])
-    axs[i, 0].plot(time_lin, forces[:, 0], label="Fx")
-    axs[i, 1].plot(time_lin, forces[:, 1], label="Fy")
-    axs[i, 2].plot(time_lin, forces[:, 2], label="Fz")
-    # Add friction cone constraints 
-    Fz_lb = (1./MU)*np.sqrt(forces[:, 0]**2 + forces[:, 1]**2)
-    # Fz_ub = np.zeros(time_lin.shape)
-    # axs[i, 2].plot(time_lin, Fz_ub, 'k-.', label='ub')
-    axs[i, 2].plot(time_lin, Fz_lb, 'k-.', label='lb')
-    axs[i, 0].grid()
-    axs[i, 1].grid()
-    axs[i, 2].grid()
-    axs[i, 0].set_ylabel(ct_frame_name)
-axs[0, 0].legend()
-axs[0, 1].legend()
-axs[0, 2].legend()
-
-axs[3, 0].set_xlabel(r"$F_x$")
-axs[3, 1].set_xlabel(r"$F_y$")
-axs[3, 2].set_xlabel(r"$F_z$")
-fig.suptitle('Force', fontsize=16)
-
-
-comDes = np.array(comDes)
-centroidal_sol = np.array(constrained_sol['centroidal'])
-plt.figure()
-plt.plot(comDes[:, 0], comDes[:, 1], "--", label="reference")
-plt.plot(centroidal_sol[:, 0], centroidal_sol[:, 1], label="solution")
-plt.legend()
-plt.xlabel("x")
-plt.ylabel("y")
-plt.title("COM trajectory")
 plt.show()
+robot.close()
+

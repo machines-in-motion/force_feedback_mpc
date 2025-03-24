@@ -112,6 +112,7 @@ class Go2MPC:
         self.createProblem()
         self.createSolver()
         self.us = self.solver.problem.quasiStatic([self.x0]*self.HORIZON) 
+        print("wepifuwefweifo\n\n\n", self.us[0])
 
     def createProblem(self):
 
