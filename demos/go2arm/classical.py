@@ -113,22 +113,7 @@ class Go2MPC:
         self.us = self.solver.problem.quasiStatic([self.x0]*self.HORIZON) 
 
     def createProblem(self):
-        #First compute the desired state of the robot
-        comRef = (self.rfFootPos0 + self.rhFootPos0 + self.lfFootPos0 + self.lhFootPos0) / 4
-        comRef[2] = pinocchio.centerOfMass(self.rmodel, self.rdata, self.q0)[2].item() 
-        eeDes = self.armEEPos0
-        comDes = []
-        dt = self.dt
-        # radius = 0.065
-        radius = 0.0
-        for t in range(self.HORIZON+1):
-            comDes_t = comRef.copy()
-            w = (2 * np.pi) * 0.2 # / T
-            comDes_t[0] += radius * np.sin(w * t * dt) 
-            comDes_t[1] += radius * (np.cos(w * t * dt) - 1)
-            comDes += [comDes_t]
-        body_com_ref = comDes
-        arm_eff_ref = [eeDes]*(self.HORIZON+1)
+
         # Now define the model
         for t in range(self.HORIZON+1):
             self.contactModel = crocoddyl.ContactModelMultiple(self.ccdyl_state, self.nu)
@@ -136,12 +121,13 @@ class Go2MPC:
 
             # Add contacts
             for i,frame_idx in enumerate(self.supportFeetIds):
-                support_contact = crocoddyl.ContactModel3D(self.ccdyl_state, frame_idx, np.array([0., 0., 0.0]), self.pinRef, self.nu, np.array([0., 20.]))
+                support_contact = crocoddyl.ContactModel3D(self.ccdyl_state, frame_idx, np.array([0., 0., 0.0]), self.pinRef, self.nu, np.array([0., 50.]))
                 self.contactModel.addContact(self.rmodel.frames[frame_idx].name + "_contact", support_contact) 
 
             # Contact for the EE
-            support_contact = crocoddyl.ContactModel3D(self.ccdyl_state, self.armEEId, self.armEEPos0, pin.LOCAL_WORLD_ALIGNED, self.nu, np.array([0., 20.]))
+            support_contact = crocoddyl.ContactModel3D(self.ccdyl_state, self.armEEId, self.armEEPos0, pin.LOCAL_WORLD_ALIGNED, self.nu, np.array([0., 50.]))
             self.contactModel.addContact(self.rmodel.frames[self.armEEId].name + "_contact", support_contact) 
+            
             # Add state/control regularization costs
             state_reg_weight, control_reg_weight = 1e-1, 1e-3
 
@@ -164,44 +150,14 @@ class Go2MPC:
                 ctrlResidual = crocoddyl.ResidualModelControl(self.ccdyl_state, self.nu)
                 ctrlReg = crocoddyl.CostModelResidual(self.ccdyl_state, ctrlResidual)
                 costModel.addCost("ctrlReg", ctrlReg, control_reg_weight)      
-
-
-            # Body COM Tracking Cost
-            com_residual = crocoddyl.ResidualModelCoMPosition(self.ccdyl_state, body_com_ref[t], self.nu)
-            com_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
-            com_track = crocoddyl.CostModelResidual(self.ccdyl_state, com_activation, com_residual) # What does it correspond to exactly?
-            # costModel.addCost("comTrack", com_track, 1e-3)
-
-            # if t == self.HORIZON:
-            #     # costModel.addCost("comTrack", com_track, 1e5)
-            #     costModel.addCost("comTrack", com_track, 1e5)
-            # else:
-            #     costModel.addCost("comTrack", com_track, 1e1)
-
-            # End Effecor Position Tracking Cost
-            # ef_residual = crocoddyl.ResidualModelFrameTranslation(self.ccdyl_state, self.armEEId, arm_eff_ref[t], self.nu) # Check this cost term            
-            # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
-            # ef_track = crocoddyl.CostModelResidual(self.ccdyl_state, ef_activation, ef_residual)
-
-            # ef_rotation_residual = crocoddyl.ResidualModelFrameRotation(self.ccdyl_state, self.armEEId, self.armEEOri0, self.nu)
-            # ef_rot_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
-            # ef_rot_track = crocoddyl.CostModelResidual(self.ccdyl_state, ef_rot_activation, ef_rotation_residual)
-            # if t == self.HORIZON:
-            #     # costModel.addCost("efTrack", ef_track, 1e5)
-            #     costModel.addCost("efRotTrack", ef_rot_track, 1e5)
-                
-            # else:
-            #     # costModel.addCost("efTrack", ef_track, 1e1)
-            #     costModel.addCost("efRotTrack", ef_rot_track, 1e1)
+            
             # Force tracking term
-            self.ef_des_force = pin.Force.Zero()
-            self.ef_des_force.linear[2] = 0
-            contact_force_residual = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, self.ef_des_force, 3, self.nu)
-            contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
-            contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
-            if t == self.HORIZON:
-                costModel.addCost("contact_force_track", contact_force_track, 1e5)
-            else:
+            if t != self.HORIZON:
+                self.ef_des_force = pin.Force.Zero()
+                self.ef_des_force.linear[2] = 0
+                contact_force_residual = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, self.ef_des_force, 3, self.nu)
+                contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
+                contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
                 costModel.addCost("contact_force_track", contact_force_track, 1e1)
                 
             # # regularization on the feet forces
@@ -223,24 +179,24 @@ class Go2MPC:
                     constraintFriction = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualFriction, np.array([0.]), np.array([np.inf]))
                     constraintModelManager.addConstraint(name + "friction", constraintFriction)
 
-                    # enforce unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
-                    residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, frame_idx, self.ef_des_force, 3, self.nu)
-                    forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, 0.]), np.array([np.inf, np.inf, np.inf]))
-                    constraintModelManager.addConstraint(name + "Box", forceBoxConstraint)
+                    # # enforce unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
+                    # residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, frame_idx, self.ef_des_force, 3, self.nu)
+                    # forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, 0.]), np.array([np.inf, np.inf, np.inf]))
+                    # constraintModelManager.addConstraint(name + "Box", forceBoxConstraint)
                 
-                ctrlResidual2 = crocoddyl.ResidualModelControl(self.ccdyl_state, self.nu)
-                torque_lb = -self.ctrlLim #self.pin_robot.model.effortLimit
-                torque_ub = self.ctrlLim #self.pin_robot.model.effortLimit
-                # print("Ctrl limit lb = \n", torque_lb)
-                # print("Ctrl limit ub = \n", torque_ub)
-                torqueBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, ctrlResidual2, torque_lb, torque_ub)
-                constraintModelManager.addConstraint("ctrlBox", torqueBoxConstraint)
+                # ctrlResidual2 = crocoddyl.ResidualModelControl(self.ccdyl_state, self.nu)
+                # torque_lb = -self.ctrlLim #self.pin_robot.model.effortLimit
+                # torque_ub = self.ctrlLim #self.pin_robot.model.effortLimit
+                # # print("Ctrl limit lb = \n", torque_lb)
+                # # print("Ctrl limit ub = \n", torque_ub)
+                # torqueBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, ctrlResidual2, torque_lb, torque_ub)
+                # constraintModelManager.addConstraint("ctrlBox", torqueBoxConstraint)
 
-            #friction model for the arm
-            # name = self.rmodel.frames[self.armEEId].name + "_contact"
-            # residualFriction = friction_utils.ResidualFrictionCone(self.ccdyl_state, name, self.friction_mu, self.ccdyl_actuation.nu)
-            # constraintFriction = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualFriction, np.array([0.]), np.array([np.inf]))
-            # constraintModelManager.addConstraint(name + "friction", constraintFriction)
+                # #friction model for the arm
+                # name = self.rmodel.frames[self.armEEId].name + "_contact"
+                # residualFriction = friction_utils.ResidualFrictionCone(self.ccdyl_state, name, self.friction_mu, self.ccdyl_actuation.nu)
+                # constraintFriction = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualFriction, np.array([0.]), np.array([np.inf]))
+                # constraintModelManager.addConstraint(name + "friction", constraintFriction)
             
             dmodel = crocoddyl.DifferentialActionModelContactFwdDynamics(self.ccdyl_state, self.ccdyl_actuation, self.contactModel, costModel, constraintModelManager, 0., True)
             model = crocoddyl.IntegratedActionModelEuler(dmodel, self.dt)
@@ -250,7 +206,7 @@ class Go2MPC:
     def createSolver(self):
         solver = mim_solvers.SolverCSQP(self.ocp)
         solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
-        solver.max_qp_iters = 125
+        solver.max_qp_iters = 10000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
         solver.mu_constraint = 1e3
@@ -290,7 +246,7 @@ class Go2MPC:
         for frame_idx in self.supportFeetIds:
             ct_frame_name = self.rmodel.frames[frame_idx].name + "_contact"
             data = self.solver.problem.runningDatas[0].differential.multibody.contacts.contacts[ct_frame_name] 
-            sol_dict[ct_frame_name] = data.f.vector[:3]
+            sol_dict[ct_frame_name] = data.f.linear
         return sol_dict
     
     def updateAndSolve(self, t, quat, q, v, omega, dq):
@@ -342,6 +298,13 @@ def getForceSensor(model, data, frame_name):
     return force_in_world
 
 
+def setGroundFriction(model, data, mu):
+    ground_geom_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, "floor")
+    if ground_geom_id == -1:
+        raise ValueError("Ground geometry not found. Check your XML model for the correct geom name.")
+    print("Friction found for ground = ", model.geom_friction[ground_geom_id])
+    model.geom_friction[ground_geom_id][0] = mu
+    print("Set ground friction to : ", model.geom_friction[ground_geom_id])
 
 # Instantiate the simulator
 robot=Go2Sim(with_arm=True)
@@ -366,7 +329,7 @@ robot.q0 = state['q']
 robot.reset()
 
 # Solve for as many iterations as needed for the first step
-mpc.max_iterations=10 #500
+mpc.max_iterations=100 #500
 
 Nsim = 50
 measured_forces = []
@@ -382,18 +345,22 @@ desired_forces = []
 joint_torques = []
 f_des_z = np.linspace(0, 50, Nsim) # TODO: implement 3D force !  
 # breakpoint()
-WITH_INTEGRAL = True
+WITH_INTEGRAL = False
 if(WITH_INTEGRAL):
     Ki = 0.1
     err_f3d = np.zeros(3)
+# Set ground friction in Mujoco
+setGroundFriction(robot.model, robot.data, MU)
+
+# Main simulation loop
 for i in range(Nsim):
     print("Step ", i)
     # set the force setpoint
     f_des_3d = np.array([-f_des_z[i], 0, 0])
     desired_forces.append(f_des_3d)
-    for action_model in m:
+    for action_model in m[:-1]:
         action_model.differential.costs.costs['contact_force_track'].cost.residual.reference.linear[:] = f_des_3d
-
+    # Get state from simulation
     state = robot.getJointStates()
     q = state['q']
     dq = state['dq']
