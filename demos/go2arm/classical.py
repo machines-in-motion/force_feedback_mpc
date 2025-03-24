@@ -122,12 +122,12 @@ class Go2MPC:
 
             # Add contacts
             for i,frame_idx in enumerate(self.supportFeetIds):
-                support_contact = crocoddyl.ContactModel3D(self.ccdyl_state, frame_idx, np.array([0., 0., 0.0]), self.pinRef, self.nu, np.array([0., 0.]))
+                support_contact = crocoddyl.ContactModel3D(self.ccdyl_state, frame_idx, np.array([0., 0., 0.0]), self.pinRef, self.nu, np.array([0., 20.]))
                 self.contactModel.addContact(self.rmodel.frames[frame_idx].name + "_contact", support_contact) 
                 # print("Create ", self.rmodel.frames[frame_idx].name + "_contact")
 
             # Contact for the EE
-            support_contact = crocoddyl.ContactModel3D(self.ccdyl_state, self.armEEId, self.armEEPos0, pin.LOCAL_WORLD_ALIGNED, self.nu, np.array([0., 0.]))
+            support_contact = crocoddyl.ContactModel3D(self.ccdyl_state, self.armEEId, self.armEEPos0, pin.LOCAL_WORLD_ALIGNED, self.nu, np.array([0., 20.]))
             self.contactModel.addContact(self.rmodel.frames[self.armEEId].name + "_contact", support_contact) 
             # print("Create ", self.rmodel.frames[self.armEEId].name + "_contact")
             
@@ -157,7 +157,7 @@ class Go2MPC:
             # Force tracking term
             if t != self.HORIZON:
                 self.ef_des_force = pin.Force.Zero()
-                self.ef_des_force.linear[0] = -20
+                self.ef_des_force.linear[0] = -40
                 contact_force_residual = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, self.ef_des_force, 3, self.nu)
                 contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
                 contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
@@ -170,17 +170,17 @@ class Go2MPC:
                     name = self.rmodel.frames[frame_idx].name + "_contact"
                     residualFriction = friction_utils.ResidualFrictionCone(self.ccdyl_state, name, self.friction_mu, self.ccdyl_actuation.nu)
                     constraintFriction = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualFriction, np.array([0.]), np.array([np.inf]))
-                    # constraintModelManager.addConstraint(name + "friction", constraintFriction)
+                    constraintModelManager.addConstraint(name + "friction", constraintFriction)
 
-                #     # enforce unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
-                #     residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, frame_idx, pin.Force.Zero(), 3, self.nu)
-                #     forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, 0.]), np.array([np.inf, np.inf, np.inf]))
-                #     constraintModelManager.addConstraint(name + "Box", forceBoxConstraint)
+                    # enforce unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
+                    residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, frame_idx, pin.Force.Zero(), 3, self.nu)
+                    forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, 0.]), np.array([np.inf, np.inf, np.inf]))
+                    constraintModelManager.addConstraint(name + "Box", forceBoxConstraint)
 
-                # # enforce unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
-                # residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, pin.Force.Zero(), 3, self.nu)
-                # forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, -np.inf]), np.array([0., np.inf, np.inf]))
-                # constraintModelManager.addConstraint("efBox", forceBoxConstraint)
+                # enforce unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
+                residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, pin.Force.Zero(), 3, self.nu)
+                forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, -np.inf]), np.array([0., np.inf, np.inf]))
+                constraintModelManager.addConstraint("efBox", forceBoxConstraint)
 
                 # ctrlResidual2 = crocoddyl.ResidualModelControl(self.ccdyl_state, self.nu)
                 # torque_lb = -self.ctrlLim #self.pin_robot.model.effortLimit
@@ -342,7 +342,7 @@ robot.updateHeightMap(map)
 
 # Instantiate the solver
 assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
-MU = 0.75
+MU = 0.5
 mpc = Go2MPC(assets_path, HORIZON=20, friction_mu=MU)
 mpc.initialize()
 mpc.max_iterations=500
@@ -359,7 +359,7 @@ robot.reset()
 # Solve for as many iterations as needed for the first step
 mpc.max_iterations=10
 
-Nsim = 100
+Nsim = 50
 # measured_forces = []
 measured_forces_dict = {}
 predicted_forces_dict = {}
@@ -375,11 +375,11 @@ for fname in mpc.ee_frame_names:
 # measured_forces_FR = []
 desired_forces = []
 joint_torques = []
-f_des_z = np.array([20.]*Nsim) #np.linspace(50, 100, Nsim) # TODO: implement 3D force !  
+f_des_z = np.array([40.]*Nsim) 
 # breakpoint()
 WITH_INTEGRAL = False
 if(WITH_INTEGRAL):
-    Ki = 0.01
+    Ki = 0.1
     err_f3d = np.zeros(3)
 # Set ground friction in Mujoco
 setGroundFriction(robot.model, robot.data, MU)
@@ -458,9 +458,9 @@ fig, axs = plt.subplots(3, 4, constrained_layout=True)
 for i,fname in enumerate(mpc.ee_frame_names[:-1]):
     # x,y
     axs[0, i].plot(time_span, measured_forces_dict[fname][:,0], linewidth=4, color='r', marker='o', label="Fx measured")
-    axs[0, i].plot(time_span, predicted_forces_dict[fname][:,0], linewidth=4, color='b', marker='o', alpha=0.5, label="Fx predicted")
+    axs[0, i].plot(time_span, predicted_forces_dict[fname][:,0], linewidth=4, color='b', marker='o', alpha=0.25, label="Fx predicted")
     axs[1, i].plot(time_span, measured_forces_dict[fname][:,1], linewidth=4, color='r', marker='o', label="Fy measured")
-    axs[1, i].plot(time_span, predicted_forces_dict[fname][:,1], linewidth=4, color='b', marker='o', alpha=0.5, label="Fy predicted")
+    axs[1, i].plot(time_span, predicted_forces_dict[fname][:,1], linewidth=4, color='b', marker='o', alpha=0.25, label="Fy predicted")
     axs[0, i].legend()
     # axs[0, i].title(fname)
     axs[0, i].grid()
@@ -471,9 +471,9 @@ for i,fname in enumerate(mpc.ee_frame_names[:-1]):
     Fz_lb_mea = (1./MU)*np.sqrt(measured_forces_dict[fname][:, 0]**2 + measured_forces_dict[fname][:, 1]**2)
     Fz_lb_pred = (1./MU)*np.sqrt(predicted_forces_dict[fname][:, 0]**2 + predicted_forces_dict[fname][:, 1]**2)
     axs[2, i].plot(time_span, measured_forces_dict[fname][:,2], linewidth=4, color='r', marker='o', label="Fz measured")
-    axs[2, i].plot(time_span, predicted_forces_dict[fname][:,2], linewidth=4, color='b', marker='o', alpha=0.5, label="Fz predicted")
-    axs[2, i].plot(time_span, Fz_lb_mea, '--', linewidth=4, color='r',  alpha=0.2, label="Fz friction lb (mea)")
-    axs[2, i].plot(time_span, Fz_lb_pred, '--', linewidth=4, color='b', alpha=0.2, label="Fz friction lb (pred)")
+    axs[2, i].plot(time_span, predicted_forces_dict[fname][:,2], linewidth=4, color='b', marker='o', alpha=0.25, label="Fz predicted")
+    axs[2, i].plot(time_span, Fz_lb_mea, '--', linewidth=4, color='k',  alpha=0.5, label="Fz friction constraint (lower bound)")
+    # axs[2, i].plot(time_span, Fz_lb_pred, '--', linewidth=4, color='b', alpha=0.2, label="Fz friction lb (pred)")
     axs[2, i].legend()
     axs[2, i].grid()
 
