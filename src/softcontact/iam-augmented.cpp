@@ -21,10 +21,10 @@ namespace softcontact {
 
 
 IAMSoftContactAugmented::IAMSoftContactAugmented(
-    boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model,
+    std::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model,
     const double& time_step,
     const bool& with_cost_residual,
-    const std::vector<boost::shared_ptr<force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented>> friction_constraints)
+    const std::vector<std::shared_ptr<force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented>> friction_constraints)
     : Base(model->get_state(), 
            model->get_nu(),
            model->get_nr() + model->get_nc(), 
@@ -36,13 +36,13 @@ IAMSoftContactAugmented::IAMSoftContactAugmented(
       with_cost_residual_(with_cost_residual),
       nf_(friction_constraints.size()) {
   // Downcast DAM state (abstract --> multibody)
-  boost::shared_ptr<StateMultibody> state =
-      boost::static_pointer_cast<StateMultibody>(model->get_state());
+  std::shared_ptr<StateMultibody> state =
+      std::static_pointer_cast<StateMultibody>(model->get_state());
   pin_model_ = state->get_pinocchio();
   // Instantiate stateSofcontact using pinocchio model of DAM state
   nc_ = model->get_nc();
-  state_ = boost::make_shared<StateSoftContact>(pin_model_, nc_);
-  ny_ = boost::static_pointer_cast<StateSoftContact>(state_)->get_ny();
+  state_ = std::make_shared<StateSoftContact>(pin_model_, nc_);
+  ny_ = std::static_pointer_cast<StateSoftContact>(state_)->get_ny();
   // Check stuff
   if (time_step_ < double(0.)) {
     time_step_ = double(1e-3);
@@ -94,7 +94,7 @@ void IAMSoftContactAugmented::set_force_ub(const VectorXs& inVec){
 }
 
 void IAMSoftContactAugmented::calc(
-    const boost::shared_ptr<ActionDataAbstract>& data,
+    const std::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y, 
     const Eigen::Ref<const VectorXs>& u) {
   const std::size_t& nv = differential_->get_state()->get_nv();
@@ -113,28 +113,28 @@ void IAMSoftContactAugmented::calc(
   }
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
-  boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
-  boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = boost::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
+  std::shared_ptr<Data> d = std::static_pointer_cast<Data>(data);
+  std::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = std::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
   // Extract x=(q,v) and f from augmented state y
   const Eigen::Ref<const VectorXs>& x = y.head(nx);   // get q,v_q
   const Eigen::Ref<const VectorXs>& f = y.tail(nc_);  // get f
 
   if (static_cast<std::size_t>(d->Fy.rows()) !=
-      boost::static_pointer_cast<StateSoftContact>(state_)->get_ndy()) {
+      std::static_pointer_cast<StateSoftContact>(state_)->get_ndy()) {
     throw_pretty(
         "Invalid argument: "
         << "Fy.rows() has wrong dimension (it should be " +
                std::to_string(
-                   boost::static_pointer_cast<StateSoftContact>(state_)->get_ndy()) +
+                   std::static_pointer_cast<StateSoftContact>(state_)->get_ndy()) +
                ")");
   }
   if (static_cast<std::size_t>(d->Fy.cols()) !=
-      boost::static_pointer_cast<StateSoftContact>(state_)->get_ndy()) {
+      std::static_pointer_cast<StateSoftContact>(state_)->get_ndy()) {
     throw_pretty(
         "Invalid argument: "
         << "Fy.cols() has wrong dimension (it should be " +
                std::to_string(
-                   boost::static_pointer_cast<StateSoftContact>(state_)->get_ndy()) +
+                   std::static_pointer_cast<StateSoftContact>(state_)->get_ndy()) +
                ")");
   }
   if (static_cast<std::size_t>(d->Fu.cols()) != nu_) {
@@ -150,12 +150,12 @@ void IAMSoftContactAugmented::calc(
                         ")");
   }
   if (static_cast<std::size_t>(d->Ly.size()) !=
-      boost::static_pointer_cast<StateSoftContact>(state_)->get_ndy()) {
+      std::static_pointer_cast<StateSoftContact>(state_)->get_ndy()) {
     throw_pretty(
         "Invalid argument: "
         << "Ly has wrong dimension (it should be " +
                std::to_string(
-                   boost::static_pointer_cast<StateSoftContact>(state_)->get_ndy()) +
+                   std::static_pointer_cast<StateSoftContact>(state_)->get_ndy()) +
                ")");
   }
   if (static_cast<std::size_t>(d->Lu.size()) != nu_) {
@@ -219,7 +219,7 @@ void IAMSoftContactAugmented::calc(
 
 
 void IAMSoftContactAugmented::calc(
-    const boost::shared_ptr<ActionDataAbstract>& data,
+    const std::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y) {
   const std::size_t& nx = differential_->get_state()->get_nx();
 
@@ -230,8 +230,8 @@ void IAMSoftContactAugmented::calc(
   }
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
-  boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
-  boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = boost::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
+  std::shared_ptr<Data> d = std::static_pointer_cast<Data>(data);
+  std::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = std::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
   // Extract x=(q,v) and tau from augmented state y
   const Eigen::Ref<const VectorXs>& x = y.head(nx);  // get q,v_q
   const Eigen::Ref<const VectorXs>& f = y.tail(nc_);  // get q,v_q
@@ -261,7 +261,7 @@ void IAMSoftContactAugmented::calc(
 
 
 void IAMSoftContactAugmented::calcDiff(
-    const boost::shared_ptr<ActionDataAbstract>& data,
+    const std::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y, 
     const Eigen::Ref<const VectorXs>& u) {
   const std::size_t& nv = differential_->get_state()->get_nv();
@@ -281,8 +281,8 @@ void IAMSoftContactAugmented::calcDiff(
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
 
   // Static casting the data
-  boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
-  boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = boost::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
+  std::shared_ptr<Data> d = std::static_pointer_cast<Data>(data);
+  std::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = std::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
   // Extract x=(q,v) and f from augmented state y
   const Eigen::Ref<const VectorXs>& x = y.head(nx);   // get q,v_q
   const Eigen::Ref<const VectorXs>& f = y.tail(nc_);  // get f
@@ -346,7 +346,7 @@ void IAMSoftContactAugmented::calcDiff(
 
 
 void IAMSoftContactAugmented::calcDiff(
-    const boost::shared_ptr<ActionDataAbstract>& data,
+    const std::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y) {
   const std::size_t& nx = differential_->get_state()->get_nx();
   const std::size_t& ndx = differential_->get_state()->get_ndx();
@@ -359,8 +359,8 @@ void IAMSoftContactAugmented::calcDiff(
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
 
   // Static casting the data
-  boost::shared_ptr<Data> d = boost::static_pointer_cast<Data>(data);
-  boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = boost::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
+  std::shared_ptr<Data> d = std::static_pointer_cast<Data>(data);
+  std::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = std::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
   // Extract x=(q,v) and f from augmented state y
   const Eigen::Ref<const VectorXs>& x = y.head(nx);   // get q,v_q
   const Eigen::Ref<const VectorXs>& f = y.tail(nc_);  // get f
@@ -390,16 +390,16 @@ void IAMSoftContactAugmented::calcDiff(
 }
 
 
-boost::shared_ptr<ActionDataAbstractTpl<double> >
+std::shared_ptr<ActionDataAbstractTpl<double> >
 IAMSoftContactAugmented::createData() {
-  return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
+  return std::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
 
 bool IAMSoftContactAugmented::checkData(
-    const boost::shared_ptr<ActionDataAbstract>& data) {
-  boost::shared_ptr<Data> d = boost::dynamic_pointer_cast<Data>(data);
-  boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = boost::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
+    const std::shared_ptr<ActionDataAbstract>& data) {
+  std::shared_ptr<Data> d = std::dynamic_pointer_cast<Data>(data);
+  std::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> diff_data_soft = std::static_pointer_cast<DADSoftContactAbstractAugmentedFwdDynamics>(d->differential);
   if (data != NULL) {
     return differential_->checkData(diff_data_soft);
   } else {
@@ -408,7 +408,7 @@ bool IAMSoftContactAugmented::checkData(
 }
 
 
-const boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>&
+const std::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>&
 IAMSoftContactAugmented::get_differential() const {
   return differential_;
 }
@@ -430,14 +430,14 @@ void IAMSoftContactAugmented::set_dt(const double& dt) {
 
 
 void IAMSoftContactAugmented::set_differential(
-    boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model) {
+    std::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model) {
   const std::size_t& nu = model->get_nu();
   if (nu_ != nu) {
     nu_ = nu;
     unone_ = VectorXs::Zero(nu_);
   }
   nr_ = model->get_nr() + nc_;
-  state_ = boost::static_pointer_cast<StateSoftContact>(
+  state_ = std::static_pointer_cast<StateSoftContact>(
       model->get_state());  // cast StateAbstract from DAM as StateSoftContact for IAM
   differential_ = model;
   Base::set_u_lb(differential_->get_u_lb());
@@ -465,7 +465,7 @@ void IAMSoftContactAugmented::set_g_ub(const VectorXs& g_ub) {
   g_ub_ = g_ub;
 }
 
-void IAMSoftContactAugmented::set_friction_cone_constraints(const std::vector<boost::shared_ptr<ResidualModelFrictionConeAugmented>>& frictionConstraints) {
+void IAMSoftContactAugmented::set_friction_cone_constraints(const std::vector<std::shared_ptr<ResidualModelFrictionConeAugmented>>& frictionConstraints) {
   nf_ = 0;
   with_friction_cone_constraint_ = false;
   // // Assert non-empty list of constraints
@@ -482,8 +482,8 @@ void IAMSoftContactAugmented::set_friction_cone_constraints(const std::vector<bo
       friction_constraints_.push_back(frictionConstraints[i]);
       // create friction constraint data associated with the model
       crocoddyl::DataCollectorAbstractTpl<double>* dc;
-      boost::shared_ptr<crocoddyl::ResidualDataAbstractTpl<double>> da = frictionConstraints[i]->createData(dc);
-      boost::shared_ptr<ResidualDataFrictionConeAugmented> d = boost::dynamic_pointer_cast<ResidualDataFrictionConeAugmented>(da);
+      std::shared_ptr<crocoddyl::ResidualDataAbstractTpl<double>> da = frictionConstraints[i]->createData(dc);
+      std::shared_ptr<ResidualDataFrictionConeAugmented> d = std::dynamic_pointer_cast<ResidualDataFrictionConeAugmented>(da);
       friction_datas_.push_back(d);
       if(frictionConstraints[i]->get_active()){
         nf_ += 1;

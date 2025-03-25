@@ -15,11 +15,11 @@ namespace lpf {
 namespace bp = boost::python;
 
 void exposeStateLPF() {
-  bp::register_ptr_to_python<boost::shared_ptr<StateLPF>>();
+  bp::register_ptr_to_python<std::shared_ptr<StateLPF>>();
 
   bp::class_<StateLPF, bp::bases<crocoddyl::StateAbstract>>(
       "StateLPF", "State model for low-pass filtered joints",
-      bp::init<boost::shared_ptr<pinocchio::Model>, std::vector<int>>(
+      bp::init<std::shared_ptr<pinocchio::Model>, std::vector<int>>(
           bp::args("self", "model", "lpf_joint_ids"),
           "Initialize the state lpf model.\n\n"
           ":param model: pinocchio model\n"

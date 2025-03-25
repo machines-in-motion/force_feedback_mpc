@@ -77,7 +77,7 @@ class ResidualModelFrictionConeAugmented
    * @param[in] fwddyn  Indicates that we have a forward dynamics problem (true)
    * or inverse dynamics (false)
    */
-  ResidualModelFrictionConeAugmented(boost::shared_ptr<StateMultibody> state,
+  ResidualModelFrictionConeAugmented(std::shared_ptr<StateMultibody> state,
                             const pinocchio::FrameIndex id,
                             const double coef,
                             const std::size_t nu);
@@ -92,7 +92,7 @@ class ResidualModelFrictionConeAugmented
    * @param[in] id     Reference frame id
    * @param[in] fref   Reference friction cone
    */
-  ResidualModelFrictionConeAugmented(boost::shared_ptr<StateMultibody> state,
+  ResidualModelFrictionConeAugmented(std::shared_ptr<StateMultibody> state,
                                       const pinocchio::FrameIndex id,
                                       const double coef);
   virtual ~ResidualModelFrictionConeAugmented();
@@ -104,7 +104,7 @@ class ResidualModelFrictionConeAugmented
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calc(const std::shared_ptr<ResidualDataAbstract>& data,
                     const Eigen::Ref<const VectorXs>& f);
 
   /**
@@ -118,13 +118,13 @@ class ResidualModelFrictionConeAugmented
    * @param[in] data  Residual data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calcDiff(const std::shared_ptr<ResidualDataAbstract>& data,
                         const Eigen::Ref<const VectorXs>& f);
 
   /**
    * @brief Create the contact friction cone residual data
    */
-  virtual boost::shared_ptr<ResidualDataAbstract> createData(
+  virtual std::shared_ptr<ResidualDataAbstract> createData(
       DataCollectorAbstract* const data);
 
   /**

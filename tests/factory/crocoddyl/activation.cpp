@@ -39,21 +39,21 @@ std::ostream& operator<<(std::ostream& os, ActivationModelTypes::Type type) {
 ActivationModelFactory::ActivationModelFactory() {}
 ActivationModelFactory::~ActivationModelFactory() {}
 
-boost::shared_ptr<crocoddyl::ActivationModelAbstract>
+std::shared_ptr<crocoddyl::ActivationModelAbstract>
 ActivationModelFactory::create(ActivationModelTypes::Type activation_type,
                                std::size_t nr) const {
-  boost::shared_ptr<crocoddyl::ActivationModelAbstract> activation;
+  std::shared_ptr<crocoddyl::ActivationModelAbstract> activation;
   Eigen::VectorXd lb = Eigen::VectorXd::Random(nr);
   Eigen::VectorXd ub =
       lb + Eigen::VectorXd::Ones(nr) + Eigen::VectorXd::Random(nr);
 
   switch (activation_type) {
     case ActivationModelTypes::ActivationModelQuad:
-      activation = boost::make_shared<crocoddyl::ActivationModelQuad>(nr);
+      activation = std::make_shared<crocoddyl::ActivationModelQuad>(nr);
       break;
     case ActivationModelTypes::ActivationModelQuadraticBarrier:
       activation =
-          boost::make_shared<crocoddyl::ActivationModelQuadraticBarrier>(
+          std::make_shared<crocoddyl::ActivationModelQuadraticBarrier>(
               crocoddyl::ActivationBounds(lb, ub));
       break;
     default:

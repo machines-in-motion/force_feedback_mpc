@@ -15,11 +15,11 @@ namespace softcontact {
 namespace bp = boost::python;
 
 void exposeStateSoftContact() {
-  bp::register_ptr_to_python<boost::shared_ptr<StateSoftContact>>();
+  bp::register_ptr_to_python<std::shared_ptr<StateSoftContact>>();
 
   bp::class_<StateSoftContact, bp::bases<crocoddyl::StateAbstract>>(
       "StateSoftContact", "State model for low-pass filtered joints",
-      bp::init<boost::shared_ptr<pinocchio::Model>, int>(
+      bp::init<std::shared_ptr<pinocchio::Model>, int>(
           bp::args("self", "model", "nc"),
           "Initialize the state soft contact model.\n\n"
           ":param model: pinocchio model\n"

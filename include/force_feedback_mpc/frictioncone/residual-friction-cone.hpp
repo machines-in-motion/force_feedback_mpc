@@ -72,8 +72,8 @@ struct ResidualDataFrictionCone
 
     // Avoids data casting at runtime
     const pinocchio::FrameIndex id = model->get_id();
-    const boost::shared_ptr<StateMultibody>& state =
-        boost::static_pointer_cast<StateMultibody>(model->get_state());
+    const std::shared_ptr<StateMultibody>& state =
+        std::static_pointer_cast<StateMultibody>(model->get_state());
     std::string frame_name = state->get_pinocchio()->frames[id].name;
     bool found_contact = false;
     if (is_contact) {
@@ -146,7 +146,7 @@ struct ResidualDataFrictionCone
     }
   }
 
-  boost::shared_ptr<crocoddyl::ForceDataAbstractTpl<double> >
+  std::shared_ptr<crocoddyl::ForceDataAbstractTpl<double> >
       contact;               //!< Contact force data
   crocoddyl::ContactType contact_type;  //!< Type of contact (2D / 3D / 6D)
   using Base::r;
@@ -195,7 +195,7 @@ class ResidualModelFrictionCone
    * @param[in] fwddyn  Indicates that we have a forward dynamics problem (true)
    * or inverse dynamics (false)
    */
-  ResidualModelFrictionCone(boost::shared_ptr<StateMultibody> state,
+  ResidualModelFrictionCone(std::shared_ptr<StateMultibody> state,
                             const pinocchio::FrameIndex id,
                             const double coef,
                             const std::size_t nu);
@@ -210,7 +210,7 @@ class ResidualModelFrictionCone
    * @param[in] id     Reference frame id
    * @param[in] fref   Reference friction cone
    */
-  ResidualModelFrictionCone(boost::shared_ptr<StateMultibody> state,
+  ResidualModelFrictionCone(std::shared_ptr<StateMultibody> state,
                                       const pinocchio::FrameIndex id,
                                       const double coef);
   virtual ~ResidualModelFrictionCone();
@@ -222,7 +222,7 @@ class ResidualModelFrictionCone
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calc(const std::shared_ptr<ResidualDataAbstract>& data,
                     const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& u);
 
@@ -236,7 +236,7 @@ class ResidualModelFrictionCone
    * @param[in] data  Residual data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
-  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calc(const std::shared_ptr<ResidualDataAbstract>& data,
                     const Eigen::Ref<const VectorXs>& x);
 
   /**
@@ -246,7 +246,7 @@ class ResidualModelFrictionCone
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calcDiff(const std::shared_ptr<ResidualDataAbstract>& data,
                         const Eigen::Ref<const VectorXs>& x,
                         const Eigen::Ref<const VectorXs>& u);
 
@@ -261,13 +261,13 @@ class ResidualModelFrictionCone
    * @param[in] data  Residual data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calcDiff(const std::shared_ptr<ResidualDataAbstract>& data,
                         const Eigen::Ref<const VectorXs>& x);
 
   /**
    * @brief Create the contact friction cone residual data
    */
-  virtual boost::shared_ptr<ResidualDataAbstract> createData(
+  virtual std::shared_ptr<ResidualDataAbstract> createData(
       DataCollectorAbstract* const data);
 
 //   /**
@@ -275,7 +275,7 @@ class ResidualModelFrictionCone
 //    *
 //    * @param[in] data  Contact friction cone residual data
 //    */
-//   void updateJacobians(const boost::shared_ptr<ResidualDataAbstract>& data);
+//   void updateJacobians(const std::shared_ptr<ResidualDataAbstract>& data);
 
 //   /**
 //    * @brief Indicates if we are using the forward-dynamics (true) or

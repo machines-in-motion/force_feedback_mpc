@@ -21,7 +21,7 @@ using namespace force_feedback_mpc::unittest;
 
 void test_state_dimension(StateLPFModelTypes::Type state_type) {
   StateLPFModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
       factory.create(state_type, LPFJointMaskType::ALL);
   // Checking the dimension of zero and random states
   BOOST_CHECK(static_cast<std::size_t>(stateLPFAll->zero().size()) ==
@@ -39,7 +39,7 @@ void test_state_dimension(StateLPFModelTypes::Type state_type) {
               stateLPFAll->get_ny());
 
   // Check for random LPF joint in stateLPF
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
       factory.create(state_type, LPFJointMaskType::RAND);
   BOOST_CHECK(static_cast<std::size_t>(stateLPFRand->zero().size()) ==
               stateLPFRand->get_ny());
@@ -57,9 +57,9 @@ void test_state_dimension(StateLPFModelTypes::Type state_type) {
 
   // Check that dimensions matches multibody dimensions when nu=0 (no LPF joint)
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
       factory.create(state_type, LPFJointMaskType::NONE);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateLPFToStateMultibody.at(state_type));
   BOOST_CHECK(stateLPFNone->get_ny() == stateMultibody->get_nx());
   BOOST_CHECK(stateLPFNone->get_ndy() == stateMultibody->get_ndx());
@@ -70,7 +70,7 @@ void test_state_dimension(StateLPFModelTypes::Type state_type) {
 
 void test_integrate_against_difference(StateLPFModelTypes::Type state_type) {
   StateLPFModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
       factory.create(state_type, LPFJointMaskType::ALL);
   // Generating random states
   const Eigen::VectorXd& x1 = stateLPFAll->rand();
@@ -86,7 +86,7 @@ void test_integrate_against_difference(StateLPFModelTypes::Type state_type) {
   BOOST_CHECK(dxi.isZero(1e-9));
 
   // Check for random LPF joint in stateLPF
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
       factory.create(state_type, LPFJointMaskType::RAND);
   // Generating random states
   const Eigen::VectorXd& x1rand = stateLPFRand->rand();
@@ -103,9 +103,9 @@ void test_integrate_against_difference(StateLPFModelTypes::Type state_type) {
 
   // Check diff against state multibody diff when nu=0
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
       factory.create(state_type, LPFJointMaskType::NONE);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateLPFToStateMultibody.at(state_type));
   // Generating random states
   const Eigen::VectorXd& x3 = stateLPFNone->rand();
@@ -121,7 +121,7 @@ void test_integrate_against_difference(StateLPFModelTypes::Type state_type) {
 
 void test_difference_against_integrate(StateLPFModelTypes::Type state_type) {
   StateLPFModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
       factory.create(state_type, LPFJointMaskType::ALL);
   // Generating random states
   const Eigen::VectorXd& x = stateLPFAll->rand();
@@ -135,7 +135,7 @@ void test_difference_against_integrate(StateLPFModelTypes::Type state_type) {
   BOOST_CHECK((dxd - dx).isZero(1e-9));
 
   // Check for random LPF joint in stateLPF
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
       factory.create(state_type, LPFJointMaskType::RAND);
   const Eigen::VectorXd& xrand = stateLPFRand->rand();
   const Eigen::VectorXd& dxrand =
@@ -150,9 +150,9 @@ void test_difference_against_integrate(StateLPFModelTypes::Type state_type) {
 
   // Check integrate against state multibody integrate when nu=0
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
       factory.create(state_type, LPFJointMaskType::NONE);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateLPFToStateMultibody.at(state_type));
   // Generating random states
   const Eigen::VectorXd& x1 = stateLPFNone->rand();
@@ -168,7 +168,7 @@ void test_difference_against_integrate(StateLPFModelTypes::Type state_type) {
 
 void test_Jdiff_firstsecond(StateLPFModelTypes::Type state_type) {
   StateLPFModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
       factory.create(state_type, LPFJointMaskType::ALL);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& x1 = stateLPFAll->rand();
@@ -192,7 +192,7 @@ void test_Jdiff_firstsecond(StateLPFModelTypes::Type state_type) {
   BOOST_CHECK((Jdiff_second - Jdiff_both_second).isZero(1e-9));
 
   // Check for random LPF joint in stateLPF
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
       factory.create(state_type, LPFJointMaskType::RAND);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& x1rand = stateLPFRand->rand();
@@ -220,9 +220,9 @@ void test_Jdiff_firstsecond(StateLPFModelTypes::Type state_type) {
 
   // Check Jdiff against state multibody when nu=0
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
       factory.create(state_type, LPFJointMaskType::NONE);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateLPFToStateMultibody.at(state_type));
   const Eigen::VectorXd& x3 = stateLPFNone->rand();
   const Eigen::VectorXd& x4 = stateLPFNone->rand();
@@ -266,7 +266,7 @@ void test_Jdiff_firstsecond(StateLPFModelTypes::Type state_type) {
 
 void test_Jint_firstsecond(StateLPFModelTypes::Type state_type) {
   StateLPFModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
       factory.create(state_type, LPFJointMaskType::ALL);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& x = stateLPFAll->rand();
@@ -290,7 +290,7 @@ void test_Jint_firstsecond(StateLPFModelTypes::Type state_type) {
   BOOST_CHECK((Jint_second - Jint_both_second).isZero(1e-9));
 
   // Check for random LPF joint in stateLPF
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
       factory.create(state_type, LPFJointMaskType::RAND);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& xrand = stateLPFAll->rand();
@@ -319,9 +319,9 @@ void test_Jint_firstsecond(StateLPFModelTypes::Type state_type) {
 
   // Check Jintegrate against state multibody Jintegrate when nu=0
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
       factory.create(state_type, LPFJointMaskType::NONE);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateLPFToStateMultibody.at(state_type));
   const Eigen::VectorXd& x1 = stateLPFNone->rand();
   const Eigen::VectorXd& dx1 = Eigen::VectorXd::Random(stateLPFNone->get_ndy());
@@ -367,7 +367,7 @@ void test_Jint_firstsecond(StateLPFModelTypes::Type state_type) {
 
 void test_Jdiff_num_diff_firstsecond(StateLPFModelTypes::Type state_type) {
   StateLPFModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
       factory.create(state_type, LPFJointMaskType::ALL);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& x1 = stateLPFAll->rand();
@@ -397,7 +397,7 @@ void test_Jdiff_num_diff_firstsecond(StateLPFModelTypes::Type state_type) {
       (Jdiff_num_diff_second - Jdiff_num_diff_both_second).isZero(1e-9));
 
   // Check for random LPF joint in stateLPF
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
       factory.create(state_type, LPFJointMaskType::RAND);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& x1rand = stateLPFRand->rand();
@@ -430,7 +430,7 @@ void test_Jdiff_num_diff_firstsecond(StateLPFModelTypes::Type state_type) {
 
 void test_Jint_num_diff_firstsecond(StateLPFModelTypes::Type state_type) {
   StateLPFModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
       factory.create(state_type, LPFJointMaskType::ALL);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& x = stateLPFAll->rand();
@@ -459,7 +459,7 @@ void test_Jint_num_diff_firstsecond(StateLPFModelTypes::Type state_type) {
   BOOST_CHECK((Jint_num_diff_second - Jint_num_diff_both_second).isZero(1e-9));
 
   // Check for random LPF joint in stateLPF
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
       factory.create(state_type, LPFJointMaskType::RAND);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& xrand = stateLPFRand->rand();
@@ -493,7 +493,7 @@ void test_Jint_num_diff_firstsecond(StateLPFModelTypes::Type state_type) {
 
 void test_Jdiff_against_numdiff(StateLPFModelTypes::Type state_type) {
   StateLPFModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
       factory.create(state_type, LPFJointMaskType::ALL);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& x1 = stateLPFAll->rand();
@@ -519,7 +519,7 @@ void test_Jdiff_against_numdiff(StateLPFModelTypes::Type state_type) {
   BOOST_CHECK((Jdiff_2 - Jdiff_num_2).isZero(tol));
 
   // Check for random LPF joint in stateLPF
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
       factory.create(state_type, LPFJointMaskType::RAND);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& x1rand = stateLPFRand->rand();
@@ -550,7 +550,7 @@ void test_Jdiff_against_numdiff(StateLPFModelTypes::Type state_type) {
 
 void test_Jintegrate_against_numdiff(StateLPFModelTypes::Type state_type) {
   StateLPFModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
       factory.create(state_type, LPFJointMaskType::ALL);
   // Generating random values for the initial stateLPFAll and its rate of change
   const Eigen::VectorXd& x = stateLPFAll->rand();
@@ -575,7 +575,7 @@ void test_Jintegrate_against_numdiff(StateLPFModelTypes::Type state_type) {
   BOOST_CHECK((Jint_2 - Jint_num_2).isZero(tol));
 
   // Check for random LPF joint in stateLPF
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
       factory.create(state_type, LPFJointMaskType::RAND);
   // Generating random values for the initial stateLPFAll and its rate of change
   const Eigen::VectorXd& xrand = stateLPFRand->rand();
@@ -602,9 +602,9 @@ void test_Jintegrate_against_numdiff(StateLPFModelTypes::Type state_type) {
 
   // Check Jdiff against state multibody when nu=0
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
       factory.create(state_type, LPFJointMaskType::NONE);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateLPFToStateMultibody.at(state_type));
   Eigen::MatrixXd Jint_1LPF(
       Eigen::MatrixXd::Zero(stateLPFNone->get_ndy(), stateLPFNone->get_ndy()));
@@ -622,7 +622,7 @@ void test_Jintegrate_against_numdiff(StateLPFModelTypes::Type state_type) {
 
 void test_JintegrateTransport(StateLPFModelTypes::Type state_type) {
   StateLPFModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
       factory.create(state_type, LPFJointMaskType::ALL);
   // Generating random values for the initial stateLPFAll and its rate of change
   const Eigen::VectorXd& x = stateLPFAll->rand();
@@ -643,7 +643,7 @@ void test_JintegrateTransport(StateLPFModelTypes::Type state_type) {
   BOOST_CHECK((Jref - Jint_2 * Jtest).isZero(1e-10));
 
   // Check for random LPF joint in stateLPF
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
       factory.create(state_type, LPFJointMaskType::RAND);
   // Generating random values for the initial stateLPFAll and its rate of change
   const Eigen::VectorXd& xrand = stateLPFRand->rand();
@@ -667,9 +667,9 @@ void test_JintegrateTransport(StateLPFModelTypes::Type state_type) {
   // Check JintegrateTransport against state multibody JintegrateTransport when
   // nu=0
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFNone =
       factory.create(state_type, LPFJointMaskType::NONE);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateLPFToStateMultibody.at(state_type));
   const Eigen::VectorXd& x1 = stateLPFNone->rand();
   const Eigen::VectorXd& dx1 = Eigen::VectorXd::Random(stateLPFNone->get_ndy());
@@ -694,7 +694,7 @@ void test_JintegrateTransport(StateLPFModelTypes::Type state_type) {
 void test_Jdiff_and_Jintegrate_are_inverses(
     StateLPFModelTypes::Type state_type) {
   StateLPFModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
       factory.create(state_type, LPFJointMaskType::ALL);
   // Generating random states
   const Eigen::VectorXd& x1 = stateLPFAll->rand();
@@ -718,7 +718,7 @@ void test_Jdiff_and_Jintegrate_are_inverses(
   BOOST_CHECK((dX_dDX - dDX_dX.inverse()).isZero(1e-9));
 
   // Check for random LPF joint in stateLPF
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
       factory.create(state_type, LPFJointMaskType::RAND);
   // Generating random states
   const Eigen::VectorXd& x1rand = stateLPFRand->rand();
@@ -745,7 +745,7 @@ void test_Jdiff_and_Jintegrate_are_inverses(
 
 void test_velocity_from_Jintegrate_Jdiff(StateLPFModelTypes::Type state_type) {
   StateLPFModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFAll =
       factory.create(state_type, LPFJointMaskType::ALL);
   // Generating random states
   const Eigen::VectorXd& x1 = stateLPFAll->rand();
@@ -786,7 +786,7 @@ void test_velocity_from_Jintegrate_Jdiff(StateLPFModelTypes::Type state_type) {
   BOOST_CHECK((J2 * eps - (-dx + dxi) / h).isZero(1e-3));
 
   // Check for random LPF joint in stateLPF
-  const boost::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
+  const std::shared_ptr<force_feedback_mpc::lpf::StateLPF>& stateLPFRand =
       factory.create(state_type, LPFJointMaskType::RAND);
   // Generating random states
   const Eigen::VectorXd& x1rand = stateLPFRand->rand();

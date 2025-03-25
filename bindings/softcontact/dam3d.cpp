@@ -19,14 +19,14 @@ namespace bp = boost::python;
 
 void exposeDAMSoftContact3DFwdDyn() {
 
-  bp::register_ptr_to_python<boost::shared_ptr<DifferentialActionModelSoftContact3DFwdDynamics>>();
+  bp::register_ptr_to_python<std::shared_ptr<DifferentialActionModelSoftContact3DFwdDynamics>>();
 
   bp::class_<DifferentialActionModelSoftContact3DFwdDynamics, bp::bases<crocoddyl::DifferentialActionModelFreeFwdDynamics>>(
       "DifferentialActionModelSoftContact3DFwdDynamics", 
       "Differential action model for visco-elastic contact forward dynamics in multibody systems.",
-      bp::init<boost::shared_ptr<crocoddyl::StateMultibody>,
-               boost::shared_ptr<crocoddyl::ActuationModelAbstract>,
-               boost::shared_ptr<crocoddyl::CostModelSum>,
+      bp::init<std::shared_ptr<crocoddyl::StateMultibody>,
+               std::shared_ptr<crocoddyl::ActuationModelAbstract>,
+               std::shared_ptr<crocoddyl::CostModelSum>,
                pinocchio::FrameIndex, double, double, Eigen::Vector3d, pinocchio::ReferenceFrame>(
           bp::args("self", "state", "actuation", "costs", "frameId", "Kp", "Kv", "oPc", "ref"),
           "Initialize the constrained forward-dynamics action model.\n\n"
@@ -39,7 +39,7 @@ void exposeDAMSoftContact3DFwdDyn() {
           ":param oPc: Anchor point of the contact model "
           ":param ref: Pinocchio reference frame of the contact"))
       .def<void (DifferentialActionModelSoftContact3DFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &DifferentialActionModelSoftContact3DFwdDynamics::calc,
@@ -51,12 +51,12 @@ void exposeDAMSoftContact3DFwdDyn() {
           ":param x: continuous-time state vector\n"
           ":param u: continuous-time control input")
       .def<void (DifferentialActionModelSoftContact3DFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &DifferentialActionModelSoftContact3DFwdDynamics::calc, bp::args("self", "data", "x"))
       
       .def<void (DifferentialActionModelSoftContact3DFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &DifferentialActionModelSoftContact3DFwdDynamics::calcDiff,
@@ -71,7 +71,7 @@ void exposeDAMSoftContact3DFwdDyn() {
           ":param x: time-continuous state vector\n"
           ":param u: time-continuous control input\n")
       .def<void (DifferentialActionModelSoftContact3DFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&, 
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&, 
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &DifferentialActionModelSoftContact3DFwdDynamics::calcDiff, bp::args("self", "data", "x"))
       .def("createData", &DifferentialActionModelSoftContact3DFwdDynamics::createData,
@@ -124,7 +124,7 @@ void exposeDAMSoftContact3DFwdDyn() {
 
 
 
-  bp::register_ptr_to_python<boost::shared_ptr<DifferentialActionDataSoftContact3DFwdDynamics> >();
+  bp::register_ptr_to_python<std::shared_ptr<DifferentialActionDataSoftContact3DFwdDynamics> >();
 
   bp::class_<DifferentialActionDataSoftContact3DFwdDynamics, bp::bases<crocoddyl::DifferentialActionDataFreeFwdDynamics> >(
       "DifferentialActionDataSoftContact3DFwdDynamics", "Action data for the soft contact 3D forward dynamics system",

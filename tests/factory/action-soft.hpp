@@ -74,7 +74,7 @@ class IAMSoftContactFactory {
   explicit IAMSoftContactFactory();
   ~IAMSoftContactFactory();
 
-  boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented> create(
+  std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented> create(
       IAMSoftContactTypes::Type iam_type,
       DAMSoftContactAbstractTypes::Type dam_type,
         pinocchio::ReferenceFrame ref_type,

@@ -217,15 +217,15 @@ class DAMSoftContact1DAugmentedFwdDynamics
    * 
    */
   DAMSoftContact1DAugmentedFwdDynamics(
-      boost::shared_ptr<StateMultibody> state,
-      boost::shared_ptr<ActuationModelAbstract> actuation,
-      boost::shared_ptr<CostModelSum> costs,
+      std::shared_ptr<StateMultibody> state,
+      std::shared_ptr<ActuationModelAbstract> actuation,
+      std::shared_ptr<CostModelSum> costs,
       const pinocchio::FrameIndex frameId,
       const VectorXs& Kp, 
       const VectorXs& Kv,
       const Vector3s& oPc,
       const Vector3MaskType& type = Vector3MaskType::z,
-      boost::shared_ptr<ConstraintModelManager> constraints = nullptr);
+      std::shared_ptr<ConstraintModelManager> constraints = nullptr);
   virtual ~DAMSoftContact1DAugmentedFwdDynamics();
 
   /**
@@ -238,7 +238,7 @@ class DAMSoftContact1DAugmentedFwdDynamics
    * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+  virtual void calc(const std::shared_ptr<DifferentialActionDataAbstract>& data, 
                     const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& f,
                     const Eigen::Ref<const VectorXs>& u);
@@ -252,7 +252,7 @@ class DAMSoftContact1DAugmentedFwdDynamics
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
    */
-  virtual void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+  virtual void calc(const std::shared_ptr<DifferentialActionDataAbstract>& data, 
                     const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& f);
 
@@ -265,7 +265,7 @@ class DAMSoftContact1DAugmentedFwdDynamics
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
   virtual void calcDiff(
-      const boost::shared_ptr<DifferentialActionDataAbstract>& data,
+      const std::shared_ptr<DifferentialActionDataAbstract>& data,
       const Eigen::Ref<const VectorXs>& x, 
       const Eigen::Ref<const VectorXs>& f, 
       const Eigen::Ref<const VectorXs>& u);
@@ -278,7 +278,7 @@ class DAMSoftContact1DAugmentedFwdDynamics
    * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
    */
   virtual void calcDiff(
-      const boost::shared_ptr<DifferentialActionDataAbstract>& data,
+      const std::shared_ptr<DifferentialActionDataAbstract>& data,
       const Eigen::Ref<const VectorXs>& x,
       const Eigen::Ref<const VectorXs>& f);
   
@@ -287,14 +287,14 @@ class DAMSoftContact1DAugmentedFwdDynamics
    *
    * @return soft contact forward-dynamics data
    */
-  virtual boost::shared_ptr<DifferentialActionDataAbstract> createData();
+  virtual std::shared_ptr<DifferentialActionDataAbstract> createData();
 
   /**
    * @brief Checks that a specific data belongs to the free inverse-dynamics
    * model
    */
   virtual bool checkData(
-      const boost::shared_ptr<DifferentialActionDataAbstract>& data);
+      const std::shared_ptr<DifferentialActionDataAbstract>& data);
       
   const Vector3MaskType& get_type() const;
 

@@ -26,7 +26,7 @@ class StateLPF : public crocoddyl::StateAbstract {
 
   enum JointType { FreeFlyer = 0, Spherical, Simple };
 
-  explicit StateLPF(boost::shared_ptr<pinocchio::ModelTpl<double> > model,
+  explicit StateLPF(std::shared_ptr<pinocchio::ModelTpl<double> > model,
                        std::vector<int> lpf_joint_ids);
   virtual ~StateLPF();
 
@@ -54,7 +54,7 @@ class StateLPF : public crocoddyl::StateAbstract {
                                    Eigen::Ref<MatrixXs> Jin,
                                    const crocoddyl::Jcomponent firstsecond) const;
 
-  const boost::shared_ptr<pinocchio::ModelTpl<double> >& get_pinocchio() const;
+  const std::shared_ptr<pinocchio::ModelTpl<double> >& get_pinocchio() const;
   const std::size_t& get_ntau() const;
   const std::size_t& get_ny() const;
   const std::size_t& get_ndy() const;
@@ -72,7 +72,7 @@ class StateLPF : public crocoddyl::StateAbstract {
   std::size_t ndy_;
 
  private:
-  boost::shared_ptr<pinocchio::ModelTpl<double> > pinocchio_;
+  std::shared_ptr<pinocchio::ModelTpl<double> > pinocchio_;
   VectorXs y0_;
   JointType joint_type_;
 };

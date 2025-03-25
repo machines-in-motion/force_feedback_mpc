@@ -53,7 +53,7 @@ class ActionModelLPFFactory {
   explicit ActionModelLPFFactory();
   ~ActionModelLPFFactory();
 
-  boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF> create(
+  std::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF> create(
       ActionModelLPFTypes::Type iam_type,
       DifferentialActionModelTypes::Type dam_type,
       ContactModelTypes::Type contact_type) const;

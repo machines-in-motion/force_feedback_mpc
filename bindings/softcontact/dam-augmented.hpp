@@ -19,18 +19,18 @@ namespace bp = boost::python;
 class DAMSoftContactAbstractAugmentedFwdDynamics_wrap : public DAMSoftContactAbstractAugmentedFwdDynamics,
                                                         public bp::wrapper<DAMSoftContactAbstractAugmentedFwdDynamics> {
  public:
-  DAMSoftContactAbstractAugmentedFwdDynamics_wrap(boost::shared_ptr<crocoddyl::StateMultibody> state, 
-                                                  boost::shared_ptr<crocoddyl::ActuationModelAbstract> actuation,
-                                                  boost::shared_ptr<crocoddyl::CostModelSum> costs,
+  DAMSoftContactAbstractAugmentedFwdDynamics_wrap(std::shared_ptr<crocoddyl::StateMultibody> state, 
+                                                  std::shared_ptr<crocoddyl::ActuationModelAbstract> actuation,
+                                                  std::shared_ptr<crocoddyl::CostModelSum> costs,
                                                   const pinocchio::FrameIndex frameId,
                                                   const Eigen::VectorXd& Kp,
                                                   const Eigen::VectorXd& Kv,
                                                   const Eigen::Vector3d& oPc, 
                                                   const std::size_t nc,
-                                                  boost::shared_ptr<crocoddyl::ConstraintModelManager> constraints = nullptr)
+                                                  std::shared_ptr<crocoddyl::ConstraintModelManager> constraints = nullptr)
       : DAMSoftContactAbstractAugmentedFwdDynamics(state, actuation, costs, frameId, Kp, Kv, oPc, nc, constraints), bp::wrapper<DAMSoftContactAbstractAugmentedFwdDynamics>() {}
   
-  void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data,
+  void calc(const std::shared_ptr<DifferentialActionDataAbstract>& data,
             const Eigen::Ref<const Eigen::VectorXd>& x,
             const Eigen::Ref<const Eigen::VectorXd>& f,
             const Eigen::Ref<const Eigen::VectorXd>& u) {
@@ -58,7 +58,7 @@ class DAMSoftContactAbstractAugmentedFwdDynamics_wrap : public DAMSoftContactAbs
     }
   }
 
-  void calcDiff(const boost::shared_ptr<DifferentialActionDataAbstract>& data,
+  void calcDiff(const std::shared_ptr<DifferentialActionDataAbstract>& data,
                 const Eigen::Ref<const Eigen::VectorXd>& x,
                 const Eigen::Ref<const Eigen::VectorXd>& f,
                 const Eigen::Ref<const Eigen::VectorXd>& u) {
@@ -86,15 +86,15 @@ class DAMSoftContactAbstractAugmentedFwdDynamics_wrap : public DAMSoftContactAbs
     }
   }
 
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> createData() {
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> createData() {
     crocoddyl::enableMultithreading() = false;
     if (boost::python::override createData = this->get_override("createData")) {
-      return bp::call<boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> >(createData.ptr());
+      return bp::call<std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> >(createData.ptr());
     }
     return DAMSoftContactAbstractAugmentedFwdDynamics::createData();
   }
 
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> default_createData() {
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> default_createData() {
     return this->DAMSoftContactAbstractAugmentedFwdDynamics::createData();
   }
 

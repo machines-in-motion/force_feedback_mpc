@@ -21,7 +21,7 @@ void test_check_data(DifferentialActionModelTypes::Type action_type,
                      ContactModelTypes::Type contact_type) {
   // create the model
   DifferentialActionModelFactory factory;
-  boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
+  std::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
       factory.create(action_type, contact_type);
 
   // Run the print function
@@ -29,7 +29,7 @@ void test_check_data(DifferentialActionModelTypes::Type action_type,
   tmp << *model;
 
   // create the corresponding data object
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
       model->createData();
 
   BOOST_CHECK(model->checkData(data));
@@ -39,11 +39,11 @@ void test_calc_returns_state(DifferentialActionModelTypes::Type action_type,
                              ContactModelTypes::Type contact_type) {
   // create the model
   DifferentialActionModelFactory factory;
-  boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
+  std::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
       factory.create(action_type, contact_type);
 
   // create the corresponding data object
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
       model->createData();
 
   // Generating random state and control vectors
@@ -61,11 +61,11 @@ void test_calc_returns_a_cost(DifferentialActionModelTypes::Type action_type,
                               ContactModelTypes::Type contact_type) {
   // create the model
   DifferentialActionModelFactory factory;
-  boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
+  std::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
       factory.create(action_type, contact_type);
 
   // create the corresponding data object and set the cost to nan
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
       model->createData();
   data->cost = nan("");
 
@@ -86,11 +86,11 @@ void test_quasi_static(DifferentialActionModelTypes::Type action_type,
   //   return;
   // create the model
   DifferentialActionModelFactory factory;
-  boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
+  std::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
       factory.create(action_type, contact_type);
 
   // create the corresponding data object and set the cost to nan
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
       model->createData();
 
   // Getting the cost value computed by calc()
@@ -108,15 +108,15 @@ void test_partial_derivatives_against_numdiff(
     ContactModelTypes::Type contact_type) {
   // create the model
   DifferentialActionModelFactory factory;
-  boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
+  std::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
       factory.create(action_type, contact_type);
 
   // create the corresponding data object and set the cost to nan
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
       model->createData();
 
   crocoddyl::DifferentialActionModelNumDiff model_num_diff(model);
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data_num_diff =
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data_num_diff =
       model_num_diff.createData();
 
   // Generating random values for the state and control
@@ -168,17 +168,17 @@ void test_partial_derivatives_against_numdiff(
 //                                ContactModelTypes::Type contact_type) {
 //   // create the model
 //   DifferentialActionModelFactory factory;
-//   boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
+//   std::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
 //       factory.create(action_type, contact_type);
-//   boost::shared_ptr<sobec::DifferentialActionModelSoftContact3DFwdDynamics> modelsoft = boost::static_pointer_cast<sobec::DifferentialActionModelSoftContact3DFwdDynamics>(model); 
-//   boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data = modelsoft->createData();
+//   std::shared_ptr<sobec::DifferentialActionModelSoftContact3DFwdDynamics> modelsoft = std::static_pointer_cast<sobec::DifferentialActionModelSoftContact3DFwdDynamics>(model); 
+//   std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data = modelsoft->createData();
   
 //   // Create DAM free
-//   boost::shared_ptr<crocoddyl::StateMultibody> statemb = boost::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_state()); 
-//   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree =
-//       boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
+//   std::shared_ptr<crocoddyl::StateMultibody> statemb = std::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_state()); 
+//   std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree =
+//       std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
 //           statemb, modelsoft->get_actuation(), modelsoft->get_costs());
-//   const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& datafree = modelfree->createData();
+//   const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& datafree = modelfree->createData();
 
 //   // Generating random state and control vectors
 //   const Eigen::VectorXd x = modelsoft->get_state()->rand();
@@ -200,17 +200,17 @@ void test_partial_derivatives_against_numdiff(
 //                                ContactModelTypes::Type contact_type) {
 //   // create the model
 //   DifferentialActionModelFactory factory;
-//   boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
+//   std::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
 //       factory.create(action_type, contact_type);
-//   boost::shared_ptr<sobec::DifferentialActionModelSoftContact3DFwdDynamics> modelsoft = boost::static_pointer_cast<sobec::DifferentialActionModelSoftContact3DFwdDynamics>(model); 
-//   boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data = modelsoft->createData();
+//   std::shared_ptr<sobec::DifferentialActionModelSoftContact3DFwdDynamics> modelsoft = std::static_pointer_cast<sobec::DifferentialActionModelSoftContact3DFwdDynamics>(model); 
+//   std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data = modelsoft->createData();
   
 //   // Create DAM free
-//   boost::shared_ptr<crocoddyl::StateMultibody> statemb = boost::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_state()); 
-//   boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree =
-//       boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
+//   std::shared_ptr<crocoddyl::StateMultibody> statemb = std::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_state()); 
+//   std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree =
+//       std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
 //           statemb, modelsoft->get_actuation(), modelsoft->get_costs());
-//   const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& datafree = modelfree->createData();
+//   const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& datafree = modelfree->createData();
 
 //   // Generating random state and control vectors
 //   const Eigen::VectorXd x = modelsoft->get_state()->rand();

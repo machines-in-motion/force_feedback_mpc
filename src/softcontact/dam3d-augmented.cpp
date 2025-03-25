@@ -27,14 +27,14 @@ namespace softcontact {
 
 
 DAMSoftContact3DAugmentedFwdDynamics::DAMSoftContact3DAugmentedFwdDynamics(
-    boost::shared_ptr<StateMultibody> state, 
-    boost::shared_ptr<ActuationModelAbstract> actuation,
-    boost::shared_ptr<CostModelSum> costs,
+    std::shared_ptr<StateMultibody> state, 
+    std::shared_ptr<ActuationModelAbstract> actuation,
+    std::shared_ptr<CostModelSum> costs,
     const pinocchio::FrameIndex frameId,
     const VectorXs& Kp, 
     const VectorXs& Kv,
     const Vector3s& oPc,
-    boost::shared_ptr<ConstraintModelManager> constraints)
+    std::shared_ptr<ConstraintModelManager> constraints)
     : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 3, constraints) {}
 
 
@@ -42,7 +42,7 @@ DAMSoftContact3DAugmentedFwdDynamics::~DAMSoftContact3DAugmentedFwdDynamics() {}
 
 
 void DAMSoftContact3DAugmentedFwdDynamics::calc(
-            const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
+            const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const VectorXs>& x,
             const Eigen::Ref<const VectorXs>& f,
             const Eigen::Ref<const VectorXs>& u) {
@@ -178,7 +178,7 @@ void DAMSoftContact3DAugmentedFwdDynamics::calc(
 
 
 void DAMSoftContact3DAugmentedFwdDynamics::calc(
-            const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
+            const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const VectorXs>& x,
             const Eigen::Ref<const VectorXs>& f) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
@@ -241,7 +241,7 @@ void DAMSoftContact3DAugmentedFwdDynamics::calc(
 
 
 void DAMSoftContact3DAugmentedFwdDynamics::calcDiff(
-    const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
+    const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
     const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& f,
     const Eigen::Ref<const VectorXs>& u) {
@@ -446,7 +446,7 @@ void DAMSoftContact3DAugmentedFwdDynamics::calcDiff(
 
 
 void DAMSoftContact3DAugmentedFwdDynamics::calcDiff(
-    const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
+    const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
     const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& f) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
@@ -532,14 +532,14 @@ void DAMSoftContact3DAugmentedFwdDynamics::calcDiff(
 }
 
 
-boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double> >
+std::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double> >
 DAMSoftContact3DAugmentedFwdDynamics::createData() {
-  return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
+  return std::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
 bool DAMSoftContact3DAugmentedFwdDynamics::checkData(
-    const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double>>& data) {
-  boost::shared_ptr<Data> d = boost::dynamic_pointer_cast<Data>(data);
+    const std::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double>>& data) {
+  std::shared_ptr<Data> d = std::dynamic_pointer_cast<Data>(data);
   if (d != NULL) {
     return true;
   } else {

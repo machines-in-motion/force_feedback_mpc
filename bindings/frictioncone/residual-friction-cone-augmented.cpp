@@ -16,13 +16,13 @@ namespace bp = boost::python;
 
 void exposeResidualFrictionConeAugmented() {
   bp::register_ptr_to_python<
-      boost::shared_ptr<ResidualModelFrictionConeAugmented> >();
+      std::shared_ptr<ResidualModelFrictionConeAugmented> >();
 
   bp::class_<ResidualModelFrictionConeAugmented,
              bp::bases<crocoddyl::ResidualModelAbstract> >(
       "ResidualModelFrictionConeAugmented",
       "Nonlinear (Lorentz) friction cone.",
-      bp::init<boost::shared_ptr<crocoddyl::StateMultibody>, pinocchio::FrameIndex,
+      bp::init<std::shared_ptr<crocoddyl::StateMultibody>, pinocchio::FrameIndex,
                double, std::size_t >(
           bp::args("self", "state", "id", "coef", "nu"),
           "Initialize the contact friction cone residual model.\n\n"
@@ -30,7 +30,7 @@ void exposeResidualFrictionConeAugmented() {
           ":param id: reference frame id\n"
           ":param coef: friction coefficient mu\n"
           ":param nu: dimension of control vector"))
-      .def(bp::init<boost::shared_ptr<crocoddyl::StateMultibody>, pinocchio::FrameIndex, double>(
+      .def(bp::init<std::shared_ptr<crocoddyl::StateMultibody>, pinocchio::FrameIndex, double>(
           bp::args("self", "state", "id", "coef"),
           "Initialize the contact friction cone residual model.\n\n"
           "The default nu is obtained from state.nv. Note that this "
@@ -40,7 +40,7 @@ void exposeResidualFrictionConeAugmented() {
           ":param id: reference frame id\n"
           ":param coef: friction coefficient mu"))
       .def<void (ResidualModelFrictionConeAugmented::*)(
-          const boost::shared_ptr<crocoddyl::ResidualDataAbstract>&,
+          const std::shared_ptr<crocoddyl::ResidualDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &ResidualModelFrictionConeAugmented::calc,
           bp::args("self", "data", "f"),
@@ -48,7 +48,7 @@ void exposeResidualFrictionConeAugmented() {
           ":param data: residual data\n"
           ":param f: force (dim 3)")
       .def<void (ResidualModelFrictionConeAugmented::*)(
-          const boost::shared_ptr<crocoddyl::ResidualDataAbstract>&,
+          const std::shared_ptr<crocoddyl::ResidualDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &ResidualModelFrictionConeAugmented::calcDiff,
           bp::args("self", "data", "f"),
@@ -86,7 +86,7 @@ void exposeResidualFrictionConeAugmented() {
     //   .def(CopyableVisitor<ResidualModelFrictionConeAugmented>());
 
   bp::register_ptr_to_python<
-      boost::shared_ptr<ResidualDataFrictionConeAugmented> >();
+      std::shared_ptr<ResidualDataFrictionConeAugmented> >();
 
   bp::class_<ResidualDataFrictionConeAugmented, bp::bases<crocoddyl::ResidualDataAbstract> >(
       "ResidualDataFrictionConeAugmented",

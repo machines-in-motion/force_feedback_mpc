@@ -26,15 +26,15 @@ namespace softcontact {
 
 
 DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDynamics(
-    boost::shared_ptr<StateMultibody> state, 
-    boost::shared_ptr<ActuationModelAbstract> actuation,
-    boost::shared_ptr<CostModelSum> costs,
+    std::shared_ptr<StateMultibody> state, 
+    std::shared_ptr<ActuationModelAbstract> actuation,
+    std::shared_ptr<CostModelSum> costs,
     const pinocchio::FrameIndex frameId,
     const VectorXs& Kp, 
     const VectorXs& Kv,
     const Vector3s& oPc,
     const std::size_t nc,
-    boost::shared_ptr<ConstraintModelManager> constraints)
+    std::shared_ptr<ConstraintModelManager> constraints)
     : DAMBase(state, 
               actuation->get_nu(), 
               costs->get_nr(), 
@@ -97,27 +97,27 @@ DAMSoftContactAbstractAugmentedFwdDynamics::~DAMSoftContactAbstractAugmentedFwdD
 
 
 void DAMSoftContactAbstractAugmentedFwdDynamics::calc(
-    const boost::shared_ptr<DifferentialActionDataAbstract>& data,
+    const std::shared_ptr<DifferentialActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& f) {
   calc(data, x, f, unone_);
 }
 
 void DAMSoftContactAbstractAugmentedFwdDynamics::calcDiff(
-    const boost::shared_ptr<DifferentialActionDataAbstract>& data,
+    const std::shared_ptr<DifferentialActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& f) {
   calcDiff(data, x, f, unone_);
 }
 
-boost::shared_ptr<DifferentialActionDataAbstractTpl<double> >
+std::shared_ptr<DifferentialActionDataAbstractTpl<double> >
 DAMSoftContactAbstractAugmentedFwdDynamics::createData() {
-  return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
+  return std::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
 
 bool DAMSoftContactAbstractAugmentedFwdDynamics::checkData(
-    const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double>>&) {
+    const std::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double>>&) {
   return false;
 }
 
@@ -188,17 +188,17 @@ DAMSoftContactAbstractAugmentedFwdDynamics::get_pinocchio() const {
   return pinocchio_;
 }
 
-const boost::shared_ptr<ActuationModelAbstract >&
+const std::shared_ptr<ActuationModelAbstract >&
 DAMSoftContactAbstractAugmentedFwdDynamics::get_actuation() const {
   return actuation_;
 }
 
-const boost::shared_ptr<CostModelSum >&
+const std::shared_ptr<CostModelSum >&
 DAMSoftContactAbstractAugmentedFwdDynamics::get_costs() const {
   return costs_;
 }
 
-const boost::shared_ptr<ConstraintModelManager >&
+const std::shared_ptr<ConstraintModelManager >&
 DAMSoftContactAbstractAugmentedFwdDynamics::get_constraints() const {
   return constraints_;
 }

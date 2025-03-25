@@ -16,7 +16,7 @@ namespace bp = boost::python;
 
 
 void exposeIntegratedActionModelLPF() {
-  bp::register_ptr_to_python<boost::shared_ptr<IntegratedActionModelLPF> >();
+  bp::register_ptr_to_python<std::shared_ptr<IntegratedActionModelLPF> >();
   bp::class_<IntegratedActionModelLPF, bp::bases<crocoddyl::ActionModelAbstract> >(
       "IntegratedActionModelLPF",
       "Sympletic Euler integrator for differential action models.\n\n"
@@ -25,7 +25,7 @@ void exposeIntegratedActionModelLPF() {
       "integrator) give a differential action model, i.e.:\n"
       "  [q+, v+, tau+] = StateLPF.integrate([q, v], [v + a * dt, a * dt] * "
       "dt, [alpha*tau + (1-alpha)*w]).",
-      bp::init<boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract>,
+      bp::init<std::shared_ptr<crocoddyl::DifferentialActionModelAbstract>,
                bp::optional<std::vector<std::string>, double, bool, double,
                             bool, int> >(
           bp::args("self", "diffModel", "LPFJointNames", "stepTime",
@@ -43,7 +43,7 @@ void exposeIntegratedActionModelLPF() {
           ":param filter: type of low-pass filter (0 = Expo Moving Avg, 1 = "
           "Classical, 2 = Exact)"))
       .def<void (IntegratedActionModelLPF::*)(
-          const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &IntegratedActionModelLPF::calc,
@@ -55,11 +55,11 @@ void exposeIntegratedActionModelLPF() {
           ":param x: state vector\n"
           ":param u: control input")
       .def<void (IntegratedActionModelLPF::*)(
-          const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &crocoddyl::ActionModelAbstract::calc, bp::args("self", "data", "x"))
       .def<void (IntegratedActionModelLPF::*)(
-          const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &IntegratedActionModelLPF::calcDiff,
@@ -73,7 +73,7 @@ void exposeIntegratedActionModelLPF() {
           ":param x: state vector\n"
           ":param u: control input\n")
       .def<void (IntegratedActionModelLPF::*)(
-          const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &crocoddyl::ActionModelAbstract::calcDiff,
           bp::args("self", "data", "x"))
@@ -167,7 +167,7 @@ void exposeIntegratedActionModelLPF() {
           &IntegratedActionModelLPF::set_with_lpf_torque_constraint,
           "activate box constraint on the contact LPF torque dimensions (default: False)");
 
-  bp::register_ptr_to_python<boost::shared_ptr<IntegratedActionDataLPF> >();
+  bp::register_ptr_to_python<std::shared_ptr<IntegratedActionDataLPF> >();
 
   bp::class_<IntegratedActionDataLPF, bp::bases<crocoddyl::ActionDataAbstract> >(
       "IntegratedActionDataLPF", "Sympletic Euler integrator data.",

@@ -20,14 +20,14 @@ namespace bp = boost::python;
 
 void exposeDAMSoftContact3DAugmentedFrictionFwdDyn() {
 
-  bp::register_ptr_to_python<boost::shared_ptr<DAMSoftContact3DAugmentedFrictionFwdDynamics>>();
+  bp::register_ptr_to_python<std::shared_ptr<DAMSoftContact3DAugmentedFrictionFwdDynamics>>();
 
   bp::class_<DAMSoftContact3DAugmentedFrictionFwdDynamics, bp::bases<sobec::DAMSoftContactAbstractAugmentedFwdDynamics>>(
       "DAMSoftContact3DAugmentedFrictionFwdDynamics", 
       "Differential action model for 3D visco-elastic contact forward dynamics in multibody systems.",
-      bp::init<boost::shared_ptr<crocoddyl::StateMultibody>,
-               boost::shared_ptr<crocoddyl::ActuationModelAbstract>,
-               boost::shared_ptr<crocoddyl::CostModelSum>,
+      bp::init<std::shared_ptr<crocoddyl::StateMultibody>,
+               std::shared_ptr<crocoddyl::ActuationModelAbstract>,
+               std::shared_ptr<crocoddyl::CostModelSum>,
                pinocchio::FrameIndex, Eigen::VectorXd, Eigen::VectorXd, Eigen::Vector3d, pinocchio::ReferenceFrame>(
           bp::args("self", "state", "actuation", "costs", "frameId", "Kp", "Kv", "oPc", "ref"),
           "Initialize the constrained forward-dynamics action model.\n\n"
@@ -40,7 +40,7 @@ void exposeDAMSoftContact3DAugmentedFrictionFwdDyn() {
           ":param oPc: Anchor point of the contact model "
           ":param ref: Pinocchio reference frame of the contact"))
       .def<void (DAMSoftContact3DAugmentedFrictionFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
@@ -54,13 +54,13 @@ void exposeDAMSoftContact3DAugmentedFrictionFwdDyn() {
           ":param f: continuous-time force vector\n"
           ":param u: continuous-time control input")
       .def<void (DAMSoftContact3DAugmentedFrictionFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&, 
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &DAMSoftContact3DAugmentedFrictionFwdDynamics::calc, bp::args("self", "data", "x", "f"))
       
       .def<void (DAMSoftContact3DAugmentedFrictionFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
@@ -77,7 +77,7 @@ void exposeDAMSoftContact3DAugmentedFrictionFwdDyn() {
           ":param x: time-continuous force vector\n"
           ":param u: time-continuous control input\n")
       .def<void (DAMSoftContact3DAugmentedFrictionFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&, 
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&, 
           const Eigen::Ref<const Eigen::VectorXd>&, 
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &DAMSoftContact3DAugmentedFrictionFwdDynamics::calcDiff, bp::args("self", "data", "x", "f"))
@@ -96,7 +96,7 @@ void exposeDAMSoftContact3DAugmentedFrictionFwdDyn() {
           &DAMSoftContact3DAugmentedFrictionFwdDynamics::set_eps,
           "Sharpness of the tanh approximation of sign function for dynamic friction");
 
-  bp::register_ptr_to_python<boost::shared_ptr<DADSoftContact3DAugmentedFrictionFwdDynamics> >();
+  bp::register_ptr_to_python<std::shared_ptr<DADSoftContact3DAugmentedFrictionFwdDynamics> >();
 
   bp::class_<DADSoftContact3DAugmentedFrictionFwdDynamics, bp::bases<sobec::DADSoftContactAbstractAugmentedFwdDynamics> >(
       "DADSoftContact3DAugmentedFrictionFwdDynamics", "Action data for the soft contact 3D forward dynamics system",

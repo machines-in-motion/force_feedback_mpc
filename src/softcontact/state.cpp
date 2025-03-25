@@ -19,7 +19,7 @@ namespace softcontact{
 
 
 StateSoftContact::StateSoftContact(
-    boost::shared_ptr<pinocchio::ModelTpl<double> > model, std::size_t nc)
+    std::shared_ptr<pinocchio::ModelTpl<double> > model, std::size_t nc)
     : Base(model->nq + model->nv + nc, 2 * model->nv + nc),
       pinocchio_(model),
       nc_(nc),
@@ -322,7 +322,7 @@ void StateSoftContact::JintegrateTransport(
 }
 
 
-const boost::shared_ptr<pinocchio::ModelTpl<double> >&
+const std::shared_ptr<pinocchio::ModelTpl<double> >&
 StateSoftContact::get_pinocchio() const {
   return pinocchio_;
 }

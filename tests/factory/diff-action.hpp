@@ -59,16 +59,16 @@ class DifferentialActionModelFactory {
   explicit DifferentialActionModelFactory();
   ~DifferentialActionModelFactory();
 
-  boost::shared_ptr<crocoddyl::DifferentialActionModelAbstract> create(
+  std::shared_ptr<crocoddyl::DifferentialActionModelAbstract> create(
       DifferentialActionModelTypes::Type type,
       ContactModelTypes::Type contact_type,
       bool with_baumgarte = true) const;
 
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
+  std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
   create_freeFwdDynamics(StateModelTypes::Type state_type,
                          ActuationModelTypes::Type actuation_type) const;
 
-  boost::shared_ptr<crocoddyl::DifferentialActionModelContactFwdDynamics>
+  std::shared_ptr<crocoddyl::DifferentialActionModelContactFwdDynamics>
   create_contactFwdDynamics(StateModelTypes::Type state_type,
                             ActuationModelTypes::Type actuation_type,
                             ContactModelTypes::Type contact_type,

@@ -22,9 +22,9 @@ namespace sobec {
 
 template <typename Scalar>
 DifferentialActionModelSoftContact3DFwdDynamicsTpl<Scalar>::DifferentialActionModelSoftContact3DFwdDynamicsTpl(
-    boost::shared_ptr<StateMultibody> state, 
-    boost::shared_ptr<ActuationModelAbstract> actuation,
-    boost::shared_ptr<CostModelSum> costs,
+    std::shared_ptr<StateMultibody> state, 
+    std::shared_ptr<ActuationModelAbstract> actuation,
+    std::shared_ptr<CostModelSum> costs,
     const pinocchio::FrameIndex frameId,
     const double Kp, 
     const double Kv,
@@ -63,7 +63,7 @@ DifferentialActionModelSoftContact3DFwdDynamicsTpl<Scalar>::~DifferentialActionM
 
 template <typename Scalar>
 void DifferentialActionModelSoftContact3DFwdDynamicsTpl<Scalar>::calc(
-            const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+            const std::shared_ptr<DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const VectorXs>& x,
             const Eigen::Ref<const VectorXs>& u) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
@@ -148,7 +148,7 @@ void DifferentialActionModelSoftContact3DFwdDynamicsTpl<Scalar>::calc(
 
 template <typename Scalar>
 void DifferentialActionModelSoftContact3DFwdDynamicsTpl<Scalar>::calc(
-            const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+            const std::shared_ptr<DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const VectorXs>& x) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
     throw_pretty("Invalid argument: "
@@ -166,7 +166,7 @@ void DifferentialActionModelSoftContact3DFwdDynamicsTpl<Scalar>::calc(
 
 template <typename Scalar>
 void DifferentialActionModelSoftContact3DFwdDynamicsTpl<Scalar>::calcDiff(
-    const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+    const std::shared_ptr<DifferentialActionDataAbstract>& data, 
     const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& u) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
@@ -254,7 +254,7 @@ void DifferentialActionModelSoftContact3DFwdDynamicsTpl<Scalar>::calcDiff(
 
 template <typename Scalar>
 void DifferentialActionModelSoftContact3DFwdDynamicsTpl<Scalar>::calcDiff(
-    const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+    const std::shared_ptr<DifferentialActionDataAbstract>& data, 
     const Eigen::Ref<const VectorXs>& x) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
     throw_pretty("Invalid argument: "
@@ -266,9 +266,9 @@ void DifferentialActionModelSoftContact3DFwdDynamicsTpl<Scalar>::calcDiff(
 
 
 template <typename Scalar>
-boost::shared_ptr<DifferentialActionDataAbstractTpl<Scalar> >
+std::shared_ptr<DifferentialActionDataAbstractTpl<Scalar> >
 DifferentialActionModelSoftContact3DFwdDynamicsTpl<Scalar>::createData() {
-  return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
+  return std::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
 template <typename Scalar>

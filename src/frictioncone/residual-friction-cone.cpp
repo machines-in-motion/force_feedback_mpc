@@ -16,7 +16,7 @@ namespace frictioncone {
 
 
 ResidualModelFrictionCone::
-    ResidualModelFrictionCone(boost::shared_ptr<StateMultibody> state,
+    ResidualModelFrictionCone(std::shared_ptr<StateMultibody> state,
                                         const pinocchio::FrameIndex id,
                                         const double coef,
                                         const std::size_t nu)
@@ -33,7 +33,7 @@ ResidualModelFrictionCone::
 
 
 ResidualModelFrictionCone::
-    ResidualModelFrictionCone(boost::shared_ptr<StateMultibody> state,
+    ResidualModelFrictionCone(std::shared_ptr<StateMultibody> state,
                                         const pinocchio::FrameIndex id,
                                         const double coef)
     : Base(state, 1),
@@ -51,7 +51,7 @@ ResidualModelFrictionCone::~ResidualModelFrictionCone() {}
 
 
 void ResidualModelFrictionCone::calc(
-    const boost::shared_ptr<ResidualDataAbstract>& data,
+    const std::shared_ptr<ResidualDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& x, 
     const Eigen::Ref<const VectorXs>& u) {
   Data* d = static_cast<Data*>(data.get());
@@ -62,7 +62,7 @@ void ResidualModelFrictionCone::calc(
 
 
 void ResidualModelFrictionCone::calc(
-    const boost::shared_ptr<ResidualDataAbstract>& data,
+    const std::shared_ptr<ResidualDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& x) {
   Data* d = static_cast<Data*>(data.get());
   // Compute the residual of the friction cone
@@ -72,7 +72,7 @@ void ResidualModelFrictionCone::calc(
 }
 
 void ResidualModelFrictionCone::calcDiff(
-    const boost::shared_ptr<ResidualDataAbstract>& data,
+    const std::shared_ptr<ResidualDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& x, 
     const Eigen::Ref<const VectorXs>& u) {
   Data* d = static_cast<Data*>(data.get());
@@ -89,7 +89,7 @@ void ResidualModelFrictionCone::calcDiff(
 
 
 void ResidualModelFrictionCone::calcDiff(
-    const boost::shared_ptr<ResidualDataAbstract>& data,
+    const std::shared_ptr<ResidualDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& x) {
   Data* d = static_cast<Data*>(data.get());
   d->f3d = d->contact->f.linear();
@@ -103,17 +103,17 @@ void ResidualModelFrictionCone::calcDiff(
 //   data->Rx.setZero();
 }
 
-boost::shared_ptr<ResidualDataAbstractTpl<double> >
+std::shared_ptr<ResidualDataAbstractTpl<double> >
 ResidualModelFrictionCone::createData(
     DataCollectorAbstract* const data) {
-  boost::shared_ptr<ResidualDataAbstract> d = boost::allocate_shared<Data>(
+  std::shared_ptr<ResidualDataAbstract> d = std::allocate_shared<Data>(
       Eigen::aligned_allocator<Data>(), this, data);
   return d;
 }
 
 // 
 // void ResidualModelFrictionCone::updateJacobians(
-//     const boost::shared_ptr<ResidualDataAbstract>& data) {
+//     const std::shared_ptr<ResidualDataAbstract>& data) {
 //   Data* d = static_cast<Data*>(data.get());
 
 //   const MatrixXs& df_dx = d->contact->df_dx;
@@ -143,8 +143,8 @@ ResidualModelFrictionCone::createData(
 
 void ResidualModelFrictionCone::print(
     std::ostream& os) const {
-  boost::shared_ptr<StateMultibody> s =
-      boost::static_pointer_cast<StateMultibody>(state_);
+  std::shared_ptr<StateMultibody> s =
+      std::static_pointer_cast<StateMultibody>(state_);
   os << "ResidualModelFrictionCone {frame="
      << s->get_pinocchio()->frames[id_].name << ", mu=" << coef_
      << "}";

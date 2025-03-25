@@ -20,11 +20,11 @@ using eigenpy::StdVectorPythonVisitor;
 
 void exposeIAMSoftContactAugmented() {
 
-  typedef boost::shared_ptr<force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented> ResidualModelFrictionConeAugmentedPtr;
+  typedef std::shared_ptr<force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented> ResidualModelFrictionConeAugmentedPtr;
   StdVectorPythonVisitor<std::vector<ResidualModelFrictionConeAugmentedPtr>, true>::expose(
       "StdVec_FrictionC one");
 
-  bp::register_ptr_to_python<boost::shared_ptr<IAMSoftContactAugmented> >();
+  bp::register_ptr_to_python<std::shared_ptr<IAMSoftContactAugmented> >();
   
   bp::class_<IAMSoftContactAugmented, bp::bases<crocoddyl::ActionModelAbstract> >(
       "IAMSoftContactAugmented",
@@ -34,8 +34,8 @@ void exposeIAMSoftContactAugmented() {
       "integrator) give a differential action model, i.e.:\n"
       "  [q+, v+, tau+] = StateLPF.integrate([q, v], [v + a * dt, a * dt] * "
       "dt, [alpha*tau + (1-alpha)*w]).",
-      bp::init<boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>,
-               bp::optional<double, bool, std::vector<boost::shared_ptr<force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented>> > >(
+      bp::init<std::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>,
+               bp::optional<double, bool, std::vector<std::shared_ptr<force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented>> > >(
           bp::args("self", "diffModel", "stepTime", "withCostResidual", "friction_constraints"),
           "Initialize the sympletic Euler integrator.\n\n"
           ":param diffModel: differential action model\n"
@@ -43,7 +43,7 @@ void exposeIAMSoftContactAugmented() {
           ":param withCostResidual: includes the cost residuals and derivatives computation, or tau\n"
           ":param friction_constraints: list of friction cone constraint residual models"))
       .def<void (IAMSoftContactAugmented::*)(
-          const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &IAMSoftContactAugmented::calc,
@@ -55,11 +55,11 @@ void exposeIAMSoftContactAugmented() {
           ":param x: state vector\n"
           ":param u: control input")
       .def<void (IAMSoftContactAugmented::*)(
-          const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &crocoddyl::ActionModelAbstract::calc, bp::args("self", "data", "x"))
       .def<void (IAMSoftContactAugmented::*)(
-          const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &IAMSoftContactAugmented::calcDiff,
@@ -73,7 +73,7 @@ void exposeIAMSoftContactAugmented() {
           ":param x: state vector\n"
           ":param u: control input\n")
       .def<void (IAMSoftContactAugmented::*)(
-          const boost::shared_ptr<crocoddyl::ActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &crocoddyl::ActionModelAbstract::calcDiff,
           bp::args("self", "data", "x"))
@@ -130,7 +130,7 @@ void exposeIAMSoftContactAugmented() {
                             bp::return_value_policy<bp::return_by_value>()),
           &IAMSoftContactAugmented::set_friction_cone_constraints, "friction cone constraint");
 
-  bp::register_ptr_to_python<boost::shared_ptr<IADSoftContactAugmented> >();
+  bp::register_ptr_to_python<std::shared_ptr<IADSoftContactAugmented> >();
 
   bp::class_<IADSoftContactAugmented, bp::bases<crocoddyl::ActionDataAbstract> >(
       "IADSoftContactAugmented", "Sympletic Euler integrator data.",

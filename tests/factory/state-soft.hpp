@@ -58,7 +58,7 @@ class StateSoftContactModelFactory {
   explicit StateSoftContactModelFactory();
   ~StateSoftContactModelFactory();
 
-  boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact> create(
+  std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact> create(
       StateSoftContactModelTypes::Type state_type, std::size_t nc = 3) const;
 };
 

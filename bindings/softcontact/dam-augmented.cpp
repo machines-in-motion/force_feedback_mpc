@@ -18,20 +18,20 @@ namespace bp = boost::python;
 
 void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
 
-  bp::register_ptr_to_python<boost::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>>();
+  bp::register_ptr_to_python<std::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>>();
 
   bp::class_<DAMSoftContactAbstractAugmentedFwdDynamics_wrap, boost::noncopyable>(
       "DAMSoftContactAbstractAugmentedFwdDynamics", 
       "Differential action model for visco-elastic contact forward dynamics in multibody systems.",
-      bp::init<boost::shared_ptr<crocoddyl::StateMultibody>,
-               boost::shared_ptr<crocoddyl::ActuationModelAbstract>,
-               boost::shared_ptr<crocoddyl::CostModelSum>,
+      bp::init<std::shared_ptr<crocoddyl::StateMultibody>,
+               std::shared_ptr<crocoddyl::ActuationModelAbstract>,
+               std::shared_ptr<crocoddyl::CostModelSum>,
                pinocchio::FrameIndex, 
                Eigen::VectorXd, 
                Eigen::VectorXd, 
                Eigen::Vector3d, 
                int, 
-               bp::optional< boost::shared_ptr<crocoddyl::ConstraintModelManager> > >(
+               bp::optional< std::shared_ptr<crocoddyl::ConstraintModelManager> > >(
           bp::args("self", "state", "actuation", "costs", "frameId", "Kp", "Kv", "oPc", "nc", "constraints"),
           "Initialize the constrained forward-dynamics action model.\n\n"
           ":param state: multibody state\n"
@@ -50,7 +50,7 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
            ":param f: force point (dim. state.nx)\n"
            ":param u: control input (dim. nu)")
       .def<void (DAMSoftContactAbstractAugmentedFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &DAMSoftContactAbstractAugmentedFwdDynamics::calc,
@@ -73,7 +73,7 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
            ":param f: force point (dim. state.nc)\n"
            ":param u: control input (dim. nu)")
       .def<void (DAMSoftContactAbstractAugmentedFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &DAMSoftContactAbstractAugmentedFwdDynamics::calcDiff,
@@ -236,7 +236,7 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
                         bp::return_value_policy<bp::return_by_value>()),
                     "number of equality constraints"); 
 
-  bp::register_ptr_to_python<boost::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> >();
+  bp::register_ptr_to_python<std::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> >();
 
   bp::class_<DADSoftContactAbstractAugmentedFwdDynamics>(
       "DADSoftContactAbstractAugmentedFwdDynamics", "Action data for the soft contact forward dynamics system",

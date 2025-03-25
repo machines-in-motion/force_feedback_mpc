@@ -18,7 +18,7 @@ namespace bp = boost::python;
 
 void exposeDAMSoftContact1DFwdDyn() {
 
-  bp::register_ptr_to_python<boost::shared_ptr<DifferentialActionModelSoftContact1DFwdDynamics>>();
+  bp::register_ptr_to_python<std::shared_ptr<DifferentialActionModelSoftContact1DFwdDynamics>>();
 
   bp::enum_<sobec::Vector3MaskType>("Vector3MaskType")
       .value("x", x)
@@ -29,9 +29,9 @@ void exposeDAMSoftContact1DFwdDyn() {
   bp::class_<DifferentialActionModelSoftContact1DFwdDynamics, bp::bases<crocoddyl::DifferentialActionModelFreeFwdDynamics>>(
       "DifferentialActionModelSoftContact1DFwdDynamics", 
       "Differential action model for visco-elastic contact forward dynamics in multibody systems.",
-      bp::init<boost::shared_ptr<crocoddyl::StateMultibody>,
-               boost::shared_ptr<crocoddyl::ActuationModelAbstract>,
-               boost::shared_ptr<crocoddyl::CostModelSum>,
+      bp::init<std::shared_ptr<crocoddyl::StateMultibody>,
+               std::shared_ptr<crocoddyl::ActuationModelAbstract>,
+               std::shared_ptr<crocoddyl::CostModelSum>,
                pinocchio::FrameIndex, double, double, Eigen::Vector3d, pinocchio::ReferenceFrame, sobec::Vector3MaskType>(
           bp::args("self", "state", "actuation", "costs", "frameId", "Kp", "Kv", "oPc", "ref", "type"),
           "Initialize the constrained forward-dynamics action model.\n\n"
@@ -45,7 +45,7 @@ void exposeDAMSoftContact1DFwdDyn() {
           ":param ref: Pinocchio reference frame of the contact\n"
           ":param type: Type of the 1D contact"))
       .def<void (DifferentialActionModelSoftContact1DFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &DifferentialActionModelSoftContact1DFwdDynamics::calc,
@@ -57,12 +57,12 @@ void exposeDAMSoftContact1DFwdDyn() {
           ":param x: continuous-time state vector\n"
           ":param u: continuous-time control input")
       .def<void (DifferentialActionModelSoftContact1DFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &DifferentialActionModelSoftContact1DFwdDynamics::calc, bp::args("self", "data", "x"))
       
       .def<void (DifferentialActionModelSoftContact1DFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &DifferentialActionModelSoftContact1DFwdDynamics::calcDiff,
@@ -77,7 +77,7 @@ void exposeDAMSoftContact1DFwdDyn() {
           ":param x: time-continuous state vector\n"
           ":param u: time-continuous control input\n")
       .def<void (DifferentialActionModelSoftContact1DFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&, 
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&, 
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &DifferentialActionModelSoftContact1DFwdDynamics::calcDiff, bp::args("self", "data", "x"))
       .def("createData", &DifferentialActionModelSoftContact1DFwdDynamics::createData,
@@ -135,7 +135,7 @@ void exposeDAMSoftContact1DFwdDyn() {
           "Contact 1D mask type");
 
 
-  bp::register_ptr_to_python<boost::shared_ptr<DifferentialActionDataSoftContact1DFwdDynamics> >();
+  bp::register_ptr_to_python<std::shared_ptr<DifferentialActionDataSoftContact1DFwdDynamics> >();
 
   bp::class_<DifferentialActionDataSoftContact1DFwdDynamics, bp::bases<crocoddyl::DifferentialActionDataFreeFwdDynamics> >(
       "DifferentialActionDataSoftContact1DFwdDynamics", "Action data for the soft contact 1D forward dynamics system",

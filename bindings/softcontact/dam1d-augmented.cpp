@@ -16,7 +16,7 @@ namespace bp = boost::python;
 
 void exposeDAMSoftContact1DAugmentedFwdDyn() {
 
-  bp::register_ptr_to_python<boost::shared_ptr<DAMSoftContact1DAugmentedFwdDynamics>>();
+  bp::register_ptr_to_python<std::shared_ptr<DAMSoftContact1DAugmentedFwdDynamics>>();
 
   bp::enum_<Vector3MaskType>("Vector3MaskType")
       .value("x", x)
@@ -27,11 +27,11 @@ void exposeDAMSoftContact1DAugmentedFwdDyn() {
   bp::class_<DAMSoftContact1DAugmentedFwdDynamics, bp::bases<DAMSoftContactAbstractAugmentedFwdDynamics>>(
       "DAMSoftContact1DAugmentedFwdDynamics", 
       "Differential action model for 1D visco-elastic contact forward dynamics in multibody systems.",
-      bp::init<boost::shared_ptr<crocoddyl::StateMultibody>,
-               boost::shared_ptr<crocoddyl::ActuationModelAbstract>,
-               boost::shared_ptr<crocoddyl::CostModelSum>,
+      bp::init<std::shared_ptr<crocoddyl::StateMultibody>,
+               std::shared_ptr<crocoddyl::ActuationModelAbstract>,
+               std::shared_ptr<crocoddyl::CostModelSum>,
                pinocchio::FrameIndex, Eigen::VectorXd, Eigen::VectorXd, Eigen::Vector3d, Vector3MaskType,
-               bp::optional<boost::shared_ptr<crocoddyl::ConstraintModelManager>> >(
+               bp::optional<std::shared_ptr<crocoddyl::ConstraintModelManager>> >(
           bp::args("self", "state", "actuation", "costs", "frameId", "Kp", "Kv", "oPc", "type", "constraints"),
           "Initialize the constrained forward-dynamics action model.\n\n"
           ":param state: multibody state\n"
@@ -44,7 +44,7 @@ void exposeDAMSoftContact1DAugmentedFwdDyn() {
           ":param type: Contact 1D mask type\n"
           ":param constraints: stack of constraint functions"))
       .def<void (DAMSoftContact1DAugmentedFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
@@ -58,12 +58,12 @@ void exposeDAMSoftContact1DAugmentedFwdDyn() {
           ":param f: continuous-time force vector\n"
           ":param u: continuous-time control input")
       .def<void (DAMSoftContact1DAugmentedFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&, 
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calc", &DAMSoftContact1DAugmentedFwdDynamics::calc, bp::args("self", "data", "x", "f"))
       .def<void (DAMSoftContact1DAugmentedFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
@@ -80,7 +80,7 @@ void exposeDAMSoftContact1DAugmentedFwdDyn() {
           ":param x: time-continuous force vector\n"
           ":param u: time-continuous control input\n")
       .def<void (DAMSoftContact1DAugmentedFwdDynamics::*)(
-          const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&, 
+          const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>&, 
           const Eigen::Ref<const Eigen::VectorXd>&, 
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &DAMSoftContact1DAugmentedFwdDynamics::calcDiff, bp::args("self", "data", "x", "f"))
@@ -95,7 +95,7 @@ void exposeDAMSoftContact1DAugmentedFwdDyn() {
           &DAMSoftContact1DAugmentedFwdDynamics::set_type,
           "1D mask type");
 
-  bp::register_ptr_to_python<boost::shared_ptr<DADSoftContact1DAugmentedFwdDynamics> >();
+  bp::register_ptr_to_python<std::shared_ptr<DADSoftContact1DAugmentedFwdDynamics> >();
 
   bp::class_<DADSoftContact1DAugmentedFwdDynamics, bp::bases<DADSoftContactAbstractAugmentedFwdDynamics> >(
       "DADSoftContact1DAugmentedFwdDynamics", "Action data for the soft contact 1D forward dynamics system",

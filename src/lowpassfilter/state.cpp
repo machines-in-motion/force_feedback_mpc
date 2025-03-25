@@ -20,7 +20,7 @@ namespace lpf{
 
 
 StateLPF::StateLPF(
-    boost::shared_ptr<pinocchio::ModelTpl<double> > model,
+    std::shared_ptr<pinocchio::ModelTpl<double> > model,
     std::vector<int> lpf_joint_ids)
     : Base(model->nq + model->nv + lpf_joint_ids.size(),
            2 * model->nv + lpf_joint_ids.size()),
@@ -344,7 +344,7 @@ void StateLPF::JintegrateTransport(
 }
 
 
-const boost::shared_ptr<pinocchio::ModelTpl<double> >&
+const std::shared_ptr<pinocchio::ModelTpl<double> >&
 StateLPF::get_pinocchio() const {
   return pinocchio_;
 }
