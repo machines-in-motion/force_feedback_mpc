@@ -31,9 +31,9 @@ robot.updateHeightMap(map)
 # Instantiate the solver
 assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
 MU = 0.75
-mpc = Go2MPC(assets_path, HORIZON=10, friction_mu=MU)
+mpc = Go2MPC(assets_path, HORIZON=5, friction_mu=MU, dt=0.01)
 mpc.initialize()
-mpc.max_iterations=100
+mpc.max_iterations=1000
 mpc.solve()
 m = list(mpc.solver.problem.runningModels) + [mpc.solver.problem.terminalModel]
 
@@ -47,7 +47,7 @@ robot.q0 = state['q']
 robot.reset()
 
 # Solve for as many iterations as needed for the first step
-mpc.max_iterations=10
+mpc.max_iterations=50
 
 Nsim = 50
 # measured_forces = []
@@ -76,7 +76,7 @@ for fname in mpc.ee_frame_names:
 # measured_forces_FR = []
 desired_forces = []
 joint_torques = []
-f_des_z = np.array([10.]*Nsim) 
+f_des_z = np.array([40.]*Nsim) 
 
 # Set ground friction in Mujoco
 setGroundFriction(robot.model, robot.data, MU)

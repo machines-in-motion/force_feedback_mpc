@@ -315,11 +315,11 @@ class Go2MPC:
                 ctrlReg = crocoddyl.CostModelResidual(self.ccdyl_state, ctrlResidual)
                 costModel.addCost("ctrlReg", ctrlReg, control_reg_weight)  
 
-            # # Body COM Tracking Cost
+            # Body COM Tracking Cost
             # com_residual = crocoddyl.ResidualModelCoMPosition(self.ccdyl_state, comRef, self.nu)
             # com_activation = crocoddyl.ActivationModelWeightedQuad(np.array([0., 0., 1.]))
             # com_track = crocoddyl.CostModelResidual(self.ccdyl_state, com_activation, com_residual) #
-            # costModel.addCost("comTrack", com_track, 1e5)
+            # costModel.addCost("comTrack", com_track, 1e1)
 
             # # End Effecor Position Tracking Cost
             # ef_residual = crocoddyl.ResidualModelFrameTranslation(self.ccdyl_state, self.armEEId, self.armEEPos0, self.nu) # Check this cost term            
@@ -344,10 +344,10 @@ class Go2MPC:
             softContactModelsStack = ViscoElasticContact3d_Multiple(self.ccdyl_state, self.ccdyl_actuation, [lf_contact, rf_contact, lh_contact, rh_contact, ef_contact])
 
             # Constraints stack
-            constraintModelManager = None #crocoddyl.ConstraintModelManager(self.ccdyl_state, self.nu)
+            constraintModelManager = crocoddyl.ConstraintModelManager(self.ccdyl_state, self.nu)
 
             # Custom force cost in DAM
-            forceCostManager = ForceCostManager([ForceCost(self.ccdyl_state, self.armEEId, np.array([-10, 0., 0.]), 0.01, pin.LOCAL_WORLD_ALIGNED)], softContactModelsStack)
+            forceCostManager = ForceCostManager([ForceCost(self.ccdyl_state, self.armEEId, np.array([-40, 0., 0.]), 0.1, pin.LOCAL_WORLD_ALIGNED)], softContactModelsStack)
 
             # Create DAM with soft contact models, force costs + standard cost & constraints
             dam = DAMSoftContactDynamics3D_Go2(self.ccdyl_state, self.ccdyl_actuation, costModel, softContactModelsStack, constraintModelManager, forceCostManager)
@@ -398,7 +398,7 @@ class Go2MPC:
         solver.max_qp_iters = 1000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
-        solver.mu_constraint = 1e3
+        solver.mu_constraint = -1 #1e2
         solver.termination_tolerance = 1e-2
         solver.eps_abs = 1e-6
         solver.eps_rel = 1e-6
