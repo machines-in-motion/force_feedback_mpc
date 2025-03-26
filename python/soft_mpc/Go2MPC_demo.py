@@ -21,9 +21,10 @@ from soft_multicontact_api import DAMSoftContactDynamics3D_Go2, IAMSoftContactDy
 
 from Go2MPC_wrapper import Go2MPC, getForceSensor, setGroundFriction, plot_ocp_solution_with_cones
 from Go2Py.sim.mujoco import Go2Sim
+from utils import ExpMovingAvg, LPFButterOrder1, LPFButterOrder2, LPFButterOrder3
 
 # Instantiate the simulator
-robot=Go2Sim(with_arm=True)
+robot=Go2Sim(with_arm=True, dt=0.001)
 map = np.zeros((1200, 1200))
 map[:,649:679] = 400
 robot.updateHeightMap(map)
@@ -31,9 +32,9 @@ robot.updateHeightMap(map)
 # Instantiate the solver
 assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
 MU = 0.75
-mpc = Go2MPC(assets_path, HORIZON=5, friction_mu=MU, dt=0.01)
+mpc = Go2MPC(assets_path, HORIZON=5, friction_mu=MU, dt=0.005)
 mpc.initialize()
-mpc.max_iterations=1000
+mpc.max_iterations=100
 mpc.solve()
 m = list(mpc.solver.problem.runningModels) + [mpc.solver.problem.terminalModel]
 
@@ -47,9 +48,9 @@ robot.q0 = state['q']
 robot.reset()
 
 # Solve for as many iterations as needed for the first step
-mpc.max_iterations=50
+mpc.max_iterations=10
 
-Nsim = 50
+Nsim = 500
 # measured_forces = []
 measured_forces_dict = {}
 predicted_forces_dict = {}
@@ -76,10 +77,19 @@ for fname in mpc.ee_frame_names:
 # measured_forces_FR = []
 desired_forces = []
 joint_torques = []
-f_des_z = np.array([40.]*Nsim) 
+f_des_z = np.array([15.]*Nsim) 
 
 # Set ground friction in Mujoco
 setGroundFriction(robot.model, robot.data, MU)
+
+# robot.model.geom('floor').solref = [0.031, 1.]
+
+# CUTOFF_2 = 50 
+# butter2_Fx_ee = LPFButterOrder2(fc=CUTOFF_2, fs=1./1e-3)
+# butter2_Fy_ee = LPFButterOrder2(fc=CUTOFF_2, fs=1./1e-3)
+# butter2_Fz_ee = LPFButterOrder2(fc=CUTOFF_2, fs=1./1e-3)
+# force_est_butter2 = np.zeros(3)
+# force_est_butter2_ = [] 
 
 # Main simulation loop
 f_mea_all = np.zeros(3*5)
@@ -88,8 +98,6 @@ for i in range(Nsim):
     # set the force setpoint
     f_des_3d = np.array([-f_des_z[i], 0, 0])
     desired_forces.append(f_des_3d)
-    # for action_model in m:
-    #     action_model.differential.costs.costs['contact_force_track'].cost.residual.reference.linear[:] = f_des_3d
     # Get state from simulation
     state = robot.getJointStates()
     q = state['q']
@@ -102,12 +110,25 @@ for i in range(Nsim):
     # Solve OCP
     for fname in mpc.ee_frame_names:
         f_mea = -getForceSensor(robot.model, robot.data, frame_name_to_mujoco_sensor[fname]).squeeze().copy()
+        # if(fname =='Link6'):
+        #     print("filter")
+        #     # Filter force using butterworth LPF
+        #     force_est_butter2[0] = butter2_Fx_ee.filter(f_mea[0])
+        #     force_est_butter2[1] = butter2_Fy_ee.filter(f_mea[1])
+        #     force_est_butter2[2] = butter2_Fz_ee.filter(f_mea[2])
+        #     print(f_mea)
+        #     print(force_est_butter2)
+        #     force_est_butter2_.append(force_est_butter2)
+        #     # apply filter on feedback
+        #     f_mea = force_est_butter2.copy()
         measured_forces_dict[fname].append(f_mea)
         id_f = sol_to_force_id_map[frame_name_to_sol_map[fname]]
         f_mea_all[id_f:id_f+3] = f_mea
+
         # print("Extract name ", fname, " , Mujoco sensor = ", frame_name_to_mujoco_sensor[fname], " id = ", id_f, " sol name = ", frame_name_to_sol_map[fname] )
         # print("value = ", f_mea)
-    solution = mpc.updateAndSolve(t, quat, q, v, omega, dq, f_mea_all)
+    if(i%2 == 0):
+        solution = mpc.updateAndSolve(t, quat, q, v, omega, dq, f_mea_all)
     for fname in mpc.ee_frame_names:
         predicted_forces_dict[fname].append(solution[frame_name_to_sol_map[fname]])
     # Save the solution
@@ -117,9 +138,9 @@ for i in range(Nsim):
     kp = np.ones(18)*0.
     kv = np.ones(18)*0.
     # Step the physics
-    for j in range(int(mpc.dt//robot.dt)):
-        robot.setCommands(q, dq, kp, kv, tau)
-        robot.step()
+    # for j in range(int(mpc.dt//robot.dt)):
+    robot.setCommands(q, dq, kp, kv, tau)
+    robot.step()
 
 # measured_forces = np.array(measured_forces)
 desired_forces = np.array(desired_forces)
@@ -127,6 +148,15 @@ joint_torques = np.array(joint_torques)
 for fname in mpc.ee_frame_names:
     measured_forces_dict[fname] = np.array(measured_forces_dict[fname])
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
+# force_est_butter2_ = np.array(force_est_butter2_)
+
+# Save data 
+np.savez_compressed('/tmp/soft_go2',
+                    joint_torques=joint_torques,
+                    measured_forces=measured_forces_dict,
+                    desired_forces=desired_forces,
+                    predicted_forces=predicted_forces_dict)
+print("Saved MPC simulation data to /tmp/soft_go2")
 
 # Visualize the measured force against the desired
 import matplotlib.pyplot as plt
@@ -139,6 +169,10 @@ axs[1].plot(time_span, measured_forces_dict['Link6'][:,1],linewidth=4, color='r'
 axs[1].plot(time_span, desired_forces[:,1], linewidth=4, color='b', marker='o', label="Fy des")
 axs[2].plot(time_span, measured_forces_dict['Link6'][:,2],linewidth=4, color='r', marker='o',  label="Fz mea")
 axs[2].plot(time_span, desired_forces[:,2], linewidth=4, color='b', marker='o', label="Fz des")
+
+# axs[0].plot(time_span, force_est_butter2_[:,0],linewidth=4, color='g', marker='o',  label="Fx mea (filtered)")
+# axs[1].plot(time_span, force_est_butter2_[:,1],linewidth=4, color='g', marker='o',  label="Fy mea (filtered)")
+# axs[2].plot(time_span, force_est_butter2_[:,2],linewidth=4, color='g', marker='o',  label="Fz mea (filtered)")
 for i in range(3):
     axs[i].legend()
     axs[i].grid()

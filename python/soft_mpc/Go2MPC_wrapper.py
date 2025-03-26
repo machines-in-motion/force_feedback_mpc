@@ -250,17 +250,18 @@ class Go2MPC:
         #                             [np.inf]*6)
         # print(self.ccdyl_state.pinocchio.effortLimit[6:])
 
-    def initialize(self, q0=np.array([0.0, 0.0, 0.33, 0.0, 0.0, 0.0, 1.0] 
+    def initialize(self, q0=np.array([-0.01, 0.0, 0.32, 0.0, 0.0, 0.0, 1.0] 
                     +4*[0.0, 0.77832842, -1.56065452] + [0.0, 0.3, -0.3, 0.0, 0.0, 0.0]
                         ), f0=np.array([0., 0., 0.]*4 + [0.]*3), Kp=1000, Kv=100):
         q0[11+2]=0.0
         self.q0 = q0.copy()
         self.Kp = Kp
-        self.f0 = np.array([-0.083766 , 0.003337, -0.051429, 
-                            -0.063791 ,-0.002004, -0.03834,
-                            -0.05787  ,-0.051013,  0.103739 ,
-                            -0.053733 , 0.045646,  0.10088  ,
-                            -41.543034,  -7.066572,  -6.30816    ]) #f0.copy()
+        self.f0 = f0.copy()
+        # np.array([-0.083766 , 0.003337, -0.051429, 
+        #                     -0.063791 ,-0.002004, -0.03834,
+        #                     -0.05787  ,-0.051013,  0.103739 ,
+        #                     -0.053733 , 0.045646,  0.10088  ,
+        #                     -41.543034,  -7.066572,  -6.30816    ]) #f0.copy()
         self.Kv = Kv
         self.x0 =  np.concatenate([q0, np.zeros(self.rmodel.nv)])
         self.y0 =  np.concatenate([self.x0, f0])
@@ -280,13 +281,13 @@ class Go2MPC:
         self.xs = [self.y0]*(self.HORIZON + 1)
         self.createProblem()
         self.createSolver()
-        # self.us = [np.zeros(self.nu)]*self.HORIZON
-        self.us0 = np.array([-1.70292494e+00 , -2.53493996e-01,   4.00765770e+00 , 1.69757863e+00,
-                            -2.53702321e-01 ,  4.00563075e+00,  -2.07526085e+00 ,-2.77332371e-01,
-                            4.63287338e+00  , 2.06914143e+00,  -2.77541101e-01  ,4.63085705e+00,
-                            -6.68587279e-04 ,  5.55902596e+00,   6.17453082e+00 ,-3.00315497e-03,
-                            1.96635590e+00  , 3.09288758e-06]) 
-        self.us = [self.us0 for i in range(self.HORIZON)]
+        self.us = [np.zeros(self.nu)]*self.HORIZON
+        # self.us0 = np.array([-1.70292494e+00 , -2.53493996e-01,   4.00765770e+00 , 1.69757863e+00,
+        #                     -2.53702321e-01 ,  4.00563075e+00,  -2.07526085e+00 ,-2.77332371e-01,
+        #                     4.63287338e+00  , 2.06914143e+00,  -2.77541101e-01  ,4.63085705e+00,
+        #                     -6.68587279e-04 ,  5.55902596e+00,   6.17453082e+00 ,-3.00315497e-03,
+        #                     1.96635590e+00  , 3.09288758e-06]) 
+        # self.us = [self.us0 for i in range(self.HORIZON)]
         # self.solver.problem.quasiStatic([self.y0]*self.HORIZON) 
         # print("wepifuwefweifo\n\n\n", self.us[0])
 
@@ -322,10 +323,12 @@ class Go2MPC:
             # costModel.addCost("comTrack", com_track, 1e1)
 
             # # End Effecor Position Tracking Cost
-            # ef_residual = crocoddyl.ResidualModelFrameTranslation(self.ccdyl_state, self.armEEId, self.armEEPos0, self.nu) # Check this cost term            
-            # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
+            # ef_pos_ref = self.armEEPos0.copy()
+            # ef_pos_ref[0] += 0.01
+            # ef_residual = crocoddyl.ResidualModelFrameTranslation(self.ccdyl_state, self.armEEId, ef_pos_ref, self.nu) # Check this cost term            
+            # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([0., 1., 1.]))
             # ef_track = crocoddyl.CostModelResidual(self.ccdyl_state, ef_activation, ef_residual)
-            # costModel.addCost("ef_track", ef_track, 1e1)
+            # costModel.addCost("ef_track", ef_track, 1e3)
             # # feet tracking costs
             # for fname in self.ee_frame_names[:-1]:
             #     frame_idx = self.rmodel.getFrameId(fname)
@@ -335,19 +338,20 @@ class Go2MPC:
             #     costModel.addCost(fname+"_track", foot_track, 1e1)
 
             # Soft contact models 3d 
-            lf_contact = ViscoElasticContact3D(self.ccdyl_state, self.ccdyl_actuation, self.lfFootId, self.rdata.oMf[self.lfFootId].translation, self.Kp, self.Kv, self.pinRef)
-            rf_contact = ViscoElasticContact3D(self.ccdyl_state, self.ccdyl_actuation, self.rfFootId, self.rdata.oMf[self.rfFootId].translation, self.Kp, self.Kv, self.pinRef)
-            lh_contact = ViscoElasticContact3D(self.ccdyl_state, self.ccdyl_actuation, self.lhFootId, self.rdata.oMf[self.lhFootId].translation, self.Kp, self.Kv, self.pinRef)
-            rh_contact = ViscoElasticContact3D(self.ccdyl_state, self.ccdyl_actuation, self.rhFootId, self.rdata.oMf[self.rhFootId].translation, self.Kp, self.Kv, self.pinRef)
-            ef_contact = ViscoElasticContact3D(self.ccdyl_state, self.ccdyl_actuation, self.armEEId, self.rdata.oMf[self.armEEId].translation, self.Kp, self.Kv, self.pinRef)
+            oPc_ee = self.rdata.oMf[self.armEEId].translation.copy() #+ np.array([0.05, 0., 0.])
+            lf_contact = ViscoElasticContact3D(self.ccdyl_state, self.ccdyl_actuation, self.lfFootId, self.rdata.oMf[self.lfFootId].translation.copy(), self.Kp, self.Kv, self.pinRef)
+            rf_contact = ViscoElasticContact3D(self.ccdyl_state, self.ccdyl_actuation, self.rfFootId, self.rdata.oMf[self.rfFootId].translation.copy(), self.Kp, self.Kv, self.pinRef)
+            lh_contact = ViscoElasticContact3D(self.ccdyl_state, self.ccdyl_actuation, self.lhFootId, self.rdata.oMf[self.lhFootId].translation.copy(), self.Kp, self.Kv, self.pinRef)
+            rh_contact = ViscoElasticContact3D(self.ccdyl_state, self.ccdyl_actuation, self.rhFootId, self.rdata.oMf[self.rhFootId].translation.copy(), self.Kp, self.Kv, self.pinRef)
+            ef_contact = ViscoElasticContact3D(self.ccdyl_state, self.ccdyl_actuation, self.armEEId, oPc_ee, self.Kp, self.Kv, self.pinRef)
             # Stack models
             softContactModelsStack = ViscoElasticContact3d_Multiple(self.ccdyl_state, self.ccdyl_actuation, [lf_contact, rf_contact, lh_contact, rh_contact, ef_contact])
 
             # Constraints stack
-            constraintModelManager = crocoddyl.ConstraintModelManager(self.ccdyl_state, self.nu)
+            constraintModelManager = None #crocoddyl.ConstraintModelManager(self.ccdyl_state, self.nu)
 
             # Custom force cost in DAM
-            forceCostManager = ForceCostManager([ForceCost(self.ccdyl_state, self.armEEId, np.array([-40, 0., 0.]), 0.1, pin.LOCAL_WORLD_ALIGNED)], softContactModelsStack)
+            forceCostManager = ForceCostManager([ForceCost(self.ccdyl_state, self.armEEId, np.array([-15, 0., 0.]), 0.1, pin.LOCAL_WORLD_ALIGNED)], softContactModelsStack)
 
             # Create DAM with soft contact models, force costs + standard cost & constraints
             dam = DAMSoftContactDynamics3D_Go2(self.ccdyl_state, self.ccdyl_actuation, costModel, softContactModelsStack, constraintModelManager, forceCostManager)
@@ -398,7 +402,8 @@ class Go2MPC:
         solver.max_qp_iters = 1000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
-        solver.mu_constraint = -1 #1e2
+        solver.mu_constraint = -1
+        solver.lag_mul_inf_norm_coef = 10.
         solver.termination_tolerance = 1e-2
         solver.eps_abs = 1e-6
         solver.eps_rel = 1e-6
