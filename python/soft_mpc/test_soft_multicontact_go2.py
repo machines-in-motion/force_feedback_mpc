@@ -332,12 +332,30 @@ if(TESTING_API):
             dx[idx] = h
             x = state.integrate(x0, dx)
             # Compute finite difference
-            dx_h = state.diff(f(x), f0)
+            dx_h = state.diff(f0, f(x))
             Fx.append(dx_h / h)
             # Reset perturbation
             dx[idx] = 0.0
         return np.array(Fx).T
-    
+
+
+    def numdiff_u_iam(f, u0, state, h=1e-6):
+        '''
+        Numdiff in tangent space for Integrated Action models
+        '''
+        f0 = f(u0).copy()
+        u = u0.copy()
+        # Create perturbation vector
+        du = np.zeros_like(u0) 
+        Fu = []
+        for idu in range(len(du)):
+            # Apply perturbation to the iv-th component
+            u[idu] += h
+            # Compute finite difference
+            Fu.append(state.diff(f0, f(u)) / h)
+            # Reset perturbation
+            u[idu] -= h
+        return np.array(Fu).T
 
     # Compute differential action model derivatives
     dam = iam.differential
@@ -363,9 +381,6 @@ if(TESTING_API):
     dcost_dy = iad.Lx
     dcost_du = iad.Lu
     dynext_dx = iad.Fx 
-    # dynext_dq = iad.Fx[:,:rmodel.nv] 
-    # dynext_dv = iad.Fx[:,rmodel.nv:2*rmodel.nv] 
-    # dynext_df = iad.Fx[:,-len(f):] 
     dynext_du = iad.Fu 
 
     # Finite differences
@@ -403,7 +418,7 @@ if(TESTING_API):
     dfdot_du_ND = numdiff(lambda u_:get_fdot(dam, dad, q, v, f, u_), u)
 
     dynext_dx_ND = numdiff_x_iam(lambda y_:get_ynext_y(iam, iad, y_, u), y, iam.stateSoft)
-    dynext_du_ND = numdiff(lambda u_:get_ynext(iam, iad, q, v, f, u_), u)
+    dynext_du_ND = numdiff_u_iam(lambda u_:get_ynext_y(iam, iad, y, u_), u, iam.stateSoft)
     # dcost_dy_ND = numdiff(lambda y_:get_iam_cost(iam, iad, y_, u), y)
     # dcost_du_ND = numdiff(lambda u_:get_iam_cost(iam, iad, y, u_), u)
     
@@ -415,7 +430,6 @@ if(TESTING_API):
     assert(norm(dfdot_dv - dfdot_dv_ND) <= TOL)
     assert(norm(dfdot_df - dfdot_df_ND) <= TOL)
     assert(norm(dfdot_du - dfdot_du_ND) <= TOL)
-    assert(norm(dynext_dx - dynext_dx_ND) <= TOL)
     assert(norm(dynext_dx - dynext_dx_ND) <= TOL)
     assert(norm(dynext_du - dynext_du_ND) <= TOL)
     # assert(norm(dcost_dy - dcost_dy_ND) <= TOL)
