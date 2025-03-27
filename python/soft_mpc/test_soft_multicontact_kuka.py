@@ -12,6 +12,8 @@ from soft_multicontact_api import FrictionConeConstraint, ForceBoxConstraint, Fo
 from soft_multicontact_api import ForceCost, ForceCostManager
 from soft_multicontact_api import DAMSoftContactDynamics3D_Go2, IAMSoftContactDynamics3D_Go2
 
+SOLVING_OCP = False
+TESTING_API = True
 
 ## KUKA EXAMPLE FOR DEBUGGING
 from mim_robots.robot_loader import load_pinocchio_wrapper
@@ -101,23 +103,104 @@ for i in range(N):
 
     runningModels.append(iam)
 
+if(SOLVING_OCP):
+    import mim_solvers
+    # Create shooting problem
+    ocp = crocoddyl.ShootingProblem(y, runningModels, runningModels[-1])
+    # ocp.x0 = y
 
-import mim_solvers
-# Create shooting problem
-ocp = crocoddyl.ShootingProblem(y, runningModels, runningModels[-1])
-# ocp.x0 = y
+    solver = mim_solvers.SolverCSQP(ocp)
+    solver.max_qp_iters = 1000
+    max_iter = 500
+    solver.with_callbacks = True
+    solver.use_filter_line_search = False
+    solver.termination_tolerance = 1e-4
+    solver.eps_abs = 1e-6
+    solver.eps_rel = 1e-6
 
-solver = mim_solvers.SolverCSQP(ocp)
-solver.max_qp_iters = 1000
-max_iter = 500
-solver.with_callbacks = True
-solver.use_filter_line_search = False
-solver.termination_tolerance = 1e-4
-solver.eps_abs = 1e-6
-solver.eps_rel = 1e-6
+    xs = [y]*(solver.problem.T + 1)
+    # us = [u]*solver.problem.T
+    us = solver.problem.quasiStatic([y]*solver.problem.T) 
+    solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
+    solver.solve(xs, us, max_iter)   
 
-xs = [y]*(solver.problem.T + 1)
-# us = [u]*solver.problem.T
-us = solver.problem.quasiStatic([y]*solver.problem.T) 
-solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
-solver.solve(xs, us, max_iter)   
+
+if(TESTING_API):
+    from numpy.random import rand
+    from numpy.linalg import norm 
+    np.random.seed(10)
+    TOL = 1e-4
+    # Numerical difference function
+    def numdiff(f,x0,h=1e-6):
+        f0 = f(x0).copy()
+        x = x0.copy()
+        Fx = []
+        for ix in range(len(x)):
+            x[ix] += h
+            Fx.append((f(x)-f0)/h)
+            x[ix] = x0[ix]
+        return np.array(Fx).T
+
+
+    # Compute differential action model derivatives
+    dam = iam.differential
+    dad = dam.createData()
+    # dad = iad.differential
+    dam.calc(dad, x, f, u)
+    dam.calcDiff(dad, x, f, u)
+    dxdot_dx = dad.Fx
+    dxdot_df = dad.dABA_df
+    dxdot_du = dad.Fu
+    dfdot_dx = dad.dfdt_dx
+    dfdot_df = dad.dfdt_df
+    dfdot_du = dad.dfdt_du
+
+    # Compute integral action model derivatives
+    iam = runningModels[0]
+    iad = iam.createData()
+    iam.calc(iad, y, u)
+    iam.calcDiff(iad, y, u)
+    dcost_dy = iad.Lx
+    dcost_du = iad.Lu
+    dynext_dy = iad.Fx 
+    dynext_du = iad.Fu 
+
+    # Finite differences
+    def get_xdot(dam, dad, x, f, u):
+        dam.calc(dad, x, f, u)
+        return dad.xout 
+    
+    def get_fdot(dam, dad, x, f, u):
+        dam.calc(dad, x, f, u)
+        return dad.fout
+
+    def get_ynext(iam, iad, y, u):
+        iam.calc(iad, y, u)
+        return iad.xnext 
+    
+    def get_iam_cost(iam, iad, y, u):
+        iam.calc(iad, y, u)
+        return iad.cost
+
+    dxdot_dx_ND = numdiff(lambda x_:get_xdot(dam, dad, x_, f, u), x)
+    dxdot_df_ND = numdiff(lambda f_:get_xdot(dam, dad, x, f_, u), f)
+    dxdot_du_ND = numdiff(lambda u_:get_xdot(dam, dad, x, f, u_), u)
+    dfdot_dx_ND = numdiff(lambda x_:get_fdot(dam, dad, x_, f, u), x)
+    dfdot_df_ND = numdiff(lambda f_:get_fdot(dam, dad, x, f_, u), f)
+    dfdot_du_ND = numdiff(lambda u_:get_fdot(dam, dad, x, f, u_), u)
+
+    dynext_dy_ND = numdiff(lambda y_:get_ynext(iam, iad, y_, u), y)
+    dynext_du_ND = numdiff(lambda u_:get_ynext(iam, iad, y, u_), u)
+    # dcost_dy_ND = numdiff(lambda y_:get_iam_cost(iam, iad, y_, u), y)
+    # dcost_du_ND = numdiff(lambda u_:get_iam_cost(iam, iad, y, u_), u)
+
+    assert(norm(dxdot_dx - dxdot_dx_ND) <= TOL)
+    assert(norm(dxdot_df - dxdot_df_ND) <= TOL)
+    assert(norm(dxdot_du - dxdot_du_ND) <= TOL)
+    assert(norm(dfdot_dx - dfdot_dx_ND) <= TOL)
+    assert(norm(dfdot_df - dfdot_df_ND) <= TOL)
+    assert(norm(dfdot_du - dfdot_du_ND) <= TOL)
+    assert(norm(dynext_dy - dynext_dy_ND) <= TOL)
+    assert(norm(dynext_du - dynext_du_ND) <= TOL)
+    # assert(norm(dcost_dy - dcost_dy_ND) <= TOL)
+    # assert(norm(dcost_du - dcost_dy_ND) <= TOL)

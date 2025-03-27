@@ -92,7 +92,7 @@ class Go2MPC:
         #                             [np.inf]*6)
         # print(self.ccdyl_state.pinocchio.effortLimit[6:])
 
-    def initialize(self, q0=np.array([0.0, 0.0, 0.33, 0.0, 0.0, 0.0, 1.0] 
+    def initialize(self, q0=np.array([-0.01, 0.0, 0.32, 0.0, 0.0, 0.0, 1.0] 
                     +4*[0.0, 0.77832842, -1.56065452] + [0.0, 0.3, -0.3, 0.0, 0.0, 0.0]
                         )):
         q0[11+2]=0.0
@@ -158,7 +158,7 @@ class Go2MPC:
             # Force tracking term
             if t != self.HORIZON:
                 self.ef_des_force = pin.Force.Zero()
-                self.ef_des_force.linear[0] = -40
+                self.ef_des_force.linear[0] = -15
                 contact_force_residual = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, self.ef_des_force, 3, self.nu)
                 contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
                 contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
@@ -173,15 +173,15 @@ class Go2MPC:
                     constraintFriction = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualFriction, np.array([0.]), np.array([np.inf]))
                     constraintModelManager.addConstraint(name + "friction", constraintFriction)
 
-                    # enforce unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
-                    residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, frame_idx, pin.Force.Zero(), 3, self.nu)
-                    forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, 0.]), np.array([np.inf, np.inf, np.inf]))
-                    constraintModelManager.addConstraint(name + "Box", forceBoxConstraint)
+                #     # enforce unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
+                #     residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, frame_idx, pin.Force.Zero(), 3, self.nu)
+                #     forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, 0.]), np.array([np.inf, np.inf, np.inf]))
+                #     constraintModelManager.addConstraint(name + "Box", forceBoxConstraint)
 
-                # enforce unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
-                residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, pin.Force.Zero(), 3, self.nu)
-                forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, -np.inf]), np.array([0., np.inf, np.inf]))
-                constraintModelManager.addConstraint("efBox", forceBoxConstraint)
+                # # enforce unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
+                # residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, pin.Force.Zero(), 3, self.nu)
+                # forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, -np.inf]), np.array([0., np.inf, np.inf]))
+                # constraintModelManager.addConstraint("efBox", forceBoxConstraint)
 
                 # ctrlResidual2 = crocoddyl.ResidualModelControl(self.ccdyl_state, self.nu)
                 # torque_lb = -self.ctrlLim #self.pin_robot.model.effortLimit
@@ -199,10 +199,11 @@ class Go2MPC:
     def createSolver(self):
         solver = mim_solvers.SolverCSQP(self.ocp)
         solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
-        solver.max_qp_iters = 10000
+        solver.max_qp_iters = 1000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
-        solver.mu_constraint = 1e3
+        solver.mu_constraint = -1 #1e3
+        solver.lag_mul_inf_norm_coef = 10.
         solver.termination_tolerance = 1e-2
         solver.eps_abs = 1e-6
         solver.eps_rel = 1e-6
@@ -336,15 +337,15 @@ def setGroundFriction(model, data, mu):
     print("Set ground friction to : ", model.geom_friction[ground_geom_id])
 
 # Instantiate the simulator
-robot=Go2Sim(with_arm=True)
+robot=Go2Sim(with_arm=True, dt=0.001)
 map = np.zeros((1200, 1200))
 map[:,649:679] = 400
 robot.updateHeightMap(map)
 
 # Instantiate the solver
 assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
-MU = 0.5
-mpc = Go2MPC(assets_path, HORIZON=20, friction_mu=MU)
+MU = 0.75
+mpc = Go2MPC(assets_path, HORIZON=20, friction_mu=MU, dt=0.02)
 mpc.initialize()
 mpc.max_iterations=500
 mpc.solve()
@@ -360,7 +361,7 @@ robot.reset()
 # Solve for as many iterations as needed for the first step
 mpc.max_iterations=10
 
-Nsim = 50
+Nsim = 1000
 # measured_forces = []
 measured_forces_dict = {}
 predicted_forces_dict = {}
@@ -376,17 +377,21 @@ for fname in mpc.ee_frame_names:
 # measured_forces_FR = []
 desired_forces = []
 joint_torques = []
-f_des_z = np.array([40.]*Nsim) 
+f_des_z = np.array([15.]*Nsim) 
 # breakpoint()
-WITH_INTEGRAL = False
+WITH_INTEGRAL = True
 if(WITH_INTEGRAL):
-    Ki = 0.1
+    Ki = 0.01
     err_f3d = np.zeros(3)
 # Set ground friction in Mujoco
 setGroundFriction(robot.model, robot.data, MU)
 
 
 # test_force_sensor_orientation()
+ANTI_WINDUP = 100
+MPC_FREQ    = 100
+SIM_FREQ    = int(1./robot.dt)
+
 
 # Main simulation loop
 for i in range(Nsim):
@@ -406,7 +411,8 @@ for i in range(Nsim):
     q = np.hstack([q, np.zeros(2)])
     dq = np.hstack([dq, np.zeros(2)])
     # Solve OCP
-    solution = mpc.updateAndSolve(t, quat, q, v, omega, dq)
+    if(i%int(SIM_FREQ/MPC_FREQ)==0):
+        solution = mpc.updateAndSolve(t, quat, q, v, omega, dq)
     # Save the solution
     q = solution['q']
     dq = solution['dq']
@@ -421,15 +427,18 @@ for i in range(Nsim):
         predicted_forces_dict[fname].append(solution[fname+'_contact'])
     # compute the force integral error and map it to joint torques
     if(WITH_INTEGRAL):
-        err_f3d -= Ki * (f_des_3d - measured_forces_dict['Link6'][i])
-        pin.computeAllTerms(mpc.rmodel, mpc.rdata, mpc.xs[0][:mpc.rmodel.nq], mpc.xs[0][mpc.rmodel.nq:])
-        J = pin.getFrameJacobian(mpc.rmodel, mpc.rdata, mpc.armEEId, pin.LOCAL_WORLD_ALIGNED)
-        tau_int = J[:3,6:].T @ err_f3d 
-        print(tau_int)
-        tau += tau_int
-    for j in range(int(mpc.dt//robot.dt)):
-        robot.setCommands(q, dq, kp, kv, tau)
-        robot.step()
+        # if(i%ANTI_WINDUP==0):
+            # err_f3d = np.zeros(3)
+        if(i%int(SIM_FREQ/MPC_FREQ)==0):
+            err_f3d -= Ki * (f_des_3d - measured_forces_dict['Link6'][i])
+            pin.computeAllTerms(mpc.rmodel, mpc.rdata, mpc.xs[0][:mpc.rmodel.nq], mpc.xs[0][mpc.rmodel.nq:])
+            J = pin.getFrameJacobian(mpc.rmodel, mpc.rdata, mpc.armEEId, pin.LOCAL_WORLD_ALIGNED)
+            tau_int = J[:3,6:].T @ err_f3d 
+            # print(tau_int)
+            tau += tau_int
+    # for j in range(int(mpc.dt//robot.dt)):
+    robot.setCommands(q, dq, kp, kv, tau)
+    robot.step()
 
 # measured_forces = np.array(measured_forces)
 desired_forces = np.array(desired_forces)

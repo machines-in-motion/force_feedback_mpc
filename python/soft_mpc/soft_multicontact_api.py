@@ -53,10 +53,11 @@ class ViscoElasticContact3D:
         # Placement of contact frame in WORLD
         oRf = dad.pinocchio.oMf[self.frameId].rotation
         # Compute external wrench given LOCAL 3d force
-        self.fext = self.jMf.act(pin.Force(f, np.zeros(3)))
+        pinForce = pin.Force(f, np.zeros(3))
         # Rotate if f is not expressed in LOCAL
         if(self.pinRef != pin.LOCAL):
-            self.fext = self.jMf.act(pin.Force(oRf.T @ f, np.zeros(3)))
+            pinForce = pin.Force(oRf.T @ f, np.zeros(3))
+        self.fext = self.jMf.act(pinForce)
         return self.fext
 
     def calc_fdot(self, dad):
@@ -80,7 +81,7 @@ class ViscoElasticContact3D:
         # Compute derivatives of data.xout (ABA) w.r.t. f in LOCAL 
         lJ = pin.getFrameJacobian(self.pinocchio, dad.pinocchio, self.frameId, pin.LOCAL)  
         oRf = dad.pinocchio.oMf[self.frameId].rotation
-        self.dABA_df = dad.pinocchio.Minv @ lJ[:3].T @ self.pinocchio.frames[self.frameId].placement.rotation @ np.eye(3) 
+        self.dABA_df = dad.pinocchio.Minv @ lJ[:3].T  
         # Skew term added to RNEA derivatives when force is expressed in LWA
         if(self.pinRef != pin.LOCAL):
             # logger.debug("corrective term aba LWA : \n"+str(data.pinocchio.Minv @ lJ[:3].T @ pin.skew(oRf.T @ f) @ lJ[3:]))
