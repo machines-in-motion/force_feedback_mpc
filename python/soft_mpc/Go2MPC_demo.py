@@ -32,7 +32,7 @@ robot.updateHeightMap(map)
 # Instantiate the solver
 assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
 MU = 0.75
-mpc = Go2MPC(assets_path, HORIZON=10, friction_mu=MU, dt=0.02)
+mpc = Go2MPC(assets_path, HORIZON=20, friction_mu=MU, dt=0.02)
 mpc.initialize()
 mpc.max_iterations=100
 mpc.solve()
@@ -65,7 +65,7 @@ robot.reset()
 # Solve for as many iterations as needed for the first step
 mpc.max_iterations=10
 
-Nsim = 1000
+Nsim = 200
 # measured_forces = []
 measured_forces_dict = {}
 predicted_forces_dict = {}
@@ -106,7 +106,7 @@ setGroundFriction(robot.model, robot.data, MU)
 # force_est_butter2 = np.zeros(3)
 # force_est_butter2_ = [] 
 
-MPC_FREQ    = 100
+MPC_FREQ    = 500
 SIM_FREQ    = int(1./robot.dt)
 
 

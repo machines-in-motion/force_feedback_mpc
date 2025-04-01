@@ -311,7 +311,7 @@ class Go2MPC:
             costModel = crocoddyl.CostModelSum(self.ccdyl_state, self.nu)
 
             # Add state/control reg costs
-            state_reg_weight, control_reg_weight = 1e1, 1e-3
+            state_reg_weight, control_reg_weight = 1e-1, 1e-3
             freeFlyerQWeight = [0.]*3 + [500.]*3
             freeFlyerVWeight = [10.]*6
             legsQWeight = [0.01]*(self.rmodel.nv - 6)
@@ -320,39 +320,44 @@ class Go2MPC:
             stateResidual = crocoddyl.ResidualModelState(self.ccdyl_state, self.x0, self.nu)
             stateActivation = crocoddyl.ActivationModelWeightedQuad(stateWeights**2)
             stateReg = crocoddyl.CostModelResidual(self.ccdyl_state, stateActivation, stateResidual)
-            # if t != self.HORIZON:
-            costModel.addCost("stateReg", stateReg, state_reg_weight*0.1)
-            # else:
-            #     costModel.addCost("stateReg", stateReg, state_reg_weight*self.dt)
+            
+            # state_reg_weight *= 0.001
+            # control_reg_weight *= 0.001
+            if t != self.HORIZON:
+                costModel.addCost("stateReg", stateReg, state_reg_weight)
+            else:
+                costModel.addCost("stateReg", stateReg, state_reg_weight*self.dt)
                 
             if t != self.HORIZON:
                 ctrlResidual = crocoddyl.ResidualModelControl(self.ccdyl_state, self.nu)
                 ctrlReg = crocoddyl.CostModelResidual(self.ccdyl_state, ctrlResidual)
-                costModel.addCost("ctrlReg", ctrlReg, control_reg_weight*0.1)  
+                costModel.addCost("ctrlReg", ctrlReg, control_reg_weight)  
 
             # Body COM Tracking Cost
             # com_residual = crocoddyl.ResidualModelCoMPosition(self.ccdyl_state, comRef, self.nu)
-            # com_activation = crocoddyl.ActivationModelWeightedQuad(np.array([0., 0., 1.]))
+            # com_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
             # com_track = crocoddyl.CostModelResidual(self.ccdyl_state, com_activation, com_residual) #
-            # costModel.addCost("comTrack", com_track, 1e1)
+            # costModel.addCost("comTrack", com_track, 1e-4)
 
             # # End Effecor Position Tracking Cost
-            # ef_pos_ref = self.armEEPos0.copy()
-            # ef_pos_ref[0] += 0.01
+            # ef_pos_ref = self.armEEPos0.copy() + np.array([0.02, 0., 0.])
             # ef_residual = crocoddyl.ResidualModelFrameTranslation(self.ccdyl_state, self.armEEId, ef_pos_ref, self.nu) # Check this cost term            
-            # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([0., 1., 1.]))
+            # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
             # ef_track = crocoddyl.CostModelResidual(self.ccdyl_state, ef_activation, ef_residual)
-            # costModel.addCost("ef_track", ef_track, 1e3)
+            # # if t != self.HORIZON:
+            # costModel.addCost("ef_track", ef_track, 1e-2)
+            # else:
+                # costModel.addCost("ef_track", ef_track, 1e1*self.dt)
             # # feet tracking costs
             # for fname in self.ee_frame_names[:-1]:
             #     frame_idx = self.rmodel.getFrameId(fname)
             #     foot_residual = crocoddyl.ResidualModelFrameTranslation(self.ccdyl_state, frame_idx, self.footPosDict[fname], self.nu) # Check this cost term            
             #     foot_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
             #     foot_track = crocoddyl.CostModelResidual(self.ccdyl_state, foot_activation, foot_residual)
-            #     costModel.addCost(fname+"_track", foot_track, 1e1)
+            #     costModel.addCost(fname+"_track", foot_track, 1e-3)
 
             # Soft contact models 3d 
-            oPc_ee = self.rdata.oMf[self.armEEId].translation.copy() #+ np.array([0.05, 0., 0.])
+            oPc_ee = self.rdata.oMf[self.armEEId].translation.copy() 
             lf_contact = ViscoElasticContact3D(self.ccdyl_state, self.ccdyl_actuation, self.lfFootId, self.rdata.oMf[self.lfFootId].translation.copy(), self.Kp, self.Kv, self.pinRef)
             rf_contact = ViscoElasticContact3D(self.ccdyl_state, self.ccdyl_actuation, self.rfFootId, self.rdata.oMf[self.rfFootId].translation.copy(), self.Kp, self.Kv, self.pinRef)
             lh_contact = ViscoElasticContact3D(self.ccdyl_state, self.ccdyl_actuation, self.lhFootId, self.rdata.oMf[self.lhFootId].translation.copy(), self.Kp, self.Kv, self.pinRef)
@@ -365,7 +370,7 @@ class Go2MPC:
             constraintModelManager = None #crocoddyl.ConstraintModelManager(self.ccdyl_state, self.nu)
 
             # Custom force cost in DAM
-            f_weight = 0.01
+            f_weight = 0.001
             if t != self.HORIZON:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-15, 0., 0.]), f_weight, pin.LOCAL_WORLD_ALIGNED)
             else:
