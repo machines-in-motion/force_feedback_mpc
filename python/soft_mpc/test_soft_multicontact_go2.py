@@ -145,7 +145,7 @@ for t in range(N_ocp+1):
     if t == N_ocp:
         forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3*dt, pinRef) ], softContactModelsStack)
     else:
-        forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3, pinRef) ], softContactModelsStack)
+        forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3, pinRef, fdotReg=0.01) ], softContactModelsStack)
 
     # Create DAM with soft contact models, force costs + standard cost & constraints
     dam = DAMSoftContactDynamics3D_Go2(state, actuation, costModel, softContactModelsStack, constraintModelManager, forceCostManager)
@@ -318,9 +318,11 @@ if(TESTING_API):
             v[iv] = 0.0
         return np.array(Fq).T
 
-    def numdiff_x_iam(f, x0, state, h=1e-6):
+
+    def numdiff_x_iam_dyn(f, x0, state, h=1e-6):
         '''
         Numdiff in tangent space for Integrated Action models
+        partial of dynamics (xnext) w.r.t. state x
         '''
         f0 = f(x0).copy()
         x = x0.copy()
@@ -338,10 +340,10 @@ if(TESTING_API):
             dx[idx] = 0.0
         return np.array(Fx).T
 
-
-    def numdiff_u_iam(f, u0, state, h=1e-6):
+    def numdiff_u_iam_dyn(f, u0, state, h=1e-6):
         '''
         Numdiff in tangent space for Integrated Action models
+        partial of dynamics (xnext) w.r.t. control u
         '''
         f0 = f(u0).copy()
         u = u0.copy()
@@ -353,6 +355,46 @@ if(TESTING_API):
             u[idu] += h
             # Compute finite difference
             Fu.append(state.diff(f0, f(u)) / h)
+            # Reset perturbation
+            u[idu] -= h
+        return np.array(Fu).T
+
+
+    def numdiff_x_iam_cost(f, x0, state, h=1e-6):
+        '''
+        Numdiff in tangent space for Integrated Action models
+        partial of cost (scalar) w.r.t. control u
+        '''
+        f0 = f(x0)
+        x = x0.copy()
+        # Create perturbation vector
+        dx = np.zeros(state.ndx)
+        Fx = []
+        for idx in range(state.ndx):
+            # Apply perturbation to the iv-th component
+            dx[idx] = h
+            x = state.integrate(x0, dx)
+            # Compute finite difference
+            Fx.append( ( f(x) - f0 )/ h)
+            # Reset perturbation
+            dx[idx] = 0.0
+        return np.array(Fx).T
+
+    def numdiff_u_iam_cost(f, x0, state, h=1e-6):
+        '''
+        Numdiff in tangent space for Integrated Action models
+        partial of cost (scalar) w.r.t. control u
+        '''
+        f0 = f(u0)
+        u = u0.copy()
+        # Create perturbation vector
+        du = np.zeros_like(u0) 
+        Fu = []
+        for idu in range(len(du)):
+            # Apply perturbation to the iv-th component
+            u[idu] += h
+            # Compute finite difference
+            Fu.append( ( f(u) - f0 )/ h)
             # Reset perturbation
             u[idu] -= h
         return np.array(Fu).T
@@ -374,7 +416,7 @@ if(TESTING_API):
     dfdot_du = dad.dfdt_du
 
     # Compute integral action model derivatives
-    iam = runningModels[0]
+    iam = runningModels[10]
     iad = iam.createData()
     iam.calc(iad, y, u)
     iam.calcDiff(iad, y, u)
@@ -403,8 +445,7 @@ if(TESTING_API):
         iam.calc(iad, y, u)
         return iad.xnext 
     
-    def get_iam_cost(iam, iad, q, v, f, u):
-        y = np.concatenate([q,v,f])
+    def get_iam_cost(iam, iad, y, u):
         iam.calc(iad, y, u)
         return iad.cost
 
@@ -417,10 +458,10 @@ if(TESTING_API):
     dfdot_df_ND = numdiff(lambda f_:get_fdot(dam, dad, q, v, f_, u), f)
     dfdot_du_ND = numdiff(lambda u_:get_fdot(dam, dad, q, v, f, u_), u)
 
-    dynext_dx_ND = numdiff_x_iam(lambda y_:get_ynext_y(iam, iad, y_, u), y, iam.stateSoft)
-    dynext_du_ND = numdiff_u_iam(lambda u_:get_ynext_y(iam, iad, y, u_), u, iam.stateSoft)
-    # dcost_dy_ND = numdiff(lambda y_:get_iam_cost(iam, iad, y_, u), y)
-    # dcost_du_ND = numdiff(lambda u_:get_iam_cost(iam, iad, y, u_), u)
+    dynext_dx_ND = numdiff_x_iam_dyn(lambda y_:get_ynext_y(iam, iad, y_, u), y, iam.stateSoft)
+    dynext_du_ND = numdiff_u_iam_dyn(lambda u_:get_ynext_y(iam, iad, y, u_), u, iam.stateSoft)
+    dcost_dy_ND = numdiff_x_iam_cost(lambda y_:get_iam_cost(iam, iad, y_, u), y, iam.stateSoft)
+    dcost_du_ND = numdiff_u_iam_cost(lambda u_:get_iam_cost(iam, iad, y, u_), u, iam.stateSoft)
     
     assert(norm(dxdot_dq - dxdot_dq_ND) <= TOL)
     assert(norm(dxdot_dv - dxdot_dv_ND) <= TOL)
@@ -432,5 +473,6 @@ if(TESTING_API):
     assert(norm(dfdot_du - dfdot_du_ND) <= TOL)
     assert(norm(dynext_dx - dynext_dx_ND) <= TOL)
     assert(norm(dynext_du - dynext_du_ND) <= TOL)
-    # assert(norm(dcost_dy - dcost_dy_ND) <= TOL)
-    # assert(norm(dcost_du - dcost_dy_ND) <= TOL)
+    assert(norm(dcost_dy - dcost_dy_ND) <= TOL)
+    assert(norm(dcost_du - dcost_du_ND) <= TOL)
+    print("\n---> ALL TESTS PASSED.\n")

@@ -32,13 +32,28 @@ robot.updateHeightMap(map)
 # Instantiate the solver
 assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
 MU = 0.75
-mpc = Go2MPC(assets_path, HORIZON=5, friction_mu=MU, dt=0.005)
+mpc = Go2MPC(assets_path, HORIZON=10, friction_mu=MU, dt=0.02)
 mpc.initialize()
 mpc.max_iterations=100
 mpc.solve()
 m = list(mpc.solver.problem.runningModels) + [mpc.solver.problem.terminalModel]
 
 # plot_ocp_solution_with_cones(mpc)
+# Extract OCP Solution 
+force_sol = []
+xs, us = mpc.solver.xs, mpc.solver.us
+for time_idx in range (mpc.HORIZON+1):
+    f = xs[time_idx][-3:]
+    force_sol    += [f]
+force_sol = np.array(force_sol)   
+time_span = np.linspace(0, mpc.HORIZON*mpc.dt, mpc.HORIZON+1)
+import matplotlib.pyplot as plt
+plt.plot(time_span, force_sol[:,0], label='x')
+plt.plot(time_span, [-15]*(mpc.HORIZON+1), 'k-.', label='ref x')
+plt.plot(time_span, force_sol[:,1], label='y')
+plt.plot(time_span, force_sol[:,2], label='z')
+plt.legend()
+plt.show()
 
 # Reset the robot
 state = mpc.getSolution(0)
@@ -50,7 +65,7 @@ robot.reset()
 # Solve for as many iterations as needed for the first step
 mpc.max_iterations=10
 
-Nsim = 500
+Nsim = 1000
 # measured_forces = []
 measured_forces_dict = {}
 predicted_forces_dict = {}
@@ -91,6 +106,10 @@ setGroundFriction(robot.model, robot.data, MU)
 # force_est_butter2 = np.zeros(3)
 # force_est_butter2_ = [] 
 
+MPC_FREQ    = 100
+SIM_FREQ    = int(1./robot.dt)
+
+
 # Main simulation loop
 f_mea_all = np.zeros(3*5)
 for i in range(Nsim):
@@ -107,16 +126,18 @@ for i in range(Nsim):
     omega = robot.data.qvel[3:6]
     q = np.hstack([q, np.zeros(2)])
     dq = np.hstack([dq, np.zeros(2)])
-    # Solve OCP
+    # Measure forces
     for fname in mpc.ee_frame_names:
         f_mea = -getForceSensor(robot.model, robot.data, frame_name_to_mujoco_sensor[fname]).squeeze().copy()
-        # if(fname =='Link6'):
+        # if(fname !='Link6'):
         #     print("filter")
         #     # Filter force using butterworth LPF
         #     force_est_butter2[0] = butter2_Fx_ee.filter(f_mea[0])
         #     force_est_butter2[1] = butter2_Fy_ee.filter(f_mea[1])
         #     force_est_butter2[2] = butter2_Fz_ee.filter(f_mea[2])
-        #     print(f_mea)
+            # print(fname, " : ", f_mea)
+            # if(MU * f_mea[2] - np.sqrt(f_mea[0]*f_mea[0] + f_mea[1]*f_mea[1]) > 0):
+            #     print(fname, " is slipping !")
         #     print(force_est_butter2)
         #     force_est_butter2_.append(force_est_butter2)
         #     # apply filter on feedback
@@ -127,8 +148,11 @@ for i in range(Nsim):
 
         # print("Extract name ", fname, " , Mujoco sensor = ", frame_name_to_mujoco_sensor[fname], " id = ", id_f, " sol name = ", frame_name_to_sol_map[fname] )
         # print("value = ", f_mea)
-    if(i%2 == 0):
+    # Solve OCP
+    if(i%int(SIM_FREQ/MPC_FREQ)==0):
         solution = mpc.updateAndSolve(t, quat, q, v, omega, dq, f_mea_all)
+        # if(mpc.solver.KKT > 1e-4):
+        #     fheor
     for fname in mpc.ee_frame_names:
         predicted_forces_dict[fname].append(solution[frame_name_to_sol_map[fname]])
     # Save the solution

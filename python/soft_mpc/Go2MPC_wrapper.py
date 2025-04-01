@@ -101,7 +101,7 @@ def plot_ocp_solution_with_cones(mpc):
     force_sol = []
     xs, us = solver.xs, solver.us
     x = []
-    for time_idx in range (N):
+    for time_idx in range (T):
         q, v = xs[time_idx][:nq], xs[time_idx][nq:nq+nv]
         f = xs[time_idx][nq+nv:]
         pin.framesForwardKinematics(rmodel, rdata, q)
@@ -115,7 +115,7 @@ def plot_ocp_solution_with_cones(mpc):
         jointVel_sol += [v]
         force_sol    += [f]
         x += [xs[time_idx]]
-        if time_idx < N-1:
+        if time_idx < T-1:
             jointAcc_sol +=  [solver.problem.runningDatas[time_idx].xnext[nq::]] 
             jointTorques_sol += [us[time_idx]]
 
@@ -124,16 +124,16 @@ def plot_ocp_solution_with_cones(mpc):
                         'jointTorques':jointTorques_sol}       
 
     # Extract contact forces by hand
-    sol['FL_FOOT_contact'] = [force_sol[i][0:3] for i in range(N)]     
-    sol['FR_FOOT_contact'] = [force_sol[i][3:6] for i in range(N)]     
-    sol['HL_FOOT_contact'] = [force_sol[i][6:9] for i in range(N)]     
-    sol['HR_FOOT_contact'] = [force_sol[i][9:12] for i in range(N)]     
-    sol['Link6'] = [force_sol[i][12:15] for i in range(N)]     
+    sol['FL_FOOT_contact'] = [force_sol[i][0:3] for i in range(T)]     
+    sol['FR_FOOT_contact'] = [force_sol[i][3:6] for i in range(T)]     
+    sol['HL_FOOT_contact'] = [force_sol[i][6:9] for i in range(T)]     
+    sol['HR_FOOT_contact'] = [force_sol[i][9:12] for i in range(T)]     
+    sol['Link6'] = [force_sol[i][12:15] for i in range(T)]     
 
     # Plotting 
     import matplotlib.pyplot as plt
     constrained_sol = sol
-    time_lin = np.linspace(0, T, solver.problem.T+1)
+    time_lin = np.linspace(0, T, T)
     fig, axs = plt.subplots(4, 3, constrained_layout=True)
     for i, frame_idx in enumerate(supportFeetIds):
         ct_frame_name = rmodel.frames[frame_idx].name + "_contact"
@@ -157,9 +157,19 @@ def plot_ocp_solution_with_cones(mpc):
     axs[3, 0].set_xlabel(r"$F_x$")
     axs[3, 1].set_xlabel(r"$F_y$")
     axs[3, 2].set_xlabel(r"$F_z$")
-    fig.suptitle('Force', fontsize=16)
+    fig.suptitle('Force feet', fontsize=16)
 
+    fig, axs = plt.subplots(1, 3, constrained_layout=True)
+    forces = np.array(constrained_sol['Link6'])
+    axs[0].plot(time_lin, forces[:, 0], label="Fx")
+    axs[1].plot(time_lin, forces[:, 1], label="Fy")
+    axs[2].plot(time_lin, forces[:, 2], label="Fz")
+    axs[0].legend()
+    fig.suptitle('Force EE', fontsize=16)
 
+    axs[0].set_xlabel(r"$F_x$")
+    axs[1].set_xlabel(r"$F_y$")
+    axs[2].set_xlabel(r"$F_z$")
     # comDes = np.array(comDes)
     # centroidal_sol = np.array(constrained_sol['centroidal'])
     # plt.figure()
@@ -310,11 +320,15 @@ class Go2MPC:
             stateResidual = crocoddyl.ResidualModelState(self.ccdyl_state, self.x0, self.nu)
             stateActivation = crocoddyl.ActivationModelWeightedQuad(stateWeights**2)
             stateReg = crocoddyl.CostModelResidual(self.ccdyl_state, stateActivation, stateResidual)
-            costModel.addCost("stateReg", stateReg, state_reg_weight)
+            # if t != self.HORIZON:
+            costModel.addCost("stateReg", stateReg, state_reg_weight*0.1)
+            # else:
+            #     costModel.addCost("stateReg", stateReg, state_reg_weight*self.dt)
+                
             if t != self.HORIZON:
                 ctrlResidual = crocoddyl.ResidualModelControl(self.ccdyl_state, self.nu)
                 ctrlReg = crocoddyl.CostModelResidual(self.ccdyl_state, ctrlResidual)
-                costModel.addCost("ctrlReg", ctrlReg, control_reg_weight)  
+                costModel.addCost("ctrlReg", ctrlReg, control_reg_weight*0.1)  
 
             # Body COM Tracking Cost
             # com_residual = crocoddyl.ResidualModelCoMPosition(self.ccdyl_state, comRef, self.nu)
@@ -351,7 +365,13 @@ class Go2MPC:
             constraintModelManager = None #crocoddyl.ConstraintModelManager(self.ccdyl_state, self.nu)
 
             # Custom force cost in DAM
-            forceCostManager = ForceCostManager([ForceCost(self.ccdyl_state, self.armEEId, np.array([-15, 0., 0.]), 0.1, pin.LOCAL_WORLD_ALIGNED)], softContactModelsStack)
+            f_weight = 0.01
+            if t != self.HORIZON:
+                forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-15, 0., 0.]), f_weight, pin.LOCAL_WORLD_ALIGNED)
+            else:
+                forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-15, 0., 0.]), f_weight*self.dt, pin.LOCAL_WORLD_ALIGNED)
+
+            forceCostManager = ForceCostManager([forceCostEE], softContactModelsStack)
 
             # Create DAM with soft contact models, force costs + standard cost & constraints
             dam = DAMSoftContactDynamics3D_Go2(self.ccdyl_state, self.ccdyl_actuation, costModel, softContactModelsStack, constraintModelManager, forceCostManager)
@@ -399,15 +419,16 @@ class Go2MPC:
         # solver.eps_abs = 1e-6
         # solver.eps_rel = 0.
 
-        solver.max_qp_iters = 1000
+        solver.max_qp_iters = 10000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
-        solver.mu_constraint = -1
-        solver.lag_mul_inf_norm_coef = 10.
-        solver.termination_tolerance = 1e-2
+        solver.mu_constraint = -1 #1e-4 #-3
+        # solver.mu_dynamic = 1e2 #-1
+        # solver.lag_mul_inf_norm_coef = 2.
+        solver.termination_tolerance = 1e-4
         solver.eps_abs = 1e-6
         solver.eps_rel = 1e-6
-
+        # solver.extra_iteration_for_last_kkt = True
         self.solver = solver
 
     def getSolution(self, k=None):

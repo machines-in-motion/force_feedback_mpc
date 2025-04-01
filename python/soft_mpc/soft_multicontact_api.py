@@ -40,11 +40,11 @@ class ViscoElasticContact3D:
         self.fout      = np.zeros(self.nc)
         self.fout_copy = np.zeros(self.nc)
         # Partial derivatives
-        self.dABA_df = np.zeros((self.state.nv, self.nc))
-        self.dfdt_dx   = np.zeros((self.nc, self.state.ndx))
-        self.dfdt_du   = np.zeros((self.nc, self.actuation.nu))
-        self.dfdt_df   = np.zeros((self.nc, self.nc))  
-        
+        self.dABA_df3d = np.zeros((self.state.nv, self.nc))    # derivative of ada (ddq) w.r.t. 3d force
+        self.dfdt_dx = np.zeros((self.nc, self.state.ndx))     # derivative of fdot (3D) w.r.t. state 
+        self.dfdt_du = np.zeros((self.nc, self.actuation.nu))  # derivative of fdot (3D) w.r.t. control
+        self.dfdt_df = np.zeros((self.nc, self.nc))            # derivative of fdot (3D) w.r.t. forces
+
     def calc(self, dad, f):
         '''
         Calculate the contact force spatial wrench 
@@ -81,17 +81,18 @@ class ViscoElasticContact3D:
         # Compute derivatives of data.xout (ABA) w.r.t. f in LOCAL 
         lJ = pin.getFrameJacobian(self.pinocchio, dad.pinocchio, self.frameId, pin.LOCAL)  
         oRf = dad.pinocchio.oMf[self.frameId].rotation
-        self.dABA_df = dad.pinocchio.Minv @ lJ[:3].T  
+        self.dABA_df3d = dad.pinocchio.Minv @ lJ[:3].T  
         # Skew term added to RNEA derivatives when force is expressed in LWA
         if(self.pinRef != pin.LOCAL):
             # logger.debug("corrective term aba LWA : \n"+str(data.pinocchio.Minv @ lJ[:3].T @ pin.skew(oRf.T @ f) @ lJ[3:]))
             dad.Fx[:,:self.state.nv] += dad.pinocchio.Minv @ lJ[:3].T @ pin.skew(oRf.T @ f) @ lJ[3:]
             # Rotate dABA/df
-            self.dABA_df = self.dABA_df @ oRf.T 
+            self.dABA_df3d = self.dABA_df3d @ oRf.T 
 
     def calcDiff(self, dad):  
         '''
         Compute partial derivatives of the soft contact force time derivative w.r.t. state and input
+        must be called after update_ABAderivatives
         '''
         oRf = dad.pinocchio.oMf[self.frameId].rotation
         # Derivatives of data.fout in LOCAL : important >> UPDATE FORWARD KINEMATICS with data.xout
@@ -102,7 +103,7 @@ class ViscoElasticContact3D:
         da_dx[:,:self.state.nv] = a_dq[:3] + a_da[:3] @ dad.Fx[:,:self.state.nv] # same as aba_dq here
         da_dx[:,self.state.nv:] = a_dv[:3] + a_da[:3] @ dad.Fx[:,self.state.nv:] # same as aba_dv here
         da_du = a_da[:3] @ dad.Fu
-        da_df = a_da[:3] @ dad.dABA_df
+        da_df = a_da[:3] @ dad.dABA_df # this dad attribute was computed in update update_ABAderivatives
         # Deriv of lambda dot
         self.dfdt_dx = -self.Kp*lv_dx[:3] - self.Kv*da_dx[:3]
         self.dfdt_du = -self.Kv*da_du
@@ -117,7 +118,7 @@ class ViscoElasticContact3D:
             self.dfdt_dx[:,self.state.nv:] = oRf @ self.ldfdt_dx_copy[:,self.state.nv:] 
             self.dfdt_du = oRf @ self.ldfdt_du_copy
             self.dfdt_df = oRf @ self.ldfdt_df_copy
-            
+
 
 # 3D Soft contact models stack
 class ViscoElasticContact3d_Multiple:
@@ -179,7 +180,7 @@ class ViscoElasticContact3d_Multiple:
         for ct in self.contacts:
             if(ct.active):
                 ct.update_ABAderivatives(dad, f[nc_i:nc_i+ct.nc])
-                dad.dABA_df[0:self.nv, nc_i:nc_i+ct.nc] = ct.dABA_df
+                dad.dABA_df[0:self.nv, nc_i:nc_i+ct.nc] = ct.dABA_df3d
             nc_i += ct.nc
     
     def calcDiff(self, dad):
@@ -336,7 +337,7 @@ class ForceCost:
         self.frameId       = frameId
         self.state         = state
         self.f_des         = f_des
-        self.f_weight      = np.diag([f_weight]*3)
+        self.f_weight      = np.diag([f_weight,0.,0.]) # np.diag([f_weight]*3) # 
         self.f_residual    = np.zeros(3)
         self.f_residual_x  = np.zeros((3,state.ndx))
         self.f_cost        = 0.
@@ -445,7 +446,6 @@ class ForceCostManager:
             nr_i   = 0
             # For each constraint active at this model
             for cost in self.contact_to_cost_map[ct.frameId]:
-                # Compute the constraint residual
                 self.cost += cost.calc(dad, f[nc_i:nc_i+ct.nc], pinRefDyn)
                 nr_i += cost.nr
             nc_i += ct.nc
@@ -467,7 +467,6 @@ class ForceCostManager:
             nr_i   = 0
             # For each constraint active at this model
             for cost in self.contact_to_cost_map[ct.frameId]:
-                # Compute the constraint residual
                 Lf_ct, Lff_ct = cost.calcDiff(dad, f[nc_i:nc_i+ct.nc], pinRefDyn)
                 self.Lf[nc_i:nc_i+cost.nc] = Lf_ct
                 self.Lff[nr_i:nr_i+cost.nr, nc_i:nc_i+cost.nc] = Lff_ct
