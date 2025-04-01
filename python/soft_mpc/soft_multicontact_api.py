@@ -647,9 +647,6 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             # add hard-coded cost
             if(self.active_contact and self.with_force_cost):
                 data.Lf, data.Lff = self.forceCosts.calcDiff(data, f)
-                # data.f_residual = f - self.f_des
-                # data.Lf         = self.f_weight * data.f_residual.T
-                # data.Lff        = self.f_weight * np.eye(self.nc_tot)
             # constraints
             if(self.constraints is not None):
                 self.constraints.calcDiff(data.constraints, x, u)
@@ -657,16 +654,10 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             # pass
             self.costs.calcDiff(data.costs, x)
             data.Lx = data.costs.Lx
-            data.Lu = data.costs.Lu
             data.Lxx = data.costs.Lxx
-            data.Lxu = data.costs.Lxu
-            data.Luu = data.costs.Luu
             # add hard-coded cost
             if(self.active_contact and self.with_force_cost):
                 data.Lf, data.Lff = self.forceCosts.calcDiff(data, f)
-                # data.f_residual = f - self.f_des
-                # data.Lf         = self.f_weight * data.f_residual.T
-                # data.Lff        = self.f_weight * np.eye(self.nc_tot)
             # constraints
             if(self.constraints is not None):
                 self.constraints.calcDiff(data.constraints, x)
@@ -795,10 +786,10 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
                 data.g[ng_dam: ng_dam+ng_f] = self.forceConstraints.calc(f)
         else:
             self.differential.calc(data.differential, x, f) 
-            a = data.differential.xout
-            fdot = data.differential.fout
             data.dx = np.zeros(data.dx.shape)
-            data.cost = self.dt*data.differential.cost
+            data.xnext = y
+            data.cost = data.differential.cost
+            data.g[:ng_dam] = data.differential.g[:ng_dam]
             # Compute cost residual
             if(self.withCostResidual):
                 data.r = data.differential.r
@@ -860,27 +851,19 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
             # Calc forward dyn derivatives
             self.differential.calcDiff(data.differential, x, f)
             data.Fx += self.stateSoft.Jintegrate(y, data.dx, crocoddyl.Jcomponent.first).tolist()[0]  # add identity to Fx = d(x+dx)/dx = d(q,v)/d(q,v)
-            data.Fx[ndx:, ndx:] -= np.eye(nf)
-            data.Lx[:ndx] = data.differential.Lx*self.dt
+            # data.Fx[ndx:, ndx:] -= np.eye(nf)
+            data.Lx[:ndx] = data.differential.Lx
+            data.Lxx[:ndx,:ndx] = data.differential.Lxx
             if(self.differential.nr_f > 0):
-                data.Lx[ndx:] = data.differential.Lf*self.dt
-                data.Lxx[ndx:,ndx:] = data.differential.Lff*self.dt
-            data.Lxx[:ndx,:ndx] = data.differential.Lxx*self.dt
-            data.Lxu[:ndx, :nu] = data.differential.Lxu*self.dt
-            data.Lu = data.differential.Lu*self.dt
-            data.Luu = data.differential.Luu*self.dt
+                data.Lx[ndx:] = data.differential.Lf
+                data.Lxx[ndx:,ndx:] = data.differential.Lff
             if(ng_dam>0): # otherwise dimension issue
                 data.Gx[0:ng_dam, 0:ndx] = data.differential.Gx
-                data.Gu[0:ng_dam, 0:nu] = data.differential.Gu
             if(self.with_force_constraint):
                 if(len(data.Gx.shape) == 1):
                     data.Gx[ndx:ndx+self.nc_f] = self.forceConstraints.calcDiff(f)
                 else:
                     data.Gx[ng_dam:ng_dam+ng_f, ndx:ndx+self.nc_f] = self.forceConstraints.calcDiff(f)
-                # if(ng_dam>0):
-                #     data.Gx[ng_dam:ng_dam+ng_f, ndx:ndx+self.nc_f] = self.forceConstraints.calcDiff(f)
-                # else:
-                #     data.Gx[ndx:ndx+self.nc_f] = self.forceConstraints.calcDiff(f)
 
 class IADSoftContactDynamics3D_Go2(crocoddyl.ActionDataAbstract): 
     '''

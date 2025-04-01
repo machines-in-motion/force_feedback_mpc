@@ -111,22 +111,25 @@ for t in range(N_ocp+1):
     com_residual = crocoddyl.ResidualModelCoMPosition(state, comDes[t], nu)
     com_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
     com_track = crocoddyl.CostModelResidual(state, com_activation, com_residual) # What does it correspond to exactly?
-    # costModel.addCost("comTrack", com_track, 1e5)
+    costModel.addCost("comTrack", com_track, 1e-2)
 
-    # # End Effecor Position Task
-    # ef_residual = crocoddyl.ResidualModelFrameTranslation(state, efId, efPos0, nu)
-    # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
-    # ef_track = crocoddyl.CostModelResidual(state, ef_activation, ef_residual)
-    # costModel.addCost("efTrack", ef_track, 1e5)
+    # End Effecor Position Task
+    ef_residual = crocoddyl.ResidualModelFrameTranslation(state, efId, efPos0, nu)
+    ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
+    ef_track = crocoddyl.CostModelResidual(state, ef_activation, ef_residual)
+    if t == N_ocp:
+        costModel.addCost("efTransTrack", ef_track, 1e-1*dt)
+    else:
+        costModel.addCost("efTransTrack", ef_track, 1e-1)
 
     # End Effecor Orientation Task
     ef_rotation_residual = crocoddyl.ResidualModelFrameRotation(state, efId, rdata.oMf[efId].rotation, nu)
     ef_rot_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
     ef_rot_track = crocoddyl.CostModelResidual(state, ef_rot_activation, ef_rotation_residual)
     if t == N_ocp:
-        costModel.addCost("efRotTrack", ef_rot_track, 1e-1*dt)
+        costModel.addCost("efRotTrack", ef_rot_track, 1e-2*dt)
     else:
-        costModel.addCost("efRotTrack", ef_rot_track, 1e-1)
+        costModel.addCost("efRotTrack", ef_rot_track, 1e-2)
 
     # Soft contact models 3d 
     lf_contact = ViscoElasticContact3D(state, actuation, lfFootId, rdata.oMf[lfFootId].translation, Kp, Kv, pinRef)
@@ -145,7 +148,8 @@ for t in range(N_ocp+1):
     if t == N_ocp:
         forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3*dt, pinRef) ], softContactModelsStack)
     else:
-        forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3, pinRef, fdotReg=0.01) ], softContactModelsStack)
+        # forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3, pinRef, fdotReg=0.01) ], softContactModelsStack)
+        forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3, pinRef) ], softContactModelsStack)
 
     # Create DAM with soft contact models, force costs + standard cost & constraints
     dam = DAMSoftContactDynamics3D_Go2(state, actuation, costModel, softContactModelsStack, constraintModelManager, forceCostManager)
@@ -424,6 +428,12 @@ if(TESTING_API):
     dcost_du = iad.Lu
     dynext_dx = iad.Fx 
     dynext_du = iad.Fu 
+    # Test terminal model
+    iad_t = iam.createData()
+    iam.calc(iad_t, y)
+    iam.calcDiff(iad_t, y)
+    dcost_dy_t = iad_t.Lx
+    dynext_dx_t = iad_t.Fx 
 
     # Finite differences
     def get_xdot(dam, dad, q, v, f, u):
@@ -441,12 +451,18 @@ if(TESTING_API):
         iam.calc(iad, y, u)
         return iad.xnext 
 
-    def get_ynext_y(iam, iad, y, u):
-        iam.calc(iad, y, u)
+    def get_ynext_y(iam, iad, y, u=None):
+        if(u is not None):
+            iam.calc(iad, y, u)
+        else:
+            iam.calc(iad, y)
         return iad.xnext 
     
-    def get_iam_cost(iam, iad, y, u):
-        iam.calc(iad, y, u)
+    def get_iam_cost(iam, iad, y, u=None):
+        if(u is not None):
+            iam.calc(iad, y, u)
+        else:
+            iam.calc(iad, y)
         return iad.cost
 
     dxdot_dq_ND = numdiff_q_manifold(lambda q_:get_xdot(dam, dad, q_, v, f, u), q, rmodel)
@@ -463,6 +479,9 @@ if(TESTING_API):
     dcost_dy_ND = numdiff_x_iam_cost(lambda y_:get_iam_cost(iam, iad, y_, u), y, iam.stateSoft)
     dcost_du_ND = numdiff_u_iam_cost(lambda u_:get_iam_cost(iam, iad, y, u_), u, iam.stateSoft)
     
+    dynext_dx_terminal_ND = numdiff_x_iam_dyn(lambda y_:get_ynext_y(iam, iad, y_), y, iam.stateSoft)
+    dcost_dy_terminal_ND = numdiff_x_iam_cost(lambda y_:get_iam_cost(iam, iad, y_), y, iam.stateSoft)
+
     assert(norm(dxdot_dq - dxdot_dq_ND) <= TOL)
     assert(norm(dxdot_dv - dxdot_dv_ND) <= TOL)
     assert(norm(dxdot_df - dxdot_df_ND) <= TOL)
@@ -474,5 +493,6 @@ if(TESTING_API):
     assert(norm(dynext_dx - dynext_dx_ND) <= TOL)
     assert(norm(dynext_du - dynext_du_ND) <= TOL)
     assert(norm(dcost_dy - dcost_dy_ND) <= TOL)
-    assert(norm(dcost_du - dcost_du_ND) <= TOL)
+    assert(norm(dynext_dx_t - dynext_dx_terminal_ND) <= TOL)
+    assert(norm(dcost_dy_t - dcost_dy_terminal_ND) <= TOL)
     print("\n---> ALL TESTS PASSED.\n")
