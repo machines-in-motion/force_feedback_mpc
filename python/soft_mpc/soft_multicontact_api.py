@@ -298,10 +298,10 @@ class ForceConstraintManager:
             output > stacked constraint residuals
         '''
         nc_i = 0
+        nr_i = 0
         # For each contact model
         for ct in self.contacts:
             # Current residual index
-            nr_i   = 0
             # For each constraint active at this model
             for cstr in self.contact_to_cstr_map[ct.frameId]:
                 # Compute the constraint residual
@@ -317,10 +317,10 @@ class ForceConstraintManager:
             output > stacked constraint Jacobians
         '''
         nc_i = 0
+        nr_i   = 0
         # For each contact model
         for ct in self.contacts:
             # Current residual index
-            nr_i   = 0
             # For each constraint active at this model
             for cstr in self.contact_to_cstr_map[ct.frameId]:
                 # Compute the constraint residual
@@ -780,12 +780,16 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
             data.dx[2*nv:] = fdot*self.dt
             data.xnext = self.stateSoft.integrate(y, data.dx)
             data.cost = self.dt*data.differential.cost
+            data.g[:ng_dam] = data.differential.g[:ng_dam]
             # Compute cost residual
             if(self.withCostResidual):
                 data.r = data.differential.r
+            # print("g before = ", data.g)
             # Compute force constraint residual
             if(self.with_force_constraint):
+                # print("f residual = ", self.forceConstraints.calc(f))
                 data.g[ng_dam: ng_dam+ng_f] = self.forceConstraints.calc(f)
+            # print("g after = ", data.g)
         else:
             self.differential.calc(data.differential, x, f) 
             data.dx = np.zeros(data.dx.shape)
@@ -843,11 +847,14 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
             if(ng_dam>0): # otherwise dimension issue 
                 data.Gx[0:ng_dam, 0:ndx] = data.differential.Gx
                 data.Gu[0:ng_dam, 0:nu] = data.differential.Gu
+            # print("Gx before = ", data.Gx)
             if(self.with_force_constraint):
+                # print("Gf = ", self.forceConstraints.calcDiff(f))
                 if(len(data.Gx.shape) == 1):
                     data.Gx[ndx:ndx+self.nc_f] = self.forceConstraints.calcDiff(f)
                 else:
                     data.Gx[ng_dam:ng_dam+ng_f, ndx:ndx+self.nc_f] = self.forceConstraints.calcDiff(f)
+            # print("Gx after = ", data.Gx)
         else:
             # Calc forward dyn derivatives
             self.differential.calcDiff(data.differential, x, f)

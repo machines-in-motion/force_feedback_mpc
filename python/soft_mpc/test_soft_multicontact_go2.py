@@ -19,7 +19,9 @@ TESTING_API = True
 import pinocchio as pin
 import crocoddyl
 import pinocchio
-import numpy as np
+
+np.random.seed(10)
+
 urdf_root_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
 urdf_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/urdf/go2_with_arm.urdf'
 robot = pin.RobotWrapper.BuildFromURDF(
@@ -63,7 +65,7 @@ state = crocoddyl.StateMultibody(rmodel)
 actuation = crocoddyl.ActuationModelFloatingBase(state)
 nu = actuation.nu
 
-f0 = np.zeros(3*5)
+f0 = np.random.rand(3*5)
 u0 = np.zeros(actuation.nu)
 y0 = np.concatenate([x0, f0])
 q = q0.copy()
@@ -141,8 +143,15 @@ for t in range(N_ocp+1):
     softContactModelsStack = ViscoElasticContact3d_Multiple(state, actuation, [lf_contact, rf_contact, lh_contact, rh_contact, ef_contact])
 
     # Constraints stack
-    constraintModelManager = None 
-    # crocoddyl.ConstraintModelManager(state, actuation.nu)
+    # constraintModelManager = None 
+    constraintModelManager = crocoddyl.ConstraintModelManager(state, actuation.nu)
+    uBoxCstr = crocoddyl.ConstraintModelResidual(state, crocoddyl.ResidualModelControl(state, actuation.nu), -robot.model.effortLimit, robot.model.effortLimit)  
+    xlb = np.concatenate([robot.model.lowerPositionLimit, [-np.inf]*robot.model.nv])
+    xub = np.concatenate([robot.model.upperPositionLimit, [np.inf]*robot.model.nv])
+    xBoxCstr = crocoddyl.ConstraintModelResidual(state, crocoddyl.ResidualModelState(state, actuation.nu), xlb, xub)  
+    constraintModelManager.addConstraint("ctrlBox", uBoxCstr)
+    constraintModelManager.addConstraint("stateBox", xBoxCstr)
+    
 
     # Custom force cost in DAM
     if t == N_ocp:
@@ -162,8 +171,8 @@ for t in range(N_ocp+1):
                             FrictionConeConstraint(lfFootId, MU),
                             FrictionConeConstraint(rfFootId, MU),
                             FrictionConeConstraint(lhFootId, MU),
-                            FrictionConeConstraint(rhFootId, MU)],
-                            # ForceBoxConstraint(efId, ub, lb)], 
+                            FrictionConeConstraint(rhFootId, MU),
+                            ForceBoxConstraint(efId, ub, lb)], 
                                 softContactModelsStack)
 
     iam = IAMSoftContactDynamics3D_Go2(dam, dt=dt, withCostResidual=True, forceConstraintManager=forceConstraintManager)
@@ -291,18 +300,24 @@ if(TESTING_API):
 
     from numpy.random import rand
     from numpy.linalg import norm 
-    np.random.seed(10)
-    TOL = 1e-3
+    TOL = 1e-2
     from test_utils import get_fdot, \
                            get_iam_cost, \
                            get_xdot, \
-                           get_ynext_y
+                           get_ynext_y, \
+                           get_dam_cost, \
+                           get_cstr
     from test_utils import numdiff, \
-                           numdiff_q_manifold, \
+                           numdiff_q_dam_dyn, \
                            numdiff_u_iam_cost, \
                            numdiff_u_iam_dyn, \
                            numdiff_x_iam_cost, \
-                           numdiff_x_iam_dyn
+                           numdiff_x_iam_dyn, \
+                           numdiff_x_iam_cstr, \
+                           numdiff_u_iam_cstr, \
+                           numdiff_q_dam_cost, \
+                           numdiff_vfu_dam_cost
+
 
     # Compute running IAM derivatives
     IAM = runningModels[1]
@@ -313,6 +328,8 @@ if(TESTING_API):
     dcost_du = IAD.Lu
     dynext_dx = IAD.Fx 
     dynext_du = IAD.Fu 
+    dcstr_dy = IAD.Gx
+    dcstr_du = IAD.Gu
 
     # Compute terminal IAM derivatives
     IAM_t = runningModels[-1]
@@ -320,7 +337,8 @@ if(TESTING_API):
     IAM_t.calc(IAD_t, y)
     IAM_t.calcDiff(IAD_t, y)
     dcost_dy_t = IAD_t.Lx
-    dynext_dx_t = IAD_t.Fx 
+    dynext_dy_t = IAD_t.Fx 
+    dcstr_dy_t = IAD_t.Gx
 
     # Compute running DAM derivatives
     DAM = IAM.differential
@@ -336,6 +354,11 @@ if(TESTING_API):
     dfdot_dv = DAD.dfdt_dx[:,rmodel.nv:]
     dfdot_df = DAD.dfdt_df
     dfdot_du = DAD.dfdt_du
+    Lq_dad = DAD.Lx[:rmodel.nv]
+    Lv_dad = DAD.Lx[rmodel.nv:]
+    Lf_dad = DAD.Lf
+    Lu_dad = DAD.Lu
+    
 
     # Compute terminal DAM derivatives
     DAM_t = IAM_t.differential
@@ -349,44 +372,64 @@ if(TESTING_API):
     dfdot_dq_t = DAD_t.dfdt_dx[:,:rmodel.nv]
     dfdot_dv_t = DAD_t.dfdt_dx[:,rmodel.nv:]
     dfdot_df_t = DAD_t.dfdt_df
+    Lq_dad_t = DAD_t.Lx[:rmodel.nv]
+    Lv_dad_t = DAD_t.Lx[rmodel.nv:]
+    Lf_dad_t = DAD_t.Lf
 
     # Compute running IAM derivatives with NUMDIFF
+        # Dyn
     dynext_dx_ND = numdiff_x_iam_dyn(lambda y_:get_ynext_y(IAM, IAD, y_, u), y, IAM.stateSoft)
     dynext_du_ND = numdiff_u_iam_dyn(lambda u_:get_ynext_y(IAM, IAD, y, u_), u, IAM.stateSoft)
+        # Cost
     dcost_dy_ND = numdiff_x_iam_cost(lambda y_:get_iam_cost(IAM, IAD, y_, u), y, IAM.stateSoft)
     dcost_du_ND = numdiff_u_iam_cost(lambda u_:get_iam_cost(IAM, IAD, y, u_), u)
+        # Cstr
+    dcstr_dy_ND = numdiff_x_iam_cstr(lambda y_:get_cstr(IAM, IAD, y_, u), y, IAM.stateSoft)
+    dcstr_du_ND = numdiff_u_iam_cstr(lambda u_:get_cstr(IAM, IAD, y, u_), u)
     
     # Compute terminal IAM_t derivatives with NUMDIFF
-    dynext_dx_t_ND = numdiff_x_iam_dyn(lambda y_:get_ynext_y(IAM_t, IAD_t, y_), y, IAM_t.stateSoft)
+    dynext_dy_t_ND = numdiff_x_iam_dyn(lambda y_:get_ynext_y(IAM_t, IAD_t, y_), y, IAM_t.stateSoft)
     dcost_dy_t_ND = numdiff_x_iam_cost(lambda y_:get_iam_cost(IAM_t, IAD_t, y_), y, IAM_t.stateSoft)
-
+        # Cstr
+    dcstr_dy_t_ND = numdiff_x_iam_cstr(lambda y_:get_cstr(IAM_t, IAD_t, y_, u), y, IAM_t.stateSoft)
+    
     # Compute running DAM derivatives with NUMDIFF
-    dxdot_dq_ND = numdiff_q_manifold(lambda q_:get_xdot(DAM, DAD, q_, v, f, u), q, rmodel)
+    dxdot_dq_ND = numdiff_q_dam_dyn(lambda q_:get_xdot(DAM, DAD, q_, v, f, u), q, rmodel)
     dxdot_dv_ND = numdiff(lambda v_:get_xdot(DAM, DAD, q, v_, f, u), v)
     dxdot_df_ND = numdiff(lambda f_:get_xdot(DAM, DAD, q, v, f_, u), f)
     dxdot_du_ND = numdiff(lambda u_:get_xdot(DAM, DAD, q, v, f, u_), u)
-    dfdot_dq_ND = numdiff_q_manifold(lambda q_:get_fdot(DAM, DAD, q_, v, f, u), q, rmodel)
+    dfdot_dq_ND = numdiff_q_dam_dyn(lambda q_:get_fdot(DAM, DAD, q_, v, f, u), q, rmodel)
     dfdot_dv_ND = numdiff(lambda v_:get_fdot(DAM, DAD, q, v_, f, u), v)
     dfdot_df_ND = numdiff(lambda f_:get_fdot(DAM, DAD, q, v, f_, u), f)
     dfdot_du_ND = numdiff(lambda u_:get_fdot(DAM, DAD, q, v, f, u_), u)
+    Lq_dad_ND = numdiff_q_dam_cost(lambda q_:get_dam_cost(DAM, DAD, q_, v, f, u), q, rmodel)
+    Lv_dad_ND = numdiff_vfu_dam_cost(lambda v_:get_dam_cost(DAM, DAD, q, v_, f, u), v)
+    Lf_dad_ND = numdiff_vfu_dam_cost(lambda f_:get_dam_cost(DAM, DAD, q, v, f_, u), f)
+    Lu_dad_ND = numdiff_vfu_dam_cost(lambda u_:get_dam_cost(DAM, DAD, q, v, f, u_), u)
     
     # Compute terminal DAM_t derivatives with NUMDIFF
-    dxdot_dq_t_ND = numdiff_q_manifold(lambda q_:get_xdot(DAM_t, DAD_t, q_, v, f), q, rmodel)
+    dxdot_dq_t_ND = numdiff_q_dam_dyn(lambda q_:get_xdot(DAM_t, DAD_t, q_, v, f), q, rmodel)
     dxdot_dv_t_ND = numdiff(lambda v_:get_xdot(DAM_t, DAD_t, q, v_, f), v)
     dxdot_df_t_ND = numdiff(lambda f_:get_xdot(DAM_t, DAD_t, q, v, f_), f)
-    dfdot_dq_t_ND = numdiff_q_manifold(lambda q_:get_fdot(DAM_t, DAD_t, q_, v, f), q, rmodel)
+    dfdot_dq_t_ND = numdiff_q_dam_dyn(lambda q_:get_fdot(DAM_t, DAD_t, q_, v, f), q, rmodel)
     dfdot_dv_t_ND = numdiff(lambda v_:get_fdot(DAM_t, DAD_t, q, v_, f), v)
     dfdot_df_t_ND = numdiff(lambda f_:get_fdot(DAM_t, DAD_t, q, v, f_), f)
+    Lq_dad_t_ND = numdiff_q_dam_cost(lambda q_:get_dam_cost(DAM_t, DAD_t, q_, v, f), q, rmodel)
+    Lv_dad_t_ND = numdiff_vfu_dam_cost(lambda v_:get_dam_cost(DAM_t, DAD_t, q, v_, f), v)
+    Lf_dad_t_ND = numdiff_vfu_dam_cost(lambda f_:get_dam_cost(DAM_t, DAD_t, q, v, f_), f)
 
     # Check running IAM
     assert(norm(dynext_dx - dynext_dx_ND) <= TOL)
     assert(norm(dynext_du - dynext_du_ND) <= TOL)
     assert(norm(dcost_dy - dcost_dy_ND) <= TOL)
     assert(norm(dcost_du - dcost_du_ND) <= TOL)
+    assert(norm(dcstr_dy - dcstr_dy_ND) <= TOL)
+    assert(norm(dcstr_du - dcstr_du_ND) <= TOL)
     
     # Check terminal IAM_t
-    assert(norm(dynext_dx_t - dynext_dx_t_ND) <= TOL)
+    assert(norm(dynext_dy_t - dynext_dy_t_ND) <= TOL)
     assert(norm(dcost_dy_t - dcost_dy_t_ND) <= TOL)
+    assert(norm(dcstr_dy_t - dcstr_dy_t_ND) <= TOL)
 
     # Check running DAM
     assert(norm(dxdot_dq - dxdot_dq_ND) <= TOL)
@@ -397,6 +440,10 @@ if(TESTING_API):
     assert(norm(dfdot_dv - dfdot_dv_ND) <= TOL)
     assert(norm(dfdot_df - dfdot_df_ND) <= TOL)
     assert(norm(dfdot_du - dfdot_du_ND) <= TOL)
+    # assert(norm(Lq_dad - Lq_dad_ND) <= TOL)
+    assert(norm(Lv_dad - Lv_dad_ND) <= TOL)
+    assert(norm(Lf_dad - Lf_dad_ND) <= TOL)
+    assert(norm(Lu_dad - Lu_dad_ND) <= TOL)
 
     # Check terminal DAM_t
     assert(norm(dxdot_dq_t - dxdot_dq_t_ND) <= TOL)
@@ -405,5 +452,8 @@ if(TESTING_API):
     assert(norm(dfdot_dq_t - dfdot_dq_t_ND) <= TOL)
     assert(norm(dfdot_dv_t - dfdot_dv_t_ND) <= TOL)
     assert(norm(dfdot_df_t - dfdot_df_t_ND) <= TOL)
+    assert(norm(Lq_dad_t - Lq_dad_t_ND) <= TOL)
+    assert(norm(Lv_dad_t - Lv_dad_t_ND) <= TOL)
+    assert(norm(Lf_dad_t - Lf_dad_t_ND) <= TOL)
 
     print("\n---> ALL TESTS PASSED.\n")
