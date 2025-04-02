@@ -92,7 +92,7 @@ for t in range(N_ocp+1):
 
     # Add state/control reg costs
     state_reg_weight, control_reg_weight = 1e-1, 1e-3
-    freeFlyerQWeight = [0.]*3 + [500.]*3
+    freeFlyerQWeight = [0.]*3 + [50.]*3
     freeFlyerVWeight = [10.]*6
     legsQWeight = [0.01]*(rmodel.nv - 6)
     legsWWeights = [1.]*(rmodel.nv - 6)
@@ -440,7 +440,7 @@ if(TESTING_API):
     assert(norm(dfdot_dv - dfdot_dv_ND) <= TOL)
     assert(norm(dfdot_df - dfdot_df_ND) <= TOL)
     assert(norm(dfdot_du - dfdot_du_ND) <= TOL)
-    # assert(norm(Lq_dad - Lq_dad_ND) <= TOL)
+    assert(norm(Lq_dad - Lq_dad_ND) <= TOL)
     assert(norm(Lv_dad - Lv_dad_ND) <= TOL)
     assert(norm(Lf_dad - Lf_dad_ND) <= TOL)
     assert(norm(Lu_dad - Lu_dad_ND) <= TOL)

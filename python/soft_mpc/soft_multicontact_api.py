@@ -221,7 +221,7 @@ class FrictionConeConstraint:
             self.residual_df[:, 1] = -f[1] / np.sqrt(f[0]*f[0] + f[1]*f[1])
             self.residual_df[:, 2] = self.coef
         else:
-            self.residual_df = np.zeros((self.nr, self.nc))
+            self.residual_df = np.array([[-1, -1, self.coef]])
         return self.residual_df
 
 
