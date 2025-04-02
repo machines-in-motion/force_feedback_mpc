@@ -593,7 +593,10 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
                 
         else:
             # pass
+            data.xout = np.zeros(data.xout.shape)
+            data.fout = np.zeros(data.fout.shape)
             pin.computeAllTerms(self.pinocchio, data.pinocchio, q, v)
+            # import pdb; pdb.set_trace()
             self.costs.calc(data.costs, x) 
             data.cost = data.costs.cost
             # Add hard-coded cost
@@ -651,7 +654,6 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             if(self.constraints is not None):
                 self.constraints.calcDiff(data.constraints, x, u)
         else:
-            # pass
             self.costs.calcDiff(data.costs, x)
             data.Lx = data.costs.Lx
             data.Lxx = data.costs.Lxx
@@ -794,7 +796,6 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
             if(self.withCostResidual):
                 data.r = data.differential.r
             if(self.with_force_constraint):
-                # print( self.forceConstraints.calc(f))
                 data.g[ng_dam: ng_dam+ng_f] = self.forceConstraints.calc(f)
 
     def calcDiff(self, data, y, u=None):
@@ -851,7 +852,6 @@ class IAMSoftContactDynamics3D_Go2(crocoddyl.ActionModelAbstract): #IntegratedAc
             # Calc forward dyn derivatives
             self.differential.calcDiff(data.differential, x, f)
             data.Fx += self.stateSoft.Jintegrate(y, data.dx, crocoddyl.Jcomponent.first).tolist()[0]  # add identity to Fx = d(x+dx)/dx = d(q,v)/d(q,v)
-            # data.Fx[ndx:, ndx:] -= np.eye(nf)
             data.Lx[:ndx] = data.differential.Lx
             data.Lxx[:ndx,:ndx] = data.differential.Lxx
             if(self.differential.nr_f > 0):
