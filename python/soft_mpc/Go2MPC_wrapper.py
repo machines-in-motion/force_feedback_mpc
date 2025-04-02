@@ -182,7 +182,7 @@ def plot_ocp_solution_with_cones(mpc):
     plt.show()
 
 class Go2MPC:
-    def __init__(self, assets_path, HORIZON=250, friction_mu = 0.2, dt = 0.01):
+    def __init__(self, assets_path, HORIZON=250, friction_mu = 0.75, dt = 0.01):
         self.assets_path = assets_path
         self.HORIZON = HORIZON
         self.max_iterations = 500
@@ -265,6 +265,7 @@ class Go2MPC:
                         ), f0=np.array([0., 0., 0.]*4 + [0.]*3), Kp=1000, Kv=100):
         q0[11+2]=0.0
         self.q0 = q0.copy()
+        self.v0 = np.zeros(self.rmodel.nv)
         self.Kp = Kp
         self.f0 = f0.copy()
         # np.array([-0.083766 , 0.003337, -0.051429, 
@@ -273,7 +274,7 @@ class Go2MPC:
         #                     -0.053733 , 0.045646,  0.10088  ,
         #                     -41.543034,  -7.066572,  -6.30816    ]) #f0.copy()
         self.Kv = Kv
-        self.x0 =  np.concatenate([q0, np.zeros(self.rmodel.nv)])
+        self.x0 =  np.concatenate([q0, self.v0])
         self.y0 =  np.concatenate([self.x0, f0])
         pinocchio.forwardKinematics(self.rmodel, self.rdata, q0)
         pinocchio.updateFramePlacements(self.rmodel, self.rdata)
@@ -291,7 +292,8 @@ class Go2MPC:
         self.xs = [self.y0]*(self.HORIZON + 1)
         self.createProblem()
         self.createSolver()
-        self.us = [np.zeros(self.nu)]*self.HORIZON
+        self.u0 = np.zeros(self.nu)
+        self.us = [self.u0]*self.HORIZON
         # self.us0 = np.array([-1.70292494e+00 , -2.53493996e-01,   4.00765770e+00 , 1.69757863e+00,
         #                     -2.53702321e-01 ,  4.00563075e+00,  -2.07526085e+00 ,-2.77332371e-01,
         #                     4.63287338e+00  , 2.06914143e+00,  -2.77541101e-01  ,4.63085705e+00,
@@ -312,7 +314,7 @@ class Go2MPC:
 
             # Add state/control reg costs
             state_reg_weight, control_reg_weight = 1e-1, 1e-3
-            freeFlyerQWeight = [0.]*3 + [500.]*3
+            freeFlyerQWeight = [0.]*3 + [0.]*3
             freeFlyerVWeight = [10.]*6
             legsQWeight = [0.01]*(self.rmodel.nv - 6)
             legsWWeights = [1.]*(self.rmodel.nv - 6)
@@ -412,7 +414,178 @@ class Go2MPC:
             self.running_models += [iam]
 
         self.ocp = crocoddyl.ShootingProblem(self.y0, self.running_models[:-1], self.running_models[-1])
+
+
+    def test_derivatives(self):
+
+        from numpy.random import rand
+        from numpy.linalg import norm 
+        TOL = 1e-2
+        from test_utils import get_fdot, \
+                            get_iam_cost, \
+                            get_xdot, \
+                            get_ynext_y, \
+                            get_dam_cost, \
+                            get_cstr
+        from test_utils import numdiff, \
+                            numdiff_q_dam_dyn, \
+                            numdiff_u_iam_cost, \
+                            numdiff_u_iam_dyn, \
+                            numdiff_x_iam_cost, \
+                            numdiff_x_iam_dyn, \
+                            numdiff_x_iam_cstr, \
+                            numdiff_u_iam_cstr, \
+                            numdiff_q_dam_cost, \
+                            numdiff_vfu_dam_cost
+
+        y = self.y0
+        u = self.u0
+        x = self.x0
+        q = self.q0
+        v = self.v0
+        f = self.f0
+        rmodel = self.rmodel
+        # Compute running IAM derivatives
+        IAM = self.running_models[1]
+        IAD = IAM.createData()
+        IAM.calc(IAD, y, u)
+        IAM.calcDiff(IAD, y, u)
+        dcost_dy = IAD.Lx
+        dcost_du = IAD.Lu
+        dynext_dx = IAD.Fx 
+        dynext_du = IAD.Fu 
+        dcstr_dy = IAD.Gx
+        dcstr_du = IAD.Gu
+
+        # Compute terminal IAM derivatives
+        IAM_t = self.running_models[-1]
+        IAD_t = IAM_t.createData()
+        IAM_t.calc(IAD_t, y)
+        IAM_t.calcDiff(IAD_t, y)
+        dcost_dy_t = IAD_t.Lx
+        dynext_dy_t = IAD_t.Fx 
+        dcstr_dy_t = IAD_t.Gx
+
+        # Compute running DAM derivatives
+        DAM = IAM.differential
+        DAD = DAM.createData()
+        DAM.calc(DAD, x, f, u)
+        DAM.calcDiff(DAD, x, f, u)
+        dxdot_dx = DAD.Fx
+        dxdot_dq = DAD.Fx[:,:rmodel.nv]
+        dxdot_dv = DAD.Fx[:,rmodel.nv:]
+        dxdot_df = DAD.dABA_df
+        dxdot_du = DAD.Fu
+        dfdot_dq = DAD.dfdt_dx[:,:rmodel.nv]
+        dfdot_dv = DAD.dfdt_dx[:,rmodel.nv:]
+        dfdot_df = DAD.dfdt_df
+        dfdot_du = DAD.dfdt_du
+        Lq_dad = DAD.Lx[:rmodel.nv]
+        Lv_dad = DAD.Lx[rmodel.nv:]
+        Lf_dad = DAD.Lf
+        Lu_dad = DAD.Lu
         
+
+        # Compute terminal DAM derivatives
+        DAM_t = IAM_t.differential
+        DAD_t = DAM_t.createData()
+        DAM_t.calc(DAD_t, x, f)
+        DAM_t.calcDiff(DAD_t, x, f)
+        dxdot_dx_t = DAD_t.Fx
+        dxdot_dq_t = DAD_t.Fx[:,:rmodel.nv]
+        dxdot_dv_t = DAD_t.Fx[:,rmodel.nv:]
+        dxdot_df_t = DAD_t.dABA_df
+        dfdot_dq_t = DAD_t.dfdt_dx[:,:rmodel.nv]
+        dfdot_dv_t = DAD_t.dfdt_dx[:,rmodel.nv:]
+        dfdot_df_t = DAD_t.dfdt_df
+        Lq_dad_t = DAD_t.Lx[:rmodel.nv]
+        Lv_dad_t = DAD_t.Lx[rmodel.nv:]
+        Lf_dad_t = DAD_t.Lf
+
+        # Compute running IAM derivatives with NUMDIFF
+            # Dyn
+        dynext_dx_ND = numdiff_x_iam_dyn(lambda y_:get_ynext_y(IAM, IAD, y_, u), y, IAM.stateSoft)
+        dynext_du_ND = numdiff_u_iam_dyn(lambda u_:get_ynext_y(IAM, IAD, y, u_), u, IAM.stateSoft)
+            # Cost
+        dcost_dy_ND = numdiff_x_iam_cost(lambda y_:get_iam_cost(IAM, IAD, y_, u), y, IAM.stateSoft)
+        dcost_du_ND = numdiff_u_iam_cost(lambda u_:get_iam_cost(IAM, IAD, y, u_), u)
+            # Cstr
+        dcstr_dy_ND = numdiff_x_iam_cstr(lambda y_:get_cstr(IAM, IAD, y_, u), y, IAM.stateSoft)
+        dcstr_du_ND = numdiff_u_iam_cstr(lambda u_:get_cstr(IAM, IAD, y, u_), u)
+        
+        # Compute terminal IAM_t derivatives with NUMDIFF
+        dynext_dy_t_ND = numdiff_x_iam_dyn(lambda y_:get_ynext_y(IAM_t, IAD_t, y_), y, IAM_t.stateSoft)
+        dcost_dy_t_ND = numdiff_x_iam_cost(lambda y_:get_iam_cost(IAM_t, IAD_t, y_), y, IAM_t.stateSoft)
+            # Cstr
+        dcstr_dy_t_ND = numdiff_x_iam_cstr(lambda y_:get_cstr(IAM_t, IAD_t, y_, u), y, IAM_t.stateSoft)
+        
+        # Compute running DAM derivatives with NUMDIFF
+        dxdot_dq_ND = numdiff_q_dam_dyn(lambda q_:get_xdot(DAM, DAD, q_, v, f, u), q, rmodel)
+        dxdot_dv_ND = numdiff(lambda v_:get_xdot(DAM, DAD, q, v_, f, u), v)
+        dxdot_df_ND = numdiff(lambda f_:get_xdot(DAM, DAD, q, v, f_, u), f)
+        dxdot_du_ND = numdiff(lambda u_:get_xdot(DAM, DAD, q, v, f, u_), u)
+        dfdot_dq_ND = numdiff_q_dam_dyn(lambda q_:get_fdot(DAM, DAD, q_, v, f, u), q, rmodel)
+        dfdot_dv_ND = numdiff(lambda v_:get_fdot(DAM, DAD, q, v_, f, u), v)
+        dfdot_df_ND = numdiff(lambda f_:get_fdot(DAM, DAD, q, v, f_, u), f)
+        dfdot_du_ND = numdiff(lambda u_:get_fdot(DAM, DAD, q, v, f, u_), u)
+        Lq_dad_ND = numdiff_q_dam_cost(lambda q_:get_dam_cost(DAM, DAD, q_, v, f, u), q, rmodel)
+        Lv_dad_ND = numdiff_vfu_dam_cost(lambda v_:get_dam_cost(DAM, DAD, q, v_, f, u), v)
+        Lf_dad_ND = numdiff_vfu_dam_cost(lambda f_:get_dam_cost(DAM, DAD, q, v, f_, u), f)
+        Lu_dad_ND = numdiff_vfu_dam_cost(lambda u_:get_dam_cost(DAM, DAD, q, v, f, u_), u)
+        
+        # Compute terminal DAM_t derivatives with NUMDIFF
+        dxdot_dq_t_ND = numdiff_q_dam_dyn(lambda q_:get_xdot(DAM_t, DAD_t, q_, v, f), q, rmodel)
+        dxdot_dv_t_ND = numdiff(lambda v_:get_xdot(DAM_t, DAD_t, q, v_, f), v)
+        dxdot_df_t_ND = numdiff(lambda f_:get_xdot(DAM_t, DAD_t, q, v, f_), f)
+        dfdot_dq_t_ND = numdiff_q_dam_dyn(lambda q_:get_fdot(DAM_t, DAD_t, q_, v, f), q, rmodel)
+        dfdot_dv_t_ND = numdiff(lambda v_:get_fdot(DAM_t, DAD_t, q, v_, f), v)
+        dfdot_df_t_ND = numdiff(lambda f_:get_fdot(DAM_t, DAD_t, q, v, f_), f)
+        Lq_dad_t_ND = numdiff_q_dam_cost(lambda q_:get_dam_cost(DAM_t, DAD_t, q_, v, f), q, rmodel)
+        Lv_dad_t_ND = numdiff_vfu_dam_cost(lambda v_:get_dam_cost(DAM_t, DAD_t, q, v_, f), v)
+        Lf_dad_t_ND = numdiff_vfu_dam_cost(lambda f_:get_dam_cost(DAM_t, DAD_t, q, v, f_), f)
+
+        # Check running IAM
+        assert(norm(dynext_dx - dynext_dx_ND) <= TOL)
+        assert(norm(dynext_du - dynext_du_ND) <= TOL)
+        assert(norm(dcost_dy - dcost_dy_ND) <= TOL)
+        assert(norm(dcost_du - dcost_du_ND) <= TOL)
+        assert(norm(dcstr_dy - dcstr_dy_ND) <= TOL)
+        assert(norm(dcstr_du - dcstr_du_ND) <= TOL)
+        
+        # Check terminal IAM_t
+        assert(norm(dynext_dy_t - dynext_dy_t_ND) <= TOL)
+        assert(norm(dcost_dy_t - dcost_dy_t_ND) <= TOL)
+        assert(norm(dcstr_dy_t - dcstr_dy_t_ND) <= TOL)
+
+        # Check running DAM
+        assert(norm(dxdot_dq - dxdot_dq_ND) <= TOL)
+        assert(norm(dxdot_dv - dxdot_dv_ND) <= TOL)
+        assert(norm(dxdot_df - dxdot_df_ND) <= TOL)
+        assert(norm(dxdot_du - dxdot_du_ND) <= TOL)
+        assert(norm(dfdot_dq - dfdot_dq_ND) <= TOL)
+        assert(norm(dfdot_dv - dfdot_dv_ND) <= TOL)
+        assert(norm(dfdot_df - dfdot_df_ND) <= TOL)
+        assert(norm(dfdot_du - dfdot_du_ND) <= TOL)
+        assert(norm(Lq_dad - Lq_dad_ND) <= TOL)
+        assert(norm(Lv_dad - Lv_dad_ND) <= TOL)
+        assert(norm(Lf_dad - Lf_dad_ND) <= TOL)
+        assert(norm(Lu_dad - Lu_dad_ND) <= TOL)
+
+        # Check terminal DAM_t
+        assert(norm(dxdot_dq_t - dxdot_dq_t_ND) <= TOL)
+        assert(norm(dxdot_dv_t - dxdot_dv_t_ND) <= TOL)
+        assert(norm(dxdot_df_t - dxdot_df_t_ND) <= TOL)
+        assert(norm(dfdot_dq_t - dfdot_dq_t_ND) <= TOL)
+        assert(norm(dfdot_dv_t - dfdot_dv_t_ND) <= TOL)
+        assert(norm(dfdot_df_t - dfdot_df_t_ND) <= TOL)
+        assert(norm(Lq_dad_t - Lq_dad_t_ND) <= TOL)
+        assert(norm(Lv_dad_t - Lv_dad_t_ND) <= TOL)
+        assert(norm(Lf_dad_t - Lf_dad_t_ND) <= TOL)
+
+        print("\n---> ALL TESTS PASSED.\n")
+
+
+
     def createSolver(self):
         solver = mim_solvers.SolverCSQP(self.ocp)
         solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
@@ -427,8 +600,8 @@ class Go2MPC:
         solver.max_qp_iters = 10000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
-        solver.mu_constraint = -1 #1e-4 #-3
-        # solver.mu_dynamic = 1e2 #-1
+        solver.mu_constraint = 1e1 #-1 #1e-4 #-3
+        solver.mu_dynamic = 1e4 #-1
         # solver.lag_mul_inf_norm_coef = 2.
         solver.termination_tolerance = 1e-4
         solver.eps_abs = 1e-6

@@ -32,9 +32,12 @@ robot.updateHeightMap(map)
 # Instantiate the solver
 assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
 MU = 0.75
-mpc = Go2MPC(assets_path, HORIZON=20, friction_mu=MU, dt=0.02)
+mpc = Go2MPC(assets_path, HORIZON=50, friction_mu=MU, dt=0.01)
 mpc.initialize()
 mpc.max_iterations=100
+
+# mpc.test_derivatives()
+
 mpc.solve()
 m = list(mpc.solver.problem.runningModels) + [mpc.solver.problem.terminalModel]
 
@@ -106,7 +109,7 @@ setGroundFriction(robot.model, robot.data, MU)
 # force_est_butter2 = np.zeros(3)
 # force_est_butter2_ = [] 
 
-MPC_FREQ    = 500
+MPC_FREQ    = 100
 SIM_FREQ    = int(1./robot.dt)
 
 
@@ -159,8 +162,8 @@ for i in range(Nsim):
     q = solution['q']
     dq = solution['dq']
     tau = solution['tau'].squeeze()
-    kp = np.ones(18)*0.
-    kv = np.ones(18)*0.
+    kp = np.ones(18)*10.
+    kv = np.ones(18)*1
     # Step the physics
     # for j in range(int(mpc.dt//robot.dt)):
     robot.setCommands(q, dq, kp, kv, tau)
