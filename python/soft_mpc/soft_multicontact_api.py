@@ -73,7 +73,7 @@ class ViscoElasticContact3D:
             oa = pin.getFrameAcceleration(self.pinocchio, dad.pinocchio, self.frameId, pin.LOCAL_WORLD_ALIGNED).linear         
             ov = pin.getFrameVelocity(self.pinocchio, dad.pinocchio, self.frameId, pin.LOCAL_WORLD_ALIGNED).linear
             self.fout = -self.Kp * ov - self.Kv * oa
-    
+
     def update_ABAderivatives(self, dad, f):  
         '''
         Add the contribution of the soft contact force model to the ABA derivatives
@@ -118,7 +118,6 @@ class ViscoElasticContact3D:
             self.dfdt_dx[:,self.state.nv:] = oRf @ self.ldfdt_dx_copy[:,self.state.nv:] 
             self.dfdt_du = oRf @ self.ldfdt_du_copy
             self.dfdt_df = oRf @ self.ldfdt_df_copy
-
 
 # 3D Soft contact models stack
 class ViscoElasticContact3d_Multiple:
@@ -186,6 +185,7 @@ class ViscoElasticContact3d_Multiple:
     def calcDiff(self, dad):
         '''
         Compute partial derivatives of the soft contact force time derivative w.r.t. state and input
+        Populates the differential action data 
         '''
         nc_i = 0
         # Compute & stack partials of fdot
@@ -196,7 +196,6 @@ class ViscoElasticContact3d_Multiple:
                 dad.dfdt_du[nc_i:nc_i+ct.nc, :] = ct.dfdt_du
                 dad.dfdt_df[nc_i:nc_i+ct.nc, :] = ct.dfdt_df
             nc_i += ct.nc
-
 
 # 3D Friction cone constraint
 class FrictionConeConstraint:
@@ -459,6 +458,9 @@ class ForceCostManager:
             pinRefDyn : reference frame in which the dynamics is expressed
         output > stacked cost Jacobians
         '''
+        # Reset partials
+        self.Lf *= 0.
+        self.Lff *= 0.
         nc_i = 0
         # For each contact model
         for ct in self.contacts:
@@ -468,23 +470,56 @@ class ForceCostManager:
             # For each constraint active at this model
             for cost in self.contact_to_cost_map[ct.frameId]:
                 Lf_ct, Lff_ct = cost.calcDiff(dad, f[nc_i:nc_i+ct.nc], pinRefDyn)
-                self.Lf[nc_i:nc_i+cost.nc] = Lf_ct
-                self.Lff[nr_i:nr_i+cost.nr, nc_i:nc_i+cost.nc] = Lff_ct
+                # print("filling out block ", str(nc_i), " to ", str(nc_i+cost.nc))
+                self.Lf[nc_i:nc_i+cost.nc] += Lf_ct
+                self.Lff[nr_i:nr_i+cost.nr, nc_i:nc_i+cost.nc] += Lff_ct
+                # print("Lf = \n ", self.Lf)
                 nr_i += cost.nr
             nc_i += ct.nc
         # For each constraint, stack residual 
         return self.Lf, self.Lff
 
 
+# 3D force rate costs
+class ForceRateCostManager:
+    def __init__(self, state, actuation, contacts, fdot_weight):
+        self.state         = state
+        self.actuation     = actuation
+        self.contacts      = contacts
+        self.fdot_weight   = np.diag(fdot_weight) 
+        self.nr            = np.count_nonzero(self.fdot_weight)
+        assert(self.contacts.nc_tot == len(fdot_weight))
+
+    def calc(self, dad):
+        # Compute force residual and add force cost to total cost
+        return 0.5 * dad.fout.T @ self.fdot_weight @ dad.fout
+    
+    def calcDiff(self, dad):
+        # Compute force residual and add force cost to total cost
+        dad.Lf += dad.fout.T @ self.fdot_weight @ dad.dfdt_df
+        dad.Lff +=  dad.dfdt_df.T @ self.fdot_weight @ dad.dfdt_df
+        dad.Lx += dad.fout.T @ self.fdot_weight @ dad.dfdt_dx
+        dad.Lxx +=  dad.dfdt_dx.T @ self.fdot_weight @ dad.dfdt_dx
+        dad.Lu += dad.fout.T @ self.fdot_weight @ dad.dfdt_du
+        dad.Luu +=  dad.dfdt_du.T @ self.fdot_weight @ dad.dfdt_du
 
 # Custom Differential Action Model (DAM) for Go2+arm (5 soft 3D contacts with the environment)
 class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
-    def __init__(self, stateMultibody, actuationModel, costModelSum, softContactModelsStack=None, constraintModelManager=None, forceCostManager=None):
+    def __init__(self, stateMultibody, 
+                       actuationModel, 
+                       costModelSum, 
+                       softContactModelsStack=None, 
+                       constraintModelManager=None, 
+                       forceCostManager=None,
+                       forceRateCostManager=None):
         '''
             stateMultibody         : crocoddyl.stateMultibody
             actuationModel         : crocoddyl.actuationModelFloatingBase
             costModelSum           : crocoddyl.costModelSum
+            softContactModelsStack : softContactModelsStack stack of custom dynamics models with 3d visco-elastic force 
             constraintModelManager : crocoddyl.constraintModelManager
+            forceCostManager       : forceCostManager stack of custom quadratic costs on 3d visco-elastic force
+            forceRateCostManager   : forceRateCostManager stack of custom quadratic costs on 3d visco-elastic force rate of change
         '''
         # Determine constraint dimensions if any
         if(constraintModelManager is None):
@@ -521,7 +556,7 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
         self.costs       = costModelSum
         self.constraints = constraintModelManager
         self.pinocchio   = stateMultibody.pinocchio
-        # hard coded costs 
+        # hard coded costs : contact force tracking
         self.forceCosts = forceCostManager
         if(self.forceCosts is None):
             self.nr_f            = 0
@@ -529,11 +564,19 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
         else:
             self.nr_f            = self.forceCosts.nr
             self.with_force_cost = True
-        # print("force cost red dim = ", self.nr_f)
+        # hard coded costs : contact force rate regularization
+        self.forceRateCosts = forceRateCostManager
+        if(self.forceRateCosts is None):
+            self.nr_fdot              = 0
+            self.with_force_rate_cost = False
+        else:
+            self.nr_fdot              = self.forceRateCosts.nr
+            self.with_force_rate_cost = True
+        print("force cost rate dim = ", self.nr_fdot)
         # Init constraint bounds
         if(self.constraints is not None):
             self.init_cstr_bounds()
-    
+
     def init_cstr_bounds(self):
         '''
         Initialize the constraint bounds of the constraint model manager
@@ -587,6 +630,8 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             # Add hard-coded cost
             if(self.active_contact and self.with_force_cost):
                 data.cost += self.forceCosts.calc(data, f)
+            if(self.active_contact and self.with_force_rate_cost):
+                data.cost += self.forceRateCosts.calc(data)
             # constraints
             if(self.constraints is not None):
                 self.constraints.calc(data.constraints, x, u)
@@ -602,6 +647,8 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             # Add hard-coded cost
             if(self.active_contact and self.with_force_cost):
                 data.cost += self.forceCosts.calc(data, f)
+            if(self.active_contact and self.with_force_rate_cost):
+                data.cost += self.forceRateCosts.calc(data)
             # constraints
             if(self.constraints is not None):
                 self.constraints.calc(data.constraints, x)
@@ -650,6 +697,8 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             # add hard-coded cost
             if(self.active_contact and self.with_force_cost):
                 data.Lf, data.Lff = self.forceCosts.calcDiff(data, f)
+            if(self.active_contact and self.with_force_rate_cost):
+                self.forceRateCosts.calcDiff(data)
             # constraints
             if(self.constraints is not None):
                 self.constraints.calcDiff(data.constraints, x, u)
@@ -660,6 +709,8 @@ class DAMSoftContactDynamics3D_Go2(crocoddyl.DifferentialActionModelAbstract):
             # add hard-coded cost
             if(self.active_contact and self.with_force_cost):
                 data.Lf, data.Lff = self.forceCosts.calcDiff(data, f)
+            if(self.active_contact and self.with_force_rate_cost):
+                self.forceRateCosts.calcDiff(data)
             # constraints
             if(self.constraints is not None):
                 self.constraints.calcDiff(data.constraints, x)

@@ -140,7 +140,7 @@ class LPFButterOrder3:
 
 
 # CUTOFF = 4.1
-# CUTOFF2 = 50 #7
+# CUTOFF2 = 20 #7
 # CUTOFF3 = 20
 # FILTER0 = ExpMovingAvg(fc=CUTOFF, fs=1./DT)
 # FILTER1 = LPFButterOrder1(fc=CUTOFF, fs=1./DT)

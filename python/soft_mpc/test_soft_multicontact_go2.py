@@ -9,7 +9,7 @@ import pinocchio as pin
 
 from soft_multicontact_api import ViscoElasticContact3d_Multiple, ViscoElasticContact3D
 from soft_multicontact_api import FrictionConeConstraint, ForceBoxConstraint, ForceConstraintManager
-from soft_multicontact_api import ForceCost, ForceCostManager
+from soft_multicontact_api import ForceCost, ForceCostManager, ForceRateCostManager
 from soft_multicontact_api import DAMSoftContactDynamics3D_Go2, IAMSoftContactDynamics3D_Go2
 
 SOLVING_OCP = False
@@ -159,9 +159,19 @@ for t in range(N_ocp+1):
     else:
         # forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3, pinRef, fdotReg=0.01) ], softContactModelsStack)
         forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3, pinRef) ], softContactModelsStack)
+    
+    # Custom cost on the contact force rate 
+    fdot_weights = np.ones(f.shape)*1e-4
+    forceRateCostManager = ForceRateCostManager(state, actuation, softContactModelsStack, fdot_weights)
 
     # Create DAM with soft contact models, force costs + standard cost & constraints
-    dam = DAMSoftContactDynamics3D_Go2(state, actuation, costModel, softContactModelsStack, constraintModelManager, forceCostManager)
+    dam = DAMSoftContactDynamics3D_Go2(state, 
+                                       actuation, 
+                                       costModel, 
+                                       softContactModelsStack, 
+                                       constraintModelManager, 
+                                       forceCostManager,
+                                       forceRateCostManager)
 
     # Friction cone constraint models
     lb = np.array([0, 0, 0])

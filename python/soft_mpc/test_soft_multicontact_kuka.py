@@ -9,7 +9,7 @@ import pinocchio as pin
 
 from soft_multicontact_api import ViscoElasticContact3d_Multiple, ViscoElasticContact3D
 from soft_multicontact_api import FrictionConeConstraint, ForceBoxConstraint, ForceConstraintManager
-from soft_multicontact_api import ForceCost, ForceCostManager
+from soft_multicontact_api import ForceCost, ForceCostManager, ForceRateCostManager
 from soft_multicontact_api import DAMSoftContactDynamics3D_Go2, IAMSoftContactDynamics3D_Go2
 
 SOLVING_OCP = False
@@ -34,12 +34,13 @@ v = np.zeros(robot.model.nv)
 x = np.concatenate([q, v])
 u = np.random.rand(actuation.nu)
 MU = 0.7 # friction coeff
-CONTACT    = True
-CONSTRAINT = True
-FRICTION_C = False
-FORCE_C    = False   
-BOTH_C     = True
-FORCE_COST = True   
+CONTACT         = True
+CONSTRAINT      = True
+FRICTION_C      = False
+FORCE_C         = False   
+BOTH_C          = True
+FORCE_COST      = True   
+FORCE_RATE_COST = True
 if(CONTACT):
     f = np.random.rand(3)
 else:
@@ -84,10 +85,21 @@ for i in range(N):
         forceCostManager = ForceCostManager([ForceCost(state, frameId, np.array([0]*3), 0., pin.LOCAL_WORLD_ALIGNED)], softContactModelsStack)
     else:
         forceCostManager = None
+    
+    if(FORCE_RATE_COST):
+        fdot_weights = np.ones(f.shape)*1e-3
+        forceRateCostManager = ForceRateCostManager(state, actuation, softContactModelsStack, fdot_weights)
+    else:
+        forceRateCostManager = None
 
     # Create DAM with soft contact models, force costs + standard cost & constraints
-    DAM = DAMSoftContactDynamics3D_Go2(state, actuation, costs, softContactModelsStack, constraintModelManager, forceCostManager)
-    
+    DAM = DAMSoftContactDynamics3D_Go2(state, 
+                                       actuation, 
+                                       costs, 
+                                       softContactModelsStack=softContactModelsStack, 
+                                       constraintModelManager=constraintModelManager, 
+                                       forceCostManager=forceCostManager,
+                                       forceRateCostManager=forceRateCostManager)
     # Custom force constraints for IAM
     if(FORCE_C):
         forceConstraintManager = ForceConstraintManager([ForceBoxConstraint(frameId, np.array([-np.inf]*3), np.array([np.inf]*3))], softContactModelsStack)
