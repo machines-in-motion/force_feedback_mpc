@@ -29,11 +29,13 @@ map = np.zeros((1200, 1200))
 map[:,649:679] = 400
 robot.updateHeightMap(map)
 
+FREF = 10
+
 # Instantiate the solver
 assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
 MU = 0.75
 mpc = Go2MPC(assets_path, HORIZON=20, friction_mu=MU, dt=0.01)
-mpc.initialize()
+mpc.initialize(FREF=FREF)
 mpc.max_iterations=100
 
 # mpc.test_derivatives()
@@ -53,7 +55,7 @@ time_span = np.linspace(0, mpc.HORIZON*mpc.dt, mpc.HORIZON+1)
 import matplotlib.pyplot as plt
 plt.figure()
 plt.plot(time_span, force_sol[:,0], label='x')
-plt.plot(time_span, [-15]*(mpc.HORIZON+1), 'k-.', label='ref x')
+plt.plot(time_span, [-FREF]*(mpc.HORIZON+1), 'k-.', label='ref x')
 plt.plot(time_span, force_sol[:,1], label='y')
 plt.plot(time_span, force_sol[:,2], label='z')
 plt.title("End-effector forces")
@@ -68,7 +70,7 @@ robot.q0 = state['q']
 robot.reset()
 
 # Solve for as many iterations as needed for the first step
-mpc.max_iterations=10
+mpc.max_iterations=20
 
 Nsim = 500
 
@@ -97,12 +99,12 @@ for fname in mpc.ee_frame_names:
 # measured_forces_FR = []
 desired_forces = []
 joint_torques = []
-f_des_z = np.array([15.]*Nsim) 
+f_des_z = np.array([FREF]*Nsim) 
 
 # Set ground friction in Mujoco
 setGroundFriction(robot.model, robot.data, MU)
 
-robot.model.geom('floor').solref = [0.031, 1.]
+# robot.model.geom('floor').solref = [0.031, 1.]
 
 # Force filtering
 butter_dict = {}
@@ -111,7 +113,7 @@ filtered_forces_dict = {}
 for fname in mpc.ee_frame_names:
     filtered_forces_dict[fname]  = []
     if(fname == 'Link6'):
-        CUTOFF_2 = 25 
+        CUTOFF_2 = 100 
     else:
         CUTOFF_2 = 100
     butter_dict[fname] = {'x': LPFButterOrder2(fc=CUTOFF_2, fs=1./1e-3),

@@ -295,7 +295,7 @@ class Go2MPC:
 
     def initialize(self, q0=np.array([-0.01, 0.0, 0.32, 0.0, 0.0, 0.0, 1.0] 
                     +4*[0.0, 0.77832842, -1.56065452] + [0.0, 0.3, -0.3, 0.0, 0.0, 0.0]
-                        ), f0=np.array([0., 0., 0.]*4 + [0.]*3), Kp=1000, Kv=100):
+                        ), f0=np.array([0., 0., 0.]*4 + [0.]*3), Kp=1000, Kv=100, FREF=15):
         q0[11+2]=0.0
         self.q0 = q0.copy()
         self.v0 = np.zeros(self.rmodel.nv)
@@ -306,6 +306,7 @@ class Go2MPC:
         #                     -0.05787  ,-0.051013,  0.103739 ,
         #                     -0.053733 , 0.045646,  0.10088  ,
         #                     -41.543034,  -7.066572,  -6.30816    ]) #f0.copy()
+        self.Fx_ref_ee = FREF
         self.Kv = Kv
         self.x0 =  np.concatenate([q0, self.v0])
         pinocchio.forwardKinematics(self.rmodel, self.rdata, q0)
@@ -321,7 +322,7 @@ class Go2MPC:
         self.armEEPos0 = self.rdata.oMf[self.armEEId].translation
         self.armEEOri0 = self.rdata.oMf[self.armEEId].rotation
         self.oPc_ee = self.armEEPos0.copy()
-        # self.oPc_ee[0] += 0.02
+        self.oPc_ee[0] += 0.02
         # self.supportFeetIds = [self.lfFootId, self.rfFootId, self.lhFootId, self.rhFootId]
         # self.f0[-3:] = -np.diag([self.Kp]*3) @ (self.armEEPos0 - self.oPc_ee)  
         # print("\n\n f0 = ", self.f0[-3:], "\n\n")
@@ -341,6 +342,7 @@ class Go2MPC:
         # self.us = [self.us0 for i in range(self.HORIZON)]
         # self.solver.problem.quasiStatic([self.y0]*self.HORIZON) 
         # print("wepifuwefweifo\n\n\n", self.us[0])
+        
 
     def createProblem(self):
         #First compute the desired state of the robot
@@ -379,16 +381,16 @@ class Go2MPC:
             # com_track = crocoddyl.CostModelResidual(self.ccdyl_state, com_activation, com_residual) #
             # costModel.addCost("comTrack", com_track, 1e-4)
 
-            # # End Effecor Position Tracking Cost
+            # End Effecor Position Tracking Cost
             # ef_pos_ref = self.oPc_ee
             # ef_residual = crocoddyl.ResidualModelFrameTranslation(self.ccdyl_state, self.armEEId, ef_pos_ref, self.nu) # Check this cost term            
             # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
             # ef_track = crocoddyl.CostModelResidual(self.ccdyl_state, ef_activation, ef_residual)
             # # if t != self.HORIZON:
-            # costModel.addCost("ef_track", ef_track, 1e-2)
+            # costModel.addCost("ef_track", ef_track, 1)
             # else:
             #     costModel.addCost("ef_track", ef_track, 1e1*self.dt)
-            # # feet tracking costs
+            # feet tracking costs
             # for fname in self.ee_frame_names[:-1]:
             #     frame_idx = self.rmodel.getFrameId(fname)
             #     foot_residual = crocoddyl.ResidualModelFrameTranslation(self.ccdyl_state, frame_idx, self.footPosDict[fname], self.nu) # Check this cost term            
@@ -410,13 +412,13 @@ class Go2MPC:
             constraintModelManager = None #crocoddyl.ConstraintModelManager(self.ccdyl_state, self.nu)
 
             # Custom force cost in DAM
-            f_weight = 0.1
+            f_weight = np.array([1e-1, 1e-6, 1e-6])
             fdot_weights = np.array([1e-3]*12 + [1., 1., 1.])*1e-5
             if t != self.HORIZON:
-                forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-15, 0., 0.]), f_weight, pin.LOCAL_WORLD_ALIGNED)
+                forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight, pin.LOCAL_WORLD_ALIGNED)
                 forceRateCostManager = ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights)
             else:
-                forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-15, 0., 0.]), f_weight*self.dt, pin.LOCAL_WORLD_ALIGNED)
+                forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight*self.dt, pin.LOCAL_WORLD_ALIGNED)
                 forceRateCostManager = ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights*self.dt)
 
             forceCostManager = ForceCostManager([forceCostEE], softContactModelsStack)
@@ -637,7 +639,7 @@ class Go2MPC:
         solver = mim_solvers.SolverCSQP(self.ocp)
         solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 
-        solver.max_qp_iters = 10000
+        solver.max_qp_iters = 1000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
         solver.mu_constraint = 1e1 #-1 #1e-4 #-3

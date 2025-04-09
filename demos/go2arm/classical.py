@@ -379,7 +379,7 @@ desired_forces = []
 joint_torques = []
 f_des_z = np.array([15.]*Nsim) 
 # breakpoint()
-WITH_INTEGRAL = True
+WITH_INTEGRAL = False
 if(WITH_INTEGRAL):
     Ki = 0.01
     err_f3d = np.zeros(3)

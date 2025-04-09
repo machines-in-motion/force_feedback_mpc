@@ -336,7 +336,7 @@ class ForceCost:
         self.frameId       = frameId
         self.state         = state
         self.f_des         = f_des
-        self.f_weight      = np.diag([f_weight,0.,0.]) # np.diag([f_weight]*3) # 
+        self.f_weight      = np.diag(f_weight) # np.diag([f_weight]*3) # 
         self.f_residual    = np.zeros(3)
         self.f_residual_x  = np.zeros((3,state.ndx))
         self.f_cost        = 0.
