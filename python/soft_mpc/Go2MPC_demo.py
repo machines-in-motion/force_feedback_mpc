@@ -47,15 +47,25 @@ else:
     from force_feedback_mpc.core_mpc_utils import sim_utils
     env = BulletEnvWithGround(dt=DT_SIMU, server=p.GUI)
     robot = load_bullet_wrapper('go2')
-    q0 = np.array([-0.01, 0.0, 0.33, 0.0, 0.0, 0.0, 1.0] + 4*[0.0, 0.77832842, -1.56065452] + [0.0, 0.3, -0.3, 0.0, 0.0, 0.0])
+    q0 = np.array([-0.01, 0.0, 0.32, 0.0, 0.0, 0.0, 1.0] + 4*[0.0, 0.77832842, -1.56065452] + [0.0, 0.3, -0.3, 0.0, 0.0, 0.0])
     v0 = np.zeros(robot.pin_robot.model.nv)
     env.add_robot(robot) 
     robot.reset_state(q0, v0)
     robot.forward_robot(q0, v0)
+    sim_utils.set_lateral_friction(env.objects[0], MU)
+    
+    # sim_utils.set_contact_stiffness_and_damping(env.objects[0], 10000, 500)
     # contact plane
-    contact_placement = pin.SE3(pin.rpy.rpyToMatrix(0.,np.pi/2, 0.), np.array([0.4,0.,0.]))
-    contact_surface_bulletId = sim_utils.display_contact_surface(contact_placement, radius=2., bullet_endeff_ids=robot.bullet_endeff_ids)
-
+    # contact_placement = pin.SE3(pin.rpy.rpyToMatrix(0.,np.pi/2, 0.), np.array([0.4,0.,0.]))
+    # contact_surface_bulletId = sim_utils.display_contact_surface(contact_placement, radius=2., bullet_endeff_ids=robot.bullet_endeff_ids)
+    # # floor props
+    # p.changeDynamics(
+    #     env.objects[0],
+    #     0,
+    #     lateralFriction=MU,
+    #     spinningFriction=0.,
+    #     rollingFriction=0.,
+    # )
 
 
 # Instantiate the solver
@@ -103,8 +113,10 @@ if(USE_MUJOCO):
                                 'Link6': 'EF_force_site'}
     # physics
     setGroundFriction(robot.model, robot.data, MU)
-else:
-    sim_utils.set_lateral_friction(contact_surface_bulletId, 0.5)
+# else:
+#     sim_utils.set_lateral_friction(contact_surface_bulletId, MU)
+#     sim_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 10000, 500)
+
 
 frame_name_to_sol_map = {'FL_FOOT': 'f_lf', 
                         'FR_FOOT': 'f_rf', 
@@ -196,6 +208,8 @@ if(USE_MUJOCO):
         kp = np.ones(18)*KP #10.
         kv = np.ones(18)*KV #1
         # Step the physics
+        print(tau)
+
         robot.setCommands(q, dq, kp, kv, tau)
         robot.step()
 else:   
@@ -215,6 +229,7 @@ else:
         print("Contacts forces = \n", f_mea_bullet)
         # print(f_mea_bullet, f_mea_bullet.shape)
         for k,fname in enumerate(mpc.ee_frame_names):
+            # print(fname, robot.pinocchio_endeff_ids[k], robot.endeff_names[k], robot.bullet_endeff_ids[k])
             if(contact_status[robot.pinocchio_endeff_ids[k]]):
                 f_mea = f_mea_bullet[k,:3]
             else:
@@ -232,6 +247,9 @@ else:
             predicted_forces_dict[fname].append(solution[frame_name_to_sol_map[fname]])
         # Save the solution
         tau = solution['tau'].squeeze()
+        # tau = np.array([ 2.669558, -0.77472,   6.259826 ,-2.667158, -0.782974 , 6.212979 , 2.623451 , 0.632957 , 5.424336 ,-2.628259 , 0.659122  ,5.432545,  0.000359 ,\
+        #                 -1.215166, -0.674627 , 0.000072 ,-0.159409,  0.000011])
+        print(tau)
         # Step the physics
         robot.send_joint_command(tau)
         env.step() 

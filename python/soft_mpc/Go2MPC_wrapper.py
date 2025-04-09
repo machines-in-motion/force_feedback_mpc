@@ -222,16 +222,16 @@ class Go2MPC:
         self.dt = dt
         self.friction_mu = friction_mu 
         self.pinRef = pin.LOCAL_WORLD_ALIGNED
-        if(self.USE_MUJOCO):
-            print("Loading XML Go2")
-            self.assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
-            self.urdf_path = os.path.join(self.assets_path, 'urdf/go2_with_arm.urdf')
-            self.xml_path = os.path.join(self.assets_path, 'mujoco/go2_with_arm.xml')
-            self.pin_robot = pin.RobotWrapper.BuildFromURDF(self.urdf_path, self.assets_path, pin.JointModelFreeFlyer())
-        else:
-            from mim_robots.robot_loader import load_pinocchio_wrapper
-            print("Loading pinocchio wrapper Go2")
-            self.pin_robot = load_pinocchio_wrapper('go2')
+        # if(self.USE_MUJOCO):
+        print("Loading XML Go2")
+        self.assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
+        self.urdf_path = os.path.join(self.assets_path, 'urdf/go2_with_arm.urdf')
+        self.xml_path = os.path.join(self.assets_path, 'mujoco/go2_with_arm.xml')
+        self.pin_robot = pin.RobotWrapper.BuildFromURDF(self.urdf_path, self.assets_path, pin.JointModelFreeFlyer())
+        # else:
+            # from mim_robots.robot_loader import load_pinocchio_wrapper
+            # print("Loading pinocchio wrapper Go2")
+            # self.pin_robot = load_pinocchio_wrapper('go2')
         self.rmodel = self.pin_robot.model
         self.rdata = self.pin_robot.data
 
@@ -331,7 +331,7 @@ class Go2MPC:
         self.armEEPos0 = self.rdata.oMf[self.armEEId].translation
         self.armEEOri0 = self.rdata.oMf[self.armEEId].rotation
         self.oPc_ee = self.armEEPos0.copy()
-        self.oPc_ee[0] += 0.02
+        # self.oPc_ee[0] += 0.02
         # self.supportFeetIds = [self.lfFootId, self.rfFootId, self.lhFootId, self.rhFootId]
         # self.f0[-3:] = -np.diag([self.Kp]*3) @ (self.armEEPos0 - self.oPc_ee)  
         # print("\n\n f0 = ", self.f0[-3:], "\n\n")
@@ -355,19 +355,19 @@ class Go2MPC:
 
     def createProblem(self):
         #First compute the desired state of the robot
-        comRef = (self.rfFootPos0 + self.rhFootPos0 + self.lfFootPos0 + self.lhFootPos0) / 4
-        comRef[2] = pinocchio.centerOfMass(self.rmodel, self.rdata, self.q0)[2].item() 
-
+        # comRef = (self.rfFootPos0 + self.rhFootPos0 + self.lfFootPos0 + self.lhFootPos0) / 4
+        # comRef[2] = pinocchio.centerOfMass(self.rmodel, self.rdata, self.q0)[2].item() 
+        comRef = np.array([-0.01, 0.0, 0.32])
         # Now define the model
         for t in range(self.HORIZON+1):
             costModel = crocoddyl.CostModelSum(self.ccdyl_state, self.nu)
 
             # Add state/control reg costs
-            state_reg_weight, control_reg_weight = 1e-1, 1e-3
+            state_reg_weight, control_reg_weight = 1e-1, 1e-6
             freeFlyerQWeight = [0.]*3 + [0.]*3
-            freeFlyerVWeight = [10.]*6
+            freeFlyerVWeight = [100.]*6
             legsQWeight = [0.01]*(self.rmodel.nv - 6)
-            legsWWeights = [1.]*(self.rmodel.nv - 6)
+            legsWWeights = [1000.]*(self.rmodel.nv - 6)
             stateWeights = np.array(freeFlyerQWeight + legsQWeight + freeFlyerVWeight + legsWWeights)    
             stateResidual = crocoddyl.ResidualModelState(self.ccdyl_state, self.x0, self.nu)
 
@@ -384,28 +384,33 @@ class Go2MPC:
                 ctrlReg = crocoddyl.CostModelResidual(self.ccdyl_state, ctrlResidual)
                 costModel.addCost("ctrlReg", ctrlReg, control_reg_weight)  
 
-            # Body COM Tracking Cost
+            # # Body COM Tracking Cost
             # com_residual = crocoddyl.ResidualModelCoMPosition(self.ccdyl_state, comRef, self.nu)
             # com_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
             # com_track = crocoddyl.CostModelResidual(self.ccdyl_state, com_activation, com_residual) #
-            # costModel.addCost("comTrack", com_track, 1e-4)
+            # com_weight = 1e6
+            # if t != self.HORIZON:
+            #     costModel.addCost("comTrack", com_track, com_weight)
+            # else:
+            #     costModel.addCost("comTrack", com_track, com_weight*self.dt)
 
-            # End Effecor Position Tracking Cost
+            # # End Effecor Position Tracking Cost
             # ef_pos_ref = self.oPc_ee
             # ef_residual = crocoddyl.ResidualModelFrameTranslation(self.ccdyl_state, self.armEEId, ef_pos_ref, self.nu) # Check this cost term            
             # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
             # ef_track = crocoddyl.CostModelResidual(self.ccdyl_state, ef_activation, ef_residual)
-            # # if t != self.HORIZON:
-            # costModel.addCost("ef_track", ef_track, 1)
+            # ef_weight = 1e6
+            # if t != self.HORIZON:
+            #     costModel.addCost("ef_track", ef_track, ef_weight)
             # else:
-            #     costModel.addCost("ef_track", ef_track, 1e1*self.dt)
-            # feet tracking costs
+            #     costModel.addCost("ef_track", ef_track, ef_weight*self.dt)
+            # # feet tracking costs
             # for fname in self.ee_frame_names[:-1]:
             #     frame_idx = self.rmodel.getFrameId(fname)
             #     foot_residual = crocoddyl.ResidualModelFrameTranslation(self.ccdyl_state, frame_idx, self.footPosDict[fname], self.nu) # Check this cost term            
             #     foot_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
             #     foot_track = crocoddyl.CostModelResidual(self.ccdyl_state, foot_activation, foot_residual)
-            #     costModel.addCost(fname+"_track", foot_track, 1e-3)
+            #     costModel.addCost(fname+"_track", foot_track, 1e2)
 
             # Soft contact models 3d 
             # oPc_ee = self.rdata.oMf[self.armEEId].translation.copy() 
@@ -425,12 +430,12 @@ class Go2MPC:
             fdot_weights = np.array([1e-3]*12 + [1., 1., 1.])*1e-5
             if t != self.HORIZON:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight, pin.LOCAL_WORLD_ALIGNED)
-                forceRateCostManager = ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights)
+                forceRateCostManager = None # ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights)
             else:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight*self.dt, pin.LOCAL_WORLD_ALIGNED)
-                forceRateCostManager = ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights*self.dt)
+                forceRateCostManager = None #ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights*self.dt)
 
-            forceCostManager = ForceCostManager([forceCostEE], softContactModelsStack)
+            forceCostManager = None #ForceCostManager([forceCostEE], softContactModelsStack)
 
             # Create DAM with soft contact models, force costs + standard cost & constraints
             dam = DAMSoftContactDynamics3D_Go2(self.ccdyl_state, 
@@ -455,18 +460,19 @@ class Go2MPC:
             # ub_foot = np.array([np.inf, np.inf, np.inf])
             # lb_ee = np.array([-np.inf, -np.inf, -np.inf])
             # ub_ee = np.array([0., np.inf, np.inf])
-            forceConstraintManager = ForceConstraintManager([
-                                                            FrictionConeConstraint(self.lfFootId, self.friction_mu),
-                                                             FrictionConeConstraint(self.rfFootId, self.friction_mu),
-                                                             FrictionConeConstraint(self.lhFootId, self.friction_mu),
-                                                             FrictionConeConstraint(self.rhFootId, self.friction_mu),
-                                                            #  ForceBoxConstraint(self.lfFootId, lb_foot, ub_foot),
-                                                            #  ForceBoxConstraint(self.rfFootId, lb_foot, ub_foot),
-                                                            #  ForceBoxConstraint(self.lhFootId, lb_foot, ub_foot),
-                                                            #  ForceBoxConstraint(self.rhFootId, lb_foot, ub_foot),
-                                                            #  ForceBoxConstraint(self.armEEId, lb_ee, ub_ee),
-                                                            ], 
-                                                                softContactModelsStack)
+            forceConstraintManager = None
+            # ForceConstraintManager([
+            #                                                 FrictionConeConstraint(self.lfFootId, self.friction_mu),
+            #                                                  FrictionConeConstraint(self.rfFootId, self.friction_mu),
+            #                                                  FrictionConeConstraint(self.lhFootId, self.friction_mu),
+            #                                                  FrictionConeConstraint(self.rhFootId, self.friction_mu),
+            #                                                 #  ForceBoxConstraint(self.lfFootId, lb_foot, ub_foot),
+            #                                                 #  ForceBoxConstraint(self.rfFootId, lb_foot, ub_foot),
+            #                                                 #  ForceBoxConstraint(self.lhFootId, lb_foot, ub_foot),
+            #                                                 #  ForceBoxConstraint(self.rhFootId, lb_foot, ub_foot),
+            #                                                 #  ForceBoxConstraint(self.armEEId, lb_ee, ub_ee),
+            #                                                 ], 
+            #                                                     softContactModelsStack)
 
             iam = IAMSoftContactDynamics3D_Go2(dam, dt=self.dt, withCostResidual=True, forceConstraintManager=forceConstraintManager)
             self.running_models += [iam]
@@ -651,7 +657,7 @@ class Go2MPC:
         solver.max_qp_iters = 1000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
-        solver.mu_constraint = 1e1 #-1 #1e-4 #-3
+        solver.mu_constraint = 1e2 #-1 #1e-4 #-3
         solver.mu_dynamic = 1e4 #-1
         # solver.lag_mul_inf_norm_coef = 2.
         solver.termination_tolerance = 1e-2

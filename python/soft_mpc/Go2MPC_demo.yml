@@ -2,14 +2,14 @@
 # Simu
 USE_MUJOCO: False
 DT_SIMU: 0.001
-N_SIMU: 200
+N_SIMU: 1000
 
 # MPC
 MPC_FREQ: 100
 HORIZON: 20
-DT_OCP: 0.01 
-MAX_ITER_1: 2
-MAX_ITER_2: 2
+DT_OCP: 0.01
+MAX_ITER_1: 100
+MAX_ITER_2: 10
 
 # Task
 FREF: 10   # desired contact force at end-effector
