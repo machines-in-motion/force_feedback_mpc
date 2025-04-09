@@ -215,63 +215,72 @@ def plot_ocp_solution_with_cones(mpc):
     plt.show()
 
 class Go2MPC:
-    def __init__(self, assets_path, HORIZON=250, friction_mu = 0.75, dt = 0.01):
-        self.assets_path = assets_path
+    def __init__(self, HORIZON=250, friction_mu = 0.75, dt = 0.01, USE_MUJOCO=True):
+        self.USE_MUJOCO = USE_MUJOCO
         self.HORIZON = HORIZON
         self.max_iterations = 500
         self.dt = dt
-        self.urdf_path = os.path.join(assets_path, 'urdf/go2_with_arm.urdf')
-        self.xml_path = os.path.join(assets_path, 'mujoco/go2_with_arm.xml')
-        self.pin_robot = pin.RobotWrapper.BuildFromURDF(self.urdf_path, self.assets_path, pin.JointModelFreeFlyer())
-        self.pinRef = pin.LOCAL_WORLD_ALIGNED
         self.friction_mu = friction_mu 
+        self.pinRef = pin.LOCAL_WORLD_ALIGNED
+        if(self.USE_MUJOCO):
+            print("Loading XML Go2")
+            self.assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
+            self.urdf_path = os.path.join(self.assets_path, 'urdf/go2_with_arm.urdf')
+            self.xml_path = os.path.join(self.assets_path, 'mujoco/go2_with_arm.xml')
+            self.pin_robot = pin.RobotWrapper.BuildFromURDF(self.urdf_path, self.assets_path, pin.JointModelFreeFlyer())
+        else:
+            from mim_robots.robot_loader import load_pinocchio_wrapper
+            print("Loading pinocchio wrapper Go2")
+            self.pin_robot = load_pinocchio_wrapper('go2')
         self.rmodel = self.pin_robot.model
         self.rdata = self.pin_robot.data
 
-        self.mpc_to_unitree_name_map = \
-        {'FL_HAA_joint':'FL_hip_joint',
-         'FL_HFE_joint':'FL_thigh_joint',
-         'FL_KFE_joint':'FL_calf_joint',
-         'FR_HAA_joint':'FR_hip_joint',
-         'FR_HFE_joint':'FR_thigh_joint',
-         'FR_KFE_joint':'FR_calf_joint',
-         'HL_HAA_joint':'RL_hip_joint',
-         'HL_HFE_joint':'RL_thigh_joint',
-         'HL_KFE_joint':'RL_calf_joint',
-         'HR_HAA_joint':'RR_hip_joint',
-         'HR_HFE_joint': 'RR_thigh_joint',
-         'HR_KFE_joint': 'RR_calf_joint',
-         'Joint1':'Joint1',
-         'Joint2':'Joint2',
-         'Joint3':'Joint3',
-         'Joint4':'Joint4',
-         'Joint5':'Joint5',
-         'Joint6':'Joint6'
-         }
-        self.unitree_to_mpc_name_map = {val:key for key, val in self.mpc_to_unitree_name_map.items()}
-        self.unitree_joint_order = ['FR', 'FL', 'RR', 'RL']
+        # Mapping mujoco wrapper to pinocchio
+        if(self.USE_MUJOCO):
+            self.mpc_to_unitree_name_map = \
+            {'FL_HAA_joint':'FL_hip_joint',
+            'FL_HFE_joint':'FL_thigh_joint',
+            'FL_KFE_joint':'FL_calf_joint',
+            'FR_HAA_joint':'FR_hip_joint',
+            'FR_HFE_joint':'FR_thigh_joint',
+            'FR_KFE_joint':'FR_calf_joint',
+            'HL_HAA_joint':'RL_hip_joint',
+            'HL_HFE_joint':'RL_thigh_joint',
+            'HL_KFE_joint':'RL_calf_joint',
+            'HR_HAA_joint':'RR_hip_joint',
+            'HR_HFE_joint': 'RR_thigh_joint',
+            'HR_KFE_joint': 'RR_calf_joint',
+            'Joint1':'Joint1',
+            'Joint2':'Joint2',
+            'Joint3':'Joint3',
+            'Joint4':'Joint4',
+            'Joint5':'Joint5',
+            'Joint6':'Joint6'
+            }
+            self.unitree_to_mpc_name_map = {val:key for key, val in self.mpc_to_unitree_name_map.items()}
+            self.unitree_joint_order = ['FR', 'FL', 'RR', 'RL']
 
-        mpc_to_unitree_idx_map = {}
-        unitree_id = 0
-        for foot_name in self.unitree_joint_order:
-            for actuator in ['_hip_joint', '_thigh_joint', '_calf_joint']:
-                unitree_actuator_name = foot_name+actuator
-                mpc_joint_name = self.unitree_to_mpc_name_map[unitree_actuator_name]
-                mpc_joint_id = self.rmodel.getJointId(mpc_joint_name)
-                mpc_to_unitree_idx_map[mpc_joint_id-2]=unitree_id
-                unitree_id+=1
+            mpc_to_unitree_idx_map = {}
+            unitree_id = 0
+            for foot_name in self.unitree_joint_order:
+                for actuator in ['_hip_joint', '_thigh_joint', '_calf_joint']:
+                    unitree_actuator_name = foot_name+actuator
+                    mpc_joint_name = self.unitree_to_mpc_name_map[unitree_actuator_name]
+                    mpc_joint_id = self.rmodel.getJointId(mpc_joint_name)
+                    mpc_to_unitree_idx_map[mpc_joint_id-2]=unitree_id
+                    unitree_id+=1
 
-        for unitree_actuator_name in ['Joint1', 'Joint2', 'Joint3', 'Joint4', 'Joint5', 'Joint6']:
-                mpc_joint_name = self.unitree_to_mpc_name_map[unitree_actuator_name]
-                mpc_joint_id = self.rmodel.getJointId(mpc_joint_name)
-                mpc_to_unitree_idx_map[mpc_joint_id-2]=unitree_id
-                unitree_id+=1
+            for unitree_actuator_name in ['Joint1', 'Joint2', 'Joint3', 'Joint4', 'Joint5', 'Joint6']:
+                    mpc_joint_name = self.unitree_to_mpc_name_map[unitree_actuator_name]
+                    mpc_joint_id = self.rmodel.getJointId(mpc_joint_name)
+                    mpc_to_unitree_idx_map[mpc_joint_id-2]=unitree_id
+                    unitree_id+=1
 
-        self.mpc_to_unitree_idx = np.zeros(18).astype(np.int32)    # mpc_state[mpc_to_unitree_idx] -> state/command in unitree order 
-        self.unitree_to_mpc_idx = np.zeros(18).astype(np.int32)        # unitree_state[unitree_to_mpc] -> state/command in mpc order
-        for mpc_idx, unitree_idx in mpc_to_unitree_idx_map.items():
-            self.mpc_to_unitree_idx[mpc_idx] = unitree_idx
-            self.unitree_to_mpc_idx[unitree_idx] = mpc_idx
+            self.mpc_to_unitree_idx = np.zeros(18).astype(np.int32)    # mpc_state[mpc_to_unitree_idx] -> state/command in unitree order 
+            self.unitree_to_mpc_idx = np.zeros(18).astype(np.int32)        # unitree_state[unitree_to_mpc] -> state/command in mpc order
+            for mpc_idx, unitree_idx in mpc_to_unitree_idx_map.items():
+                self.mpc_to_unitree_idx[mpc_idx] = unitree_idx
+                self.unitree_to_mpc_idx[unitree_idx] = mpc_idx
 
         # set contact frame_names and_indices
         self.ee_frame_names = ['FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT', 'Link6']
@@ -669,21 +678,38 @@ class Go2MPC:
         dq = self.xs[x_idx][25+6:25+6+18]
         f = self.xs[x_idx][25+6+18:]
         constraint_norm = self.solver.constraint_norm
-        return dict(
-            position=t,
-            orientation=np.array([qw, qx, qy, qz]), #Mujoco and uniree quaternion order
-            velocity = eta[:3],
-            omega = eta[3:],
-            q = q[self.mpc_to_unitree_idx],
-            dq = dq[self.mpc_to_unitree_idx], 
-            f_lf = f[:3],
-            f_rf = f[3:6],
-            f_lh = f[6:9],
-            f_rh = f[9:12],
-            f_ee = f[12:],
-            tau = self.us[u_idx][[self.mpc_to_unitree_idx]],
-            constraint_norm = constraint_norm
-        )
+        if(self.USE_MUJOCO):
+            return dict(
+                position=t,
+                orientation=np.array([qw, qx, qy, qz]), #Mujoco and uniree quaternion order
+                velocity = eta[:3],
+                omega = eta[3:],
+                q = q[self.mpc_to_unitree_idx],
+                dq = dq[self.mpc_to_unitree_idx], 
+                f_lf = f[:3],
+                f_rf = f[3:6],
+                f_lh = f[6:9],
+                f_rh = f[9:12],
+                f_ee = f[12:],
+                tau = self.us[u_idx][[self.mpc_to_unitree_idx]],
+                constraint_norm = constraint_norm
+            )
+        else:
+            return dict(
+                position=t,
+                orientation=np.array([qw, qx, qy, qz]), #Mujoco and uniree quaternion order
+                velocity = eta[:3],
+                omega = eta[3:],
+                q = q,
+                dq = dq, 
+                f_lf = f[:3],
+                f_rf = f[3:6],
+                f_lh = f[6:9],
+                f_rh = f[9:12],
+                f_ee = f[12:],
+                tau = self.us[u_idx],
+                constraint_norm = constraint_norm
+            )
     
     def updateAndSolve(self, t, quat, q, v, omega, dq, f):
         q_ = np.zeros(self.rmodel.nq)
@@ -700,6 +726,17 @@ class Go2MPC:
         dq_[6:] = dq[self.unitree_to_mpc_idx]
         pin.framesForwardKinematics(self.rmodel, self.rdata, q_)
         y = np.hstack([q_, dq_, f])
+        self.solver.problem.x0 = y
+        self.xs = list(self.solver.xs[1:]) + [self.solver.xs[-1]]
+        self.xs[0] = y
+        self.us = list(self.us[1:]) + [self.us[-1]] 
+        self.solver.solve(self.xs, self.us, self.max_iterations)
+        self.xs, self.us = self.solver.xs, self.solver.us
+        return self.getSolution()
+
+    def updateAndSolve2(self, q, dq, f):
+        pin.framesForwardKinematics(self.rmodel, self.rdata, q)
+        y = np.hstack([q, dq, f])
         self.solver.problem.x0 = y
         self.xs = list(self.solver.xs[1:]) + [self.solver.xs[-1]]
         self.xs[0] = y

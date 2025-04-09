@@ -1,0 +1,20 @@
+
+# Simu
+USE_MUJOCO: False
+DT_SIMU: 0.001
+N_SIMU: 200
+
+# MPC
+MPC_FREQ: 100
+HORIZON: 20
+DT_OCP: 0.01 
+MAX_ITER_1: 2
+MAX_ITER_2: 2
+
+# Task
+FREF: 10   # desired contact force at end-effector
+MU: 0.75   # environment friction coefficient (ground / wall)
+
+# CONTROL
+KP: 0.
+KV: 0.
