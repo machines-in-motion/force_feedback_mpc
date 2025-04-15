@@ -5,6 +5,8 @@ https://github.com/machines-in-motion/Go2Py/blob/mpc/examples/standard_mpc.py
 This sets up the Go2 MPC wrapper and runs an MPC simulation in Mujoco
 the robot must push against a wall with its end-effector while standing
 on its 4 feet and without slipping (the same task as in the original script)
+
+Force-feedback MPC (soft contact force in the state)
 '''
 
 import numpy as np
@@ -12,13 +14,13 @@ import pinocchio as pin
 
 
 
-from Go2MPC_wrapper import Go2MPC, getForceSensor, setGroundFriction, plot_ocp_solution_with_cones
+from Go2MPC_wrapper_soft import Go2MPCSoft, getForceSensor, setGroundFriction, plot_ocp_solution
 from utils import LPFButterOrder2
 
 # LOADING CONFIG parameters
 import os
 from force_feedback_mpc.core_mpc_utils.path_utils import load_yaml_file
-CONFIG       = load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/Go2MPC_demo.yml')
+CONFIG       = load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/Go2MPC_demo_soft.yml')
 USE_MUJOCO   = CONFIG['USE_MUJOCO']
 DT_SIMU      = CONFIG['DT_SIMU']
 FREF         = CONFIG['FREF']
@@ -69,8 +71,7 @@ else:
 
 
 # Instantiate the solver
-assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
-mpc = Go2MPC(HORIZON=HORIZON, friction_mu=MU, dt=DT_OCP, USE_MUJOCO=USE_MUJOCO)
+mpc = Go2MPCSoft(HORIZON=HORIZON, friction_mu=MU, dt=DT_OCP, USE_MUJOCO=USE_MUJOCO)
 mpc.initialize(FREF=FREF)
 mpc.max_iterations = MAX_ITER_1
 # mpc.test_derivatives()
@@ -79,7 +80,7 @@ m = list(mpc.solver.problem.runningModels) + [mpc.solver.problem.terminalModel]
 # Reset number of iter for MPC loop
 mpc.max_iterations=MAX_ITER_2
 
-# # plot_ocp_solution_with_cones(mpc)
+# # plot_ocp_solution(mpc)
 # # Extract OCP Solution 
 # force_sol = []
 # xs, us = mpc.solver.xs, mpc.solver.us
@@ -212,8 +213,8 @@ if(USE_MUJOCO):
 
         robot.setCommands(q, dq, kp, kv, tau)
         robot.step()
+# PYBULLET SIMULATION
 else:   
-    # PYBULLET SIMULATION
     for i in range(N_SIMU):
         print("Step ", i)
         # set the force setpoint

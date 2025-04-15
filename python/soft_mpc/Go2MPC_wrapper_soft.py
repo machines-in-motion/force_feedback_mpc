@@ -79,7 +79,7 @@ def setGroundFriction(model, data, mu):
 
 
 
-def plot_ocp_solution_with_cones(mpc):
+def plot_ocp_solution(mpc):
 
     # required to extract and plot solution
     rmodel = mpc.rmodel
@@ -214,7 +214,7 @@ def plot_ocp_solution_with_cones(mpc):
     # plt.title("COM trajectory")
     plt.show()
 
-class Go2MPC:
+class Go2MPCSoft:
     def __init__(self, HORIZON=250, friction_mu = 0.75, dt = 0.01, USE_MUJOCO=True):
         self.USE_MUJOCO = USE_MUJOCO
         self.HORIZON = HORIZON
