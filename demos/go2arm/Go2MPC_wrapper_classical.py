@@ -223,7 +223,7 @@ def plot_ocp_solution(mpc):
 
 
 class Go2MPCClassical:
-    def __init__(self, HORIZON=250, friction_mu = 0.2, dt = 0.02, USE_MUJOCO=True):
+    def __init__(self, HORIZON=250, friction_mu = 0.75, dt = 0.01, USE_MUJOCO=True):
         self.HORIZON = HORIZON
         self.max_iterations = 500
         self.dt = dt
@@ -352,7 +352,6 @@ class Go2MPCClassical:
             
             # Add state/control regularization costs
             state_reg_weight, control_reg_weight = 1e-1, 1e-3
-
             freeFlyerQWeight = [0.]*3 + [500.]*3
             freeFlyerVWeight = [10.]*6
             legsQWeight = [0.01]*(self.rmodel.nv - 6)

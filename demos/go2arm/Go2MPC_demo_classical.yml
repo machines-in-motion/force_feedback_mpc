@@ -15,6 +15,6 @@ FREF: 15   # desired contact force at end-effector
 MU: 0.75   # environment friction coefficient (ground / wall)
 
 # CONTROL
-USE_INTEGRAL: True
+USE_INTEGRAL: False
 KP: 0.
 KV: 0.

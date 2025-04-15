@@ -55,20 +55,19 @@ else:
     robot.reset_state(q0, v0)
     robot.forward_robot(q0, v0)
     sim_utils.set_lateral_friction(env.objects[0], MU)
-    
-    # sim_utils.set_contact_stiffness_and_damping(env.objects[0], 10000, 500)
-    # contact plane
-    # contact_placement = pin.SE3(pin.rpy.rpyToMatrix(0.,np.pi/2, 0.), np.array([0.4,0.,0.]))
-    # contact_surface_bulletId = sim_utils.display_contact_surface(contact_placement, radius=2., bullet_endeff_ids=robot.bullet_endeff_ids)
-    # # floor props
-    # p.changeDynamics(
-    #     env.objects[0],
-    #     0,
-    #     lateralFriction=MU,
-    #     spinningFriction=0.,
-    #     rollingFriction=0.,
-    # )
-
+    sim_utils.set_contact_stiffness_and_damping(env.objects[0], 10000, 500)
+    contact_placement = pin.SE3(pin.rpy.rpyToMatrix(0.,np.pi/2, 0.), np.array([0.41,0.,0.]))
+    contact_surface_bulletId = sim_utils.display_contact_surface(contact_placement, radius=2., bullet_endeff_ids=robot.bullet_endeff_ids)
+    sim_utils.set_lateral_friction(contact_surface_bulletId, MU)
+    sim_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 10000, 500)
+    # floor props
+    p.changeDynamics(
+        env.objects[0],
+        0,
+        lateralFriction=MU,
+        spinningFriction=0.,
+        rollingFriction=0.,
+    )
 
 # Instantiate the solver
 mpc = Go2MPCSoft(HORIZON=HORIZON, friction_mu=MU, dt=DT_OCP, USE_MUJOCO=USE_MUJOCO)
@@ -199,7 +198,7 @@ if(USE_MUJOCO):
             f_mea_all_filtered[id_f:id_f+3] = f_mea_filtered   
         # Solve OCP
         if(i%int(SIM_FREQ/MPC_FREQ)==0):
-            solution = mpc.updateAndSolve(t, quat, q, v, omega, dq, f_mea_all_filtered)
+            solution = mpc.updateAndSolve(t, quat, q, v, omega, dq, f_mea_all)
         for fname in mpc.ee_frame_names:
             predicted_forces_dict[fname].append(solution[frame_name_to_sol_map[fname]])
         # Save the solution
@@ -209,8 +208,6 @@ if(USE_MUJOCO):
         kp = np.ones(18)*KP #10.
         kv = np.ones(18)*KV #1
         # Step the physics
-        print(tau)
-
         robot.setCommands(q, dq, kp, kv, tau)
         robot.step()
 # PYBULLET SIMULATION
@@ -222,12 +219,11 @@ else:
         desired_forces.append(f_des_3d)
         # Get state from simulation
         q, dq = robot.get_state()
-
         # Measure forces
         robot.forward_robot(q, dq)
         contact_status, f_mea_bullet = robot.end_effector_forces()
-        print("Contacts status = \n", contact_status)
-        print("Contacts forces = \n", f_mea_bullet)
+        # print("Contacts status = \n", contact_status)
+        # print("Contacts forces = \n", f_mea_bullet)
         # print(f_mea_bullet, f_mea_bullet.shape)
         for k,fname in enumerate(mpc.ee_frame_names):
             # print(fname, robot.pinocchio_endeff_ids[k], robot.endeff_names[k], robot.bullet_endeff_ids[k])
@@ -240,17 +236,13 @@ else:
             filtered_forces_dict[fname].append(f_mea)
             f_mea_all[k:k+3] = f_mea
             f_mea_all_filtered[k:k+3] = f_mea
-
         # Solve OCP
         if(i%int(SIM_FREQ/MPC_FREQ)==0):
-            solution = mpc.updateAndSolve2(q, dq, f_mea_all_filtered)
+            solution = mpc.updateAndSolve2(q, dq, f_mea_all)
         for fname in mpc.ee_frame_names:
             predicted_forces_dict[fname].append(solution[frame_name_to_sol_map[fname]])
         # Save the solution
         tau = solution['tau'].squeeze()
-        # tau = np.array([ 2.669558, -0.77472,   6.259826 ,-2.667158, -0.782974 , 6.212979 , 2.623451 , 0.632957 , 5.424336 ,-2.628259 , 0.659122  ,5.432545,  0.000359 ,\
-        #                 -1.215166, -0.674627 , 0.000072 ,-0.159409,  0.000011])
-        print(tau)
         # Step the physics
         robot.send_joint_command(tau)
         env.step() 
