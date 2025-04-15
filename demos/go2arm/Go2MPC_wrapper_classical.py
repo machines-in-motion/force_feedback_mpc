@@ -144,45 +144,45 @@ def plot_ocp_solution(mpc):
     import matplotlib.pyplot as plt
     time_lin = np.linspace(0, T, T)
     # Feet forces
-    # fig, axs = plt.subplots(4, 3, constrained_layout=True)
-    # for i, frame_idx in enumerate(supportFeetIds):
-    #     ct_frame_name = rmodel.frames[frame_idx].name + "_contact"
-    #     print(ct_frame_name)
-    #     forces = np.array(sol[ct_frame_name])
-    #     axs[i, 0].plot(time_lin, forces[:, 0], label="Fx")
-    #     axs[i, 1].plot(time_lin, forces[:, 1], label="Fy")
-    #     axs[i, 2].plot(time_lin, forces[:, 2], label="Fz")
-    #     # Add friction cone constraints 
-    #     Fz_lb = (1./MU)*np.sqrt(forces[:, 0]**2 + forces[:, 1]**2)
-    #     # Fz_ub = np.zeros(time_lin.shape)
-    #     # axs[i, 2].plot(time_lin, Fz_ub, 'k-.', label='ub')
-    #     axs[i, 2].plot(time_lin, Fz_lb, 'k-.', label='lb')
-    #     axs[i, 0].grid()
-    #     axs[i, 1].grid()
-    #     axs[i, 2].grid()
-    #     axs[i, 0].set_ylabel(ct_frame_name)
-    # axs[0, 0].legend()
-    # axs[0, 1].legend()
-    # axs[0, 2].legend()
-    # axs[3, 0].set_xlabel(r"$F_x$")
-    # axs[3, 1].set_xlabel(r"$F_y$")
-    # axs[3, 2].set_xlabel(r"$F_z$")
-    # fig.suptitle('Force feet', fontsize=16)
+    fig, axs = plt.subplots(4, 3, constrained_layout=True)
+    for i, frame_idx in enumerate(supportFeetIds):
+        ct_frame_name = rmodel.frames[frame_idx].name + "_contact"
+        print(ct_frame_name)
+        forces = np.array(sol[ct_frame_name])
+        axs[i, 0].plot(time_lin, forces[:, 0], label="Fx")
+        axs[i, 1].plot(time_lin, forces[:, 1], label="Fy")
+        axs[i, 2].plot(time_lin, forces[:, 2], label="Fz")
+        # Add friction cone constraints 
+        Fz_lb = (1./MU)*np.sqrt(forces[:, 0]**2 + forces[:, 1]**2)
+        # Fz_ub = np.zeros(time_lin.shape)
+        # axs[i, 2].plot(time_lin, Fz_ub, 'k-.', label='ub')
+        axs[i, 2].plot(time_lin, Fz_lb, 'k-.', label='lb')
+        axs[i, 0].grid()
+        axs[i, 1].grid()
+        axs[i, 2].grid()
+        axs[i, 0].set_ylabel(ct_frame_name)
+    axs[0, 0].legend()
+    axs[0, 1].legend()
+    axs[0, 2].legend()
+    axs[3, 0].set_xlabel(r"$F_x$")
+    axs[3, 1].set_xlabel(r"$F_y$")
+    axs[3, 2].set_xlabel(r"$F_z$")
+    fig.suptitle('Force feet', fontsize=16)
     
-    # # EE Force
-    # fig, axs = plt.subplots(3, 1, constrained_layout=True)
-    # # forces = np.array(sol['Link62EF_dummy_fixed'])
-    # forces = np.array(sol['Link6'])
-    # axs[0].plot(time_lin, forces[:, 0], label="Fx")
-    # axs[1].plot(time_lin, forces[:, 1], label="Fy")
-    # axs[2].plot(time_lin, forces[:, 2], label="Fz")
-    # for i in range(3):
-    #     axs[i].legend()
-    #     axs[i].grid()
-    # fig.suptitle('Force EE', fontsize=16)
-    # axs[0].set_xlabel(r"$F_x$")
-    # axs[1].set_xlabel(r"$F_y$")
-    # axs[2].set_xlabel(r"$F_z$")
+    # EE Force
+    fig, axs = plt.subplots(3, 1, constrained_layout=True)
+    # forces = np.array(sol['Link62EF_dummy_fixed'])
+    forces = np.array(sol['Link6'])
+    axs[0].plot(time_lin, forces[:, 0], label="Fx")
+    axs[1].plot(time_lin, forces[:, 1], label="Fy")
+    axs[2].plot(time_lin, forces[:, 2], label="Fz")
+    for i in range(3):
+        axs[i].legend()
+        axs[i].grid()
+    fig.suptitle('Force EE', fontsize=16)
+    axs[0].set_xlabel(r"$F_x$")
+    axs[1].set_xlabel(r"$F_y$")
+    axs[2].set_xlabel(r"$F_z$")
 
     ## EE pos and vel
     fig, axs = plt.subplots(3, 2, constrained_layout=True)
@@ -207,18 +207,18 @@ def plot_ocp_solution(mpc):
     axs[1, 1].set_xlabel(r"$V_y$")
     axs[2, 1].set_xlabel(r"$V_z$")
 
-    # fig, axs = plt.subplots(nv//2, 2, constrained_layout=True)
-    # for i in range(nv//2):
-    #     jointVel_sol = np.array(jointVel_sol)
-    #     axs[i, 0].plot(time_lin, [0.]*time_lin.shape[0], color='r', linewidth=2)
-    #     axs[i, 0].plot(time_lin, jointVel_sol[:, 2*i], marker='.', linewidth=2, label="v_"+str(2*i))
-    #     axs[i, 0].grid()
-    #     axs[i, 0].legend()
-    #     axs[i, 1].plot(time_lin, [0.]*time_lin.shape[0], color='r', linewidth=2)
-    #     axs[i, 1].plot(time_lin, jointVel_sol[:, 2*i+1], marker='.', linewidth=2, label="v_"+str(2*i+1))
-    #     axs[i, 1].grid()
-    #     axs[i, 1].legend()
-    # fig.suptitle('Joint velocities', fontsize=16)
+    fig, axs = plt.subplots(nv//2, 2, constrained_layout=True)
+    for i in range(nv//2):
+        jointVel_sol = np.array(jointVel_sol)
+        axs[i, 0].plot(time_lin, [0.]*time_lin.shape[0], color='r', linewidth=2)
+        axs[i, 0].plot(time_lin, jointVel_sol[:, 2*i], marker='.', linewidth=2, label="v_"+str(2*i))
+        axs[i, 0].grid()
+        axs[i, 0].legend()
+        axs[i, 1].plot(time_lin, [0.]*time_lin.shape[0], color='r', linewidth=2)
+        axs[i, 1].plot(time_lin, jointVel_sol[:, 2*i+1], marker='.', linewidth=2, label="v_"+str(2*i+1))
+        axs[i, 1].grid()
+        axs[i, 1].legend()
+    fig.suptitle('Joint velocities', fontsize=16)
     plt.show()
 
 
@@ -290,13 +290,13 @@ class Go2MPCClassical:
                 self.unitree_to_mpc_idx[unitree_idx] = mpc_idx
 
         # set contact frame_names and_indices
-        self.ee_frame_names = ['FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT'] # 'Link6']
+        self.ee_frame_names = ['FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT', 'Link6']
         # self.ee_frame_names = ["FL_calf2FL_dummy_fixed", "FR_calf2FR_dummy_fixed", "RL_calf2RL_dummy_fixed", "RR_calf2RR_dummy_fixed", "Link62EF_dummy_fixed"]
         self.lfFootId = self.rmodel.getFrameId(self.ee_frame_names[0])
         self.rfFootId = self.rmodel.getFrameId(self.ee_frame_names[1])
         self.lhFootId = self.rmodel.getFrameId(self.ee_frame_names[2])
         self.rhFootId = self.rmodel.getFrameId(self.ee_frame_names[3])
-        self.armEEId = self.rmodel.getFrameId('Link6') #self.rmodel.getFrameId(self.ee_frame_names[4])
+        self.armEEId = self.rmodel.getFrameId(self.ee_frame_names[4])
         self.running_models = []
         self.constraintModels = []
         
@@ -310,7 +310,7 @@ class Go2MPCClassical:
         #                             [np.inf]*6)
         # print(self.ccdyl_state.pinocchio.effortLimit[6:])
 
-    def initialize(self, q0=np.array([-0.1, 0.0, 0.32, 0.0, 0.0, 0.0, 1.0] 
+    def initialize(self, q0=np.array([-0.01, 0.0, 0.32, 0.0, 0.0, 0.0, 1.0] 
                     +4*[0.0, 0.77832842, -1.56065452] + [0.0, 0.3, -0.3, 0.0, 0.0, 0.0]), FREF=15):
         q0[11+2]=0.0
         self.q0 = q0.copy()
@@ -345,10 +345,10 @@ class Go2MPCClassical:
                 self.contactModel.addContact(self.rmodel.frames[frame_idx].name + "_contact", support_contact) 
                 # print("Create ", self.rmodel.frames[frame_idx].name + "_contact")
 
-            # # Contact for the EE
-            # support_contact = crocoddyl.ContactModel3D(self.ccdyl_state, self.armEEId, self.armEEPos0, pin.LOCAL_WORLD_ALIGNED, self.nu, np.array([0., 20.]))
-            # self.contactModel.addContact(self.rmodel.frames[self.armEEId].name + "_contact", support_contact) 
-            # # print("Create ", self.rmodel.frames[self.armEEId].name + "_contact")
+            # Contact for the EE
+            arm_contact = crocoddyl.ContactModel3D(self.ccdyl_state, self.armEEId, self.armEEPos0, pin.LOCAL_WORLD_ALIGNED, self.nu, np.array([0., 20.]))
+            self.contactModel.addContact(self.rmodel.frames[self.armEEId].name + "_contact", arm_contact) 
+            # print("Create ", self.rmodel.frames[self.armEEId].name + "_contact")
             
             # Add state/control regularization costs
             state_reg_weight, control_reg_weight = 1e-1, 1e-3
@@ -373,14 +373,14 @@ class Go2MPCClassical:
                 ctrlReg = crocoddyl.CostModelResidual(self.ccdyl_state, ctrlResidual)
                 costModel.addCost("ctrlReg", ctrlReg, control_reg_weight)      
             
-            # # Force tracking term
-            # if t != self.HORIZON:
-            #     self.ef_des_force = pin.Force.Zero()
-            #     self.ef_des_force.linear[0] = -self.Fx_ref_ee
-            #     contact_force_residual = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, self.ef_des_force, 3, self.nu)
-            #     contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
-            #     contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
-            #     costModel.addCost("contact_force_track", contact_force_track, 0) #1e1)
+            # Force tracking term
+            if t != self.HORIZON:
+                self.ef_des_force = pin.Force.Zero()
+                self.ef_des_force.linear[0] = -self.Fx_ref_ee
+                contact_force_residual = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, self.ef_des_force, 3, self.nu)
+                contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
+                contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
+                costModel.addCost("contact_force_track", contact_force_track, 1e1)
 
             # Friction Cone Constraints
             constraintModelManager = crocoddyl.ConstraintModelManager(self.ccdyl_state, self.ccdyl_actuation.nu)
