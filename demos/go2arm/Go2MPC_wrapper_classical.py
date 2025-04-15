@@ -356,6 +356,8 @@ class Go2MPCClassical:
             freeFlyerQWeight = [0.]*3 + [500.]*3
             freeFlyerVWeight = [10.]*6
             legsQWeight = [0.01]*(self.rmodel.nv - 6)
+            legsQWeight[-1] = 100
+            legsQWeight[-2] = 100
             legsWWeights = [1.]*(self.rmodel.nv - 6)
             stateWeights = np.array(freeFlyerQWeight + legsQWeight + freeFlyerVWeight + legsWWeights)    
             stateResidual = crocoddyl.ResidualModelState(self.ccdyl_state, self.x0, self.nu)
