@@ -222,11 +222,7 @@ else:
         # Measure forces
         robot.forward_robot(q, dq)
         contact_status, f_mea_bullet = robot.end_effector_forces()
-        # print("Contacts status = \n", contact_status)
-        # print("Contacts forces = \n", f_mea_bullet)
-        # print(f_mea_bullet, f_mea_bullet.shape)
         for k,fname in enumerate(mpc.ee_frame_names):
-            # print(fname, robot.pinocchio_endeff_ids[k], robot.endeff_names[k], robot.bullet_endeff_ids[k])
             if(contact_status[robot.pinocchio_endeff_ids[k]]):
                 f_mea = f_mea_bullet[k,:3]
             else:
@@ -237,7 +233,6 @@ else:
             f_mea_all_filtered[3*k:3*(k+1)] = f_mea
         # Solve OCP
         if(i%int(SIM_FREQ/MPC_FREQ)==0):
-            # plot_ocp_solution(mpc)
             solution = mpc.updateAndSolve2(q, dq, f_mea_all)
             # plot_ocp_solution(mpc)
         for fname in mpc.ee_frame_names:

@@ -470,11 +470,11 @@ class Go2MPCSoft:
             constraintModelManager = None #crocoddyl.ConstraintModelManager(self.ccdyl_state, self.nu)
 
             # Custom force cost in DAM
-            f_weight = np.array([1e-3, 1e-6, 1e-6])
+            f_weight = np.array([2e-3, 1e-6, 1e-6])
             fdot_weights = np.array([1e-3]*12 + [1., 1., 1.])*1e-5
             if t != self.HORIZON:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight, pin.LOCAL_WORLD_ALIGNED)
-                forceRateCostManager = None # ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights)
+                forceRateCostManager = None #ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights)
             else:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight*self.dt, pin.LOCAL_WORLD_ALIGNED)
                 forceRateCostManager = None #ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights*self.dt)
@@ -700,8 +700,8 @@ class Go2MPCSoft:
         solver.max_qp_iters = 1000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
-        solver.mu_constraint = 1e6 #-1 #1e-4 #-3
-        solver.mu_dynamic = 1e-2 #-1
+        solver.mu_constraint = -1 #-1 #1e-4 #-3
+        # solver.mu_dynamic = 1e-2 #-1
         # solver.lag_mul_inf_norm_coef = 2.
         solver.termination_tolerance = 1e-2
         solver.eps_abs = 1e-6
