@@ -329,8 +329,9 @@ class Go2MPCClassical:
         self.xs = [self.x0]*(self.HORIZON + 1)
         self.createProblem()
         self.createSolver()
-        self.us = self.solver.problem.quasiStatic([self.x0]*self.HORIZON) 
-        print("wepifuwefweifo\n\n\n", self.us[0])
+        self.u0 = np.zeros(self.nu)
+        self.us = [self.u0]*self.HORIZON
+        # self.us = self.solver.problem.quasiStatic([self.x0]*self.HORIZON) 
 
     def createProblem(self):
 
@@ -343,12 +344,10 @@ class Go2MPCClassical:
             for i,frame_idx in enumerate(self.supportFeetIds):
                 support_contact = crocoddyl.ContactModel3D(self.ccdyl_state, frame_idx, np.array([0., 0., 0.0]), self.pinRef, self.nu, np.array([0., 20.]))
                 self.contactModel.addContact(self.rmodel.frames[frame_idx].name + "_contact", support_contact) 
-                # print("Create ", self.rmodel.frames[frame_idx].name + "_contact")
 
             # Contact for the EE
             arm_contact = crocoddyl.ContactModel3D(self.ccdyl_state, self.armEEId, self.armEEPos0, pin.LOCAL_WORLD_ALIGNED, self.nu, np.array([0., 20.]))
             self.contactModel.addContact(self.rmodel.frames[self.armEEId].name + "_contact", arm_contact) 
-            # print("Create ", self.rmodel.frames[self.armEEId].name + "_contact")
             
             # Add state/control regularization costs
             state_reg_weight, control_reg_weight = 1e-1, 1e-3
@@ -381,7 +380,7 @@ class Go2MPCClassical:
                 contact_force_residual = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, self.ef_des_force, 3, self.nu)
                 contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
                 contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
-                costModel.addCost("contact_force_track", contact_force_track, 1e1)
+                costModel.addCost("contact_force_track", contact_force_track, 1e-3) #1e1
 
             # Friction Cone Constraints
             constraintModelManager = crocoddyl.ConstraintModelManager(self.ccdyl_state, self.ccdyl_actuation.nu)
@@ -413,13 +412,12 @@ class Go2MPCClassical:
             # forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, -np.inf]), np.array([0., np.inf, np.inf]))
             # constraintModelManager.addConstraint("efBox", forceBoxConstraint)
 
-            # ctrlResidual2 = crocoddyl.ResidualModelControl(self.ccdyl_state, self.nu)
-            # torque_lb = -self.ctrlLim #self.pin_robot.model.effortLimit
-            # torque_ub = self.ctrlLim #self.pin_robot.model.effortLimit
-            # # print("Ctrl limit lb = \n", torque_lb)
-            # # print("Ctrl limit ub = \n", torque_ub)
-            # torqueBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, ctrlResidual2, torque_lb, torque_ub)
-            # constraintModelManager.addConstraint("ctrlBox", torqueBoxConstraint)
+            # if(t != self.HORIZON):
+            #     ctrlResidual2 = crocoddyl.ResidualModelControl(self.ccdyl_state, self.nu)
+            #     torque_lb = -self.ctrlLim #self.pin_robot.model.effortLimit
+            #     torque_ub = self.ctrlLim #self.pin_robot.model.effortLimit
+            #     torqueBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, ctrlResidual2, torque_lb, torque_ub)
+            #     constraintModelManager.addConstraint("ctrlBox", torqueBoxConstraint)
             
             dmodel = crocoddyl.DifferentialActionModelContactFwdDynamics(self.ccdyl_state, self.ccdyl_actuation, self.contactModel, costModel, constraintModelManager, 0., True)
             model = crocoddyl.IntegratedActionModelEuler(dmodel, self.dt)
@@ -432,8 +430,8 @@ class Go2MPCClassical:
         solver.max_qp_iters = 1000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
-        solver.mu_constraint = -1 #1e3
-        solver.lag_mul_inf_norm_coef = 10.
+        solver.mu_constraint = -1
+        # solver.lag_mul_inf_norm_coef = 10.
         solver.termination_tolerance = 1e-4
         solver.eps_abs = 1e-6
         solver.eps_rel = 1e-6
@@ -503,7 +501,6 @@ class Go2MPCClassical:
         dq_[:3] = v
         dq_[3:6] = omega
         dq_[6:] = dq[self.unitree_to_mpc_idx]
-        pin.framesForwardKinematics(self.rmodel, self.rdata, q_)
         x = np.hstack([q_, dq_])
         self.solver.problem.x0 = x
         self.xs = list(self.solver.xs[1:]) + [self.solver.xs[-1]]
@@ -514,8 +511,6 @@ class Go2MPCClassical:
         return self.getSolution()
 
     def updateAndSolve2(self, q, dq):
-        pin.framesForwardKinematics(self.rmodel, self.rdata, q)
-        pin.computeAllTerms(self.rmodel, self.rdata, q, dq)
         x = np.hstack([q, dq])
         self.solver.problem.x0 = x
         self.xs = list(self.solver.xs[1:]) + [self.solver.xs[-1]]

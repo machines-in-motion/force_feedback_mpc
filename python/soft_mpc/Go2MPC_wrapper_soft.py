@@ -714,9 +714,7 @@ class Go2MPCSoft:
         solver.max_qp_iters = 1000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
-        solver.mu_constraint = -1 #-1 #1e-4 #-3
-        # solver.mu_dynamic = 1e-2 #-1
-        # solver.lag_mul_inf_norm_coef = 2.
+        solver.mu_constraint = -1 
         solver.termination_tolerance = 1e-4
         solver.eps_abs = 1e-6
         solver.eps_rel = 1e-6

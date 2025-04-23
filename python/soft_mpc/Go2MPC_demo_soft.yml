@@ -12,7 +12,7 @@ MAX_ITER_1: 500
 MAX_ITER_2: 10
 
 # Task
-FREF: 25   # desired contact force at end-effector
+FREF: 40   # desired contact force at end-effector
 MU: 0.75   # environment friction coefficient (ground / wall)
 
 # CONTROL

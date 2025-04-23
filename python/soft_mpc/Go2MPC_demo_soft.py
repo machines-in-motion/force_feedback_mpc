@@ -105,9 +105,6 @@ if(USE_MUJOCO):
                                 'Link6': 'EF_force_site'}
     # physics
     setGroundFriction(robot.model, robot.data, MU)
-# else:
-#     sim_utils.set_lateral_friction(contact_surface_bulletId, MU)
-#     sim_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 10000, 500)
 
 
 frame_name_to_sol_map = {'FL_FOOT': 'f_lf', 
@@ -244,7 +241,7 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
 
 # Save data 
-np.savez_compressed('/tmp/soft_go2',
+np.savez_compressed('/tmp/go2_soft',
                     joint_torques=joint_torques,
                     measured_forces=measured_forces_dict,
                     filtered_forces=filtered_forces_dict,
@@ -259,18 +256,15 @@ time_span = np.linspace(0, (N_SIMU-1)*DT_SIMU, N_SIMU)
 fig, axs = plt.subplots(3, 1, constrained_layout=True)
 Fx_lb_mea = (1./MU)*np.sqrt(measured_forces_dict['Link6'][:, 1]**2 + measured_forces_dict['Link6'][:, 1]**2)
 # Fx_lb_pred = (1./MU)*np.sqrt(predicted_forces_dict['Link6'][:, 1]**2 + predicted_forces_dict['Link6'][:, 1]**2)
-axs[0].plot(time_span, np.abs(measured_forces_dict['Link6'][:,0]),linewidth=2, color='g', marker='o', alpha=0.5, label="Fx mea")
-axs[0].plot(time_span, np.abs(filtered_forces_dict['Link6'][:,0]),linewidth=4, color='r', marker='o',  label="Fx filtered")
+axs[0].plot(time_span, np.abs(measured_forces_dict['Link6'][:,0]),linewidth=4, color='g', marker='o', alpha=0.5, label="Fx mea")
 axs[0].plot(time_span, np.abs(desired_forces[:,0]), linewidth=4, color='k', marker='o', label="Fx des")
 axs[0].plot(time_span, np.abs(predicted_forces_dict['Link6'][:,0]), linewidth=4, color='b', marker='o', alpha=0.25, label="Fx predicted")
 axs[0].plot(time_span, Fx_lb_mea, '--', linewidth=4, color='k',  alpha=0.5, label="Fx friction constraint (lower bound)")
-axs[1].plot(time_span, measured_forces_dict['Link6'][:,1],linewidth=2, color='g', marker='o', alpha=0.5, label="Fy mea")
-axs[1].plot(time_span, filtered_forces_dict['Link6'][:,1],linewidth=4, color='r', marker='o',  label="Fy filtered")
+axs[1].plot(time_span, measured_forces_dict['Link6'][:,1],linewidth=4, color='g', marker='o', alpha=0.5, label="Fy mea")
 axs[1].plot(time_span, desired_forces[:,1], linewidth=4, color='k', marker='o', label="Fy des")
 axs[1].plot(time_span, predicted_forces_dict['Link6'][:,1], linewidth=4, color='b', marker='o', alpha=0.25, label="Fy predicted")
 
-axs[2].plot(time_span, measured_forces_dict['Link6'][:,2],linewidth=2, color='g', marker='o', alpha=0.5, label="Fz mea")
-axs[2].plot(time_span, filtered_forces_dict['Link6'][:,2],linewidth=4, color='r', marker='o',  label="Fz filtered")
+axs[2].plot(time_span, measured_forces_dict['Link6'][:,2],linewidth=4, color='g', marker='o', alpha=0.5, label="Fz mea")
 axs[2].plot(time_span, desired_forces[:,2], linewidth=4, color='k', marker='o', label="Fz des")
 axs[2].plot(time_span, predicted_forces_dict['Link6'][:,2], linewidth=4, color='b', marker='o', alpha=0.25, label="Fz predicted")
 
@@ -283,11 +277,9 @@ fig.suptitle('Contact force at the end-effector', fontsize=16)
 fig, axs = plt.subplots(3, 4, constrained_layout=True)
 for i,fname in enumerate(mpc.ee_frame_names[:-1]):
     # x,y
-    axs[0, i].plot(time_span, measured_forces_dict[fname][:,0], linewidth=2, color='g', marker='o', alpha=0.5, label="Fx measured")
-    axs[0, i].plot(time_span, filtered_forces_dict[fname][:,0], linewidth=4, color='r', marker='o', label="Fx filtered")
+    axs[0, i].plot(time_span, measured_forces_dict[fname][:,0], linewidth=4, color='g', marker='o', alpha=0.5, label="Fx measured")
     axs[0, i].plot(time_span, predicted_forces_dict[fname][:,0], linewidth=4, color='b', marker='o', alpha=0.25, label="Fx predicted")
     axs[1, i].plot(time_span, measured_forces_dict[fname][:,1], linewidth=4, color='g', marker='o', alpha=0.5, label="Fy measured")
-    axs[1, i].plot(time_span, filtered_forces_dict[fname][:,1], linewidth=4, color='r', marker='o', label="Fy filtered")
     axs[1, i].plot(time_span, predicted_forces_dict[fname][:,1], linewidth=4, color='b', marker='o', alpha=0.25, label="Fy predicted")
     axs[0, i].legend()
     # axs[0, i].title(fname)
@@ -298,8 +290,7 @@ for i,fname in enumerate(mpc.ee_frame_names[:-1]):
     # z
     Fz_lb_mea = (1./MU)*np.sqrt(measured_forces_dict[fname][:, 0]**2 + measured_forces_dict[fname][:, 1]**2)
     Fz_lb_pred = (1./MU)*np.sqrt(predicted_forces_dict[fname][:, 0]**2 + predicted_forces_dict[fname][:, 1]**2)
-    axs[2, i].plot(time_span, measured_forces_dict[fname][:,2], linewidth=2, color='g', marker='o', alpha=0.5, label="Fz measured")
-    axs[2, i].plot(time_span, filtered_forces_dict[fname][:,2], linewidth=4, color='r', marker='o', label="Fz filtered")
+    axs[2, i].plot(time_span, measured_forces_dict[fname][:,2], linewidth=4, color='g', marker='o', alpha=0.5, label="Fz measured")
     axs[2, i].plot(time_span, predicted_forces_dict[fname][:,2], linewidth=4, color='b', marker='o', alpha=0.25, label="Fz predicted")
     axs[2, i].plot(time_span, Fz_lb_mea, '--', linewidth=4, color='k',  alpha=0.5, label="Fz friction constraint (lower bound)")
     # axs[2, i].plot(time_span, Fz_lb_pred, '--', linewidth=4, color='b', alpha=0.2, label="Fz friction lb (pred)")
