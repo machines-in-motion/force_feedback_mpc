@@ -432,7 +432,7 @@ class Go2MPCSoft:
             # com_residual = crocoddyl.ResidualModelCoMPosition(self.ccdyl_state, comRef, self.nu)
             # com_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
             # com_track = crocoddyl.CostModelResidual(self.ccdyl_state, com_activation, com_residual) #
-            # com_weight = 1e6
+            # com_weight = 1e3
             # if t != self.HORIZON:
             #     costModel.addCost("comTrack", com_track, com_weight)
             # else:
@@ -443,11 +443,23 @@ class Go2MPCSoft:
             # ef_residual = crocoddyl.ResidualModelFrameTranslation(self.ccdyl_state, self.armEEId, ef_pos_ref, self.nu) # Check this cost term            
             # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
             # ef_track = crocoddyl.CostModelResidual(self.ccdyl_state, ef_activation, ef_residual)
-            # ef_weight = 1e6
+            # ef_weight = 1e2
             # if t != self.HORIZON:
             #     costModel.addCost("ef_track", ef_track, ef_weight)
             # else:
             #     costModel.addCost("ef_track", ef_track, ef_weight*self.dt)
+            
+            # End Effecor Velocity Tracking Cost
+            ef_vel_ref = pin.Motion.Zero()
+            ef_residual = crocoddyl.ResidualModelFrameVelocity(self.ccdyl_state, self.armEEId, ef_vel_ref, pin.LOCAL_WORLD_ALIGNED, self.nu) # Check this cost term            
+            ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([0., 0., 0., 0., 1., 1.]))
+            ef_vel = crocoddyl.CostModelResidual(self.ccdyl_state, ef_activation, ef_residual)
+            ef_weight = 0.1
+            if t != self.HORIZON:
+                costModel.addCost("ef_vel", ef_vel, ef_weight)
+            else:
+                costModel.addCost("ef_vel", ef_vel, ef_weight*self.dt)
+
             # # feet tracking costs
             # for fname in self.ee_frame_names[:-1]:
             #     frame_idx = self.rmodel.getFrameId(fname)
@@ -703,7 +715,7 @@ class Go2MPCSoft:
         solver.mu_constraint = -1 #-1 #1e-4 #-3
         # solver.mu_dynamic = 1e-2 #-1
         # solver.lag_mul_inf_norm_coef = 2.
-        solver.termination_tolerance = 1e-2
+        solver.termination_tolerance = 1e-4
         solver.eps_abs = 1e-6
         solver.eps_rel = 1e-6
         # solver.extra_iteration_for_last_kkt = True

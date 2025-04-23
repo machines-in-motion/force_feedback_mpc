@@ -56,18 +56,18 @@ else:
     robot.forward_robot(q0, v0)
     sim_utils.set_lateral_friction(env.objects[0], MU)
     sim_utils.set_contact_stiffness_and_damping(env.objects[0], 10000, 500)
-    contact_placement = pin.SE3(pin.rpy.rpyToMatrix(0.,np.pi/2, 0.), np.array([0.41,0.,0.]))
+    contact_placement = pin.SE3(pin.rpy.rpyToMatrix(0.,np.pi/2, 0.), np.array([0.42,0.,0.]))
     contact_surface_bulletId = sim_utils.display_contact_surface(contact_placement, radius=2., bullet_endeff_ids=robot.bullet_endeff_ids)
     sim_utils.set_lateral_friction(contact_surface_bulletId, MU)
     sim_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 10000, 500)
-    # floor props
-    p.changeDynamics(
-        env.objects[0],
-        0,
-        lateralFriction=MU,
-        spinningFriction=0.,
-        rollingFriction=0.,
-    )
+    # # floor props
+    # p.changeDynamics(
+    #     env.objects[0],
+    #     0,
+    #     lateralFriction=MU,
+    #     spinningFriction=0.,
+    #     rollingFriction=0.,
+    # )
 
 # Instantiate the solver
 mpc = Go2MPCSoft(HORIZON=HORIZON, friction_mu=MU, dt=DT_OCP, USE_MUJOCO=USE_MUJOCO)
