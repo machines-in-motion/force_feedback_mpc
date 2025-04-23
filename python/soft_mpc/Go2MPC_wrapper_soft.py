@@ -461,12 +461,13 @@ class Go2MPCSoft:
             #     costModel.addCost("ef_vel", ef_vel, ef_weight*self.dt)
 
             # # feet tracking costs
+            # ef_vel_ref = pin.Motion.Zero()
             # for fname in self.ee_frame_names[:-1]:
             #     frame_idx = self.rmodel.getFrameId(fname)
-            #     foot_residual = crocoddyl.ResidualModelFrameTranslation(self.ccdyl_state, frame_idx, self.footPosDict[fname], self.nu) # Check this cost term            
-            #     foot_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
+            #     foot_residual = crocoddyl.ResidualModelFrameVelocity(self.ccdyl_state, frame_idx, ef_vel_ref, pin.LOCAL_WORLD_ALIGNED, self.nu) # Check this cost term            
+            #     foot_activation = crocoddyl.ActivationModelWeightedQuad(np.array([0., 0., 0., 1., 1., 0.]))
             #     foot_track = crocoddyl.CostModelResidual(self.ccdyl_state, foot_activation, foot_residual)
-            #     costModel.addCost(fname+"_track", foot_track, 1e2)
+            #     costModel.addCost(fname+"_vel", foot_track, 0.01)
 
             # Soft contact models 3d 
             # oPc_ee = self.rdata.oMf[self.armEEId].translation.copy() 
@@ -786,7 +787,6 @@ class Go2MPCSoft:
         dq_[:3] = v
         dq_[3:6] = omega
         dq_[6:] = dq[self.unitree_to_mpc_idx]
-        pin.framesForwardKinematics(self.rmodel, self.rdata, q_)
         y = np.hstack([q_, dq_, f])
         self.solver.problem.x0 = y
         self.xs = list(self.solver.xs[1:]) + [self.solver.xs[-1]]
@@ -797,7 +797,6 @@ class Go2MPCSoft:
         return self.getSolution()
 
     def updateAndSolve2(self, q, dq, f):
-        pin.framesForwardKinematics(self.rmodel, self.rdata, q)
         y = np.hstack([q, dq, f])
         self.solver.problem.x0 = y
         self.xs = list(self.solver.xs[1:]) + [self.solver.xs[-1]]

@@ -205,7 +205,7 @@ def set_lateral_friction(bodyId, coef, linkId=-1):
     linkId : linkId . Default : -1 (base link)
     coef   : friction coefficient in (0,1)
   '''
-  p.changeDynamics(bodyId, linkId, lateralFriction=coef, rollingFriction=0., spinningFriction=0.) 
+  p.changeDynamics(bodyId, linkId, lateralFriction=coef, rollingFriction=coef, spinningFriction=coef) 
   logger.info("Set friction of body n°"+str(bodyId)+" (link n°"+str(linkId)+") to "+str(coef)) 
 
 # Set contact stiffness coefficient to PyBullet body
