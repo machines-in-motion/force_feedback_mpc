@@ -99,12 +99,16 @@ def plot_ocp_solution(mpc):
     jointTorques_sol = []
     centroidal_sol = []
     force_sol = []
+    eePos_sol = []
+    eeVel_sol = []
     xs, us = solver.xs, solver.us
     x = []
     for time_idx in range (T):
         q, v = xs[time_idx][:nq], xs[time_idx][nq:nq+nv]
         f = xs[time_idx][nq+nv:]
         pin.framesForwardKinematics(rmodel, rdata, q)
+        eePos_sol.append(rdata.oMf[mpc.armEEId].translation)
+        eeVel_sol.append(pin.getFrameVelocity(rmodel, rdata, mpc.armEEId).linear)
         pin.computeCentroidalMomentum(rmodel, rdata, q, v)
         centroidal_sol += [
             np.concatenate(
@@ -121,7 +125,8 @@ def plot_ocp_solution(mpc):
 
     sol = {'x':x, 'centroidal':centroidal_sol, 'jointPos':jointPos_sol, 
                         'jointVel':jointVel_sol, 'jointAcc':jointAcc_sol, 'force':force_sol,
-                        'jointTorques':jointTorques_sol}       
+                        'jointTorques':jointTorques_sol,
+                        'eePos': eePos_sol, 'eeVel':eeVel_sol}         
 
     # Extract contact forces by hand
     sol['FL_FOOT_contact'] = [force_sol[i][0:3] for i in range(T)]     
@@ -132,20 +137,19 @@ def plot_ocp_solution(mpc):
 
     # Plotting 
     import matplotlib.pyplot as plt
-    constrained_sol = sol
     time_lin = np.linspace(0, T, T)
     fig, axs = plt.subplots(4, 3, constrained_layout=True)
     for i, frame_idx in enumerate(supportFeetIds):
         ct_frame_name = rmodel.frames[frame_idx].name + "_contact"
-        forces = np.array(constrained_sol[ct_frame_name])
-        axs[i, 0].plot(time_lin, forces[:, 0], label="Fx")
-        axs[i, 1].plot(time_lin, forces[:, 1], label="Fy")
-        axs[i, 2].plot(time_lin, forces[:, 2], label="Fz")
+        forces = np.array(sol[ct_frame_name])
+        axs[i, 0].plot(time_lin, forces[:, 0], marker='.', linewidth=2, label="Fx")
+        axs[i, 1].plot(time_lin, forces[:, 1], marker='.', linewidth=2, label="Fy")
+        axs[i, 2].plot(time_lin, forces[:, 2], marker='.', linewidth=2, label="Fz")
         # Add friction cone constraints 
         Fz_lb = (1./MU)*np.sqrt(forces[:, 0]**2 + forces[:, 1]**2)
         # Fz_ub = np.zeros(time_lin.shape)
         # axs[i, 2].plot(time_lin, Fz_ub, 'k-.', label='ub')
-        axs[i, 2].plot(time_lin, Fz_lb, 'k-.', label='lb')
+        axs[i, 2].plot(time_lin, Fz_lb, 'k-.', marker='.', linewidth=2, label='lb')
         axs[i, 0].grid()
         axs[i, 1].grid()
         axs[i, 2].grid()
@@ -159,19 +163,57 @@ def plot_ocp_solution(mpc):
     axs[3, 2].set_xlabel(r"$F_z$")
     fig.suptitle('Force feet', fontsize=16)
 
+    # EE Force
     fig, axs = plt.subplots(3, 1, constrained_layout=True)
-    forces = np.array(constrained_sol['Link6'])
-    axs[0].plot(time_lin, forces[:, 0], label="Fx")
-    axs[1].plot(time_lin, forces[:, 1], label="Fy")
-    axs[2].plot(time_lin, forces[:, 2], label="Fz")
+    # forces = np.array(sol['Link62EF_dummy_fixed'])
+    forces = np.array(sol['Link6'])
+    axs[0].plot(time_lin, forces[:, 0], marker='.', linewidth=2, label="Fx")
+    axs[1].plot(time_lin, forces[:, 1], marker='.', linewidth=2, label="Fy")
+    axs[2].plot(time_lin, forces[:, 2], marker='.', linewidth=2, label="Fz")
     for i in range(3):
         axs[i].legend()
         axs[i].grid()
     fig.suptitle('Force EE', fontsize=16)
-
     axs[0].set_xlabel(r"$F_x$")
     axs[1].set_xlabel(r"$F_y$")
     axs[2].set_xlabel(r"$F_z$")
+
+    # ## EE pos and vel
+    # fig, axs = plt.subplots(3, 2, constrained_layout=True)
+    # eePos = np.array(sol['eePos'])
+    # eeVel = np.array(sol['eeVel'])
+    # axs[0, 0].plot(time_lin, eePos[:, 0], marker='.', linewidth=2, label="Px_ee")
+    # axs[1, 0].plot(time_lin, eePos[:, 1], marker='.', linewidth=2, label="Py_ee")
+    # axs[2, 0].plot(time_lin, eePos[:, 2], marker='.', linewidth=2, label="Pz_ee")
+    # axs[0, 1].plot(time_lin, eeVel[:, 0], marker='.', linewidth=2, label="Vx_ee")
+    # axs[1, 1].plot(time_lin, eeVel[:, 1], marker='.', linewidth=2, label="Vy_ee")
+    # axs[2, 1].plot(time_lin, eeVel[:, 2], marker='.', linewidth=2, label="Vz_ee")
+    # for i in range(3):
+    #     axs[i,0].legend()
+    #     axs[i,1].legend()
+    #     axs[i,0].grid()
+    #     axs[i,1].grid()
+    # fig.suptitle('EE trajectories', fontsize=16)
+    # axs[0, 0].set_xlabel(r"$P_x$")
+    # axs[1, 0].set_xlabel(r"$P_y$")
+    # axs[2, 0].set_xlabel(r"$P_z$")
+    # axs[0, 1].set_xlabel(r"$V_x$")
+    # axs[1, 1].set_xlabel(r"$V_y$")
+    # axs[2, 1].set_xlabel(r"$V_z$")
+
+    # fig, axs = plt.subplots(nv//2, 2, constrained_layout=True)
+    # for i in range(nv//2):
+    #     jointVel_sol = np.array(jointVel_sol)
+    #     axs[i, 0].plot(time_lin, [0.]*time_lin.shape[0], color='r', linewidth=2)
+    #     axs[i, 0].plot(time_lin, jointVel_sol[:, 2*i], marker='.', linewidth=2, label="v_"+str(2*i))
+    #     axs[i, 0].grid()
+    #     axs[i, 0].legend()
+    #     axs[i, 1].plot(time_lin, [0.]*time_lin.shape[0], color='r', linewidth=2)
+    #     axs[i, 1].plot(time_lin, jointVel_sol[:, 2*i+1], marker='.', linewidth=2, label="v_"+str(2*i+1))
+    #     axs[i, 1].grid()
+    #     axs[i, 1].legend()
+    # fig.suptitle('Joint velocities', fontsize=16)
+    # plt.show()
 
     # fig, axs = plt.subplots(nq, 1, constrained_layout=True)
     # for i in range(nq):
@@ -181,18 +223,18 @@ def plot_ocp_solution(mpc):
     #     axs[i].legend()
     # fig.suptitle('Joint positions', fontsize=16)
 
-    fig, axs = plt.subplots(nv//2, 2, constrained_layout=True)
-    for i in range(nv//2):
-        jointVel_sol = np.array(jointVel_sol)
-        axs[i, 0].plot(time_lin, [0.]*time_lin.shape[0], color='r', linewidth=2)
-        axs[i, 0].plot(time_lin, jointVel_sol[:, 2*i], marker='.', linewidth=2, label="v_"+str(2*i))
-        axs[i, 0].grid()
-        axs[i, 0].legend()
-        axs[i, 1].plot(time_lin, [0.]*time_lin.shape[0], color='r', linewidth=2)
-        axs[i, 1].plot(time_lin, jointVel_sol[:, 2*i+1], marker='.', linewidth=2, label="v_"+str(2*i+1))
-        axs[i, 1].grid()
-        axs[i, 1].legend()
-    fig.suptitle('Joint velocities', fontsize=16)
+    # fig, axs = plt.subplots(nv//2, 2, constrained_layout=True)
+    # for i in range(nv//2):
+    #     jointVel_sol = np.array(jointVel_sol)
+    #     axs[i, 0].plot(time_lin, [0.]*time_lin.shape[0], color='r', linewidth=2)
+    #     axs[i, 0].plot(time_lin, jointVel_sol[:, 2*i], marker='.', linewidth=2, label="v_"+str(2*i))
+    #     axs[i, 0].grid()
+    #     axs[i, 0].legend()
+    #     axs[i, 1].plot(time_lin, [0.]*time_lin.shape[0], color='r', linewidth=2)
+    #     axs[i, 1].plot(time_lin, jointVel_sol[:, 2*i+1], marker='.', linewidth=2, label="v_"+str(2*i+1))
+    #     axs[i, 1].grid()
+    #     axs[i, 1].legend()
+    # fig.suptitle('Joint velocities', fontsize=16)
 
     # fig, axs = plt.subplots(nv-6, 1, constrained_layout=True)
     # for i in range(nv-6):
@@ -204,7 +246,7 @@ def plot_ocp_solution(mpc):
 
 
     # comDes = np.array(comDes)
-    # centroidal_sol = np.array(constrained_sol['centroidal'])
+    # centroidal_sol = np.array(sol['centroidal'])
     # plt.figure()
     # plt.plot(comDes[:, 0], comDes[:, 1], "--", label="reference")
     # plt.plot(centroidal_sol[:, 0], centroidal_sol[:, 1], label="solution")
@@ -332,7 +374,7 @@ class Go2MPCSoft:
         self.armEEOri0 = self.rdata.oMf[self.armEEId].rotation
         self.oPc_ee = self.armEEPos0.copy()
         # self.oPc_ee[0] += 0.02
-        # self.supportFeetIds = [self.lfFootId, self.rfFootId, self.lhFootId, self.rhFootId]
+        self.supportFeetIds = [self.lfFootId, self.rfFootId, self.lhFootId, self.rhFootId]
         # self.f0[-3:] = -np.diag([self.Kp]*3) @ (self.armEEPos0 - self.oPc_ee)  
         # print("\n\n f0 = ", self.f0[-3:], "\n\n")
         # print("\n\n p_ee = ", self.armEEPos0, "\n\n")
@@ -463,8 +505,8 @@ class Go2MPCSoft:
             # lb_ee = np.array([-np.inf, -np.inf, -np.inf])
             # ub_ee = np.array([0., np.inf, np.inf])
             forceConstraintManager = ForceConstraintManager([
-                                                            # FrictionConeConstraint(self.lfFootId, self.friction_mu),
-                                                            #  FrictionConeConstraint(self.rfFootId, self.friction_mu),
+                                                             FrictionConeConstraint(self.lfFootId, self.friction_mu),
+                                                             FrictionConeConstraint(self.rfFootId, self.friction_mu),
                                                              FrictionConeConstraint(self.lhFootId, self.friction_mu),
                                                              FrictionConeConstraint(self.rhFootId, self.friction_mu),
                                                             #  ForceBoxConstraint(self.lfFootId, lb_foot, ub_foot),
@@ -658,7 +700,7 @@ class Go2MPCSoft:
         solver.max_qp_iters = 1000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
-        solver.mu_constraint = 1e2 #-1 #1e-4 #-3
+        solver.mu_constraint = 1e6 #-1 #1e-4 #-3
         solver.mu_dynamic = 1e-2 #-1
         # solver.lag_mul_inf_norm_coef = 2.
         solver.termination_tolerance = 1e-2

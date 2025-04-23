@@ -231,14 +231,15 @@ else:
                 f_mea = f_mea_bullet[k,:3]
             else:
                 f_mea = np.zeros(3)
-            # print("fmea = ", f_mea)
             measured_forces_dict[fname].append(f_mea)
             filtered_forces_dict[fname].append(f_mea)
-            f_mea_all[k:k+3] = f_mea
-            f_mea_all_filtered[k:k+3] = f_mea
+            f_mea_all[3*k:3*(k+1)] = f_mea
+            f_mea_all_filtered[3*k:3*(k+1)] = f_mea
         # Solve OCP
         if(i%int(SIM_FREQ/MPC_FREQ)==0):
+            # plot_ocp_solution(mpc)
             solution = mpc.updateAndSolve2(q, dq, f_mea_all)
+            # plot_ocp_solution(mpc)
         for fname in mpc.ee_frame_names:
             predicted_forces_dict[fname].append(solution[frame_name_to_sol_map[fname]])
         # Save the solution
