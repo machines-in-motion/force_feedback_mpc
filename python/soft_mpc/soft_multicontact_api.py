@@ -199,7 +199,7 @@ class ViscoElasticContact3d_Multiple:
 
 # 3D Friction cone constraint
 class FrictionConeConstraint:
-    def __init__(self, frameId, coef):
+    def __init__(self, frameId, coef, normal='z'):
         self.nc           = 3
         self.nr           = 1
         self.active       = True
@@ -209,18 +209,34 @@ class FrictionConeConstraint:
         self.residual_df = np.zeros((self.nr, self.nc))
         self.lb = np.array([0.])
         self.ub = np.array([np.inf])
+        self.normal = normal
 
     def calc(self, f):
-        self.residual = self.coef * f[2] - np.sqrt(f[0]*f[0] + f[1]*f[1])
+        if(self.normal == 'z'):
+            self.residual = self.coef * np.abs(f[2]) - np.sqrt(f[0]*f[0] + f[1]*f[1])
+        elif(self.normal == 'x'):
+            self.residual = self.coef * np.abs(f[0]) - np.sqrt(f[1]*f[1] + f[2]*f[2])
+        else:
+            ValueError('Friction with normal=y is not supported.')
         return self.residual
     
     def calcDiff(self, f):
-        if(np.linalg.norm(f) > 1e-3):
-            self.residual_df[:, 0] = -f[0] / np.sqrt(f[0]*f[0] + f[1]*f[1])
-            self.residual_df[:, 1] = -f[1] / np.sqrt(f[0]*f[0] + f[1]*f[1])
-            self.residual_df[:, 2] = self.coef
+        if(self.normal == 'z'):
+            if(np.linalg.norm(f) > 1e-3):
+                self.residual_df[:, 0] = -f[0] / np.sqrt(f[0]*f[0] + f[1]*f[1])
+                self.residual_df[:, 1] = -f[1] / np.sqrt(f[0]*f[0] + f[1]*f[1])
+                self.residual_df[:, 2] = self.coef
+            else:
+                self.residual_df = np.array([[-1, -1, self.coef]])
+        elif(self.normal == 'x'):
+            if(np.linalg.norm(f) > 1e-3):
+                self.residual_df[:, 0] = self.coef 
+                self.residual_df[:, 1] = -f[1] / np.sqrt(f[1]*f[1] + f[2]*f[2])
+                self.residual_df[:, 2] = -f[2] / np.sqrt(f[1]*f[1] + f[2]*f[2])
+            else:
+                self.residual_df = np.array([[self.coef, -1, -1]])
         else:
-            self.residual_df = np.array([[-1, -1, self.coef]])
+            ValueError('Friction with normal=y is not supported.')
         return self.residual_df
 
 

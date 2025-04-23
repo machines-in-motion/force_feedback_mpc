@@ -449,16 +449,16 @@ class Go2MPCSoft:
             # else:
             #     costModel.addCost("ef_track", ef_track, ef_weight*self.dt)
             
-            # End Effecor Velocity Tracking Cost
-            ef_vel_ref = pin.Motion.Zero()
-            ef_residual = crocoddyl.ResidualModelFrameVelocity(self.ccdyl_state, self.armEEId, ef_vel_ref, pin.LOCAL_WORLD_ALIGNED, self.nu) # Check this cost term            
-            ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([0., 0., 0., 0., 1., 1.]))
-            ef_vel = crocoddyl.CostModelResidual(self.ccdyl_state, ef_activation, ef_residual)
-            ef_weight = 0.1
-            if t != self.HORIZON:
-                costModel.addCost("ef_vel", ef_vel, ef_weight)
-            else:
-                costModel.addCost("ef_vel", ef_vel, ef_weight*self.dt)
+            # # End Effecor Velocity Tracking Cost
+            # ef_vel_ref = pin.Motion.Zero()
+            # ef_residual = crocoddyl.ResidualModelFrameVelocity(self.ccdyl_state, self.armEEId, ef_vel_ref, pin.LOCAL_WORLD_ALIGNED, self.nu) # Check this cost term            
+            # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([0., 0., 0., 0., 1., 1.]))
+            # ef_vel = crocoddyl.CostModelResidual(self.ccdyl_state, ef_activation, ef_residual)
+            # ef_weight = 0.01
+            # if t != self.HORIZON:
+            #     costModel.addCost("ef_vel", ef_vel, ef_weight)
+            # else:
+            #     costModel.addCost("ef_vel", ef_vel, ef_weight*self.dt)
 
             # # feet tracking costs
             # for fname in self.ee_frame_names[:-1]:
@@ -482,8 +482,8 @@ class Go2MPCSoft:
             constraintModelManager = None #crocoddyl.ConstraintModelManager(self.ccdyl_state, self.nu)
 
             # Custom force cost in DAM
-            f_weight = np.array([2e-3, 1e-6, 1e-6])
-            fdot_weights = np.array([1e-3]*12 + [1., 1., 1.])*1e-5
+            f_weight = np.array([1., 1., 1.])*1e-2
+            fdot_weights = np.array([0.]*12 + [1., 0., 0.])*1e-6
             if t != self.HORIZON:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight, pin.LOCAL_WORLD_ALIGNED)
                 forceRateCostManager = None #ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights)
@@ -517,10 +517,11 @@ class Go2MPCSoft:
             # lb_ee = np.array([-np.inf, -np.inf, -np.inf])
             # ub_ee = np.array([0., np.inf, np.inf])
             forceConstraintManager = ForceConstraintManager([
-                                                             FrictionConeConstraint(self.lfFootId, self.friction_mu),
-                                                             FrictionConeConstraint(self.rfFootId, self.friction_mu),
-                                                             FrictionConeConstraint(self.lhFootId, self.friction_mu),
-                                                             FrictionConeConstraint(self.rhFootId, self.friction_mu),
+                                                             FrictionConeConstraint(self.lfFootId, self.friction_mu, normal='z'),
+                                                             FrictionConeConstraint(self.rfFootId, self.friction_mu, normal='z'),
+                                                             FrictionConeConstraint(self.lhFootId, self.friction_mu, normal='z'),
+                                                             FrictionConeConstraint(self.rhFootId, self.friction_mu, normal='z'),
+                                                            #  FrictionConeConstraint(self.armEEId, self.friction_mu, normal='x'),
                                                             #  ForceBoxConstraint(self.lfFootId, lb_foot, ub_foot),
                                                             #  ForceBoxConstraint(self.rfFootId, lb_foot, ub_foot),
                                                             #  ForceBoxConstraint(self.lhFootId, lb_foot, ub_foot),

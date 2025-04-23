@@ -265,15 +265,22 @@ import matplotlib.pyplot as plt
 time_span = np.linspace(0, (N_SIMU-1)*DT_SIMU, N_SIMU)
 # EE FORCES
 fig, axs = plt.subplots(3, 1, constrained_layout=True)
-axs[0].plot(time_span, measured_forces_dict['Link6'][:,0],linewidth=2, color='g', marker='o', alpha=0.5, label="Fx mea")
-axs[0].plot(time_span, filtered_forces_dict['Link6'][:,0],linewidth=4, color='r', marker='o',  label="Fx filtered")
-axs[0].plot(time_span, desired_forces[:,0], linewidth=4, color='b', marker='o', label="Fx des")
+Fx_lb_mea = (1./MU)*np.sqrt(measured_forces_dict['Link6'][:, 1]**2 + measured_forces_dict['Link6'][:, 1]**2)
+# Fx_lb_pred = (1./MU)*np.sqrt(predicted_forces_dict['Link6'][:, 1]**2 + predicted_forces_dict['Link6'][:, 1]**2)
+axs[0].plot(time_span, np.abs(measured_forces_dict['Link6'][:,0]),linewidth=2, color='g', marker='o', alpha=0.5, label="Fx mea")
+axs[0].plot(time_span, np.abs(filtered_forces_dict['Link6'][:,0]),linewidth=4, color='r', marker='o',  label="Fx filtered")
+axs[0].plot(time_span, np.abs(desired_forces[:,0]), linewidth=4, color='k', marker='o', label="Fx des")
+axs[0].plot(time_span, np.abs(predicted_forces_dict['Link6'][:,0]), linewidth=4, color='b', marker='o', alpha=0.25, label="Fx predicted")
+axs[0].plot(time_span, Fx_lb_mea, '--', linewidth=4, color='k',  alpha=0.5, label="Fx friction constraint (lower bound)")
 axs[1].plot(time_span, measured_forces_dict['Link6'][:,1],linewidth=2, color='g', marker='o', alpha=0.5, label="Fy mea")
 axs[1].plot(time_span, filtered_forces_dict['Link6'][:,1],linewidth=4, color='r', marker='o',  label="Fy filtered")
-axs[1].plot(time_span, desired_forces[:,1], linewidth=4, color='b', marker='o', label="Fy des")
+axs[1].plot(time_span, desired_forces[:,1], linewidth=4, color='k', marker='o', label="Fy des")
+axs[1].plot(time_span, predicted_forces_dict['Link6'][:,1], linewidth=4, color='b', marker='o', alpha=0.25, label="Fy predicted")
+
 axs[2].plot(time_span, measured_forces_dict['Link6'][:,2],linewidth=2, color='g', marker='o', alpha=0.5, label="Fz mea")
 axs[2].plot(time_span, filtered_forces_dict['Link6'][:,2],linewidth=4, color='r', marker='o',  label="Fz filtered")
-axs[2].plot(time_span, desired_forces[:,2], linewidth=4, color='b', marker='o', label="Fz des")
+axs[2].plot(time_span, desired_forces[:,2], linewidth=4, color='k', marker='o', label="Fz des")
+axs[2].plot(time_span, predicted_forces_dict['Link6'][:,2], linewidth=4, color='b', marker='o', alpha=0.25, label="Fz predicted")
 
 for i in range(3):
     axs[i].legend()
