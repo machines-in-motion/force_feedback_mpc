@@ -715,7 +715,7 @@ class Go2MPCSoft:
         solver.with_callbacks = True
         solver.use_filter_line_search = False
         solver.mu_constraint = -1 
-        solver.termination_tolerance = 1e-4
+        solver.termination_tolerance = 1e-2
         solver.eps_abs = 1e-6
         solver.eps_rel = 1e-6
         # solver.extra_iteration_for_last_kkt = True

@@ -432,7 +432,7 @@ class Go2MPCClassical:
         solver.use_filter_line_search = False
         solver.mu_constraint = -1
         # solver.lag_mul_inf_norm_coef = 10.
-        solver.termination_tolerance = 1e-4
+        solver.termination_tolerance = 1e-2
         solver.eps_abs = 1e-6
         solver.eps_rel = 1e-6
         self.solver = solver

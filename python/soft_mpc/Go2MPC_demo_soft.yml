@@ -9,10 +9,10 @@ MPC_FREQ: 100
 HORIZON: 20
 DT_OCP: 0.01
 MAX_ITER_1: 500
-MAX_ITER_2: 10
+MAX_ITER_2: 50
 
 # Task
-FREF: 40   # desired contact force at end-effector
+FREF: 50   # desired contact force at end-effector
 MU: 0.75   # environment friction coefficient (ground / wall)
 
 # CONTROL
