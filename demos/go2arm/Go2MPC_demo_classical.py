@@ -69,6 +69,15 @@ else:
     from pinocchio.visualize import MeshcatVisualizer
     viz = MeshcatVisualizer(robot.pin_robot.model, robot.pin_robot.collision_model, robot.pin_robot.visual_model)
     viz.initViewer()
+    # Override transparency of some links 
+    ee_frame_names = ['FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT', 'Link6', 'ef_tip', \
+                      'FL_KFE', 'FR_KFE', 'HL_KFE', 'HR_KFE', 'HR_HAA', 'Link5']
+    for fname in ee_frame_names:
+        fid = robot.pin_robot.model.getFrameId(fname)
+        fname = robot.pin_robot.model.frames[fid].name + '_0'
+        print("changing mesh of ", fname)
+        g_id = viz.visual_model.getGeometryId(fname)
+        viz.visual_model.geometryObjects[g_id].meshColor = np.array([1., 1., 1., 0.5])
     viz.loadViewerModel()
     viz.display(q0)
     surface_tf = tf.translation_matrix(contact_placement.translation) @ tf.rotation_matrix(np.pi/2, [0, 1, 0])  
@@ -117,7 +126,7 @@ if(WITH_INTEGRAL):
     Ki = CONFIG['INTEGRAL_GAIN']
     err_f3d = np.zeros(3)
 # test_force_sensor_orientation()
-ANTI_WINDUP = 100
+ANTI_WINDUP = -1 #100
 
 # MUJOCO SIMULATION
 if(USE_MUJOCO):
@@ -192,6 +201,7 @@ else:
             viz, 'world/debris_center'+str(contact_idx), 
             [t[0], t[1], t[2]-0.017, 1, 0, 0, 0]
             ) 
+        
     # Create the arrows and cones
     arrow1 = meshcat_utils.Arrow(viz.viewer, "force_1", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
     arrow2 = meshcat_utils.Arrow(viz.viewer, "force_2", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
@@ -205,6 +215,7 @@ else:
     arrow_ee = meshcat_utils.Arrow(viz.viewer, "force_ee", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
     cones = [cone1, cone2, cone3, cone4]
     image_array_list = []
+    jointPos = []
 
     for i in range(N_SIMU):
         print("Step ", i)
@@ -222,6 +233,7 @@ else:
         # Save the solution
         tau = solution['tau'].squeeze()
         joint_torques.append(tau)
+        jointPos.append(q)
         # Measure forces and save predicted force from solution
         robot.forward_robot(q, dq)
         contact_status, f_mea_bullet = robot.end_effector_forces()
@@ -246,7 +258,7 @@ else:
             
         # compute the force integral error and map it to joint torques
         if(WITH_INTEGRAL):
-            if(i%ANTI_WINDUP==0):
+            if(i%ANTI_WINDUP==0 and ANTI_WINDUP>0):
                 err_f3d = np.zeros(3)
             if(i%int(SIM_FREQ/MPC_FREQ)==0):
                 err_f3d -= Ki * (f_des_3d - measured_forces_dict['Link6'][i])
@@ -279,6 +291,23 @@ if(RECORD_VIDEO):
         print("Closed writer")
     output_path = '/home/skleff/go2_mpc_classical_INT='+str(WITH_INTEGRAL)+'_meshcat.mp4'
     create_video_from_rgba(image_array_list, output_path)
+
+import pickle
+data = {'jointPos': jointPos, 
+        'measured_forces': measured_forces_dict, 
+        'supportFeedIds': mpc.supportFeetIds,
+        'supportFeetPos': mpc.supportFeetPos0,
+        'armEEId': mpc.armEEId,
+        'armEEName': 'Link6',
+        'mu': MU,
+        'pin_robot': robot.pin_robot}
+# Pickling (serializing) and saving to a file
+filename = '/home/skleff/meshcat_data.pkl'
+with open(filename, 'wb') as file:
+    pickle.dump(data, file)
+# # Unpickling (deserializing) from the file
+# with open(filename, 'rb') as file:
+#     loaded_data = pickle.load(file)
 
 # measured_forces = np.array(measured_forces)
 desired_forces = np.array(desired_forces)

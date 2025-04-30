@@ -69,6 +69,15 @@ else:
     from pinocchio.visualize import MeshcatVisualizer
     viz = MeshcatVisualizer(robot.pin_robot.model, robot.pin_robot.collision_model, robot.pin_robot.visual_model)
     viz.initViewer()
+    # Override transparency of some links 
+    ee_frame_names = ['FL_FOOT', 'FR_FOOT', 'HL_FOOT', 'HR_FOOT', 'Link6', 'ef_tip', \
+                      'FL_KFE', 'FR_KFE', 'HL_KFE', 'HR_KFE', 'HR_HAA', 'Link5']
+    for fname in ee_frame_names:
+        fid = robot.pin_robot.model.getFrameId(fname)
+        fname = robot.pin_robot.model.frames[fid].name + '_0'
+        print("changing mesh of ", fname)
+        g_id = viz.visual_model.getGeometryId(fname)
+        viz.visual_model.geometryObjects[g_id].meshColor = np.array([1., 1., 1., 0.5])
     viz.loadViewerModel()
     viz.display(q0)
     surface_tf = tf.translation_matrix(contact_placement.translation) @ tf.rotation_matrix(np.pi/2, [0, 1, 0])  
@@ -255,9 +264,10 @@ else:
     cone3 = meshcat_utils.Cone(viz.viewer, "friction_cone_3", location=mpc.supportFeetPos0[2], mu=MU)
     cone4 = meshcat_utils.Cone(viz.viewer, "friction_cone_4", location=mpc.supportFeetPos0[3], mu=MU)
     arrows = [arrow1, arrow2, arrow3, arrow4]
-    arrow_ee = meshcat_utils.Arrow(viz.viewer, "force_ee", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
+    arrow_ee = meshcat_utils.Arrow(viz.viewer, "force_ee", location=[0,0,0], vector=[0.01,0,0], length_scale=0.1)
     cones = [cone1, cone2, cone3, cone4]
     image_array_list = []
+    jointPos = []
     
     for i in range(N_SIMU):
         print("Step ", i)
@@ -266,6 +276,7 @@ else:
         desired_forces.append(f_des_3d)
         # Get state from simulation
         q, dq = robot.get_state()
+        jointPos.append(q)
         # Measure forces in PyBullet simulation
         robot.forward_robot(q, dq)
         contact_status, f_mea_bullet = robot.end_effector_forces()
@@ -325,6 +336,23 @@ if(RECORD_VIDEO):
         print("Closed writer")
     output_path = '/home/skleff/go2_mpc_soft.mp4'
     create_video_from_rgba(image_array_list, output_path)
+
+import pickle
+data = {'jointPos': jointPos, 
+        'measured_forces': measured_forces_dict, 
+        'supportFeedIds': mpc.supportFeetIds,
+        'supportFeetPos': mpc.supportFeetPos0,
+        'armEEId': mpc.armEEId,
+        'armEEName': 'Link6',
+        'mu': MU,
+        'rmodel': robot.pin_robot.model}
+# Pickling (serializing) and saving to a file
+filename = '/home/skleff/meshcat_data.pkl'
+with open(filename, 'wb') as file:
+    pickle.dump(data, file)
+# # Unpickling (deserializing) from the file
+# with open(filename, 'rb') as file:
+#     loaded_data = pickle.load(file)
 
 desired_forces = np.array(desired_forces)
 joint_torques = np.array(joint_torques)

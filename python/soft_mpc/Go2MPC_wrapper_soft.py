@@ -401,10 +401,6 @@ class Go2MPCSoft:
         
 
     def createProblem(self):
-        #First compute the desired state of the robot
-        # comRef = (self.rfFootPos0 + self.rhFootPos0 + self.lfFootPos0 + self.lhFootPos0) / 4
-        # comRef[2] = pinocchio.centerOfMass(self.rmodel, self.rdata, self.q0)[2].item() 
-        comRef = np.array([-0.01, 0.0, 0.32])
         # Now define the model
         for t in range(self.HORIZON+1):
             costModel = crocoddyl.CostModelSum(self.ccdyl_state, self.nu)

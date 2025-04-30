@@ -1,7 +1,7 @@
 # Simu
 USE_MUJOCO: False
 DT_SIMU: 0.001
-N_SIMU: 1000
+N_SIMU: 200
 
 # MPC
 MPC_FREQ: 100
@@ -15,7 +15,7 @@ FREF: 50   # desired contact force at end-effector
 MU: 0.75   # environment friction coefficient (ground / wall)
 
 # CONTROL
-USE_INTEGRAL: False
+USE_INTEGRAL: True
 INTEGRAL_GAIN: 0.01
 KP: 0.
 KV: 0.
