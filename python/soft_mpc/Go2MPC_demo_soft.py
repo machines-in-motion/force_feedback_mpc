@@ -335,7 +335,8 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
 
 # Save data 
-np.savez_compressed(DATA_SAVE_DIR+'.npz',
+import time
+np.savez_compressed(DATA_SAVE_DIR+'_'+str(time.time())+'.npz',
                     jointPos=jointPos,
                     jointVel=jointVel,
                     joint_torques=joint_torques,

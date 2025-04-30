@@ -122,6 +122,7 @@ for fname in mpc.ee_frame_names:
 desired_forces = []
 joint_torques = []
 f_des_z = np.array([FREF]*N_SIMU) 
+# f_des_z = np.linspace(0, FREF, N_SIMU+1) 
 # breakpoint()
 WITH_INTEGRAL = USE_INTEGRAL
 if(WITH_INTEGRAL):
@@ -285,7 +286,8 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
 
 # Save data 
-np.savez_compressed(DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'.npz',
+import time
+np.savez_compressed(DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'_'+str(time.time())+'.npz',
                     jointPos=jointPos,
                     jointVel=jointVel,
                     joint_torques=joint_torques,
