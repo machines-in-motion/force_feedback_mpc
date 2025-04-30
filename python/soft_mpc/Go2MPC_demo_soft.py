@@ -47,7 +47,8 @@ else:
     from mim_robots.pybullet.env import BulletEnvWithGround
     import pybullet as p
     from force_feedback_mpc.core_mpc_utils import sim_utils
-    env = BulletEnvWithGround(dt=DT_SIMU, server=p.GUI)
+    env = BulletEnvWithGround(dt=DT_SIMU, server=p.DIRECT)
+    # env = BulletEnvWithGround(dt=DT_SIMU, server=p.GUI)
     robot = load_bullet_wrapper('go2')
     q0 = np.array([-0.01, 0.0, 0.32, 0.0, 0.0, 0.0, 1.0] + 4*[0.0, 0.77832842, -1.56065452] + [0.0, 0.3, -0.3, 0.0, 0.0, 0.0])
     v0 = np.zeros(robot.pin_robot.model.nv)
@@ -60,6 +61,30 @@ else:
     contact_surface_bulletId = sim_utils.display_contact_surface(contact_placement, radius=2., bullet_endeff_ids=robot.bullet_endeff_ids)
     sim_utils.set_lateral_friction(contact_surface_bulletId, MU)
     sim_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 10000, 500)
+    # Meshcat visualization
+    import meshcat
+    import meshcat.geometry as g
+    import meshcat.transformations as tf
+    from pinocchio.visualize import MeshcatVisualizer
+    viz = MeshcatVisualizer(robot.pin_robot.model, robot.pin_robot.collision_model, robot.pin_robot.visual_model)
+    viz.initViewer()
+    viz.loadViewerModel()
+    viz.display(q0)
+    # Display contact surface in meshcat 
+    # Transform for contact surface
+    surface_tf = tf.translation_matrix(contact_placement.translation) @ tf.rotation_matrix(np.pi/2, [0, 1, 0])  # align with visual
+    # viz.viewer["contact_surface"].set_object(
+    #     g.Cylinder(radius=0.2, height=0.01),  # adjust radius/height to match
+    #     g.MeshLambertMaterial(color=0x808080, opacity=0.5)
+    # )
+    viz.viewer["contact_surface"].set_object(
+        g.Box([4.0, 4.0, 0.001]),
+        g.MeshLambertMaterial(color=0x00aaff, opacity=0.3)
+    )
+    viz.viewer["contact_surface"].set_transform(surface_tf)
+
+# import time
+# time.sleep(100)
 
 # Instantiate the solver
 mpc = Go2MPCSoft(HORIZON=HORIZON, friction_mu=MU, dt=DT_OCP, USE_MUJOCO=USE_MUJOCO)
@@ -201,6 +226,44 @@ if(USE_MUJOCO):
         robot.step()
 # PYBULLET SIMULATION
 else:   
+    # Meshcat setup
+    import meshcat_utils
+    angle = 0.0  # Initial angle
+    rotation_speed = 0.05  # Speed of rotation (adjust as needed)
+    # cam_pose = tf.translation_matrix([0, 0, 0.])  # Example camera position
+    # cam_pose[:3, :3] = tf.euler_matrix(0.0, 0.0, np.pi/3)[:3, :3]  # Example camera orientation
+    # viz.viewer["/Cameras"].set_transform(cam_pose)
+    # add contact surfaces
+    step_adjustment_bound = 0.07                         
+    s = 0.5*step_adjustment_bound
+    for contact_idx, contactLoc in enumerate(mpc.supportFeetPos0):
+        t = contactLoc
+        # debris box
+        meshcat_utils.addViewerBox(
+            viz, 'world/debris'+str(contact_idx), 
+            2*s, 2*s, 0., [1., .2, .2, .5]
+            )
+        meshcat_utils.applyViewerConfiguration(
+            viz, 'world/debris'+str(contact_idx), 
+            [t[0], t[1], t[2]-0.017, 1, 0, 0, 0]
+            )
+        meshcat_utils.applyViewerConfiguration(
+            viz, 'world/debris_center'+str(contact_idx), 
+            [t[0], t[1], t[2]-0.017, 1, 0, 0, 0]
+            ) 
+    # Create the arrows and cones
+    arrow1 = meshcat_utils.Arrow(viz.viewer, "force_1", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
+    arrow2 = meshcat_utils.Arrow(viz.viewer, "force_2", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
+    arrow3 = meshcat_utils.Arrow(viz.viewer, "force_3", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
+    arrow4 = meshcat_utils.Arrow(viz.viewer, "force_4", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
+    cone1 = meshcat_utils.Cone(viz.viewer, "friction_cone_1", location=mpc.supportFeetPos0[0], mu=MU)
+    cone2 = meshcat_utils.Cone(viz.viewer, "friction_cone_2", location=mpc.supportFeetPos0[1], mu=MU)
+    cone3 = meshcat_utils.Cone(viz.viewer, "friction_cone_3", location=mpc.supportFeetPos0[2], mu=MU)
+    cone4 = meshcat_utils.Cone(viz.viewer, "friction_cone_4", location=mpc.supportFeetPos0[3], mu=MU)
+    arrows = [arrow1, arrow2, arrow3, arrow4]
+    cones = [cone1, cone2, cone3, cone4]
+
+    # viz.viewer.open_recording()
     for i in range(N_SIMU):
         print("Step ", i)
         # set the force setpoint
@@ -208,7 +271,7 @@ else:
         desired_forces.append(f_des_3d)
         # Get state from simulation
         q, dq = robot.get_state()
-        # Measure forces
+        # Measure forces in PyBullet simulation
         robot.forward_robot(q, dq)
         contact_status, f_mea_bullet = robot.end_effector_forces()
         for k,fname in enumerate(mpc.ee_frame_names):
@@ -224,14 +287,25 @@ else:
         if(i%int(SIM_FREQ/MPC_FREQ)==0):
             solution = mpc.updateAndSolve2(q, dq, f_mea_all)
             # plot_ocp_solution(mpc)
+        # Record predicted forces and visualize forces+cones in meshcat
         for fname in mpc.ee_frame_names:
+            # Save predicted forces from OCP solution
             predicted_forces_dict[fname].append(solution[frame_name_to_sol_map[fname]])
-        # Save the solution
+
+        # MESHCAT VISUALIZATION
+        viz.display(q)
+        # update contact force and cone 
+        for k, fid in enumerate(mpc.supportFeetIds):
+            fname = robot.pin_robot.model.frames[fid].name
+            contactLoc = robot.pin_robot.data.oMf[fid].translation
+            # arrows[k].set_location(mpc.supportFeetPos0[k])
+            arrows[k].anchor_as_vector(contactLoc, measured_forces_dict[fname][i])
+        # Save the optimal control solution
         tau = solution['tau'].squeeze()
         # Step the physics
         robot.send_joint_command(tau)
         env.step() 
-
+    # viz.viewer.save_recording().close()
 
 desired_forces = np.array(desired_forces)
 joint_torques = np.array(joint_torques)

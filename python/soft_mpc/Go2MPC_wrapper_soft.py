@@ -375,6 +375,11 @@ class Go2MPCSoft:
         self.oPc_ee = self.armEEPos0.copy()
         # self.oPc_ee[0] += 0.02
         self.supportFeetIds = [self.lfFootId, self.rfFootId, self.lhFootId, self.rhFootId]
+        rfFootPos0 = self.rdata.oMf[self.rfFootId].translation
+        rhFootPos0 = self.rdata.oMf[self.rhFootId].translation
+        lfFootPos0 = self.rdata.oMf[self.lfFootId].translation
+        lhFootPos0 = self.rdata.oMf[self.lhFootId].translation 
+        self.supportFeetPos0 = np.array([lfFootPos0, rfFootPos0, lhFootPos0, rhFootPos0])
         # self.f0[-3:] = -np.diag([self.Kp]*3) @ (self.armEEPos0 - self.oPc_ee)  
         # print("\n\n f0 = ", self.f0[-3:], "\n\n")
         # print("\n\n p_ee = ", self.armEEPos0, "\n\n")
@@ -483,7 +488,7 @@ class Go2MPCSoft:
             constraintModelManager = None #crocoddyl.ConstraintModelManager(self.ccdyl_state, self.nu)
 
             # Custom force cost in DAM
-            f_weight = np.array([1., 1., 1.])*1e-3
+            f_weight = np.array([1., 1., 1.])*1e-3 
             # fdot_weights = np.array([0.]*12 + [1., 0., 0.])*1e-6
             # f_weight_foot = np.array([0., 0., 1.])*1e-6
             # Fz_ref_foot = 40
