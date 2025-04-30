@@ -221,7 +221,7 @@ if(USE_MUJOCO):
 # PYBULLET SIMULATION
 else:   
     # Meshcat setup
-    import meshcat_utils
+    import python.core_mpc_utils.meshcat_utils as meshcat_utils
     angle = 0.0  # Initial angle
     rotation_speed = 0.05  # Speed of rotation (adjust as needed)
     # cam_pose = tf.translation_matrix([0, 0, 0.])  # Example camera position
@@ -323,7 +323,7 @@ if(RECORD_VIDEO):
             writer.append_data(img)
         writer.close()
         print("Closed writer")
-    output_path = '/home/skleff/output.mp4'
+    output_path = '/home/skleff/go2_mpc_soft.mp4'
     create_video_from_rgba(image_array_list, output_path)
 
 desired_forces = np.array(desired_forces)

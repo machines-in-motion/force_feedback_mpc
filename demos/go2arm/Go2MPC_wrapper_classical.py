@@ -325,7 +325,7 @@ class Go2MPCClassical:
         self.armEEPos0 = self.rdata.oMf[self.armEEId].translation
         self.armEEOri0 = self.rdata.oMf[self.armEEId].rotation
         self.supportFeetIds = [self.lfFootId, self.rfFootId, self.lhFootId, self.rhFootId]
-        # self.supportFeePos = [self.lfFootPos0, self.rfFootPos0, self.lhFootPos0, self.rhFootPos0]
+        self.supportFeetPos0 = np.array([self.lfFootPos0, self.rfFootPos0, self.lhFootPos0, self.rhFootPos0])
         self.xs = [self.x0]*(self.HORIZON + 1)
         self.createProblem()
         self.createSolver()
@@ -351,7 +351,7 @@ class Go2MPCClassical:
             
             # Add state/control regularization costs
             state_reg_weight, control_reg_weight = 1e-1, 1e-3
-            freeFlyerQWeight = [0.]*3 + [500.]*3
+            freeFlyerQWeight = [100.]*3 + [500.]*3
             freeFlyerVWeight = [10.]*6
             legsQWeight = [0.01]*(self.rmodel.nv - 6)
             legsQWeight[-1] = 100
