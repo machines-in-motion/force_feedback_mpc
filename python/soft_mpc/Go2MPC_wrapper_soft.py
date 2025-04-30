@@ -406,7 +406,7 @@ class Go2MPCSoft:
 
             # Add state/control regularization costs
             state_reg_weight, control_reg_weight = 1e-1, 1e-3
-            freeFlyerQWeight = [0.]*3 + [500.]*3
+            freeFlyerQWeight = [100.]*3 + [500.]*3
             freeFlyerVWeight = [10.]*6
             legsQWeight = [0.01]*(self.rmodel.nv - 6)
             legsQWeight[-1] = 100
@@ -483,13 +483,19 @@ class Go2MPCSoft:
             constraintModelManager = None #crocoddyl.ConstraintModelManager(self.ccdyl_state, self.nu)
 
             # Custom force cost in DAM
-            f_weight = np.array([1., 1., 1.])*1e-2
-            fdot_weights = np.array([0.]*12 + [1., 0., 0.])*1e-6
+            f_weight = np.array([1., 1., 1.])*1e-3
+            # fdot_weights = np.array([0.]*12 + [1., 0., 0.])*1e-6
+            # f_weight_foot = np.array([0., 0., 1.])*1e-6
+            # Fz_ref_foot = 40
             if t != self.HORIZON:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_LF = ForceCost(self.ccdyl_state, self.lfFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_RF = ForceCost(self.ccdyl_state, self.rfFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
                 forceRateCostManager = None #ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights)
             else:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight*self.dt, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_LF = ForceCost(self.ccdyl_state, self.lfFootId, np.array([0., 0., Fz_ref_foot]), f_weight*self.dt, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_RF = ForceCost(self.ccdyl_state, self.rfFootId, np.array([0., 0., Fz_ref_foot]), f_weight*self.dt, pin.LOCAL_WORLD_ALIGNED)
                 forceRateCostManager = None #ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights*self.dt)
 
             forceCostManager = ForceCostManager([forceCostEE], softContactModelsStack)
@@ -738,6 +744,7 @@ class Go2MPCSoft:
         eta = self.xs[x_idx][25:25+6]
         dq = self.xs[x_idx][25+6:25+6+18]
         f = self.xs[x_idx][25+6+18:]
+        print("FORCE LF RF = ", f[0:6])
         constraint_norm = self.solver.constraint_norm
         if(self.USE_MUJOCO):
             return dict(

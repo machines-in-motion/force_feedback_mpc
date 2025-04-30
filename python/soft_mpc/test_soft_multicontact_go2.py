@@ -154,11 +154,11 @@ for t in range(N_ocp+1):
     
 
     # Custom force cost in DAM
+    f_weight = np.array([1., 1., 1.])*1e-3
     if t == N_ocp:
-        forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3*dt, pinRef) ], softContactModelsStack)
+        forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), f_weight*dt, pinRef) ], softContactModelsStack)
     else:
-        # forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3, pinRef, fdotReg=0.01) ], softContactModelsStack)
-        forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), 1e-3, pinRef) ], softContactModelsStack)
+        forceCostManager = ForceCostManager([ ForceCost(state, efId, np.array([-25, 0., 0.]), f_weight, pinRef) ], softContactModelsStack)
     
     # Custom cost on the contact force rate 
     fdot_weights = np.ones(f.shape)*1e-4
