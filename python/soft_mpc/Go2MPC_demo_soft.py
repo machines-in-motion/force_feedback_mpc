@@ -20,21 +20,22 @@ from utils import LPFButterOrder2
 # LOADING CONFIG parameters
 import os
 from force_feedback_mpc.core_mpc_utils.path_utils import load_yaml_file
-CONFIG       = load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/Go2MPC_demo_soft.yml')
-USE_MUJOCO   = CONFIG['USE_MUJOCO']
-DT_SIMU      = CONFIG['DT_SIMU']
-FREF         = CONFIG['FREF']
-MU           = CONFIG['MU']
-HORIZON      = CONFIG['HORIZON']
-DT_OCP       = CONFIG['DT_OCP']
-MAX_ITER_1   = CONFIG['MAX_ITER_1']
-MAX_ITER_2   = CONFIG['MAX_ITER_2']
-N_SIMU       = CONFIG['N_SIMU']
-MPC_FREQ     = CONFIG['MPC_FREQ']
-KP           = CONFIG['KP']
-KV           = CONFIG['KV']
-SIM_FREQ     = int(1./DT_SIMU)
-RECORD_VIDEO = CONFIG['RECORD_VIDEO']
+CONFIG        = load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/Go2MPC_demo_soft.yml')
+USE_MUJOCO    = CONFIG['USE_MUJOCO']
+DT_SIMU       = CONFIG['DT_SIMU']
+FREF          = CONFIG['FREF']
+MU            = CONFIG['MU']
+HORIZON       = CONFIG['HORIZON']
+DT_OCP        = CONFIG['DT_OCP']
+MAX_ITER_1    = CONFIG['MAX_ITER_1']
+MAX_ITER_2    = CONFIG['MAX_ITER_2']
+N_SIMU        = CONFIG['N_SIMU']
+MPC_FREQ      = CONFIG['MPC_FREQ']
+KP            = CONFIG['KP']
+KV            = CONFIG['KV']
+SIM_FREQ      = int(1./DT_SIMU)
+RECORD_VIDEO  = CONFIG['RECORD_VIDEO']
+DATA_SAVE_DIR = CONFIG['DATA_SAVE_DIR']
 
 # Instantiate the simulator
 if(USE_MUJOCO):
@@ -98,6 +99,10 @@ mpc.solve()
 m = list(mpc.solver.problem.runningModels) + [mpc.solver.problem.terminalModel]
 # Reset number of iter for MPC loop
 mpc.max_iterations=MAX_ITER_2
+
+
+# Meshcat setup
+arrows, arrow_ee, cones = mpc.setup_meshcat_force_vizualisation(viz, MU)
 
 # # plot_ocp_solution(mpc)
 # # Extract OCP Solution 
@@ -229,43 +234,6 @@ if(USE_MUJOCO):
         robot.step()
 # PYBULLET SIMULATION
 else:   
-    # Meshcat setup
-    import python.core_mpc_utils.meshcat_utils as meshcat_utils
-    angle = 0.0  # Initial angle
-    rotation_speed = 0.05  # Speed of rotation (adjust as needed)
-    # cam_pose = tf.translation_matrix([0, 0, 0.])  # Example camera position
-    # cam_pose[:3, :3] = tf.euler_matrix(0.0, 0.0, np.pi/3)[:3, :3]  # Example camera orientation
-    # viz.viewer["/Cameras"].set_transform(cam_pose)
-    # add contact surfaces
-    step_adjustment_bound = 0.07                         
-    s = 0.5*step_adjustment_bound
-    for contact_idx, contactLoc in enumerate(mpc.supportFeetPos0):
-        t = contactLoc
-        # debris box
-        meshcat_utils.addViewerBox(
-            viz, 'world/debris'+str(contact_idx), 
-            2*s, 2*s, 0., [1., .2, .2, .5]
-            )
-        meshcat_utils.applyViewerConfiguration(
-            viz, 'world/debris'+str(contact_idx), 
-            [t[0], t[1], t[2]-0.017, 1, 0, 0, 0]
-            )
-        meshcat_utils.applyViewerConfiguration(
-            viz, 'world/debris_center'+str(contact_idx), 
-            [t[0], t[1], t[2]-0.017, 1, 0, 0, 0]
-            ) 
-    # Create the arrows and cones
-    arrow1 = meshcat_utils.Arrow(viz.viewer, "force_1", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
-    arrow2 = meshcat_utils.Arrow(viz.viewer, "force_2", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
-    arrow3 = meshcat_utils.Arrow(viz.viewer, "force_3", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
-    arrow4 = meshcat_utils.Arrow(viz.viewer, "force_4", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
-    cone1 = meshcat_utils.Cone(viz.viewer, "friction_cone_1", location=mpc.supportFeetPos0[0], mu=MU)
-    cone2 = meshcat_utils.Cone(viz.viewer, "friction_cone_2", location=mpc.supportFeetPos0[1], mu=MU)
-    cone3 = meshcat_utils.Cone(viz.viewer, "friction_cone_3", location=mpc.supportFeetPos0[2], mu=MU)
-    cone4 = meshcat_utils.Cone(viz.viewer, "friction_cone_4", location=mpc.supportFeetPos0[3], mu=MU)
-    arrows = [arrow1, arrow2, arrow3, arrow4]
-    arrow_ee = meshcat_utils.Arrow(viz.viewer, "force_ee", location=[0,0,0], vector=[0.01,0,0], length_scale=0.1)
-    cones = [cone1, cone2, cone3, cone4]
     image_array_list = []
     jointPos = []
     
@@ -337,22 +305,22 @@ if(RECORD_VIDEO):
     output_path = '/home/skleff/go2_mpc_soft.mp4'
     create_video_from_rgba(image_array_list, output_path)
 
-import pickle
-data = {'jointPos': jointPos, 
-        'measured_forces': measured_forces_dict, 
-        'supportFeedIds': mpc.supportFeetIds,
-        'supportFeetPos': mpc.supportFeetPos0,
-        'armEEId': mpc.armEEId,
-        'armEEName': 'Link6',
-        'mu': MU,
-        'rmodel': robot.pin_robot.model}
-# Pickling (serializing) and saving to a file
-filename = '/home/skleff/meshcat_data.pkl'
-with open(filename, 'wb') as file:
-    pickle.dump(data, file)
-# # Unpickling (deserializing) from the file
-# with open(filename, 'rb') as file:
-#     loaded_data = pickle.load(file)
+# import pickle
+# data = {'jointPos': jointPos, 
+#         'measured_forces': measured_forces_dict, 
+#         'supportFeedIds': mpc.supportFeetIds,
+#         'supportFeetPos': mpc.supportFeetPos0,
+#         'armEEId': mpc.armEEId,
+#         'armEEName': 'Link6',
+#         'mu': MU,
+#         'rmodel': robot.pin_robot.model}
+# # Pickling (serializing) and saving to a file
+# filename = '/home/skleff/meshcat_data.pkl'
+# with open(filename, 'wb') as file:
+#     pickle.dump(data, file)
+# # # Unpickling (deserializing) from the file
+# # with open(filename, 'rb') as file:
+# #     loaded_data = pickle.load(file)
 
 desired_forces = np.array(desired_forces)
 joint_torques = np.array(joint_torques)
@@ -362,73 +330,11 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
 
 # Save data 
-np.savez_compressed('/tmp/go2_soft',
+np.savez_compressed(DATA_SAVE_DIR+'.npz',
                     joint_torques=joint_torques,
                     measured_forces=measured_forces_dict,
                     filtered_forces=filtered_forces_dict,
                     desired_forces=desired_forces,
-                    predicted_forces=predicted_forces_dict)
-print("Saved MPC simulation data to /tmp/soft_go2")
-
-# Visualize the measured force against the desired
-import matplotlib.pyplot as plt
-time_span = np.linspace(0, (N_SIMU-1)*DT_SIMU, N_SIMU)
-# EE FORCES
-fig, axs = plt.subplots(3, 1, constrained_layout=True)
-# Fx_lb_mea = (1./MU)*np.sqrt(measured_forces_dict['Link6'][:, 1]**2 + measured_forces_dict['Link6'][:, 1]**2)
-# Fx_lb_pred = (1./MU)*np.sqrt(predicted_forces_dict['Link6'][:, 1]**2 + predicted_forces_dict['Link6'][:, 1]**2)
-axs[0].plot(time_span, np.abs(measured_forces_dict['Link6'][:,0]),linewidth=4, color='g', marker='o', alpha=0.5, label="Fx mea")
-axs[0].plot(time_span, np.abs(desired_forces[:,0]), linewidth=4, color='k', marker='o', alpha=0.25, label="Fx des")
-# axs[0].plot(time_span, np.abs(predicted_forces_dict['Link6'][:,0]), linewidth=4, color='b', marker='o', alpha=0.25, label="Fx predicted")
-# axs[0].plot(time_span, Fx_lb_mea, '--', linewidth=4, color='k',  alpha=0.5, label="Fx friction constraint (lower bound)")
-axs[0].set_ylim(-10., 75)
-
-axs[1].plot(time_span, measured_forces_dict['Link6'][:,1],linewidth=4, color='g', marker='o', alpha=0.5, label="Fy mea")
-axs[1].plot(time_span, desired_forces[:,1], linewidth=4, color='k', marker='o', alpha=0.25, label="Fy des")
-# axs[1].plot(time_span, predicted_forces_dict['Link6'][:,1], linewidth=4, color='b', marker='o', alpha=0.25, label="Fy predicted")
-axs[1].set_ylim(-10., 10)
-
-axs[2].plot(time_span, measured_forces_dict['Link6'][:,2],linewidth=4, color='g', marker='o', alpha=0.5, label="Fz mea")
-axs[2].plot(time_span, desired_forces[:,2], linewidth=4, color='k', marker='o', alpha=0.25, label="Fz des")
-# axs[2].plot(time_span, predicted_forces_dict['Link6'][:,2], linewidth=4, color='b', marker='o', alpha=0.25, label="Fz predicted")
-axs[2].set_ylim(-10., 10)
-for i in range(3):
-    axs[i].legend()
-    axs[i].grid()
-fig.suptitle('Contact force at the end-effector', fontsize=16)
-
-# FEET FORCES (measured and predicted, with friction constraint lower bound on Fz)
-fig, axs = plt.subplots(3, 4, constrained_layout=True)
-for i,fname in enumerate(mpc.ee_frame_names[:-1]):
-    # x,y
-    axs[0, i].plot(time_span, measured_forces_dict[fname][:,0], linewidth=4, color='g', marker='o', alpha=0.5, label="Fx measured")
-    # axs[0, i].plot(time_span, predicted_forces_dict[fname][:,0], linewidth=4, color='b', marker='o', alpha=0.25, label="Fx predicted")
-    axs[1, i].plot(time_span, measured_forces_dict[fname][:,1], linewidth=4, color='g', marker='o', alpha=0.5, label="Fy measured")
-    # axs[1, i].plot(time_span, predicted_forces_dict[fname][:,1], linewidth=4, color='b', marker='o', alpha=0.25, label="Fy predicted")
-    axs[0, i].legend()
-    # axs[0, i].title(fname)
-    axs[0, i].grid()
-    axs[1, i].legend()
-    axs[1, i].grid()
-
-    # z
-    Fz_lb_mea = (1./MU)*np.sqrt(measured_forces_dict[fname][:, 0]**2 + measured_forces_dict[fname][:, 1]**2)
-    # Fz_lb_pred = (1./MU)*np.sqrt(predicted_forces_dict[fname][:, 0]**2 + predicted_forces_dict[fname][:, 1]**2)
-    axs[2, i].plot(time_span, measured_forces_dict[fname][:,2], linewidth=4, color='g', marker='o', alpha=0.5, label="Fz measured")
-    # axs[2, i].plot(time_span, predicted_forces_dict[fname][:,2], linewidth=4, color='b', marker='o', alpha=0.25, label="Fz predicted")
-    axs[2, i].plot(time_span, Fz_lb_mea, '--', linewidth=4, color='k',  alpha=0.5, label="Fz friction constraint (lower bound)")
-    # axs[2, i].plot(time_span, Fz_lb_pred, '--', linewidth=4, color='b', alpha=0.2, label="Fz friction lb (pred)")
-    axs[2, i].legend()
-    axs[2, i].grid()
-
-# for i in range(3):
-#     axs[i].legend()
-#     axs[i].grid()
-fig.suptitle('Contact forces at feet FL, FR, HL, HR', fontsize=16)
-
-
-# plt.plot(measured_forces[:300,0], '*')
-# plt.plot(forces,'k')
-plt.show()
-robot.close()
-
+                    predicted_forces=predicted_forces_dict,
+                    ee_frame_names=mpc.ee_frame_names)
+print("Saved MPC simulation data to "+DATA_SAVE_DIR)

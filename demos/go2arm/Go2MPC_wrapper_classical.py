@@ -1,17 +1,18 @@
+'''
+Adapted from Rooholla's code in Go2Py examples
+https://github.com/machines-in-motion/Go2Py/blob/mpc/examples/standard_mpc.py
+'''
 
-from Go2Py.sim.mujoco import Go2Sim
 import numpy as np
 import os
-import sys
 import mim_solvers
 import friction_utils
 import mujoco
 import pinocchio as pin
 import crocoddyl
 import pinocchio
-import mujoco.viewer
-import time
-import mujoco as mj
+
+import python.core_mpc_utils.meshcat_utils as meshcat_utils
 
 
 # Add this to your validation code
@@ -71,7 +72,6 @@ def setGroundFriction(model, data, mu):
     print("Friction found for ground = ", model.geom_friction[ground_geom_id])
     model.geom_friction[ground_geom_id][0] = mu
     print("Set ground friction to : ", model.geom_friction[ground_geom_id])
-
 
 
 def plot_ocp_solution(mpc):
@@ -525,4 +525,45 @@ class Go2MPCClassical:
         self.xs, self.us = self.solver.xs, self.solver.us
         return self.getSolution()
 
-
+    def setup_meshcat_force_vizualisation(self, viz, MU):
+        '''
+        Creates arrows and cones to display the contact forces and friction cones in meshcat
+        '''
+        # Meshcat setup
+        angle = 0.0  # Initial angle
+        rotation_speed = 0.05  # Speed of rotation (adjust as needed)
+        # cam_pose = tf.translation_matrix([0, 0, 0.])  # Example camera position
+        # cam_pose[:3, :3] = tf.euler_matrix(0.0, 0.0, np.pi/3)[:3, :3]  # Example camera orientation
+        # viz.viewer["/Cameras"].set_transform(cam_pose)
+        # add contact surfaces
+        step_adjustment_bound = 0.07                         
+        s = 0.5*step_adjustment_bound
+        for contact_idx, contactLoc in enumerate(self.supportFeetPos0):
+            t = contactLoc
+            # debris box
+            meshcat_utils.addViewerBox(
+                viz, 'world/debris'+str(contact_idx), 
+                2*s, 2*s, 0., [1., .2, .2, .5]
+                )
+            meshcat_utils.applyViewerConfiguration(
+                viz, 'world/debris'+str(contact_idx), 
+                [t[0], t[1], t[2]-0.017, 1, 0, 0, 0]
+                )
+            meshcat_utils.applyViewerConfiguration(
+                viz, 'world/debris_center'+str(contact_idx), 
+                [t[0], t[1], t[2]-0.017, 1, 0, 0, 0]
+                ) 
+            
+        # Create the arrows and cones
+        arrow1 = meshcat_utils.Arrow(viz.viewer, "force_1", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
+        arrow2 = meshcat_utils.Arrow(viz.viewer, "force_2", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
+        arrow3 = meshcat_utils.Arrow(viz.viewer, "force_3", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
+        arrow4 = meshcat_utils.Arrow(viz.viewer, "force_4", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
+        cone1 = meshcat_utils.Cone(viz.viewer, "friction_cone_1", location=self.supportFeetPos0[0], mu=MU)
+        cone2 = meshcat_utils.Cone(viz.viewer, "friction_cone_2", location=self.supportFeetPos0[1], mu=MU)
+        cone3 = meshcat_utils.Cone(viz.viewer, "friction_cone_3", location=self.supportFeetPos0[2], mu=MU)
+        cone4 = meshcat_utils.Cone(viz.viewer, "friction_cone_4", location=self.supportFeetPos0[3], mu=MU)
+        arrows = [arrow1, arrow2, arrow3, arrow4]
+        arrow_ee = meshcat_utils.Arrow(viz.viewer, "force_ee", location=[0,0,0], vector=[0,0,0.01], length_scale=0.01)
+        cones = [cone1, cone2, cone3, cone4]
+        return arrows, arrow_ee, cones

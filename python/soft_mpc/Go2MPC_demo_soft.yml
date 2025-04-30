@@ -2,7 +2,7 @@
 # Simu
 USE_MUJOCO: False
 DT_SIMU: 0.001
-N_SIMU: 1000
+N_SIMU: 2500
 
 # MPC
 MPC_FREQ: 100
@@ -20,3 +20,4 @@ KP: 0.
 KV: 0.
 
 RECORD_VIDEO: False
+DATA_SAVE_DIR: "/home/skleff/go2_soft"
