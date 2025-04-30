@@ -180,6 +180,7 @@ if(USE_MUJOCO):
 else:
     image_array_list = []
     jointPos = []
+    jointVel = []
 
     for i in range(N_SIMU):
         print("Step ", i)
@@ -198,6 +199,7 @@ else:
         tau = solution['tau'].squeeze()
         joint_torques.append(tau)
         jointPos.append(q)
+        jointVel.append(dq)
         # Measure forces and save predicted force from solution
         robot.forward_robot(q, dq)
         contact_status, f_mea_bullet = robot.end_effector_forces()
@@ -276,15 +278,19 @@ if(RECORD_VIDEO):
 # measured_forces = np.array(measured_forces)
 desired_forces = np.array(desired_forces)
 joint_torques = np.array(joint_torques)
+jointPos = np.array(jointPos)
+jointVel = np.array(jointVel)
 for fname in mpc.ee_frame_names:
     measured_forces_dict[fname] = np.array(measured_forces_dict[fname])
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
 
 # Save data 
 np.savez_compressed(DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'.npz',
+                    jointPos=jointPos,
+                    jointVel=jointVel,
                     joint_torques=joint_torques,
                     measured_forces=measured_forces_dict,
                     desired_forces=desired_forces,
                     predicted_forces=predicted_forces_dict,
                     ee_frame_names=mpc.ee_frame_names)
-print("Saved MPC simulation data to "+DATA_SAVE_DIR)
+print("Saved MPC simulation data to "+DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'.npz')

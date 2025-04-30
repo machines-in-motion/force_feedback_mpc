@@ -236,6 +236,7 @@ if(USE_MUJOCO):
 else:   
     image_array_list = []
     jointPos = []
+    jointVel = []
     
     for i in range(N_SIMU):
         print("Step ", i)
@@ -245,6 +246,7 @@ else:
         # Get state from simulation
         q, dq = robot.get_state()
         jointPos.append(q)
+        jointVel.append(dq)
         # Measure forces in PyBullet simulation
         robot.forward_robot(q, dq)
         contact_status, f_mea_bullet = robot.end_effector_forces()
@@ -279,6 +281,7 @@ else:
 
         # Save the optimal control solution
         tau = solution['tau'].squeeze()
+        joint_torques.append(tau)
         # Step the physics
         robot.send_joint_command(tau)
         env.step() 
@@ -324,6 +327,8 @@ if(RECORD_VIDEO):
 
 desired_forces = np.array(desired_forces)
 joint_torques = np.array(joint_torques)
+jointPos = np.array(jointPos)
+jointVel = np.array(jointVel)
 for fname in mpc.ee_frame_names:
     measured_forces_dict[fname] = np.array(measured_forces_dict[fname])
     filtered_forces_dict[fname] = np.array(filtered_forces_dict[fname])
@@ -331,6 +336,8 @@ for fname in mpc.ee_frame_names:
 
 # Save data 
 np.savez_compressed(DATA_SAVE_DIR+'.npz',
+                    jointPos=jointPos,
+                    jointVel=jointVel,
                     joint_torques=joint_torques,
                     measured_forces=measured_forces_dict,
                     filtered_forces=filtered_forces_dict,

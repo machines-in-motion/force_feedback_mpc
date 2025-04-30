@@ -18,7 +18,7 @@ from soft_multicontact_api import DAMSoftContactDynamics3D_Go2, IAMSoftContactDy
 
 import mujoco as mj
 
-import python.core_mpc_utils.meshcat_utils as meshcat_utils
+from force_feedback_mpc.core_mpc_utils import meshcat_utils 
 
 # Add this to your validation code
 def test_force_sensor_orientation(robot):

@@ -12,8 +12,7 @@ import pinocchio as pin
 import crocoddyl
 import pinocchio
 
-import python.core_mpc_utils.meshcat_utils as meshcat_utils
-
+from force_feedback_mpc.core_mpc_utils import meshcat_utils 
 
 # Add this to your validation code
 def test_force_sensor_orientation(robot):
@@ -423,7 +422,7 @@ class Go2MPCClassical:
             model = crocoddyl.IntegratedActionModelEuler(dmodel, self.dt)
             self.running_models += [model]
         self.ocp = crocoddyl.ShootingProblem(self.x0, self.running_models[:-1], self.running_models[-1])
-        
+            
     def createSolver(self):
         solver = mim_solvers.SolverCSQP(self.ocp)
         solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
