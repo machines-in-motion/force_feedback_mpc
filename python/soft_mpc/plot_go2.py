@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.insert(0, "/home/skleff/force_feedback_ws")
 
-TYPE        = 'soft' # classical or soft
+TYPE        = 'classical' # classical or soft
 
 if(TYPE == 'classical'):
     from demos.go2arm.Go2MPC_wrapper_classical import Go2MPCClassical as Go2MPCWrapper
-    DATA_PATH    = '/home/skleff/go2_classical_INT=False_1747074342.3951194.npz'
+    DATA_PATH    = '/home/skleff/go2_classical_INT=True_1747085705.1581683.npz'
     CONFIG_PATH  = '/home/skleff/force_feedback_ws/force_feedback_mpc/demos/go2arm/Go2MPC_demo_classical.yml'
 else:
     from force_feedback_mpc.soft_mpc.Go2MPC_wrapper_soft import Go2MPCSoft as Go2MPCWrapper

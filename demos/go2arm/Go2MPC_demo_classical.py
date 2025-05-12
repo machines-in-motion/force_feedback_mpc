@@ -122,7 +122,7 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = []
 desired_forces = []
 joint_torques = []
-f_des_z = np.linspace(0.1*FREF, 0.5*FREF, N_SIMU) # np.array([FREF]*N_SIMU) 
+f_des_z = np.linspace(0.1*FREF, 0.75*FREF, N_SIMU) # np.array([FREF]*N_SIMU) 
 # breakpoint()
 WITH_INTEGRAL = USE_INTEGRAL
 if(WITH_INTEGRAL):
@@ -188,8 +188,9 @@ else:
         # set the force setpoint
         f_des_3d = np.array([-f_des_z[i], 0, 0])
         desired_forces.append(f_des_3d)
-        for action_model in mpc.solver.problem.runningModels:
-            action_model.differential.costs.costs['contact_force_track'].cost.residual.reference.linear[:] = f_des_3d
+        m = list(mpc.solver.problem.runningModels) 
+        for km, action_model in enumerate(m):
+            action_model.differential.costs.costs['contact_force_track'].cost.residual.reference = pin.Force(f_des_3d, np.zeros(3))
         # Get state from simulation
         q, dq = robot.get_state()
         # Solve OCP

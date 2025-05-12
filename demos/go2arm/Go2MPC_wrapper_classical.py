@@ -379,7 +379,7 @@ class Go2MPCClassical:
                 contact_force_residual = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, self.ef_des_force, 3, self.nu)
                 contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
                 contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
-                costModel.addCost("contact_force_track", contact_force_track, 1e-3) #1e1
+                costModel.addCost("contact_force_track", contact_force_track, 5e-4) #1e1
 
             # Friction Cone Constraints
             constraintModelManager = crocoddyl.ConstraintModelManager(self.ccdyl_state, self.ccdyl_actuation.nu)
@@ -387,7 +387,7 @@ class Go2MPCClassical:
                 for frame_idx in self.supportFeetIds:
                     name = self.rmodel.frames[frame_idx].name + "_contact"
                     residualFriction = friction_utils.ResidualFrictionCone(self.ccdyl_state, name, self.friction_mu, self.ccdyl_actuation.nu)
-                    constraintFriction = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualFriction, np.array([1e-3]), np.array([np.inf]))
+                    constraintFriction = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualFriction, np.array([0.]), np.array([np.inf]))
                     constraintModelManager.addConstraint(name + "friction", constraintFriction)
 
             # # End Effecor Position Tracking Cost
@@ -401,10 +401,10 @@ class Go2MPCClassical:
             # else:
             #     costModel.addCost("ef_track", ef_track, ef_weight*self.dt)
 
-            #     # enforce unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
-            #     residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, frame_idx, pin.Force.Zero(), 3, self.nu)
-            #     forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, 0.]), np.array([np.inf, np.inf, np.inf]))
-            #     constraintModelManager.addConstraint(name + "Box", forceBoxConstraint)
+                # # enforce unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
+                # residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, frame_idx, pin.Force.Zero(), 3, self.nu)
+                # forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, 0.]), np.array([np.inf, np.inf, np.inf]))
+                # constraintModelManager.addConstraint(name + "Box", forceBoxConstraint)
 
             # # enforce unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
             # residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, pin.Force.Zero(), 3, self.nu)
