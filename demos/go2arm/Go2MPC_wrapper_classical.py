@@ -387,7 +387,7 @@ class Go2MPCClassical:
                 for frame_idx in self.supportFeetIds:
                     name = self.rmodel.frames[frame_idx].name + "_contact"
                     residualFriction = friction_utils.ResidualFrictionCone(self.ccdyl_state, name, self.friction_mu, self.ccdyl_actuation.nu)
-                    constraintFriction = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualFriction, np.array([0.]), np.array([np.inf]))
+                    constraintFriction = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualFriction, np.array([1e-3]), np.array([np.inf]))
                     constraintModelManager.addConstraint(name + "friction", constraintFriction)
 
             # # End Effecor Position Tracking Cost

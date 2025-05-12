@@ -1,4 +1,3 @@
-
 # Simu
 USE_MUJOCO: False
 DT_SIMU: 0.001
@@ -12,7 +11,7 @@ MAX_ITER_1: 500
 MAX_ITER_2: 50
 
 # Task
-FREF: 50   # desired contact force at end-effector
+FREF: 100   # desired contact force at end-effector
 MU: 0.75   # environment friction coefficient (ground / wall)
 
 # CONTROL

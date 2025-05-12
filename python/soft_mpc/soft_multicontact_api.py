@@ -199,7 +199,7 @@ class ViscoElasticContact3d_Multiple:
 
 # 3D Friction cone constraint
 class FrictionConeConstraint:
-    def __init__(self, frameId, coef, normal='z'):
+    def __init__(self, frameId, coef, normal='z', lb_slack=0.):
         self.nc           = 3
         self.nr           = 1
         self.active       = True
@@ -207,7 +207,7 @@ class FrictionConeConstraint:
         self.coef         = coef
         self.residual     = np.zeros(self.nr)
         self.residual_df = np.zeros((self.nr, self.nc))
-        self.lb = np.array([0.])
+        self.lb = np.array([lb_slack])
         self.ub = np.array([np.inf])
         self.normal = normal
 
@@ -241,10 +241,10 @@ class FrictionConeConstraint:
 
 
 # 3D force box constraint
-class ForceBoxConstraint:
+class ForceBoxConstraintZ:
     def __init__(self, frameId, lb, ub):
         self.nc          = 3
-        self.nr          = 3
+        self.nr          = 1
         self.active      = True
         self.frameId     = frameId
         self.residual    = np.zeros(self.nr)
@@ -253,11 +253,11 @@ class ForceBoxConstraint:
         self.ub = ub 
         
     def calc(self, f):
-        self.residual = f
+        self.residual = f[2]
         return self.residual
     
     def calcDiff(self, f):
-        self.residual_df = np.eye(self.nc)
+        self.residual_df = np.array([0., 0., 1.]) #np.eye(self.nc)
         return self.residual_df
 
 

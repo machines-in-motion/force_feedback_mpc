@@ -12,6 +12,7 @@ Force-feedback MPC (soft contact force in the state)
 import numpy as np
 import pinocchio as pin
 
+import time
 
 
 from Go2MPC_wrapper_soft import Go2MPCSoft, getForceSensor, setGroundFriction, plot_ocp_solution
@@ -92,7 +93,7 @@ else:
 
 # Instantiate the solver
 mpc = Go2MPCSoft(HORIZON=HORIZON, friction_mu=MU, dt=DT_OCP, USE_MUJOCO=USE_MUJOCO)
-mpc.initialize(FREF=FREF)
+mpc.initialize(FREF=0.1*FREF)
 mpc.max_iterations = MAX_ITER_1
 # mpc.test_derivatives()
 mpc.solve()
@@ -159,7 +160,7 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = []
 desired_forces = []
 joint_torques = []
-f_des_z = np.array([FREF]*N_SIMU) 
+f_des_z = np.linspace(0.1*FREF, 0.75*FREF, N_SIMU) # np.array([FREF]*N_SIMU) 
 
 # Force filtering
 butter_dict = {}
@@ -243,6 +244,9 @@ else:
         # set the force setpoint
         f_des_3d = np.array([-f_des_z[i], 0, 0])
         desired_forces.append(f_des_3d)
+        m = list(mpc.solver.problem.runningModels) + [mpc.solver.problem.terminalModel]
+        for action_model in m:
+            action_model.differential.forceCosts.forceCosts[0].f_des = f_des_3d
         # Get state from simulation
         q, dq = robot.get_state()
         jointPos.append(q)
@@ -308,22 +312,30 @@ if(RECORD_VIDEO):
     output_path = '/home/skleff/go2_mpc_soft.mp4'
     create_video_from_rgba(image_array_list, output_path)
 
-# import pickle
-# data = {'jointPos': jointPos, 
-#         'measured_forces': measured_forces_dict, 
-#         'supportFeedIds': mpc.supportFeetIds,
-#         'supportFeetPos': mpc.supportFeetPos0,
-#         'armEEId': mpc.armEEId,
-#         'armEEName': 'Link6',
-#         'mu': MU,
-#         'rmodel': robot.pin_robot.model}
-# # Pickling (serializing) and saving to a file
-# filename = '/home/skleff/meshcat_data.pkl'
-# with open(filename, 'wb') as file:
-#     pickle.dump(data, file)
-# # # Unpickling (deserializing) from the file
-# # with open(filename, 'rb') as file:
-# #     loaded_data = pickle.load(file)
+TIME_STAMP = str(time.time())
+
+import pickle
+data = {'jointPos': jointPos, 
+        'jointVel': jointVel, 
+        'joint_torques': joint_torques,
+        'measured_forces': measured_forces_dict, 
+        'desired_forces': desired_forces,
+        'predicted_forces': predicted_forces_dict,
+        'ee_frame_names': mpc.ee_frame_names,
+        'supportFeedIds': mpc.supportFeetIds,
+        'supportFeetPos': mpc.supportFeetPos0,
+        'armEEId': mpc.armEEId,
+        'armEEName': 'Link6',
+        'mu': MU,
+        'rmodel': robot.pin_robot.model}
+# Pickling (serializing) and saving to a file
+filename = DATA_SAVE_DIR+'_'+TIME_STAMP+'.pkl'
+with open(filename, 'wb') as file:
+    pickle.dump(data, file)
+# # Unpickling (deserializing) from the file
+# with open(filename, 'rb') as file:
+#     loaded_data = pickle.load(file)
+print("Saved MPC simulation data pickle to "+filename)
 
 desired_forces = np.array(desired_forces)
 joint_torques = np.array(joint_torques)
@@ -335,8 +347,8 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
 
 # Save data 
-import time
-np.savez_compressed(DATA_SAVE_DIR+'_'+str(time.time())+'.npz',
+NPZ_NAME = DATA_SAVE_DIR+'_'+TIME_STAMP+'.npz'
+np.savez_compressed(NPZ_NAME,
                     jointPos=jointPos,
                     jointVel=jointVel,
                     joint_torques=joint_torques,
@@ -345,4 +357,4 @@ np.savez_compressed(DATA_SAVE_DIR+'_'+str(time.time())+'.npz',
                     desired_forces=desired_forces,
                     predicted_forces=predicted_forces_dict,
                     ee_frame_names=mpc.ee_frame_names)
-print("Saved MPC simulation data to "+DATA_SAVE_DIR)
+print("Saved MPC simulation data npz to "+NPZ_NAME)

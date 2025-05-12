@@ -7,15 +7,15 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.insert(0, "/home/skleff/force_feedback_ws")
 
-TYPE        = 'classical' # classical or soft
+TYPE        = 'soft' # classical or soft
 
 if(TYPE == 'classical'):
     from demos.go2arm.Go2MPC_wrapper_classical import Go2MPCClassical as Go2MPCWrapper
-    DATA_PATH    = '/home/skleff/go2_classical_INT=False_1746051808.153771.npz'
+    DATA_PATH    = '/home/skleff/go2_classical_INT=False_1747074342.3951194.npz'
     CONFIG_PATH  = '/home/skleff/force_feedback_ws/force_feedback_mpc/demos/go2arm/Go2MPC_demo_classical.yml'
 else:
-    from python.soft_mpc.Go2MPC_wrapper_soft import Go2MPCSoft as Go2MPCWrapper
-    DATA_PATH    = '/home/skleff/go2_soft.npz'
+    from force_feedback_mpc.soft_mpc.Go2MPC_wrapper_soft import Go2MPCSoft as Go2MPCWrapper
+    DATA_PATH    = '/home/skleff/go2_soft_1747083871.1443565.npz'
     CONFIG_PATH  = '/home/skleff/force_feedback_ws/force_feedback_mpc/python/soft_mpc/Go2MPC_demo_soft.yml'
 
 print("Loading data from: ", DATA_PATH)
@@ -43,7 +43,7 @@ FREF          = CONFIG['FREF']
 HORIZON       = CONFIG['HORIZON']
 DT_OCP        = CONFIG['DT_OCP']
 mpc = Go2MPCWrapper(HORIZON=HORIZON, friction_mu=MU, dt=DT_OCP, USE_MUJOCO=False)
-mpc.initialize(FREF=FREF)
+mpc.initialize(FREF=0.1*FREF)
 m = mpc.ocp.runningModels[0]
 d = m.createData()
 cost = 0
@@ -51,7 +51,6 @@ violation = 0
 err_f_x = 0.
 err_f_y = 0.
 err_f_z = 0.
-fref = np.array([-FREF, 0., 0.])
 f = np.zeros(15)
 for i in range(N_SIMU):
     # print("Stage ", i)
@@ -75,9 +74,9 @@ for i in range(N_SIMU):
     if(np.linalg.norm(m.g_ub) < np.inf):
         cstr_ub = max(0, np.linalg.norm(d.g - m.g_ub, np.inf)) 
         violation += cstr_ub
-    err_f_x += (measured_forces_dict['Link6'][i][0] - fref[0])**2
-    err_f_y += (measured_forces_dict['Link6'][i][1] - fref[1])**2
-    err_f_z += (measured_forces_dict['Link6'][i][2] - fref[2])**2
+    err_f_x += (measured_forces_dict['Link6'][i][0] - desired_forces[i][0])**2
+    err_f_y += (measured_forces_dict['Link6'][i][1] - desired_forces[i][1])**2
+    err_f_z += (measured_forces_dict['Link6'][i][2] - desired_forces[i][2])**2
 # print("Total cost: ", cost)
 print("Total constraint violation: ", violation)
 print("RMSE F_ee_x = ", np.sqrt(err_f_x/N_SIMU))

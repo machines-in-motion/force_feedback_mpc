@@ -12,6 +12,7 @@ Classical MPC (rigid contact force)
 import numpy as np
 import pinocchio as pin
 
+import time
 
 
 from Go2MPC_wrapper_classical import Go2MPCClassical, getForceSensor, setGroundFriction, plot_ocp_solution
@@ -90,7 +91,7 @@ else:
 
 # Instantiate the solver
 mpc = Go2MPCClassical(HORIZON=HORIZON, friction_mu=MU, dt=DT_OCP, USE_MUJOCO=USE_MUJOCO)
-mpc.initialize(FREF=FREF)
+mpc.initialize(FREF=0.1*FREF)
 mpc.max_iterations=MAX_ITER_1
 mpc.solve()
 m = list(mpc.solver.problem.runningModels) + [mpc.solver.problem.terminalModel]
@@ -121,8 +122,7 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = []
 desired_forces = []
 joint_torques = []
-f_des_z = np.array([FREF]*N_SIMU) 
-# f_des_z = np.linspace(0, FREF, N_SIMU+1) 
+f_des_z = np.linspace(0.1*FREF, 0.5*FREF, N_SIMU) # np.array([FREF]*N_SIMU) 
 # breakpoint()
 WITH_INTEGRAL = USE_INTEGRAL
 if(WITH_INTEGRAL):
@@ -188,7 +188,7 @@ else:
         # set the force setpoint
         f_des_3d = np.array([-f_des_z[i], 0, 0])
         desired_forces.append(f_des_3d)
-        for action_model in m[:-1]:
+        for action_model in mpc.solver.problem.runningModels:
             action_model.differential.costs.costs['contact_force_track'].cost.residual.reference.linear[:] = f_des_3d
         # Get state from simulation
         q, dq = robot.get_state()
@@ -233,6 +233,8 @@ else:
                 J = pin.getFrameJacobian(mpc.rmodel, mpc.rdata, mpc.armEEId, pin.LOCAL_WORLD_ALIGNED)
                 tau_int = J[:3,6:].T @ err_f3d 
                 tau += tau_int
+        # print("Fmea link6 = ", measured_forces_dict['Link6'][i])
+        # print("Fdes link6 = ", f_des_3d)
         # Step the physics
         robot.send_joint_command(tau)
         env.step() 
@@ -259,22 +261,31 @@ if(RECORD_VIDEO):
     output_path = '/home/skleff/go2_mpc_classical_INT='+str(WITH_INTEGRAL)+'_meshcat.mp4'
     create_video_from_rgba(image_array_list, output_path)
 
-# import pickle
-# data = {'jointPos': jointPos, 
-#         'measured_forces': measured_forces_dict, 
-#         'supportFeedIds': mpc.supportFeetIds,
-#         'supportFeetPos': mpc.supportFeetPos0,
-#         'armEEId': mpc.armEEId,
-#         'armEEName': 'Link6',
-#         'mu': MU,
-#         'pin_robot': robot.pin_robot}
-# # Pickling (serializing) and saving to a file
-# filename = '/home/skleff/meshcat_data.pkl'
-# with open(filename, 'wb') as file:
-#     pickle.dump(data, file)
-# # # Unpickling (deserializing) from the file
-# # with open(filename, 'rb') as file:
-# #     loaded_data = pickle.load(file)
+
+TIME_STAMP = str(time.time())
+
+import pickle
+data = {'jointPos': jointPos, 
+        'jointVel': jointVel, 
+        'joint_torques': joint_torques,
+        'measured_forces': measured_forces_dict, 
+        'desired_forces': desired_forces,
+        'predicted_forces': predicted_forces_dict,
+        'ee_frame_names': mpc.ee_frame_names,
+        'supportFeedIds': mpc.supportFeetIds,
+        'supportFeetPos': mpc.supportFeetPos0,
+        'armEEId': mpc.armEEId,
+        'armEEName': 'Link6',
+        'mu': MU,
+        'rmodel': robot.pin_robot.model}
+# Pickling (serializing) and saving to a file
+filename = DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'_'+TIME_STAMP+'.pkl'
+with open(filename, 'wb') as file:
+    pickle.dump(data, file)
+# # Unpickling (deserializing) from the file
+# with open(filename, 'rb') as file:
+#     loaded_data = pickle.load(file)
+print("Saved MPC simulation data pickle to "+filename)
 
 # measured_forces = np.array(measured_forces)
 desired_forces = np.array(desired_forces)
@@ -286,8 +297,8 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
 
 # Save data 
-import time
-np.savez_compressed(DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'_'+str(time.time())+'.npz',
+NPZ_NAME = DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'_'+TIME_STAMP+'.npz'
+np.savez_compressed(NPZ_NAME,
                     jointPos=jointPos,
                     jointVel=jointVel,
                     joint_torques=joint_torques,
@@ -295,4 +306,4 @@ np.savez_compressed(DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'_'+str(time.time()
                     desired_forces=desired_forces,
                     predicted_forces=predicted_forces_dict,
                     ee_frame_names=mpc.ee_frame_names)
-print("Saved MPC simulation data to "+DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'.npz')
+print("Saved MPC simulation data npz to "+NPZ_NAME)

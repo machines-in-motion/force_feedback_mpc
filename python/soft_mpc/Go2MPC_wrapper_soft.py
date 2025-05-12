@@ -12,7 +12,7 @@ import crocoddyl
 import pinocchio
 
 from soft_multicontact_api import ViscoElasticContact3d_Multiple, ViscoElasticContact3D
-from soft_multicontact_api import FrictionConeConstraint, ForceBoxConstraint, ForceConstraintManager
+from soft_multicontact_api import FrictionConeConstraint, ForceBoxConstraintZ, ForceConstraintManager
 from soft_multicontact_api import ForceCost, ForceCostManager, ForceRateCostManager
 from soft_multicontact_api import DAMSoftContactDynamics3D_Go2, IAMSoftContactDynamics3D_Go2
 
@@ -462,12 +462,12 @@ class Go2MPCSoft:
 
             # # feet tracking costs
             # ef_vel_ref = pin.Motion.Zero()
-            # for fname in self.ee_frame_names[:-1]:
+            # for fname in self.ee_frame_names:
             #     frame_idx = self.rmodel.getFrameId(fname)
             #     foot_residual = crocoddyl.ResidualModelFrameVelocity(self.ccdyl_state, frame_idx, ef_vel_ref, pin.LOCAL_WORLD_ALIGNED, self.nu) # Check this cost term            
-            #     foot_activation = crocoddyl.ActivationModelWeightedQuad(np.array([0., 0., 0., 1., 1., 0.]))
+            #     foot_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1.]*6))
             #     foot_track = crocoddyl.CostModelResidual(self.ccdyl_state, foot_activation, foot_residual)
-            #     costModel.addCost(fname+"_vel", foot_track, 0.01)
+            #     costModel.addCost(fname+"_vel", foot_track, 1e3)
 
             # Soft contact models 3d 
             # oPc_ee = self.rdata.oMf[self.armEEId].translation.copy() 
@@ -483,10 +483,10 @@ class Go2MPCSoft:
             constraintModelManager = None #crocoddyl.ConstraintModelManager(self.ccdyl_state, self.nu)
 
             # Custom force cost in DAM
-            f_weight = np.array([1., 1., 1.])*1e-3 
+            f_weight = np.array([1., 1., 1.])*1e-2 
             # fdot_weights = np.array([0.]*12 + [1., 0., 0.])*1e-6
-            # f_weight_foot = np.array([0., 0., 1.])*1e-6
-            # Fz_ref_foot = 40
+            # f_weight_foot = np.array([0., 0., 1.])*1e-2
+            # Fz_ref_foot = 30
             if t != self.HORIZON:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight, pin.LOCAL_WORLD_ALIGNED)
                 # forceCost_LF = ForceCost(self.ccdyl_state, self.lfFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
@@ -494,8 +494,8 @@ class Go2MPCSoft:
                 forceRateCostManager = None #ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights)
             else:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight*self.dt, pin.LOCAL_WORLD_ALIGNED)
-                # forceCost_LF = ForceCost(self.ccdyl_state, self.lfFootId, np.array([0., 0., Fz_ref_foot]), f_weight*self.dt, pin.LOCAL_WORLD_ALIGNED)
-                # forceCost_RF = ForceCost(self.ccdyl_state, self.rfFootId, np.array([0., 0., Fz_ref_foot]), f_weight*self.dt, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_LF = ForceCost(self.ccdyl_state, self.lfFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_RF = ForceCost(self.ccdyl_state, self.rfFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
                 forceRateCostManager = None #ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights*self.dt)
 
             forceCostManager = ForceCostManager([forceCostEE], softContactModelsStack)
@@ -519,18 +519,18 @@ class Go2MPCSoft:
             #     constraintModelManager.addConstraint("ctrlBox", torqueBoxConstraint)
 
             # Friction cone constraint models
-            # lb_foot = np.array([-np.inf, -np.inf, 0.])
-            # ub_foot = np.array([np.inf, np.inf, np.inf])
+            lb_foot = np.array([0.])
+            ub_foot = np.array([100])
             # lb_ee = np.array([-np.inf, -np.inf, -np.inf])
             # ub_ee = np.array([0., np.inf, np.inf])
             forceConstraintManager = ForceConstraintManager([
-                                                             FrictionConeConstraint(self.lfFootId, self.friction_mu, normal='z'),
-                                                             FrictionConeConstraint(self.rfFootId, self.friction_mu, normal='z'),
-                                                             FrictionConeConstraint(self.lhFootId, self.friction_mu, normal='z'),
-                                                             FrictionConeConstraint(self.rhFootId, self.friction_mu, normal='z'),
-                                                            #  FrictionConeConstraint(self.armEEId, self.friction_mu, normal='x'),
-                                                            #  ForceBoxConstraint(self.lfFootId, lb_foot, ub_foot),
-                                                            #  ForceBoxConstraint(self.rfFootId, lb_foot, ub_foot),
+                                                             FrictionConeConstraint(self.lfFootId, self.friction_mu, normal='z', lb_slack=0.),
+                                                             FrictionConeConstraint(self.rfFootId, self.friction_mu, normal='z', lb_slack=0.),
+                                                             FrictionConeConstraint(self.lhFootId, self.friction_mu, normal='z', lb_slack=0.),
+                                                             FrictionConeConstraint(self.rhFootId, self.friction_mu, normal='z', lb_slack=0.),
+                                                            #  FrictionConeConstraint(self.armEEId, self.friction_mu, normal='x', lb_slack=1e-6),
+                                                             ForceBoxConstraintZ(self.lfFootId, lb_foot, ub_foot),
+                                                             ForceBoxConstraintZ(self.rfFootId, lb_foot, ub_foot),
                                                             #  ForceBoxConstraint(self.lhFootId, lb_foot, ub_foot),
                                                             #  ForceBoxConstraint(self.rhFootId, lb_foot, ub_foot),
                                                             #  ForceBoxConstraint(self.armEEId, lb_ee, ub_ee),
@@ -717,7 +717,7 @@ class Go2MPCSoft:
         solver.max_qp_iters = 1000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
-        solver.mu_constraint = -1 
+        solver.mu_constraint = -1
         solver.termination_tolerance = 1e-2
         solver.eps_abs = 1e-6
         solver.eps_rel = 1e-6
@@ -741,7 +741,7 @@ class Go2MPCSoft:
         eta = self.xs[x_idx][25:25+6]
         dq = self.xs[x_idx][25+6:25+6+18]
         f = self.xs[x_idx][25+6+18:]
-        print("FORCE LF RF = ", f[0:6])
+        # print("FORCE LF RF = ", f[0:6])
         constraint_norm = self.solver.constraint_norm
         if(self.USE_MUJOCO):
             return dict(
