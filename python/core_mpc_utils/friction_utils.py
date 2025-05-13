@@ -25,7 +25,7 @@ class ResidualForce3D(crocoddyl.ResidualModelAbstract):
         
 
 class ResidualFrictionCone(crocoddyl.ResidualModelAbstract):
-    def __init__(self, state, contact_name, mu, nu):
+    def __init__(self, state, contact_name, mu, nu, normal='z'):
         crocoddyl.ResidualModelAbstract.__init__(self, state, 1, nu, True, True, True)
         self.mu = mu
         self.contact_name = contact_name
@@ -33,18 +33,29 @@ class ResidualFrictionCone(crocoddyl.ResidualModelAbstract):
         self.dcone_df = np.zeros((1, 3))
         self.df_dx = np.zeros((3, self.state.ndx))
         self.df_du = np.zeros((3, self.nu))
+        self.normal = normal
 
     def calc(self, data, x, u=None): 
         F = data.shared.contacts.contacts[self.contact_name].f.vector[:3]   
-        data.r[0] = np.array([self.mu * np.abs(F[2]) - np.sqrt(F[0]**2 + F[1]**2)])
+        if(self.normal == 'z'):
+            data.r[0] = np.array([self.mu * np.abs(F[2]) - np.sqrt(F[0]**2 + F[1]**2)])
+        elif(self.normal == 'x'):
+            data.r[0] = np.array([self.mu * np.abs(F[0]) - np.sqrt(F[1]**2 + F[2]**2)])
+        else:
+            ValueError('Friction with normal=y is not supported.')
 
     def calcDiff(self, data, x, u=None):
         F = data.shared.contacts.contacts[self.contact_name].f.vector[:3]
-
-        self.dcone_df[0, 0] = -F[0] / np.sqrt(F[0]**2 + F[1]**2)
-        self.dcone_df[0, 1] = -F[1] / np.sqrt(F[0]**2 + F[1]**2)
-        self.dcone_df[0, 2] = self.mu
-
+        if(self.normal == 'z'):
+            self.dcone_df[0, 0] = -F[0] / np.sqrt(F[0]**2 + F[1]**2)
+            self.dcone_df[0, 1] = -F[1] / np.sqrt(F[0]**2 + F[1]**2)
+            self.dcone_df[0, 2] = self.mu
+        elif(self.normal == 'x'):
+            self.dcone_df[0, 0] = -F[1] / np.sqrt(F[1]**2 + F[2]**2)
+            self.dcone_df[0, 1] = -F[2] / np.sqrt(F[1]**2 + F[2]**2)
+            self.dcone_df[0, 2] = self.mu
+        else:
+            ValueError('Friction with normal=y is not supported.')
 
         self.df_dx = data.shared.contacts.contacts[self.contact_name].df_dx[:3]   
         self.df_du = data.shared.contacts.contacts[self.contact_name].df_du[:3] 

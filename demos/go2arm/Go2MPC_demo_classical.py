@@ -115,6 +115,9 @@ if(USE_MUJOCO):
     setGroundFriction(robot.model, robot.data, MU)
 
 # measured_forces = []
+constraint_norm = []
+gap_norm = []
+kkt_norm = []
 measured_forces_dict = {}
 predicted_forces_dict = {}
 for fname in mpc.ee_frame_names:
@@ -122,7 +125,7 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = []
 desired_forces = []
 joint_torques = []
-f_des_z = np.linspace(0.1*FREF, 0.75*FREF, N_SIMU) # np.array([FREF]*N_SIMU) 
+f_des_z = np.linspace(0.1*FREF, FREF, N_SIMU) # np.array([FREF]*N_SIMU) 
 # breakpoint()
 WITH_INTEGRAL = USE_INTEGRAL
 if(WITH_INTEGRAL):
@@ -196,6 +199,9 @@ else:
         # Solve OCP
         if(i%int(SIM_FREQ/MPC_FREQ)==0):
             solution = mpc.updateAndSolve2(q, dq)
+            constraint_norm.append(mpc.solver.constraint_norm)
+            gap_norm.append(mpc.solver.gap_norm)
+            kkt_norm.append(mpc.solver.KKT)
             # plot_ocp_solution(mpc)
         # Save the solution
         tau = solution['tau'].squeeze()
@@ -212,7 +218,6 @@ else:
                 f_mea = np.zeros(3)
             measured_forces_dict[fname].append(f_mea)
             predicted_forces_dict[fname].append(solution[fname+'_contact'])
-
         # MESHCAT VISUALIZATION
         viz.display(q)
         # update contact force and cone 
@@ -268,6 +273,9 @@ TIME_STAMP = str(time.time())
 import pickle
 data = {'jointPos': jointPos, 
         'jointVel': jointVel, 
+        'gap_norm': gap_norm, 
+        'constraint_norm': constraint_norm, 
+        'kkt_norm': kkt_norm, 
         'joint_torques': joint_torques,
         'measured_forces': measured_forces_dict, 
         'desired_forces': desired_forces,
@@ -302,6 +310,9 @@ NPZ_NAME = DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'_'+TIME_STAMP+'.npz'
 np.savez_compressed(NPZ_NAME,
                     jointPos=jointPos,
                     jointVel=jointVel,
+                    gap_norm=gap_norm, 
+                    constraint_norm=constraint_norm, 
+                    kkt_norm=kkt_norm, 
                     joint_torques=joint_torques,
                     measured_forces=measured_forces_dict,
                     desired_forces=desired_forces,

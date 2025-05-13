@@ -241,8 +241,8 @@ class FrictionConeConstraint:
 
 
 # 3D force box constraint
-class ForceBoxConstraintZ:
-    def __init__(self, frameId, lb, ub):
+class ForceBoxConstraint:
+    def __init__(self, frameId, lb, ub, axis='z'):
         self.nc          = 3
         self.nr          = 1
         self.active      = True
@@ -251,13 +251,23 @@ class ForceBoxConstraintZ:
         self.residual_df = np.zeros((self.nr,self.nc))
         self.lb = lb
         self.ub = ub 
-        
+        self.axis = axis
+        self.dr3d_df = np.eye(self.nc)
+        if(self.axis == 'x'):
+            self.id_axis = 0
+        elif(self.axis == 'y'):
+            self.id_axis = 1
+        elif(self.axis == 'z'):
+            self.id_axis = 2
+        else:
+            ValueError("ForceBoxConstraint error: axis must be in [x,y,z]")
+
     def calc(self, f):
         self.residual = f[2]
         return self.residual
     
     def calcDiff(self, f):
-        self.residual_df = np.array([0., 0., 1.]) #np.eye(self.nc)
+        self.residual_df = self.dr3d_df[self.id_axis]
         return self.residual_df
 
 

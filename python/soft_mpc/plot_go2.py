@@ -7,15 +7,15 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.insert(0, "/home/skleff/force_feedback_ws")
 
-TYPE        = 'classical' # classical or soft
+TYPE        = 'soft' # classical or soft
 
 if(TYPE == 'classical'):
     from demos.go2arm.Go2MPC_wrapper_classical import Go2MPCClassical as Go2MPCWrapper
-    DATA_PATH    = '/home/skleff/go2_classical_INT=True_1747085705.1581683.npz'
+    DATA_PATH    = '/home/skleff/go2_classical_INT=True_1747151030.0519977.npz'
     CONFIG_PATH  = '/home/skleff/force_feedback_ws/force_feedback_mpc/demos/go2arm/Go2MPC_demo_classical.yml'
 else:
     from force_feedback_mpc.soft_mpc.Go2MPC_wrapper_soft import Go2MPCSoft as Go2MPCWrapper
-    DATA_PATH    = '/home/skleff/go2_soft_1747083871.1443565.npz'
+    DATA_PATH    = '/home/skleff/go2_soft_1747151261.8786628.npz'
     CONFIG_PATH  = '/home/skleff/force_feedback_ws/force_feedback_mpc/python/soft_mpc/Go2MPC_demo_soft.yml'
 
 print("Loading data from: ", DATA_PATH)
@@ -25,6 +25,9 @@ print("Loading config from: ", CONFIG_PATH)
 data                 = np.load(DATA_PATH, allow_pickle=True)
 jointPos             = data['jointPos']
 jointVel             = data['jointVel']
+gap_norm             = data['gap_norm']
+constraint_norm      = data['constraint_norm']
+kkt_norm             = data['kkt_norm']
 joint_torques        = data['joint_torques']
 measured_forces_dict = data['measured_forces'].item()
 # filtered_forces      = data['filtered_forces'].item()
@@ -36,6 +39,7 @@ CONFIG  = load_yaml_file(CONFIG_PATH)
 DT_SIMU = CONFIG['DT_SIMU']
 N_SIMU  = CONFIG['N_SIMU']
 MU      = CONFIG['MU']
+MPC_FREQ= CONFIG['MPC_FREQ']
 
 
 # Compute cost and constraint violation along MPC trajectory
@@ -66,14 +70,24 @@ for i in range(N_SIMU):
     m = mpc.ocp.runningModels[0]
     m.calc(d, x, u)
     cost += d.cost
-    cstr_lb = 0
-    cstr_ub = 0
-    if(np.linalg.norm(m.g_lb) < np.inf):
-        cstr_lb = min(0, np.linalg.norm(d.g - m.g_lb, np.inf)) 
-        violation += cstr_lb
-    if(np.linalg.norm(m.g_ub) < np.inf):
-        cstr_ub = max(0, np.linalg.norm(d.g - m.g_ub, np.inf)) 
-        violation += cstr_ub
+    fric_res_l6 = MU * np.abs(measured_forces_dict['Link6'][i][0]) - np.sqrt(measured_forces_dict['Link6'][i][1]**2 + measured_forces_dict['Link6'][i][2]**2)
+    fric_res_FL = MU * np.abs(measured_forces_dict['FL_FOOT'][i][2]) - np.sqrt(measured_forces_dict['FL_FOOT'][i][0]**2 + measured_forces_dict['FL_FOOT'][i][1]**2)
+    fric_res_FR = MU * np.abs(measured_forces_dict['FR_FOOT'][i][2]) - np.sqrt(measured_forces_dict['FR_FOOT'][i][0]**2 + measured_forces_dict['FR_FOOT'][i][1]**2)
+    fric_res_HL = MU * np.abs(measured_forces_dict['HL_FOOT'][i][2]) - np.sqrt(measured_forces_dict['HL_FOOT'][i][0]**2 + measured_forces_dict['HL_FOOT'][i][1]**2)
+    fric_res_HR = MU * np.abs(measured_forces_dict['HR_FOOT'][i][2]) - np.sqrt(measured_forces_dict['HR_FOOT'][i][0]**2 + measured_forces_dict['HR_FOOT'][i][1]**2)
+    violation += min(fric_res_l6, 0)
+    violation += min(fric_res_FL, 0)
+    violation += min(fric_res_FR, 0)
+    violation += min(fric_res_HL, 0)
+    violation += min(fric_res_HR, 0)
+    # cstr_lb = 0
+    # cstr_ub = 0
+    # if(np.linalg.norm(m.g_lb) < np.inf):
+    #     cstr_lb = min(0, np.linalg.norm(d.g - m.g_lb, np.inf)) 
+    #     violation += cstr_lb
+    # if(np.linalg.norm(m.g_ub) < np.inf):
+    #     cstr_ub = max(0, np.linalg.norm(d.g - m.g_ub, np.inf)) 
+    #     violation += cstr_ub
     err_f_x += (measured_forces_dict['Link6'][i][0] - desired_forces[i][0])**2
     err_f_y += (measured_forces_dict['Link6'][i][1] - desired_forces[i][1])**2
     err_f_z += (measured_forces_dict['Link6'][i][2] - desired_forces[i][2])**2
@@ -94,7 +108,7 @@ axs[0].plot(time_span, np.abs(measured_forces_dict['Link6'][:,0]),linewidth=4, c
 axs[0].plot(time_span, np.abs(desired_forces[:,0]), linewidth=4, color='k', marker='o', alpha=0.25, label="Fx des")
 # axs[0].plot(time_span, np.abs(predicted_forces_dict['Link6'][:,0]), linewidth=4, color='b', marker='o', alpha=0.25, label="Fx predicted")
 # axs[0].plot(time_span, Fx_lb_mea, '--', linewidth=4, color='k',  alpha=0.5, label="Fx friction constraint (lower bound)")
-axs[0].set_ylim(-10., 75)
+axs[0].set_ylim(-10., 105)
 
 axs[1].plot(time_span, measured_forces_dict['Link6'][:,1],linewidth=4, color='g', marker='o', alpha=0.5, label="Fy mea")
 axs[1].plot(time_span, desired_forces[:,1], linewidth=4, color='k', marker='o', alpha=0.25, label="Fy des")
@@ -104,7 +118,7 @@ axs[1].set_ylim(-10., 10)
 axs[2].plot(time_span, measured_forces_dict['Link6'][:,2],linewidth=4, color='g', marker='o', alpha=0.5, label="Fz mea")
 axs[2].plot(time_span, desired_forces[:,2], linewidth=4, color='k', marker='o', alpha=0.25, label="Fz des")
 # axs[2].plot(time_span, predicted_forces_dict['Link6'][:,2], linewidth=4, color='b', marker='o', alpha=0.25, label="Fz predicted")
-axs[2].set_ylim(-10., 10)
+axs[2].set_ylim(-25., 10)
 for i in range(3):
     axs[i].legend()
     axs[i].grid()
@@ -135,6 +149,27 @@ for i,fname in enumerate(ee_frame_names[:-1]):
     axs[2, i].grid()
 
 fig.suptitle('Contact forces at feet FL, FR, HL, HR', fontsize=16)
+
+
+# SOLVER METRICS
+N_MPC_STEPS = int(N_SIMU*DT_SIMU*MPC_FREQ)
+time_span = np.linspace(0, (N_SIMU-1)*DT_SIMU, N_MPC_STEPS)
+fig, axs = plt.subplots(3, 1, constrained_layout=True)
+axs[0].plot(time_span, gap_norm,linewidth=4, color='g', marker='o', alpha=0.5, label="Gap norm")
+# axs[0].plot(time_span, np.abs(desired_forces[:,0]), linewidth=4, color='k', marker='o', alpha=0.25, label="Fx des")
+# axs[0].set_ylim(0., 105)
+
+axs[1].plot(time_span, constraint_norm, linewidth=4, color='g', marker='o', alpha=0.5, label="Constraint norm")
+# axs[1].plot(time_span, desired_forces[:,1], linewidth=4, color='k', marker='o', alpha=0.25, label="Fy des")
+# axs[1].set_ylim(-10., 10)
+
+axs[2].plot(time_span, kkt_norm,linewidth=4, color='g', marker='o', alpha=0.5, label="KKT")
+axs[2].plot(time_span, np.array([1e-4]*N_MPC_STEPS), linewidth=4, color='k', marker='o', alpha=0.25, label="TOL")
+# axs[2].set_ylim(-25., 10)
+for i in range(3):
+    axs[i].legend()
+    axs[i].grid()
+fig.suptitle('Solver convergence', fontsize=16)
 
 plt.show()
 
