@@ -11,11 +11,11 @@ TYPE        = 'soft' # classical or soft
 
 if(TYPE == 'classical'):
     from demos.go2arm.Go2MPC_wrapper_classical import Go2MPCClassical as Go2MPCWrapper
-    DATA_PATH    = '/home/skleff/go2_classical_INT=True_1747151030.0519977.npz'
+    DATA_PATH    = '/home/skleff/go2_classical_INT=False_1747165258.3585227.npz'
     CONFIG_PATH  = '/home/skleff/force_feedback_ws/force_feedback_mpc/demos/go2arm/Go2MPC_demo_classical.yml'
 else:
     from force_feedback_mpc.soft_mpc.Go2MPC_wrapper_soft import Go2MPCSoft as Go2MPCWrapper
-    DATA_PATH    = '/home/skleff/go2_soft_1747151261.8786628.npz'
+    DATA_PATH    = '/home/skleff/go2_soft_1747165515.537937.npz'
     CONFIG_PATH  = '/home/skleff/force_feedback_ws/force_feedback_mpc/python/soft_mpc/Go2MPC_demo_soft.yml'
 
 print("Loading data from: ", DATA_PATH)
@@ -153,23 +153,36 @@ fig.suptitle('Contact forces at feet FL, FR, HL, HR', fontsize=16)
 
 # SOLVER METRICS
 N_MPC_STEPS = int(N_SIMU*DT_SIMU*MPC_FREQ)
-time_span = np.linspace(0, (N_SIMU-1)*DT_SIMU, N_MPC_STEPS)
-fig, axs = plt.subplots(3, 1, constrained_layout=True)
-axs[0].plot(time_span, gap_norm,linewidth=4, color='g', marker='o', alpha=0.5, label="Gap norm")
-# axs[0].plot(time_span, np.abs(desired_forces[:,0]), linewidth=4, color='k', marker='o', alpha=0.25, label="Fx des")
+time_span2 = np.linspace(0, (N_SIMU-1)*DT_SIMU, N_MPC_STEPS)
+# fig, axs = plt.subplots(3, 1, constrained_layout=True)
+# axs[0].plot(time_span, gap_norm,linewidth=4, color='g', marker='o', alpha=0.5, label="Gap norm")
+# # axs[0].plot(time_span, np.abs(desired_forces[:,0]), linewidth=4, color='k', marker='o', alpha=0.25, label="Fx des")
+# # axs[0].set_ylim(0., 105)
+
+# axs[1].plot(time_span, constraint_norm, linewidth=4, color='g', marker='o', alpha=0.5, label="Constraint norm")
+# # axs[1].plot(time_span, desired_forces[:,1], linewidth=4, color='k', marker='o', alpha=0.25, label="Fy des")
+# # axs[1].set_ylim(-10., 10)
+
+# axs[2].plot(time_span, kkt_norm,linewidth=4, color='g', marker='o', alpha=0.5, label="KKT")
+# axs[2].plot(time_span, np.array([1e-4]*N_MPC_STEPS), linewidth=4, color='k', marker='o', alpha=0.25, label="TOL")
+# # axs[2].set_ylim(-25., 10)
+# for i in range(3):
+#     axs[i].legend()
+#     axs[i].grid()
+# fig.suptitle('Solver convergence', fontsize=16)
+
+fig, axs = plt.subplots(2, 1, constrained_layout=True)
+axs[0].plot(time_span2, gap_norm + constraint_norm, linewidth=4, color='g', marker='o', alpha=0.5, label="Constraint norm")
 # axs[0].set_ylim(0., 105)
-
-axs[1].plot(time_span, constraint_norm, linewidth=4, color='g', marker='o', alpha=0.5, label="Constraint norm")
-# axs[1].plot(time_span, desired_forces[:,1], linewidth=4, color='k', marker='o', alpha=0.25, label="Fy des")
-# axs[1].set_ylim(-10., 10)
-
-axs[2].plot(time_span, kkt_norm,linewidth=4, color='g', marker='o', alpha=0.5, label="KKT")
-axs[2].plot(time_span, np.array([1e-4]*N_MPC_STEPS), linewidth=4, color='k', marker='o', alpha=0.25, label="TOL")
-# axs[2].set_ylim(-25., 10)
-for i in range(3):
+axs[1].plot(time_span, np.abs(measured_forces_dict['Link6'][:,0]), linewidth=4, color='g', marker='o', alpha=0.5, label="Measured force (Fx)")
+axs[1].plot(time_span, np.abs(desired_forces[:,0]), linewidth=4, color='k', marker='o', alpha=0.25, label="Desired force (Fx)")
+axs[1].set_ylim(-1., FREF+1)
+for i in range(2):
     axs[i].legend()
     axs[i].grid()
-fig.suptitle('Solver convergence', fontsize=16)
+fig.suptitle('Constraint violation + Force tracking', fontsize=16)
+
+
 
 plt.show()
 

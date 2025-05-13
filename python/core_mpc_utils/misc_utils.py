@@ -18,3 +18,26 @@ def parse_MPC_script(argv=None):
 from croco_mpc_utils.utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
 logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
 
+import numpy as np
+
+def moving_average(data, window_size):
+    """
+    Compute the moving average of a 1D array.
+    
+    Parameters:
+    - data: 1D array-like, the input signal
+    - window_size: int, size of the moving average window
+
+    Returns:
+    - smoothed_data: 1D numpy array of the same length as input
+    """
+    if window_size < 1:
+        raise ValueError("Window size must be at least 1.")
+    
+    data = np.asarray(data)
+    cumsum = np.cumsum(np.insert(data, 0, 0))
+    smoothed = (cumsum[window_size:] - cumsum[:-window_size]) / window_size
+    
+    # Pad the start to maintain original length
+    pad_width = window_size // 2
+    return np.pad(smoothed, (pad_width, data.size - smoothed.size - pad_width), mode='edge')

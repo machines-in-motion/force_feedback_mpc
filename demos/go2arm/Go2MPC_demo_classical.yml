@@ -7,16 +7,17 @@ N_SIMU: 1000
 MPC_FREQ: 100
 HORIZON: 20
 DT_OCP: 0.01
-MAX_ITER_1: 500
-MAX_ITER_2: 100
+MAX_ITER_1: 1000
+MAX_ITER_2: 1000
 
 # Task
-FREF: 50   # desired contact force at end-effector
+FWEIGHT: 0.05
+FREF: 80   # desired contact force at end-effector
 MU: 0.75   # environment friction coefficient (ground / wall)
 
 # CONTROL
 USE_INTEGRAL: True
-INTEGRAL_GAIN: 0.1
+INTEGRAL_GAIN: 1.
 KP: 0.
 KV: 0.
 

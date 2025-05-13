@@ -24,6 +24,7 @@ from force_feedback_mpc.core_mpc_utils.path_utils import load_yaml_file
 CONFIG        = load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/Go2MPC_demo_soft.yml')
 USE_MUJOCO    = CONFIG['USE_MUJOCO']
 DT_SIMU       = CONFIG['DT_SIMU']
+FWEIGHT       = CONFIG['FWEIGHT']
 FREF          = CONFIG['FREF']
 MU            = CONFIG['MU']
 HORIZON       = CONFIG['HORIZON']
@@ -338,7 +339,7 @@ data = {'jointPos': jointPos,
         'mu': MU,
         'rmodel': robot.pin_robot.model}
 # Pickling (serializing) and saving to a file
-filename = DATA_SAVE_DIR+'_'+TIME_STAMP+'.pkl'
+filename = DATA_SAVE_DIR+'_Fmax='+str(FREF)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'.pkl'
 with open(filename, 'wb') as file:
     pickle.dump(data, file)
 # # Unpickling (deserializing) from the file
@@ -356,7 +357,7 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
 
 # Save data 
-NPZ_NAME = DATA_SAVE_DIR+'_'+TIME_STAMP+'.npz'
+NPZ_NAME = DATA_SAVE_DIR+'_Fmax='+str(FREF)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'.npz'
 np.savez_compressed(NPZ_NAME,
                     jointPos=jointPos,
                     jointVel=jointVel,

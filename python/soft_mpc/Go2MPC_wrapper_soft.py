@@ -346,7 +346,7 @@ class Go2MPCSoft:
 
     def initialize(self, q0=np.array([-0.01, 0.0, 0.32, 0.0, 0.0, 0.0, 1.0] 
                     +4*[0.0, 0.77832842, -1.56065452] + [0.0, 0.3, -0.3, 0.0, 0.0, 0.0]
-                        ), f0=np.array([0., 0., 0.]*4 + [0.]*3), Kp=1000, Kv=100, FREF=15):
+                        ), f0=np.array([0., 0., 0.]*4 + [0.]*3), Kp=1000, Kv=100, FREF=15, FWEIGHT=0.01):
         q0[11+2]=0.0
         self.q0 = q0.copy()
         self.v0 = np.zeros(self.rmodel.nv)
@@ -358,6 +358,7 @@ class Go2MPCSoft:
         #                     -0.053733 , 0.045646,  0.10088  ,
         #                     -41.543034,  -7.066572,  -6.30816    ]) #f0.copy()
         self.Fx_ref_ee = FREF
+        self.F_ee_weight = FWEIGHT
         self.Kv = Kv
         self.x0 =  np.concatenate([q0, self.v0])
         pinocchio.forwardKinematics(self.rmodel, self.rdata, q0)
@@ -483,7 +484,7 @@ class Go2MPCSoft:
             constraintModelManager = None #crocoddyl.ConstraintModelManager(self.ccdyl_state, self.nu)
 
             # Custom force cost in DAM
-            f_weight = np.array([1., 1., 1.])*5e-3
+            f_weight = np.array([1., 1., 1.])*self.F_ee_weight
             # fdot_weights = np.array([0.]*12 + [1., 0., 0.])*1e-6
             # f_weight_foot = np.array([1., 1., 1.])*1e-3
             # Fz_ref_foot = 30

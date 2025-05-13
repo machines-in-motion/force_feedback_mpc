@@ -309,13 +309,14 @@ class Go2MPCClassical:
         # print(self.ccdyl_state.pinocchio.effortLimit[6:])
 
     def initialize(self, q0=np.array([-0.01, 0.0, 0.32, 0.0, 0.0, 0.0, 1.0] 
-                    +4*[0.0, 0.77832842, -1.56065452] + [0.0, 0.3, -0.3, 0.0, 0.0, 0.0]), FREF=15):
+                    +4*[0.0, 0.77832842, -1.56065452] + [0.0, 0.3, -0.3, 0.0, 0.0, 0.0]), FREF=15, FWEIGHT=0.01):
         q0[11+2]=0.0
         self.q0 = q0.copy()
         self.x0 =  np.concatenate([q0, np.zeros(self.rmodel.nv)])
         pinocchio.forwardKinematics(self.rmodel, self.rdata, q0)
         pinocchio.updateFramePlacements(self.rmodel, self.rdata)
         self.Fx_ref_ee = FREF
+        self.F_ee_weight = FWEIGHT
         self.rfFootPos0 = self.rdata.oMf[self.rfFootId].translation
         self.rhFootPos0 = self.rdata.oMf[self.rhFootId].translation
         self.lfFootPos0 = self.rdata.oMf[self.lfFootId].translation
@@ -378,7 +379,7 @@ class Go2MPCClassical:
                 contact_force_residual = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, self.ef_des_force, 3, self.nu)
                 contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
                 contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
-                costModel.addCost("contact_force_track", contact_force_track, 1e-2) #5e-4) #1e1
+                costModel.addCost("contact_force_track", contact_force_track, self.F_ee_weight) #5e-4) #1e1
 
             # Force constraints
             constraintModelManager = crocoddyl.ConstraintModelManager(self.ccdyl_state, self.ccdyl_actuation.nu)
