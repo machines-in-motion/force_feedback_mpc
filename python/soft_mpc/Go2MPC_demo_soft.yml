@@ -12,7 +12,7 @@ MAX_ITER_2: 1000
 
 # Task
 FWEIGHT: 0.001
-FDOTWEIGHT: 0.0000001 
+FDOTWEIGHT: 0.000001 
 FMIN: 80   # desired contact force at end-effector (min)
 FMAX: 80   # desired contact force at end-effector (max)
 MU: 0.75   # environment friction coefficient (ground / wall)

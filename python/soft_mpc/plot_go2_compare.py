@@ -61,7 +61,7 @@ sys.path.insert(0, "/home/skleff/force_feedback_ws")
 # NEW DATASET (with convergence, ramp 25 to 80, removed ee friction cone, using foot force cost)
 DATA_PATH_1  = '/home/skleff/go2_classical_INT=False_Fmin=25_Fmax=80_maxit=1000_fweight=0.0005.npz'
 DATA_PATH_2  = '/home/skleff/go2_classical_INT=True_Fmin=25_Fmax=80_maxit=1000_fweight=0.0005.npz' 
-DATA_PATH_3  = '/home/skleff/go2_soft_Fmin=25_Fmax=80_maxit=1000_fweight=0.001.npz' 
+DATA_PATH_3  = '/home/skleff/go2_soft_Fmin=25_Fmax=80_maxit=1000_fweight=0.001.npz' #go2_soft_Fmin=25_Fmax=80_maxit=1000_fweight=0.001.npz' 
 
 # Load data and extract signals
 print("Loading data from: ", DATA_PATH_1)
