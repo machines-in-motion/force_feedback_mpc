@@ -25,7 +25,9 @@ CONFIG        = load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/Go2
 USE_MUJOCO    = CONFIG['USE_MUJOCO']
 DT_SIMU       = CONFIG['DT_SIMU']
 FWEIGHT       = CONFIG['FWEIGHT']
-FREF          = CONFIG['FREF']
+FDOTWEIGHT    = CONFIG['FDOTWEIGHT']
+FMIN          = CONFIG['FMIN']
+FMAX          = CONFIG['FMAX']
 MU            = CONFIG['MU']
 HORIZON       = CONFIG['HORIZON']
 DT_OCP        = CONFIG['DT_OCP']
@@ -94,7 +96,7 @@ else:
 
 # Instantiate the solver
 mpc = Go2MPCSoft(HORIZON=HORIZON, friction_mu=MU, dt=DT_OCP, USE_MUJOCO=USE_MUJOCO)
-mpc.initialize(FREF=0.1*FREF)
+mpc.initialize(FMIN=FMIN, FWEIGHT=FWEIGHT, FDOTWEIGHT=FDOTWEIGHT)
 mpc.max_iterations = MAX_ITER_1
 # mpc.test_derivatives()
 mpc.solve()
@@ -161,7 +163,7 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = []
 desired_forces = []
 joint_torques = []
-f_des_z = np.linspace(0.1*FREF, FREF, N_SIMU) # np.array([FREF]*N_SIMU) 
+f_des_z = np.linspace(FMIN, FMAX, N_SIMU) # np.array([FREF]*N_SIMU) 
 constraint_norm = []
 gap_norm = []
 kkt_norm = []
@@ -339,7 +341,7 @@ data = {'jointPos': jointPos,
         'mu': MU,
         'rmodel': robot.pin_robot.model}
 # Pickling (serializing) and saving to a file
-filename = DATA_SAVE_DIR+'_Fmax='+str(FREF)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'.pkl'
+filename = DATA_SAVE_DIR+'_Fmin='+str(FMIN)+'_Fmax='+str(FMAX)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'.pkl' #+'_fdotweight='+str(FDOTWEIGHT)+'.pkl'
 with open(filename, 'wb') as file:
     pickle.dump(data, file)
 # # Unpickling (deserializing) from the file
@@ -357,7 +359,7 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
 
 # Save data 
-NPZ_NAME = DATA_SAVE_DIR+'_Fmax='+str(FREF)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'.npz'
+NPZ_NAME = DATA_SAVE_DIR+'_Fmin='+str(FMIN)+'_Fmax='+str(FMAX)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'.npz' #+'_fdotweight='+str(FDOTWEIGHT)+'.npz'
 np.savez_compressed(NPZ_NAME,
                     jointPos=jointPos,
                     jointVel=jointVel,

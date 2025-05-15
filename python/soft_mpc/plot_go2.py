@@ -11,11 +11,11 @@ TYPE        = 'soft' # classical or soft
 
 if(TYPE == 'classical'):
     from demos.go2arm.Go2MPC_wrapper_classical import Go2MPCClassical as Go2MPCWrapper
-    DATA_PATH    = '/home/skleff/go2_classical_INT=False_1747165258.3585227.npz'
+    DATA_PATH    = '/home/skleff/go2_classical_INT=False_Fmin=25_Fmax=80_maxit=1000_fweight=0.0005.npz'
     CONFIG_PATH  = '/home/skleff/force_feedback_ws/force_feedback_mpc/demos/go2arm/Go2MPC_demo_classical.yml'
 else:
     from force_feedback_mpc.soft_mpc.Go2MPC_wrapper_soft import Go2MPCSoft as Go2MPCWrapper
-    DATA_PATH    = '/home/skleff/go2_soft_1747165515.537937.npz'
+    DATA_PATH    = '/home/skleff/go2_soft_Fmax=80_maxit=1000_fweight=0.001_CONSTANT.npz'
     CONFIG_PATH  = '/home/skleff/force_feedback_ws/force_feedback_mpc/python/soft_mpc/Go2MPC_demo_soft.yml'
 
 print("Loading data from: ", DATA_PATH)
@@ -43,11 +43,12 @@ MPC_FREQ= CONFIG['MPC_FREQ']
 
 
 # Compute cost and constraint violation along MPC trajectory
-FREF          = CONFIG['FREF']
+FMIN = CONFIG['FMIN']
+FMAX = CONFIG['FMAX']
 HORIZON       = CONFIG['HORIZON']
 DT_OCP        = CONFIG['DT_OCP']
 mpc = Go2MPCWrapper(HORIZON=HORIZON, friction_mu=MU, dt=DT_OCP, USE_MUJOCO=False)
-mpc.initialize(FREF=0.1*FREF)
+mpc.initialize(FMIN=FMIN)
 m = mpc.ocp.runningModels[0]
 d = m.createData()
 cost = 0
@@ -176,7 +177,7 @@ axs[0].plot(time_span2, gap_norm + constraint_norm, linewidth=4, color='g', mark
 # axs[0].set_ylim(0., 105)
 axs[1].plot(time_span, np.abs(measured_forces_dict['Link6'][:,0]), linewidth=4, color='g', marker='o', alpha=0.5, label="Measured force (Fx)")
 axs[1].plot(time_span, np.abs(desired_forces[:,0]), linewidth=4, color='k', marker='o', alpha=0.25, label="Desired force (Fx)")
-axs[1].set_ylim(-1., FREF+1)
+axs[1].set_ylim(-1., FMAX+1)
 for i in range(2):
     axs[i].legend()
     axs[i].grid()

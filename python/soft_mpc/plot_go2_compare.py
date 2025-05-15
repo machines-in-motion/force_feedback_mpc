@@ -20,9 +20,9 @@ sys.path.insert(0, "/home/skleff/force_feedback_ws")
 # # # # # # # # # # # # # # # # # # 
 #   MAXIT=1000 
 #       SQP_TOL=1e-4, FWEIGHT=0.05 both classical and soft
-DATA_PATH_1  = '/home/skleff/GO2_DATA/F=50/maxit=1000/go2_classical_INT=False_Fmax=50_maxit=1000_fweight=0.05.npz'
-DATA_PATH_2  = '/home/skleff/GO2_DATA/F=50/maxit=1000/go2_classical_INT=True_Fmax=50_maxit=1000_fweight=0.05.npz' #ki=1 #'/home/skleff/go2_classical_INT=True_Fmax=50_maxit=1000_fweight=0.05.npz' #ki=0.5
-DATA_PATH_3  = '/home/skleff/GO2_DATA/F=50/maxit=1000/go2_soft_1747166584.5935109_fweight=5e-2.npz' # 5e-2'/home/skleff/go2_soft_1747164585.2440019.npz' #2e-2 #'/home/skleff/go2_soft_1747161797.710107.npz' #1e-2
+# DATA_PATH_1  = '/home/skleff/GO2_DATA/F=50/maxit=1000/go2_classical_INT=False_Fmax=50_maxit=1000_fweight=0.05.npz'
+# DATA_PATH_2  = '/home/skleff/GO2_DATA/F=50/maxit=1000/go2_classical_INT=True_Fmax=50_maxit=1000_fweight=0.05.npz' #ki=1 #'/home/skleff/go2_classical_INT=True_Fmax=50_maxit=1000_fweight=0.05.npz' #ki=0.5
+# DATA_PATH_3  = '/home/skleff/GO2_DATA/F=50/maxit=1000/go2_soft_1747166584.5935109_fweight=5e-2.npz' # 5e-2'/home/skleff/go2_soft_1747164585.2440019.npz' #2e-2 #'/home/skleff/go2_soft_1747161797.710107.npz' #1e-2
 
 # F=100 
 #   MAXIT=20
@@ -32,7 +32,7 @@ DATA_PATH_3  = '/home/skleff/GO2_DATA/F=50/maxit=1000/go2_soft_1747166584.593510
 # DATA_PATH_3  = '/home/skleff/GO2_DATA/F=100/maxit=20/go2_soft_Fmax=100_maxit=20_fweight=0.05.npz' 
 # GOOD BINARY RESULT 
 #   MAXIT=1000  
-#       SQP_TOL=1e-4, FWEIGHT=0.05 both classical and soft)
+#       SQP_TOL=1e-4, FWEIGHT=0.05 both classical and soft
 # DATA_PATH_1  = '/home/skleff/GO2_DATA/F=100/maxit=1000/go2_classical_INT=False_Fmax=100_maxit=1000_fweight=0.05.npz'
 # DATA_PATH_2  = '/home/skleff/GO2_DATA/F=100/maxit=1000/go2_classical_INT=True_Fmax=100_maxit=1000_fweight=0.05.npz' 
 # DATA_PATH_3  = '/home/skleff/GO2_DATA/F=100/maxit=1000/go2_soft_Fmax=100_maxit=1000_fweight=0.05.npz' 
@@ -43,11 +43,25 @@ DATA_PATH_3  = '/home/skleff/GO2_DATA/F=50/maxit=1000/go2_soft_1747166584.593510
 # # # # # # # # # # # # # # # # # # # #  
 # # F=80 
 # #   MAXIT=1000  
-# #       SQP_TOL=1e-4, FWEIGHT=0.05 both classical and soft)
+# #       SQP_TOL=1e-4, FWEIGHT=0.05 both classical and soft
 # DATA_PATH_1  = '/home/skleff/GO2_DATA/F=80/go2_classical_INT=False_Fmax=80_maxit=1000_fweight=0.05.npz'
 # DATA_PATH_2  = '/home/skleff/GO2_DATA/F=80/go2_classical_INT=True_Fmax=80_maxit=1000_fweight=0.05.npz' 
 # DATA_PATH_3  = '/home/skleff/GO2_DATA/F=80/go2_soft_Fmax=80_maxit=1000_fweight=0.05.npz' 
 
+# # NEW DATASET (with convergence, ramp 25 to 80, removed ee friction cone)
+# DATA_PATH_1  = '/home/skleff/go2_classical_INT=False_Fmax=80_maxit=1000_fweight=0.0005.npz'
+# DATA_PATH_2  = '/home/skleff/go2_classical_INT=True_Fmax=80_maxit=1000_fweight=0.0005.npz' 
+# DATA_PATH_3  = '/home/skleff/go2_classical_INT=False_Fmin=25_Fmax=80_maxit=1000_fweight=0.0005.npz' 
+# # DATA_PATH_3  = '/home/skleff/go2_soft_Fmax=80_maxit=1000_fweight=0.005.npz'
+# # DATA_PATH_3  = '/home/skleff/go2_soft_Fmax=80_maxit=1000_fweight=0.001.npz'# violation > 0
+# # DATA_PATH_3  = '/home/skleff/go2_soft_Fmax=80_maxit=1000_fweight=0.0008.npz'# TODO?
+# # DATA_PATH_3  = '/home/skleff/go2_soft_Fmax=80_maxit=1000_fweight=0.0005.npz' # violation = 0 but poor tracking
+# # DATA_PATH_3  = '/home/skleff/go2_soft_Fmax=80_maxit=1000_fweight=0.0001.npz' 
+
+# NEW DATASET (with convergence, ramp 25 to 80, removed ee friction cone, using foot force cost)
+DATA_PATH_1  = '/home/skleff/go2_classical_INT=False_Fmin=25_Fmax=80_maxit=1000_fweight=0.0005.npz'
+DATA_PATH_2  = '/home/skleff/go2_classical_INT=True_Fmin=25_Fmax=80_maxit=1000_fweight=0.0005.npz' 
+DATA_PATH_3  = '/home/skleff/go2_soft_Fmin=25_Fmax=80_maxit=1000_fweight=0.001.npz' 
 
 # Load data and extract signals
 print("Loading data from: ", DATA_PATH_1)
@@ -69,7 +83,8 @@ DT_SIMU = CONFIG['DT_SIMU']
 N_SIMU  = CONFIG['N_SIMU']
 MU      = CONFIG['MU']
 MPC_FREQ= CONFIG['MPC_FREQ']
-FREF          = CONFIG['FREF']
+FMIN          = CONFIG['FMIN']
+FMAX          = CONFIG['FMAX']
 HORIZON       = CONFIG['HORIZON']
 DT_OCP        = CONFIG['DT_OCP']
 N_MPC_STEPS = int(N_SIMU*DT_SIMU*MPC_FREQ)
@@ -115,7 +130,7 @@ axs[0].set_ylabel('Constraint norm', fontsize=22)
 # axs[0].yaxis.set_major_locator(plt.MaxNLocator(4))
 # axs[0].yaxis.set_major_formatter(plt.FormatStrFormatter('%.0f'))
 axs[0].grid(True)
-# axs[0].set_yscale('log')
+axs[0].set_yscale('log')
 axs[0].set_title("Constraint norm", fontdict={'size': 30})
 
 axs[1].plot(time_span2, data1['kkt_norm'], linewidth=8, color=COLORS[0], marker='o', alpha=0.5, label=LABELS[0])
@@ -128,7 +143,7 @@ axs[1].set_ylabel('KKT residual norm', fontsize=22)
 # axs[1].yaxis.set_major_locator(plt.MaxNLocator(4))
 # axs[1].yaxis.set_major_formatter(plt.FormatStrFormatter('%.0f'))
 axs[1].grid(True)
-# axs[1].set_yscale('log')
+axs[1].set_yscale('log')
 axs[1].set_title("KKT residual norm", fontdict={'size': 30})
 
 # axs[0].set_ylim(0., 105)
@@ -137,7 +152,7 @@ axs[2].plot(time_span, np.abs(measured_forces_dict1['Link6'][:,0]), linewidth=8,
 axs[2].plot(time_span, np.abs(measured_forces_dict2['Link6'][:,0]), linewidth=8, color=COLORS[1], marker='o', alpha=0.5, label=LABELS[1])
 axs[2].plot(time_span, np.abs(measured_forces_dict3['Link6'][:,0]), linewidth=8, color=COLORS[2], marker='o', alpha=0.5, label=LABELS[2])
 axs[2].plot(time_span, np.abs(desired_forces[:,0]), linewidth=4, color='k', marker='o', alpha=0.25, label="Desired force (Fx)")
-axs[2].set_ylim(-1., FREF+1)
+axs[2].set_ylim(-1., FMAX+1)
 # # Cumulative RMSE of the force error norm
 # axs[2].plot(time_span, np.sqrt(np.cumsum(err_f_norm1)), linewidth=4, color=COLORS[0], marker='o', alpha=0.7, label=f"Force error norm {LABELS[0]}")
 # axs[2].plot(time_span, np.sqrt(np.cumsum(err_f_norm2)), linewidth=4, color=COLORS[1], marker='o', alpha=0.7, label=f"Force error norm {LABELS[1]}")

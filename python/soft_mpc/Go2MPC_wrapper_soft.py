@@ -340,25 +340,19 @@ class Go2MPCSoft:
         self.nu = self.ccdyl_actuation.nu
         self.ctrlLim = np.array([23.7, 23.7, 45.43, 23.7, 23.7, 45.43, 23.7, 23.7, 45.43, 23.7, 23.7, 45.43, \
                                     30, 30, 30, 30, 10, 10])
-        # self.ctrlLim = np.array([23.7, 23.7, 45.43, 23.7, 23.7, 45.43, 23.7, 23.7, 45.43, 23.7, 23.7, 45.43] +
-        #                             [np.inf]*6)
-        # print(self.ccdyl_state.pinocchio.effortLimit[6:])
 
     def initialize(self, q0=np.array([-0.01, 0.0, 0.32, 0.0, 0.0, 0.0, 1.0] 
                     +4*[0.0, 0.77832842, -1.56065452] + [0.0, 0.3, -0.3, 0.0, 0.0, 0.0]
-                        ), f0=np.array([0., 0., 0.]*4 + [0.]*3), Kp=1000, Kv=100, FREF=15, FWEIGHT=0.01):
+                        ), f0=np.array([0., 0., 0.]*4 + [0.]*3), Kp=1000, Kv=100, 
+                        FMIN=25, FWEIGHT=0.01, FDOTWEIGHT=1e-6):
         q0[11+2]=0.0
         self.q0 = q0.copy()
         self.v0 = np.zeros(self.rmodel.nv)
         self.Kp = Kp
         self.f0 = f0.copy()
-        # np.array([-0.083766 , 0.003337, -0.051429, 
-        #                     -0.063791 ,-0.002004, -0.03834,
-        #                     -0.05787  ,-0.051013,  0.103739 ,
-        #                     -0.053733 , 0.045646,  0.10088  ,
-        #                     -41.543034,  -7.066572,  -6.30816    ]) #f0.copy()
-        self.Fx_ref_ee = FREF
+        self.Fx_ref_ee = FMIN
         self.F_ee_weight = FWEIGHT
+        self.F_dot_weight = FDOTWEIGHT
         self.Kv = Kv
         self.x0 =  np.concatenate([q0, self.v0])
         pinocchio.forwardKinematics(self.rmodel, self.rdata, q0)
@@ -381,24 +375,13 @@ class Go2MPCSoft:
         lfFootPos0 = self.rdata.oMf[self.lfFootId].translation
         lhFootPos0 = self.rdata.oMf[self.lhFootId].translation 
         self.supportFeetPos0 = np.array([lfFootPos0, rfFootPos0, lhFootPos0, rhFootPos0])
-        # self.f0[-3:] = -np.diag([self.Kp]*3) @ (self.armEEPos0 - self.oPc_ee)  
-        # print("\n\n f0 = ", self.f0[-3:], "\n\n")
-        # print("\n\n p_ee = ", self.armEEPos0, "\n\n")
-        # print("\n\n oPc = ", self.oPc_ee, "\n\n")
         self.y0 =  np.concatenate([self.x0, self.f0])
         self.xs = [self.y0]*(self.HORIZON + 1)
         self.createProblem()
         self.createSolver()
-        self.u0 = np.zeros(self.nu)
-        self.us = [self.u0]*self.HORIZON
-        # self.us0 = np.array([-1.70292494e+00 , -2.53493996e-01,   4.00765770e+00 , 1.69757863e+00,
-        #                     -2.53702321e-01 ,  4.00563075e+00,  -2.07526085e+00 ,-2.77332371e-01,
-        #                     4.63287338e+00  , 2.06914143e+00,  -2.77541101e-01  ,4.63085705e+00,
-        #                     -6.68587279e-04 ,  5.55902596e+00,   6.17453082e+00 ,-3.00315497e-03,
-        #                     1.96635590e+00  , 3.09288758e-06]) 
-        # self.us = [self.us0 for i in range(self.HORIZON)]
-        # self.solver.problem.quasiStatic([self.y0]*self.HORIZON) 
-        # print("wepifuwefweifo\n\n\n", self.us[0])
+        # self.u0 = np.zeros(self.nu)
+        # self.us = [self.u0]*self.HORIZON
+        self.us = self.solver.problem.quasiStatic([self.y0]*self.HORIZON) 
         
     def createProblem(self):
         # Now define the model
@@ -429,7 +412,7 @@ class Go2MPCSoft:
                 ctrlReg = crocoddyl.CostModelResidual(self.ccdyl_state, ctrlResidual)
                 costModel.addCost("ctrlReg", ctrlReg, control_reg_weight)  
 
-            # # Body COM Tracking Cost
+            # # # Body COM Tracking Cost
             # com_residual = crocoddyl.ResidualModelCoMPosition(self.ccdyl_state, comRef, self.nu)
             # com_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
             # com_track = crocoddyl.CostModelResidual(self.ccdyl_state, com_activation, com_residual) #
@@ -444,7 +427,7 @@ class Go2MPCSoft:
             # ef_residual = crocoddyl.ResidualModelFrameTranslation(self.ccdyl_state, self.armEEId, ef_pos_ref, self.nu) # Check this cost term            
             # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
             # ef_track = crocoddyl.CostModelResidual(self.ccdyl_state, ef_activation, ef_residual)
-            # ef_weight = 1e2
+            # ef_weight = 1e-2
             # if t != self.HORIZON:
             #     costModel.addCost("ef_track", ef_track, ef_weight)
             # else:
@@ -453,22 +436,22 @@ class Go2MPCSoft:
             # # End Effecor Velocity Tracking Cost
             # ef_vel_ref = pin.Motion.Zero()
             # ef_residual = crocoddyl.ResidualModelFrameVelocity(self.ccdyl_state, self.armEEId, ef_vel_ref, pin.LOCAL_WORLD_ALIGNED, self.nu) # Check this cost term            
-            # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([0., 0., 0., 0., 1., 1.]))
+            # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1.]*6))
             # ef_vel = crocoddyl.CostModelResidual(self.ccdyl_state, ef_activation, ef_residual)
-            # ef_weight = 0.01
+            # ef_weight = 1e-2
             # if t != self.HORIZON:
             #     costModel.addCost("ef_vel", ef_vel, ef_weight)
             # else:
             #     costModel.addCost("ef_vel", ef_vel, ef_weight*self.dt)
 
-            # # feet tracking costs
+            # feet tracking costs
             # ef_vel_ref = pin.Motion.Zero()
             # for fname in self.ee_frame_names:
             #     frame_idx = self.rmodel.getFrameId(fname)
             #     foot_residual = crocoddyl.ResidualModelFrameVelocity(self.ccdyl_state, frame_idx, ef_vel_ref, pin.LOCAL_WORLD_ALIGNED, self.nu) # Check this cost term            
             #     foot_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1.]*6))
             #     foot_track = crocoddyl.CostModelResidual(self.ccdyl_state, foot_activation, foot_residual)
-            #     costModel.addCost(fname+"_vel", foot_track, 1e3)
+            #     costModel.addCost(fname+"_vel", foot_track, 1e2)
 
             # Soft contact models 3d 
             # oPc_ee = self.rdata.oMf[self.armEEId].translation.copy() 
@@ -485,23 +468,23 @@ class Go2MPCSoft:
 
             # Custom force cost in DAM
             f_weight = np.array([1., 1., 1.])*self.F_ee_weight
-            # fdot_weights = np.array([0.]*12 + [1., 0., 0.])*1e-6
-            # f_weight_foot = np.array([1., 1., 1.])*1e-3
-            # Fz_ref_foot = 30
+            fdot_weights = np.array([1.]*12 + [1., 1., 1.])*self.F_dot_weight
+            # f_weight_foot = np.array([1., 1., 1.])*1e-6
+            # Fz_ref_foot = 50
             if t != self.HORIZON:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight, pin.LOCAL_WORLD_ALIGNED)
                 # forceCost_LF = ForceCost(self.ccdyl_state, self.lfFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
                 # forceCost_RF = ForceCost(self.ccdyl_state, self.rfFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
                 # forceCost_LH = ForceCost(self.ccdyl_state, self.lhFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
                 # forceCost_RH = ForceCost(self.ccdyl_state, self.rhFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
-                forceRateCostManager = None #ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights)
+                forceRateCostManager = ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights)
             else:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight*self.dt, pin.LOCAL_WORLD_ALIGNED)
                 # forceCost_LF = ForceCost(self.ccdyl_state, self.lfFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
                 # forceCost_RF = ForceCost(self.ccdyl_state, self.rfFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
                 # forceCost_LH = ForceCost(self.ccdyl_state, self.lhFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
                 # forceCost_RH = ForceCost(self.ccdyl_state, self.rhFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
-                forceRateCostManager = None #ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights*self.dt)
+                forceRateCostManager = ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights*self.dt)
 
             forceCostManager = ForceCostManager([forceCostEE], softContactModelsStack)
             # forceCostManager = ForceCostManager([forceCostEE, forceCost_LF, forceCost_RF, forceCost_LH, forceCost_RH], softContactModelsStack)
@@ -527,14 +510,14 @@ class Go2MPCSoft:
             # Friction cone constraint models
             lb_foot = np.array([0.])
             ub_foot = np.array([np.inf])
-            lb_ee = np.array([-np.inf])
-            ub_ee = np.array([0.])
+            # lb_ee = np.array([-np.inf])
+            # ub_ee = np.array([0.])
             forceConstraintManager = ForceConstraintManager([
                                                              FrictionConeConstraint(self.lfFootId, self.friction_mu, normal='z', lb_slack=0),
                                                              FrictionConeConstraint(self.rfFootId, self.friction_mu, normal='z', lb_slack=0),
                                                              FrictionConeConstraint(self.lhFootId, self.friction_mu, normal='z', lb_slack=0.),
                                                              FrictionConeConstraint(self.rhFootId, self.friction_mu, normal='z', lb_slack=0.),
-                                                             FrictionConeConstraint(self.armEEId, self.friction_mu, normal='x', lb_slack=0),
+                                                            #  FrictionConeConstraint(self.armEEId, self.friction_mu, normal='x', lb_slack=0),
                                                              ForceBoxConstraint(self.lfFootId, lb_foot, ub_foot, axis='z'),
                                                              ForceBoxConstraint(self.rfFootId, lb_foot, ub_foot, axis='z'),
                                                              ForceBoxConstraint(self.lhFootId, lb_foot, ub_foot, axis='z'),
@@ -724,7 +707,7 @@ class Go2MPCSoft:
         solver.with_callbacks = True
         solver.use_filter_line_search = False
         solver.mu_constraint = -1
-        solver.termination_tolerance = 1e-4
+        solver.termination_tolerance = 1e-3
         solver.eps_abs = 1e-6
         solver.eps_rel = 1e-6
         # solver.extra_iteration_for_last_kkt = True
