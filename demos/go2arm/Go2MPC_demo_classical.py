@@ -24,7 +24,8 @@ CONFIG        = load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/Go2
 USE_MUJOCO    = CONFIG['USE_MUJOCO']
 DT_SIMU       = CONFIG['DT_SIMU']
 FWEIGHT       = CONFIG['FWEIGHT']
-FREF          = CONFIG['FREF']
+FMIN          = CONFIG['FMIN']
+FMAX          = CONFIG['FMAX']
 MU            = CONFIG['MU']
 HORIZON       = CONFIG['HORIZON']
 DT_OCP        = CONFIG['DT_OCP']
@@ -92,7 +93,7 @@ else:
 
 # Instantiate the solver
 mpc = Go2MPCClassical(HORIZON=HORIZON, friction_mu=MU, dt=DT_OCP, USE_MUJOCO=USE_MUJOCO)
-mpc.initialize(FREF=0.1*FREF, FWEIGHT=FWEIGHT)
+mpc.initialize(FMIN=FMIN, FWEIGHT=FWEIGHT)
 mpc.max_iterations=MAX_ITER_1
 mpc.solve()
 m = list(mpc.solver.problem.runningModels) + [mpc.solver.problem.terminalModel]
@@ -126,7 +127,7 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = []
 desired_forces = []
 joint_torques = []
-f_des_z = np.linspace(0.1*FREF, FREF, N_SIMU) # np.array([FREF]*N_SIMU) 
+f_des_z = np.linspace(FMIN, FMAX, N_SIMU) # np.array([FREF]*N_SIMU) 
 # breakpoint()
 WITH_INTEGRAL = USE_INTEGRAL
 if(WITH_INTEGRAL):
@@ -199,7 +200,10 @@ else:
         q, dq = robot.get_state()
         # Solve OCP
         if(i%int(SIM_FREQ/MPC_FREQ)==0):
-            solution = mpc.updateAndSolve2(q, dq)
+            if(i > 0):
+                solution = mpc.updateAndSolve2(q, dq)
+            else:
+                solution = mpc.solve()
             constraint_norm.append(mpc.solver.constraint_norm)
             gap_norm.append(mpc.solver.gap_norm)
             kkt_norm.append(mpc.solver.KKT)
@@ -219,6 +223,7 @@ else:
                 f_mea = np.zeros(3)
             measured_forces_dict[fname].append(f_mea)
             predicted_forces_dict[fname].append(solution[fname+'_contact'])
+        
         # MESHCAT VISUALIZATION
         viz.display(q)
         # update contact force and cone 
@@ -240,8 +245,6 @@ else:
                 J = pin.getFrameJacobian(mpc.rmodel, mpc.rdata, mpc.armEEId, pin.LOCAL_WORLD_ALIGNED)
                 tau_int = J[:3,6:].T @ err_f3d 
                 tau += tau_int
-        # print("Fmea link6 = ", measured_forces_dict['Link6'][i])
-        # print("Fdes link6 = ", f_des_3d)
         # Step the physics
         robot.send_joint_command(tau)
         env.step() 
@@ -289,7 +292,7 @@ data = {'jointPos': jointPos,
         'mu': MU,
         'rmodel': robot.pin_robot.model}
 # Pickling (serializing) and saving to a file
-filename = DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'_Fmax='+str(FREF)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'.pkl'
+filename = DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'_Fmin='+str(FMIN)+'_Fmax='+str(FMAX)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'.pkl'
 with open(filename, 'wb') as file:
     pickle.dump(data, file)
 # # Unpickling (deserializing) from the file
@@ -307,7 +310,7 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
 
 # Save data 
-NPZ_NAME = DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'_Fmax='+str(FREF)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'.npz'
+NPZ_NAME = DATA_SAVE_DIR+'_INT='+str(WITH_INTEGRAL)+'_Fmin='+str(FMIN)+'_Fmax='+str(FMAX)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'.npz'
 np.savez_compressed(NPZ_NAME,
                     jointPos=jointPos,
                     jointVel=jointVel,

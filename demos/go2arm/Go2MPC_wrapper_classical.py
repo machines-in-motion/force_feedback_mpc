@@ -147,14 +147,15 @@ def plot_ocp_solution(mpc):
         ct_frame_name = rmodel.frames[frame_idx].name + "_contact"
         print(ct_frame_name)
         forces = np.array(sol[ct_frame_name])
-        axs[i, 0].plot(time_lin, forces[:, 0], label="Fx")
-        axs[i, 1].plot(time_lin, forces[:, 1], label="Fy")
-        axs[i, 2].plot(time_lin, forces[:, 2], label="Fz")
+        print(forces.shape)
+        axs[i, 0].plot(time_lin, forces[:, 0, 0], linewidth=4, color='g', marker='o', alpha=0.5, label="Fx")
+        axs[i, 1].plot(time_lin, forces[:, 1, 0], linewidth=4, color='g', marker='o', alpha=0.5, label="Fy")
+        axs[i, 2].plot(time_lin, forces[:, 2, 0], linewidth=4, color='g', marker='o', alpha=0.5, label="Fz")
         # Add friction cone constraints 
         Fz_lb = (1./MU)*np.sqrt(forces[:, 0]**2 + forces[:, 1]**2)
         # Fz_ub = np.zeros(time_lin.shape)
         # axs[i, 2].plot(time_lin, Fz_ub, 'k-.', label='ub')
-        axs[i, 2].plot(time_lin, Fz_lb, 'k-.', label='lb')
+        axs[i, 2].plot(time_lin, Fz_lb, linewidth=4, color='k', marker='o', alpha=0.25, label='lb')
         axs[i, 0].grid()
         axs[i, 1].grid()
         axs[i, 2].grid()
@@ -171,9 +172,9 @@ def plot_ocp_solution(mpc):
     fig, axs = plt.subplots(3, 1, constrained_layout=True)
     # forces = np.array(sol['Link62EF_dummy_fixed'])
     forces = np.array(sol['Link6'])
-    axs[0].plot(time_lin, forces[:, 0], label="Fx")
-    axs[1].plot(time_lin, forces[:, 1], label="Fy")
-    axs[2].plot(time_lin, forces[:, 2], label="Fz")
+    axs[0].plot(time_lin, forces[:, 0, 0], linewidth=4, color='g', marker='o', alpha=0.5, label="Fx")
+    axs[1].plot(time_lin, forces[:, 1, 0], linewidth=4, color='g', marker='o', alpha=0.5, label="Fy")
+    axs[2].plot(time_lin, forces[:, 2, 0], linewidth=4, color='g', marker='o', alpha=0.5, label="Fz")
     for i in range(3):
         axs[i].legend()
         axs[i].grid()
@@ -182,41 +183,41 @@ def plot_ocp_solution(mpc):
     axs[1].set_xlabel(r"$F_y$")
     axs[2].set_xlabel(r"$F_z$")
 
-    ## EE pos and vel
-    fig, axs = plt.subplots(3, 2, constrained_layout=True)
-    eePos = np.array(sol['eePos'])
-    eeVel = np.array(sol['eeVel'])
-    axs[0, 0].plot(time_lin, eePos[:, 0], marker='.', linewidth=2, label="Px_ee")
-    axs[1, 0].plot(time_lin, eePos[:, 1], marker='.', linewidth=2, label="Py_ee")
-    axs[2, 0].plot(time_lin, eePos[:, 2], marker='.', linewidth=2, label="Pz_ee")
-    axs[0, 1].plot(time_lin, eeVel[:, 0], marker='.', linewidth=2, label="Vx_ee")
-    axs[1, 1].plot(time_lin, eeVel[:, 1], marker='.', linewidth=2, label="Vy_ee")
-    axs[2, 1].plot(time_lin, eeVel[:, 2], marker='.', linewidth=2, label="Vz_ee")
-    for i in range(3):
-        axs[i,0].legend()
-        axs[i,1].legend()
-        axs[i,0].grid()
-        axs[i,1].grid()
-    fig.suptitle('EE trajectories', fontsize=16)
-    axs[0, 0].set_xlabel(r"$P_x$")
-    axs[1, 0].set_xlabel(r"$P_y$")
-    axs[2, 0].set_xlabel(r"$P_z$")
-    axs[0, 1].set_xlabel(r"$V_x$")
-    axs[1, 1].set_xlabel(r"$V_y$")
-    axs[2, 1].set_xlabel(r"$V_z$")
+    # ## EE pos and vel
+    # fig, axs = plt.subplots(3, 2, constrained_layout=True)
+    # eePos = np.array(sol['eePos'])
+    # eeVel = np.array(sol['eeVel'])
+    # axs[0, 0].plot(time_lin, eePos[:, 0], linewidth=4, color='g', marker='o', alpha=0.5, label="Px_ee")
+    # axs[1, 0].plot(time_lin, eePos[:, 1], linewidth=4, color='g', marker='o', alpha=0.5, label="Py_ee")
+    # axs[2, 0].plot(time_lin, eePos[:, 2], linewidth=4, color='g', marker='o', alpha=0.5, label="Pz_ee")
+    # axs[0, 1].plot(time_lin, eeVel[:, 0], linewidth=4, color='g', marker='o', alpha=0.5, label="Vx_ee")
+    # axs[1, 1].plot(time_lin, eeVel[:, 1], linewidth=4, color='g', marker='o', alpha=0.5, label="Vy_ee")
+    # axs[2, 1].plot(time_lin, eeVel[:, 2], linewidth=4, color='g', marker='o', alpha=0.5, label="Vz_ee")
+    # for i in range(3):
+    #     axs[i,0].legend()
+    #     axs[i,1].legend()
+    #     axs[i,0].grid()
+    #     axs[i,1].grid()
+    # fig.suptitle('EE trajectories', fontsize=16)
+    # axs[0, 0].set_xlabel(r"$P_x$")
+    # axs[1, 0].set_xlabel(r"$P_y$")
+    # axs[2, 0].set_xlabel(r"$P_z$")
+    # axs[0, 1].set_xlabel(r"$V_x$")
+    # axs[1, 1].set_xlabel(r"$V_y$")
+    # axs[2, 1].set_xlabel(r"$V_z$")
 
-    fig, axs = plt.subplots(nv//2, 2, constrained_layout=True)
-    for i in range(nv//2):
-        jointVel_sol = np.array(jointVel_sol)
-        axs[i, 0].plot(time_lin, [0.]*time_lin.shape[0], color='r', linewidth=2)
-        axs[i, 0].plot(time_lin, jointVel_sol[:, 2*i], marker='.', linewidth=2, label="v_"+str(2*i))
-        axs[i, 0].grid()
-        axs[i, 0].legend()
-        axs[i, 1].plot(time_lin, [0.]*time_lin.shape[0], color='r', linewidth=2)
-        axs[i, 1].plot(time_lin, jointVel_sol[:, 2*i+1], marker='.', linewidth=2, label="v_"+str(2*i+1))
-        axs[i, 1].grid()
-        axs[i, 1].legend()
-    fig.suptitle('Joint velocities', fontsize=16)
+    # fig, axs = plt.subplots(nv//2, 2, constrained_layout=True)
+    # for i in range(nv//2):
+    #     jointVel_sol = np.array(jointVel_sol)
+    #     axs[i, 0].plot(time_lin, [0.]*time_lin.shape[0], linewidth=4, color='k', marker='o', alpha=0.25,)
+    #     axs[i, 0].plot(time_lin, jointVel_sol[:, 2*i], linewidth=4, color='g', marker='o', alpha=0.5, label="v_"+str(2*i))
+    #     axs[i, 0].grid()
+    #     axs[i, 0].legend()
+    #     axs[i, 1].plot(time_lin, [0.]*time_lin.shape[0], linewidth=4, color='k', marker='o', alpha=0.25,)
+    #     axs[i, 1].plot(time_lin, jointVel_sol[:, 2*i+1], linewidth=4, color='g', marker='o', alpha=0.5, label="v_"+str(2*i+1))
+    #     axs[i, 1].grid()
+    #     axs[i, 1].legend()
+    # fig.suptitle('Joint velocities', fontsize=16)
     plt.show()
 
 
@@ -309,13 +310,13 @@ class Go2MPCClassical:
         # print(self.ccdyl_state.pinocchio.effortLimit[6:])
 
     def initialize(self, q0=np.array([-0.01, 0.0, 0.32, 0.0, 0.0, 0.0, 1.0] 
-                    +4*[0.0, 0.77832842, -1.56065452] + [0.0, 0.3, -0.3, 0.0, 0.0, 0.0]), FREF=15, FWEIGHT=0.01):
+                    +4*[0.0, 0.77832842, -1.56065452] + [0.0, 0.3, -0.3, 0.0, 0.0, 0.0]), FMIN=25, FWEIGHT=0.01):
         q0[11+2]=0.0
         self.q0 = q0.copy()
         self.x0 =  np.concatenate([q0, np.zeros(self.rmodel.nv)])
         pinocchio.forwardKinematics(self.rmodel, self.rdata, q0)
         pinocchio.updateFramePlacements(self.rmodel, self.rdata)
-        self.Fx_ref_ee = FREF
+        self.Fx_ref_ee = FMIN
         self.F_ee_weight = FWEIGHT
         self.rfFootPos0 = self.rdata.oMf[self.rfFootId].translation
         self.rhFootPos0 = self.rdata.oMf[self.rhFootId].translation
@@ -328,9 +329,9 @@ class Go2MPCClassical:
         self.xs = [self.x0]*(self.HORIZON + 1)
         self.createProblem()
         self.createSolver()
-        self.u0 = np.zeros(self.nu)
-        self.us = [self.u0]*self.HORIZON
-        # self.us = self.solver.problem.quasiStatic([self.x0]*self.HORIZON) 
+        self.us = self.solver.problem.quasiStatic([self.x0]*self.HORIZON) 
+        # self.u0 = np.zeros(self.nu)
+        # self.us = [self.u0]*self.HORIZON
 
     def createProblem(self):
 
@@ -341,11 +342,11 @@ class Go2MPCClassical:
 
             # Add contact models on feet
             for i,frame_idx in enumerate(self.supportFeetIds):
-                support_contact = crocoddyl.ContactModel3D(self.ccdyl_state, frame_idx, np.array([0., 0., 0.0]), self.pinRef, self.nu, np.array([0., 20.]))
+                support_contact = crocoddyl.ContactModel3D(self.ccdyl_state, frame_idx, np.array([0., 0., 0.0]), self.pinRef, self.nu, np.array([0., 10.]))
                 self.contactModel.addContact(self.rmodel.frames[frame_idx].name + "_contact", support_contact) 
 
             # Contact model for the EE
-            arm_contact = crocoddyl.ContactModel3D(self.ccdyl_state, self.armEEId, self.armEEPos0, pin.LOCAL_WORLD_ALIGNED, self.nu, np.array([0., 20.]))
+            arm_contact = crocoddyl.ContactModel3D(self.ccdyl_state, self.armEEId, self.armEEPos0, pin.LOCAL_WORLD_ALIGNED, self.nu, np.array([0., 10.]))
             self.contactModel.addContact(self.rmodel.frames[self.armEEId].name + "_contact", arm_contact) 
             
             # Add state/control regularization costs
@@ -379,7 +380,18 @@ class Go2MPCClassical:
                 contact_force_residual = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, self.ef_des_force, 3, self.nu)
                 contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
                 contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
-                costModel.addCost("contact_force_track", contact_force_track, self.F_ee_weight) #5e-4) #1e1
+                costModel.addCost("contact_force_track", contact_force_track, self.F_ee_weight) 
+                for frame_idx in self.supportFeetIds:
+                    name = self.rmodel.frames[frame_idx].name + "_contact"
+                    foot_des_force = pin.Force.Zero()
+                    Fz_ref_foot = 50
+                    foot_des_force.linear[0] = Fz_ref_foot
+                    contact_force_residual = crocoddyl.ResidualModelContactForce(self.ccdyl_state, frame_idx, foot_des_force, 3, self.nu)
+                    contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
+                    foot_contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
+                    costModel.addCost(name+"_contact_force_track", foot_contact_force_track, 1e-8) 
+            # Force regularization on feet 
+            #TODO 
 
             # Force constraints
             constraintModelManager = crocoddyl.ConstraintModelManager(self.ccdyl_state, self.ccdyl_actuation.nu)
@@ -400,7 +412,11 @@ class Go2MPCClassical:
                 name = self.rmodel.frames[self.armEEId].name + "_contact"
                 residualFriction = friction_utils.ResidualFrictionCone(self.ccdyl_state, name, self.friction_mu, self.ccdyl_actuation.nu, normal='x')
                 constraintFriction = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualFriction, np.array([0.]), np.array([np.inf]))
-                constraintModelManager.addConstraint(name + "friction", constraintFriction)
+                # constraintModelManager.addConstraint(name + "friction", constraintFriction)
+                # # End-eff unilaterality (cannot create negative forces) Fz_(env->robot) > 0 
+                # residualForce = crocoddyl.ResidualModelContactForce(self.ccdyl_state, self.armEEId, pin.Force.Zero(), 3, self.nu)
+                # forceBoxConstraint = crocoddyl.ConstraintModelResidual(self.ccdyl_state, residualForce, np.array([-np.inf, -np.inf, -np.inf]), np.array([0., np.inf, np.inf]))
+                # constraintModelManager.addConstraint(name + "Box", forceBoxConstraint)
 
             # # End Effecor Position Tracking Cost
             # ef_pos_ref = self.armEEPos0

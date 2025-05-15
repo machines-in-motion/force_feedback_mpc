@@ -11,13 +11,14 @@ MAX_ITER_1: 1000
 MAX_ITER_2: 1000
 
 # Task
-FWEIGHT: 0.05
-FREF: 80   # desired contact force at end-effector
+FWEIGHT: 0.0005
+FMIN: 25   # desired contact force at end-effector (min)
+FMAX: 80   # desired contact force at end-effector (max)
 MU: 0.75   # environment friction coefficient (ground / wall)
 
 # CONTROL
 USE_INTEGRAL: True
-INTEGRAL_GAIN: 1.
+INTEGRAL_GAIN: 0.1
 KP: 0.
 KV: 0.
 
