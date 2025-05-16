@@ -433,25 +433,25 @@ class Go2MPCSoft:
             # else:
             #     costModel.addCost("ef_track", ef_track, ef_weight*self.dt)
             
-            # End Effecor Velocity Tracking Cost
-            ef_vel_ref = pin.Motion.Zero()
-            ef_residual = crocoddyl.ResidualModelFrameVelocity(self.ccdyl_state, self.armEEId, ef_vel_ref, pin.LOCAL_WORLD_ALIGNED, self.nu) # Check this cost term            
-            ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1.]*6))
-            ef_vel = crocoddyl.CostModelResidual(self.ccdyl_state, ef_activation, ef_residual)
-            ef_weight = 1e2
-            if t != self.HORIZON:
-                costModel.addCost("ef_vel", ef_vel, ef_weight)
-            else:
-                costModel.addCost("ef_vel", ef_vel, ef_weight*self.dt)
+            # # End Effecor Velocity Tracking Cost
+            # ef_vel_ref = pin.Motion.Zero()
+            # ef_residual = crocoddyl.ResidualModelFrameVelocity(self.ccdyl_state, self.armEEId, ef_vel_ref, pin.LOCAL_WORLD_ALIGNED, self.nu) # Check this cost term            
+            # ef_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1.]*6))
+            # ef_vel = crocoddyl.CostModelResidual(self.ccdyl_state, ef_activation, ef_residual)
+            # ef_weight = 1e2
+            # if t != self.HORIZON:
+            #     costModel.addCost("ef_vel", ef_vel, ef_weight)
+            # else:
+            #     costModel.addCost("ef_vel", ef_vel, ef_weight*self.dt)
 
-            # feet tracking costs
-            ef_vel_ref = pin.Motion.Zero()
-            for fname in self.ee_frame_names:
-                frame_idx = self.rmodel.getFrameId(fname)
-                foot_residual = crocoddyl.ResidualModelFrameVelocity(self.ccdyl_state, frame_idx, ef_vel_ref, pin.LOCAL_WORLD_ALIGNED, self.nu) # Check this cost term            
-                foot_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1.]*6))
-                foot_track = crocoddyl.CostModelResidual(self.ccdyl_state, foot_activation, foot_residual)
-                costModel.addCost(fname+"_vel", foot_track, 1e2)
+            # # feet tracking costs
+            # ef_vel_ref = pin.Motion.Zero()
+            # for fname in self.ee_frame_names:
+            #     frame_idx = self.rmodel.getFrameId(fname)
+            #     foot_residual = crocoddyl.ResidualModelFrameVelocity(self.ccdyl_state, frame_idx, ef_vel_ref, pin.LOCAL_WORLD_ALIGNED, self.nu) # Check this cost term            
+            #     foot_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1.]*6))
+            #     foot_track = crocoddyl.CostModelResidual(self.ccdyl_state, foot_activation, foot_residual)
+            #     costModel.addCost(fname+"_vel", foot_track, 1e2)
 
             # Soft contact models 3d 
             # oPc_ee = self.rdata.oMf[self.armEEId].translation.copy() 
@@ -469,25 +469,25 @@ class Go2MPCSoft:
             # Custom force cost in DAM
             f_weight = np.array([1., 1., 1.])*self.F_ee_weight
             # fdot_weights = np.array([0.]*12 + [1., 1., 1.])*self.F_dot_weight
-            f_weight_foot = np.array([0., 0., 1])*1e-4
-            Fz_ref_foot = 50
+            # f_weight_foot = np.array([0., 0., 1])*1e-4
+            # Fz_ref_foot = 50
             if t != self.HORIZON:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight, pin.LOCAL_WORLD_ALIGNED)
-                forceCost_LF = ForceCost(self.ccdyl_state, self.lfFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
-                forceCost_RF = ForceCost(self.ccdyl_state, self.rfFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
-                forceCost_LH = ForceCost(self.ccdyl_state, self.lhFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
-                forceCost_RH = ForceCost(self.ccdyl_state, self.rhFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_LF = ForceCost(self.ccdyl_state, self.lfFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_RF = ForceCost(self.ccdyl_state, self.rfFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_LH = ForceCost(self.ccdyl_state, self.lhFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_RH = ForceCost(self.ccdyl_state, self.rhFootId, np.array([0, 0., Fz_ref_foot ]), f_weight_foot, pin.LOCAL_WORLD_ALIGNED)
                 forceRateCostManager = None #ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights)
             else:
                 forceCostEE = ForceCost(self.ccdyl_state, self.armEEId, np.array([-self.Fx_ref_ee, 0., 0.]), f_weight*self.dt, pin.LOCAL_WORLD_ALIGNED)
-                forceCost_LF = ForceCost(self.ccdyl_state, self.lfFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
-                forceCost_RF = ForceCost(self.ccdyl_state, self.rfFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
-                forceCost_LH = ForceCost(self.ccdyl_state, self.lhFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
-                forceCost_RH = ForceCost(self.ccdyl_state, self.rhFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_LF = ForceCost(self.ccdyl_state, self.lfFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_RF = ForceCost(self.ccdyl_state, self.rfFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_LH = ForceCost(self.ccdyl_state, self.lhFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
+                # forceCost_RH = ForceCost(self.ccdyl_state, self.rhFootId, np.array([0., 0., Fz_ref_foot]), f_weight_foot*self.dt, pin.LOCAL_WORLD_ALIGNED)
                 forceRateCostManager = None #ForceRateCostManager(self.ccdyl_state, self.ccdyl_actuation, softContactModelsStack, fdot_weights*self.dt)
 
-            # forceCostManager = ForceCostManager([forceCostEE], softContactModelsStack)
-            forceCostManager = ForceCostManager([forceCostEE, forceCost_LF, forceCost_RF, forceCost_LH, forceCost_RH], softContactModelsStack)
+            forceCostManager = ForceCostManager([forceCostEE], softContactModelsStack)
+            # forceCostManager = ForceCostManager([forceCostEE, forceCost_LF, forceCost_RF, forceCost_LH, forceCost_RH], softContactModelsStack)
 
             # Create DAM with soft contact models, force costs + standard cost & constraints
             dam = DAMSoftContactDynamics3D_Go2(self.ccdyl_state, 
@@ -707,7 +707,7 @@ class Go2MPCSoft:
         solver.with_callbacks = True
         solver.use_filter_line_search = False
         solver.mu_constraint = -1
-        solver.termination_tolerance = 1e-4
+        solver.termination_tolerance = 1e-3
         solver.eps_abs = 1e-8
         solver.eps_rel = 1e-8
         # solver.extra_iteration_for_last_kkt = True

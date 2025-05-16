@@ -381,18 +381,16 @@ class Go2MPCClassical:
                 contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
                 contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
                 costModel.addCost("contact_force_track", contact_force_track, self.F_ee_weight) 
-                for frame_idx in self.supportFeetIds:
-                    name = self.rmodel.frames[frame_idx].name + "_contact"
-                    foot_des_force = pin.Force.Zero()
-                    Fz_ref_foot = 50
-                    foot_des_force.linear[0] = Fz_ref_foot
-                    contact_force_residual = crocoddyl.ResidualModelContactForce(self.ccdyl_state, frame_idx, foot_des_force, 3, self.nu)
-                    contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
-                    foot_contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
-                    costModel.addCost(name+"_contact_force_track", foot_contact_force_track, 1e-8) 
-            # Force regularization on feet 
-            #TODO 
-
+                # for frame_idx in self.supportFeetIds:
+                #     name = self.rmodel.frames[frame_idx].name + "_contact"
+                #     foot_des_force = pin.Force.Zero()
+                #     Fz_ref_foot = 50
+                #     foot_des_force.linear[0] = Fz_ref_foot
+                #     contact_force_residual = crocoddyl.ResidualModelContactForce(self.ccdyl_state, frame_idx, foot_des_force, 3, self.nu)
+                #     contact_force_activation = crocoddyl.ActivationModelWeightedQuad(np.array([1., 1., 1.]))
+                #     foot_contact_force_track = crocoddyl.CostModelResidual(self.ccdyl_state, contact_force_activation, contact_force_residual)
+                #     costModel.addCost(name+"_contact_force_track", foot_contact_force_track, 1e-8) 
+                
             # Force constraints
             constraintModelManager = crocoddyl.ConstraintModelManager(self.ccdyl_state, self.ccdyl_actuation.nu)
             if(t != self.HORIZON):
@@ -451,14 +449,14 @@ class Go2MPCClassical:
     def createSolver(self):
         solver = mim_solvers.SolverCSQP(self.ocp)
         solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
-        solver.max_qp_iters = 1000
+        solver.max_qp_iters = 10000
         solver.with_callbacks = True
         solver.use_filter_line_search = False
         solver.mu_constraint = -1
         # solver.lag_mul_inf_norm_coef = 10.
-        solver.termination_tolerance = 1e-4
-        solver.eps_abs = 1e-6
-        solver.eps_rel = 1e-6
+        solver.termination_tolerance = 1e-2
+        solver.eps_abs = 1e-8
+        solver.eps_rel = 1e-8
         self.solver = solver
 
     def getSolution(self, k=None):

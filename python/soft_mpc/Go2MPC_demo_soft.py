@@ -341,7 +341,7 @@ data = {'jointPos': jointPos,
         'mu': MU,
         'rmodel': robot.pin_robot.model}
 # Pickling (serializing) and saving to a file
-filename = DATA_SAVE_DIR+'_Fmin='+str(FMIN)+'_Fmax='+str(FMAX)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'.pkl' #+'_fdotweight='+str(FDOTWEIGHT)+'.pkl'
+filename = DATA_SAVE_DIR+'_Fmin='+str(FMIN)+'_Fmax='+str(FMAX)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'_tol=1e-3.pkl' #+'_fdotweight='+str(FDOTWEIGHT)+'.pkl'
 with open(filename, 'wb') as file:
     pickle.dump(data, file)
 # # Unpickling (deserializing) from the file
@@ -359,7 +359,7 @@ for fname in mpc.ee_frame_names:
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
 
 # Save data 
-NPZ_NAME = DATA_SAVE_DIR+'_Fmin='+str(FMIN)+'_Fmax='+str(FMAX)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'.npz' #+'_fdotweight='+str(FDOTWEIGHT)+'.npz'
+NPZ_NAME = DATA_SAVE_DIR+'_Fmin='+str(FMIN)+'_Fmax='+str(FMAX)+'_maxit='+str(MAX_ITER_2)+'_fweight='+str(FWEIGHT)+'_tol=1e-3.npz' #+'_fdotweight='+str(FDOTWEIGHT)+'.npz'
 np.savez_compressed(NPZ_NAME,
                     jointPos=jointPos,
                     jointVel=jointVel,
