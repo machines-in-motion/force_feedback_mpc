@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.insert(0, "/home/skleff/force_feedback_ws")
 
+DATA_PREFIX= '/home/skleff/Desktop/TRO_SQP_VIDEO/resubmission_exp_data/go2+arm/CONSTANT_F=80/'
 
 # F=50 
 #   MAXIT=20 
@@ -63,10 +64,15 @@ sys.path.insert(0, "/home/skleff/force_feedback_ws")
 # DATA_PATH_2  = '/home/skleff/go2_classical_INT=True_Fmin=25_Fmax=80_maxit=1000_fweight=0.0005.npz' 
 # DATA_PATH_3  = '/home/skleff/go2_soft_Fmin=25_Fmax=80_maxit=1000_fweight=0.001.npz' #go2_soft_Fmin=25_Fmax=80_maxit=1000_fweight=0.001.npz' 
 
-# NEW DATASET (with convergence , constant 80N, removed ee friction cone, tol=1e-2
-DATA_PATH_1  = '/home/skleff/go2_classical_INT=False_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005.npz'
-DATA_PATH_2  = '/home/skleff/go2_classical_INT=True_Fmin=25_Fmax=80_maxit=1000_fweight=0.0005.npz' 
-DATA_PATH_3  = '/home/skleff/go2_soft_Fmin=80_Fmax=80_maxit=1000_fweight=0.00025_tol=1e-3.npz'
+# # NEW DATASET (with convergence , constant 80N, removed ee friction cone, tol=1e-2
+# DATA_PATH_1  = DATA_PREFIX + 'TOL=1e-2/go2_classical_INT=False_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005_tol=1e-2.npz'
+# DATA_PATH_2  = DATA_PREFIX + 'TOL=1e-2/go2_classical_INT=True_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005_tol=1e-2.npz' 
+# DATA_PATH_3  = DATA_PREFIX + 'TOL=1e-2/go2_soft_Fmax=80_maxit=1000_fweight=0.0005_tol=1e-2.npz'
+
+# NEW DATASET (almost convergence , constant 80N, removed ee friction cone, tol=1e-4
+DATA_PATH_1  = DATA_PREFIX + 'TOL=1e-4/go2_classical_INT=False_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005.npz'
+DATA_PATH_2  = DATA_PREFIX + 'TOL=1e-4/go2_classical_INT=True_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005.npz' 
+DATA_PATH_3  = DATA_PREFIX + 'TOL=1e-4/go2_soft_Fmax=80_maxit=1000_fweight=0.0005.npz'
 
 
 # Load data and extract signals
@@ -122,43 +128,44 @@ print("  RMSE ||F-Fdes|| = ", np.sum(err_f_norm3**2)/N_SIMU)
 time_span = np.linspace(0, (N_SIMU-1)*DT_SIMU, N_SIMU)
 time_span2 = np.linspace(0, (N_SIMU-1)*DT_SIMU, N_MPC_STEPS)
 
-LABELS = ['Classical', 'Classical + Integral', 'Force-Feedback']
-COLORS = ['b', 'r', 'g']
+LABELS = ['Classical MPC', 'Classical MPC + Integral', 'Force-Feedback MPC']
+linewidths = [6,6,6,6,6]
+COLORS = ['b', 'g', 'r']
 
-fig, axs = plt.subplots(3, 1, constrained_layout=True)
-axs[0].plot(time_span2, data1['gap_norm'] + data1['constraint_norm'], linewidth=8, color=COLORS[0], marker='o', alpha=0.5, label=LABELS[0])
-axs[0].plot(time_span2, data2['gap_norm'] + data2['constraint_norm'], linewidth=8, color=COLORS[1], marker='o', alpha=0.5, label=LABELS[1])
-axs[0].plot(time_span2, data3['gap_norm'] + data3['constraint_norm'], linewidth=8, color=COLORS[2], marker='o', alpha=0.5, label=LABELS[2])
-axs[0].tick_params(axis = 'x', labelsize=22)
-axs[0].tick_params(axis = 'y', labelsize=22)
-axs[0].set_xlabel('Time (s)', fontsize=22)
-axs[0].set_ylabel('Constraint norm', fontsize=22)
-# axs[0].yaxis.set_major_locator(plt.MaxNLocator(4))
-# axs[0].yaxis.set_major_formatter(plt.FormatStrFormatter('%.0f'))
-axs[0].grid(True)
-axs[0].set_yscale('log')
-axs[0].set_title("Constraint norm", fontdict={'size': 30})
+fig, axs = plt.subplots(1, 1, constrained_layout=True)
+# axs[0].plot(time_span2, data1['gap_norm'] + data1['constraint_norm'], linewidth=8, color=COLORS[0], marker='o', alpha=0.5, label=LABELS[0])
+# axs[0].plot(time_span2, data2['gap_norm'] + data2['constraint_norm'], linewidth=8, color=COLORS[1], marker='o', alpha=0.5, label=LABELS[1])
+# axs[0].plot(time_span2, data3['gap_norm'] + data3['constraint_norm'], linewidth=8, color=COLORS[2], marker='o', alpha=0.5, label=LABELS[2])
+# axs[0].tick_params(axis = 'x', labelsize=22)
+# axs[0].tick_params(axis = 'y', labelsize=22)
+# axs[0].set_xlabel('Time (s)', fontsize=22)
+# axs[0].set_ylabel('Constraint norm', fontsize=22)
+# # axs[0].yaxis.set_major_locator(plt.MaxNLocator(4))
+# # axs[0].yaxis.set_major_formatter(plt.FormatStrFormatter('%.0f'))
+# axs[0].grid(True)
+# # axs[0].set_yscale('log')
+# axs[0].set_title("Constraint norm", fontdict={'size': 30})
 
-axs[1].plot(time_span2, data1['kkt_norm'], linewidth=8, color=COLORS[0], marker='o', alpha=0.5, label=LABELS[0])
-axs[1].plot(time_span2, data2['kkt_norm'], linewidth=8, color=COLORS[1], marker='o', alpha=0.5, label=LABELS[1])
-axs[1].plot(time_span2, data3['kkt_norm'], linewidth=8, color=COLORS[2], marker='o', alpha=0.5, label=LABELS[2])
-axs[1].tick_params(axis = 'x', labelsize=22)
-axs[1].tick_params(axis = 'y', labelsize=22)
-axs[1].set_xlabel('Time (s)', fontsize=22)
-axs[1].set_ylabel('KKT residual norm', fontsize=22)
-# axs[1].yaxis.set_major_locator(plt.MaxNLocator(4))
-# axs[1].yaxis.set_major_formatter(plt.FormatStrFormatter('%.0f'))
-axs[1].grid(True)
-axs[1].set_yscale('log')
-axs[1].set_title("KKT residual norm", fontdict={'size': 30})
+# axs[1].plot(time_span2, data1['kkt_norm'], linewidth=8, color=COLORS[0], marker='o', alpha=0.5, label=LABELS[0])
+# axs[1].plot(time_span2, data2['kkt_norm'], linewidth=8, color=COLORS[1], marker='o', alpha=0.5, label=LABELS[1])
+# axs[1].plot(time_span2, data3['kkt_norm'], linewidth=8, color=COLORS[2], marker='o', alpha=0.5, label=LABELS[2])
+# axs[1].tick_params(axis = 'x', labelsize=22)
+# axs[1].tick_params(axis = 'y', labelsize=22)
+# axs[1].set_xlabel('Time (s)', fontsize=22)
+# axs[1].set_ylabel('KKT residual norm', fontsize=22)
+# # axs[1].yaxis.set_major_locator(plt.MaxNLocator(4))
+# # axs[1].yaxis.set_major_formatter(plt.FormatStrFormatter('%.0f'))
+# axs[1].grid(True)
+# # axs[1].set_yscale('log')
+# axs[1].set_title("KKT residual norm", fontdict={'size': 30})
 
 # axs[0].set_ylim(0., 105)
 # Plot Fx
-axs[2].plot(time_span, np.abs(measured_forces_dict1['Link6'][:,0]), linewidth=8, color=COLORS[0], marker='o', alpha=0.5, label=LABELS[0])
-axs[2].plot(time_span, np.abs(measured_forces_dict2['Link6'][:,0]), linewidth=8, color=COLORS[1], marker='o', alpha=0.5, label=LABELS[1])
-axs[2].plot(time_span, np.abs(measured_forces_dict3['Link6'][:,0]), linewidth=8, color=COLORS[2], marker='o', alpha=0.5, label=LABELS[2])
-axs[2].plot(time_span, np.abs(desired_forces[:,0]), linewidth=4, color='k', marker='o', alpha=0.25, label="Desired force (Fx)")
-axs[2].set_ylim(-1., FMAX+1)
+axs.plot(time_span, np.abs(measured_forces_dict1['Link6'][:,0]), linewidth=linewidths[0], color=COLORS[0], linestyle='solid', alpha=0.8, label=LABELS[0])
+axs.plot(time_span, np.abs(measured_forces_dict2['Link6'][:,0]), linewidth=linewidths[1], color=COLORS[1], linestyle='solid', alpha=0.8, label=LABELS[1])
+axs.plot(time_span, np.abs(measured_forces_dict3['Link6'][:,0]), linewidth=linewidths[2], color=COLORS[2], linestyle='solid', alpha=0.8, label=LABELS[2])
+axs.plot(time_span, np.abs(desired_forces[:,0]), linewidth=6, color='k', linestyle='dotted', alpha=0.6, label="Desired force (Fx)")
+axs.set_ylim(-1., FMAX+10)
 # # Cumulative RMSE of the force error norm
 # axs[2].plot(time_span, np.sqrt(np.cumsum(err_f_norm1)), linewidth=4, color=COLORS[0], marker='o', alpha=0.7, label=f"Force error norm {LABELS[0]}")
 # axs[2].plot(time_span, np.sqrt(np.cumsum(err_f_norm2)), linewidth=4, color=COLORS[1], marker='o', alpha=0.7, label=f"Force error norm {LABELS[1]}")
@@ -167,17 +174,17 @@ axs[2].set_ylim(-1., FMAX+1)
 # axs[2].plot(time_span, moving_average(err_f_norm1, window_size=5), linewidth=4, color=COLORS[0], marker='o', alpha=0.7, label=f"Force error norm {LABELS[0]}")
 # axs[2].plot(time_span, moving_average(err_f_norm2, window_size=5), linewidth=4, color=COLORS[1], marker='o', alpha=0.7, label=f"Force error norm {LABELS[1]}")
 # axs[2].plot(time_span, moving_average(err_f_norm3, window_size=5), linewidth=4, color=COLORS[2], marker='o', alpha=0.7, label=f"Force error norm {LABELS[2]}")
-axs[2].tick_params(axis = 'x', labelsize=22)
-axs[2].tick_params(axis = 'y', labelsize=22)
-axs[2].set_xlabel('Time (s)', fontsize=22)
-axs[2].set_ylabel('Force error norm', fontsize=22)
-axs[2].yaxis.set_major_locator(plt.MaxNLocator(4))
-axs[2].yaxis.set_major_formatter(plt.FormatStrFormatter('%.0f'))
-axs[2].grid(True)
-axs[2].set_title("Force error norm", fontdict={'size': 30})
+axs.tick_params(axis = 'x', labelsize=22)
+axs.tick_params(axis = 'y', labelsize=22)
+axs.set_xlabel('Time (s)', fontsize=22)
+axs.set_ylabel('Force error norm', fontsize=22)
+axs.yaxis.set_major_locator(plt.MaxNLocator(4))
+axs.yaxis.set_major_formatter(plt.FormatStrFormatter('%.0f'))
+axs.grid(True)
+# axs.set_title("Force error norm", fontdict={'size': 30})
 
-handles_f, labels_f = axs[0].get_legend_handles_labels()
-fig.legend(handles_f, labels_f, loc='upper left', prop={'size': 26})
+handles_f, labels_f = axs.get_legend_handles_labels()
+fig.legend(handles_f, labels_f, loc='upper right', prop={'size': 26})
 fig.align_ylabels()
 
 plt.show()
