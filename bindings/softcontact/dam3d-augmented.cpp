@@ -79,7 +79,8 @@ void exposeDAMSoftContact3DAugmentedFwdDyn() {
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &DAMSoftContact3DAugmentedFwdDynamics::calcDiff, bp::args("self", "data", "x", "f"))
       .def("createData", &DAMSoftContact3DAugmentedFwdDynamics::createData,
-           bp::args("self"), "Create the forward dynamics differential action data.");
+           bp::args("self"),
+           "Create the forward dynamics differential action data.");
 
   bp::register_ptr_to_python<std::shared_ptr<DADSoftContact3DAugmentedFwdDynamics> >();
 
@@ -108,7 +109,17 @@ void exposeDAMSoftContact3DAugmentedFwdDyn() {
           "costs",
           bp::make_getter(&DADSoftContact3DAugmentedFwdDynamics::costs,
                           bp::return_value_policy<bp::return_by_value>()),
-          "total cost data");
+          "total cost data")
+      .add_property(
+          "tau_grav_residual",
+          bp::make_getter(&DADSoftContact3DAugmentedFwdDynamics::tau_grav_residual,
+                          bp::return_internal_reference<>()),
+          "tau_grav_residual data")
+      .add_property(
+           "fout",
+           bp::make_getter(&DADSoftContact3DAugmentedFwdDynamics::fout,
+                           bp::return_internal_reference<>()),
+           "fout data");
 }
 
 }  // namespace softcontact
