@@ -14,20 +14,20 @@ using namespace crocoddyl;
 /**
  * @brief Gravity Torque with Contact residual
  *
- * As described in `ResidualModelAbstractTpl()`, the residual value and its
+ * As described in `ResidualModelForceBaseTpl()`, the residual value and its
  * Jacobians are calculated by `calc` and `calcDiff`, respectively.
  *
- * \sa `ResidualModelAbstractTpl`, `calc()`, `calcDiff()`, `createData()`
+ * \sa `ResidualModelForceBaseTpl`, `calc()`, `calcDiff()`, `createData()`
  */
 template <typename _Scalar>
 class ResidualModelGravityTorqueContactTpl
-    : public ResidualModelAbstractTpl<_Scalar> {
+    : public ResidualModelForceBaseTpl<_Scalar> {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef _Scalar Scalar;
   typedef MathBaseTpl<Scalar> MathBase;
-  typedef ResidualModelAbstractTpl<Scalar> Base;
+  typedef ResidualModelForceBaseTpl<Scalar> Base;
   typedef ResidualDataGravityTorqueContactTpl<Scalar> Data;
   typedef StateMultibodyTpl<Scalar> StateMultibody;
   typedef ResidualDataAbstractTpl<Scalar> ResidualDataAbstract;
@@ -71,6 +71,24 @@ public:
   virtual void calcDiff(const std::shared_ptr<ResidualDataAbstract> &data,
                         const Eigen::Ref<const VectorXs> &x,
                         const Eigen::Ref<const VectorXs> &u);
+
+  /**
+   * @brief Compute the derivative of the cost function
+   *
+   * This function assumes that the derivatives of the activation and residual
+   * are computed via calcDiff functions.
+   *
+   * @param cdata     Cost data
+   * @param rdata     Residual data
+   * @param adata     Activation data
+   * @param update_u  Update the derivative of the cost function w.r.t. to the
+   * control if True.
+   */
+  virtual void calcCostDiff(
+      const std::shared_ptr<CostDataAbstract>& cdata,
+      const std::shared_ptr<ResidualDataAbstract>& rdata,
+      const std::shared_ptr<ActivationDataAbstract>& adata,
+      const bool update_u = true);
 
   virtual std::shared_ptr<ResidualDataAbstract>
   createData(DataCollectorAbstract *const data);
@@ -117,6 +135,7 @@ protected:
   using Base::state_;
   using Base::u_dependent_;
   using Base::v_dependent_;
+  using Base::unone_;
 
   bool active_contact_;
   pinocchio::FrameIndex frame_id_;
@@ -128,12 +147,12 @@ private:
 
 template <typename _Scalar>
 struct ResidualDataGravityTorqueContactTpl
-    : public ResidualDataAbstractTpl<_Scalar> {
+    : public ResidualDataForceBaseTpl<_Scalar> {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef _Scalar Scalar;
   typedef MathBaseTpl<Scalar> MathBase;
-  typedef ResidualDataAbstractTpl<Scalar> Base;
+  typedef ResidualDataForceBaseTpl<Scalar> Base;
   typedef StateMultibodyTpl<Scalar> StateMultibody;
   typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
   typedef pinocchio::DataTpl<Scalar> PinocchioData;

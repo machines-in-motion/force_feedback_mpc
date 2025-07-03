@@ -42,20 +42,7 @@ template <typename Scalar>
 void ResidualModelGravityTorqueContactTpl<Scalar>::calc(
     const std::shared_ptr<ResidualDataAbstract> &data,
     const Eigen::Ref<const VectorXs> &x) {
-  Data *d = static_cast<Data *>(data.get());
-
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q =
-      x.head(state_->get_nq());
-
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> f =
-      x.template tail<3>();
-
-  if (!active_contact_) {
-    data->r = d->actuation->tau -
-              pinocchio::computeGeneralizedGravity(pin_model_, d->pinocchio, q);
-  } else {
-    data->r = -pinocchio::computeStaticTorque(pin_model_, d->pinocchio, q, f);
-  }
+  calc(data, x, unone_);
 }
 
 template <typename Scalar>
@@ -100,25 +87,7 @@ template <typename Scalar>
 void ResidualModelGravityTorqueContactTpl<Scalar>::calcDiff(
     const std::shared_ptr<ResidualDataAbstract> &data,
     const Eigen::Ref<const VectorXs> &x) {
-  Data *d = static_cast<Data *>(data.get());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q =
-      x.head(state_->get_nq());
-
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> f =
-      x.template tail<3>();
-
-  Eigen::Block<MatrixXs, Eigen::Dynamic, Eigen::Dynamic, true> Rq =
-      data->Rx.leftCols(state_->get_nv());
-
-  // Compute the derivatives of the residual residual
-  if (!active_contact_) {
-    pinocchio::computeGeneralizedGravityDerivatives(pin_model_, d->pinocchio, q,
-                                                    Rq);
-  } else {
-    pinocchio::computeStaticTorqueDerivatives(pin_model_, d->pinocchio, q, f,
-                                              Rq);
-  }
-  Rq *= Scalar(-1);
+  calcDiff(data, x, unone_);
 }
 
 template <typename Scalar>
