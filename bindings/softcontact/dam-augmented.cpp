@@ -236,14 +236,15 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
                         bp::return_value_policy<bp::return_by_value>()),
                     "number of equality constraints")
       .add_property("nc",
-                    bp::make_function(&DAMSoftContactAbstractAugmentedFwdDynamics::get_nc,
-                    bp::return_value_policy<bp::return_by_value>()),
+                    bp::make_function(
+                        &DAMSoftContactAbstractAugmentedFwdDynamics::get_nc,
+                        bp::return_value_policy<bp::return_by_value>()),
                     "number of contacts");
   
 
   bp::register_ptr_to_python<std::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> >();
 
-  bp::class_<DADSoftContactAbstractAugmentedFwdDynamics>(
+  bp::class_<DADSoftContactAbstractAugmentedFwdDynamics, bp::bases<crocoddyl::DifferentialActionDataAbstract>>(
       "DADSoftContactAbstractAugmentedFwdDynamics", "Action data for the soft contact forward dynamics system",
       bp::init<DAMSoftContactAbstractAugmentedFwdDynamics*>(
           bp::args("self", "model"),
