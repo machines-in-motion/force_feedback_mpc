@@ -234,11 +234,17 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
                     bp::make_function(
                         &DAMSoftContactAbstractAugmentedFwdDynamics::get_nh,
                         bp::return_value_policy<bp::return_by_value>()),
-                    "number of equality constraints"); 
+                    "number of equality constraints")
+      .add_property("nc",
+                    bp::make_function(
+                        &DAMSoftContactAbstractAugmentedFwdDynamics::get_nc,
+                        bp::return_value_policy<bp::return_by_value>()),
+                    "number of contacts");
+  
 
   bp::register_ptr_to_python<std::shared_ptr<DADSoftContactAbstractAugmentedFwdDynamics> >();
 
-  bp::class_<DADSoftContactAbstractAugmentedFwdDynamics>(
+  bp::class_<DADSoftContactAbstractAugmentedFwdDynamics, bp::bases<crocoddyl::DifferentialActionDataAbstract>>(
       "DADSoftContactAbstractAugmentedFwdDynamics", "Action data for the soft contact forward dynamics system",
       bp::init<DAMSoftContactAbstractAugmentedFwdDynamics*>(
           bp::args("self", "model"),
@@ -385,7 +391,22 @@ void exposeDAMSoftContactAbstractAugmentedFwdDyn() {
           "f_residual",
           bp::make_getter(&DADSoftContactAbstractAugmentedFwdDynamics::f_residual,
                           bp::return_internal_reference<>()),
-          "Residual of the contact force");
+          "Residual of the contact force")
+      .add_property(
+          "tau_grav_residual_x",
+          bp::make_getter(&DADSoftContactAbstractAugmentedFwdDynamics::tau_grav_residual_x,
+                          bp::return_internal_reference<>()),
+          "Residual of the contact force in x")
+      .add_property(
+          "tau_grav_residual_u",
+          bp::make_getter(&DADSoftContactAbstractAugmentedFwdDynamics::tau_grav_residual_u,
+                          bp::return_internal_reference<>()),
+          "Residual of the contact force in x")
+      .add_property(
+           "f_residual_x",
+           bp::make_getter(&DADSoftContactAbstractAugmentedFwdDynamics::f_residual_x,
+                           bp::return_internal_reference<>()),
+           "Residual of the contact force in x");
 }
 
 }  // namespace softcontact

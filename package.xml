@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>force_feedback_mpc</name>
-  <version>1.0</version>
+  <version>1.0.0</version>
   <description>Optimal control tools to achieve force feedback in MPC.</description>
   <maintainer email="sk8001@nyu.edu">Sébastien Kleff</maintainer>
   <author email="sk8001@nyu.edu">Sébastien Kleff</author>
