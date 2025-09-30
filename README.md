@@ -3,6 +3,8 @@ Optimal control toolbox to achieve force feedback control in MPC. This library i
 - S. Kleff, et. al, "Introducing Force Feedback in Model-Predictive Control", IROSS 2022. [PDF](https://hal.science/hal-03594295/document)
 - S. Kleff, et. al, "Force Feedback in Model-Predictive Control: A Soft Contact Approach" [PDF](https://hal.science/hal-04572399/) (under review)
 
+The code to reproduce our experiments (i.e. real-time implementation of the force-feedback MPC), along with our experimental data are available in [this separate repository](https://github.com/machines-in-motion/force_feedback_dgh).
+
 # Dependencies
 - [Crocoddyl](https://github.com/loco-3d/crocoddyl) (>=3.0)
 - [Pinocchio](https://github.com/stack-of-tasks/pinocchio)
@@ -30,6 +32,8 @@ make -j6 && sudo make install
 Simply prototype your OCP using Crocoddyl as you would normally do, but use the custom integrated action models provided in this library (`IntegratedActionModelLPF` and `IAMSoftContactAugmented`). Example python scripts can be found in the `demos` directory (simulated force and polishing tasks).
 
 In the `python` directory, OCP utilities are implemented. These are simplified interfaces to Crocoddyl's API ; they allow the quick proto-typing of OCPs from templated YAML files (i.e. this is an extension of [croco_mpc_utils](https://github.com/machines-in-motion/mim_robots) to force-feedback OCPs).
+
+The real-time controllers used on the real robot for the paper experiments are implemented in a separate repository, [force_feedback_dgh](https://github.com/machines-in-motion/force_feedback_dgh). In this separate repo, you will also find the experimental data used to generate the paper figures.
 
 # Citing this work
 ```
