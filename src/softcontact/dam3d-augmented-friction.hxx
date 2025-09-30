@@ -22,9 +22,9 @@ namespace sobec {
 
 template <typename Scalar>
 DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl<Scalar>::DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl(
-    boost::shared_ptr<StateMultibody> state, 
-    boost::shared_ptr<ActuationModelAbstract> actuation,
-    boost::shared_ptr<CostModelSum> costs,
+    std::shared_ptr<StateMultibody> state, 
+    std::shared_ptr<ActuationModelAbstract> actuation,
+    std::shared_ptr<CostModelSum> costs,
     const pinocchio::FrameIndex frameId,
     const VectorXs& Kp, 
     const VectorXs& Kv,
@@ -37,7 +37,7 @@ DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl<Scalar>::~DAMSoftContact3DAugmen
 
 template <typename Scalar>
 void DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl<Scalar>::calc(
-            const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+            const std::shared_ptr<DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const VectorXs>& x,
             const Eigen::Ref<const VectorXs>& f,
             const Eigen::Ref<const VectorXs>& u) {
@@ -170,7 +170,7 @@ void DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl<Scalar>::calc(
 
 template <typename Scalar>
 void DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl<Scalar>::calc(
-            const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+            const std::shared_ptr<DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const VectorXs>& x,
             const Eigen::Ref<const VectorXs>& f) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
@@ -223,7 +223,7 @@ void DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl<Scalar>::calc(
 
 template <typename Scalar>
 void DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl<Scalar>::calcDiff(
-    const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+    const std::shared_ptr<DifferentialActionDataAbstract>& data, 
     const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& f,
     const Eigen::Ref<const VectorXs>& u) {
@@ -465,7 +465,7 @@ void DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl<Scalar>::calcDiff(
 
 template <typename Scalar>
 void DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl<Scalar>::calcDiff(
-    const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+    const std::shared_ptr<DifferentialActionDataAbstract>& data, 
     const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& f) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
@@ -546,9 +546,9 @@ void DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl<Scalar>::calcDiff(
 }
 
 template <typename Scalar>
-boost::shared_ptr<DifferentialActionDataAbstractTpl<Scalar> >
+std::shared_ptr<DifferentialActionDataAbstractTpl<Scalar> >
 DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl<Scalar>::createData() {
-  return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
+  return std::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
 }  // namespace sobec

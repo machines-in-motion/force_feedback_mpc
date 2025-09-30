@@ -53,46 +53,46 @@ std::ostream& operator<<(std::ostream& os, StateSoftContactModelTypes::Type type
 StateSoftContactModelFactory::StateSoftContactModelFactory() {}
 StateSoftContactModelFactory::~StateSoftContactModelFactory() {}
 
-boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact> StateSoftContactModelFactory::create(
+std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact> StateSoftContactModelFactory::create(
     StateSoftContactModelTypes::Type state_type, std::size_t nc) const {
-  boost::shared_ptr<pinocchio::Model> model;
-  boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact> state;
+  std::shared_ptr<pinocchio::Model> model;
+  std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact> state;
   switch (state_type) {
     case StateSoftContactModelTypes::StateSoftContact_TalosArm: {
       model = PinocchioModelFactory(PinocchioModelTypes::TalosArm).create();
-      boost::shared_ptr<crocoddyl::ActuationModelFull> actuation = 
-          boost::make_shared<crocoddyl::ActuationModelFull>(
+      std::shared_ptr<crocoddyl::ActuationModelFull> actuation = 
+          std::make_shared<crocoddyl::ActuationModelFull>(
               StateModelFactory().create(StateModelTypes::StateMultibody_TalosArm));
-      state = boost::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(model, nc);
+      state = std::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(model, nc);
 
       break;
     }
     case StateSoftContactModelTypes::StateSoftContact_HyQ: {
       model = PinocchioModelFactory(PinocchioModelTypes::HyQ).create();
-      boost::shared_ptr<crocoddyl::ActuationModelFloatingBase> actuation =
-          boost::make_shared<crocoddyl::ActuationModelFloatingBase>(
-              boost::static_pointer_cast<crocoddyl::StateMultibody>(
+      std::shared_ptr<crocoddyl::ActuationModelFloatingBase> actuation =
+          std::make_shared<crocoddyl::ActuationModelFloatingBase>(
+              std::static_pointer_cast<crocoddyl::StateMultibody>(
                   StateModelFactory().create(StateModelTypes::StateMultibody_HyQ)));
-      state = boost::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(model, nc);
+      state = std::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(model, nc);
       break;
     }
     case StateSoftContactModelTypes::StateSoftContact_Talos: {
       model = PinocchioModelFactory(PinocchioModelTypes::Talos).create();
-      boost::shared_ptr<crocoddyl::ActuationModelFloatingBase> actuation =
-          boost::make_shared<crocoddyl::ActuationModelFloatingBase>(
-              boost::static_pointer_cast<crocoddyl::StateMultibody>(
+      std::shared_ptr<crocoddyl::ActuationModelFloatingBase> actuation =
+          std::make_shared<crocoddyl::ActuationModelFloatingBase>(
+              std::static_pointer_cast<crocoddyl::StateMultibody>(
                   StateModelFactory().create(StateModelTypes::StateMultibody_Talos)));
-      state = boost::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(model, nc);
+      state = std::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(model, nc);
       break;
     }
     case StateSoftContactModelTypes::StateSoftContact_RandomHumanoid: {
       model =
           PinocchioModelFactory(PinocchioModelTypes::RandomHumanoid).create();
-      boost::shared_ptr<crocoddyl::ActuationModelFloatingBase> actuation =
-          boost::make_shared<crocoddyl::ActuationModelFloatingBase>(
-              boost::static_pointer_cast<crocoddyl::StateMultibody>(
+      std::shared_ptr<crocoddyl::ActuationModelFloatingBase> actuation =
+          std::make_shared<crocoddyl::ActuationModelFloatingBase>(
+              std::static_pointer_cast<crocoddyl::StateMultibody>(
                   StateModelFactory().create(StateModelTypes::StateMultibody_RandomHumanoid)));
-      state = boost::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(model, nc);
+      state = std::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(model, nc);
       break;
     }
     default:

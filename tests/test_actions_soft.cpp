@@ -33,13 +33,13 @@ void test_check_data(
     Vector3MaskType mask_type = Vector3MaskType::z ) {
   // create the model
   IAMSoftContactFactory factory_iam;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
+  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   // Run the print function
   std::ostringstream tmp;
   tmp << *model;
   // create the corresponding data object
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
   BOOST_CHECK(model->checkData(data));
 }
@@ -53,10 +53,10 @@ void test_calc_returns_state(
     Vector3MaskType mask_type = Vector3MaskType::z ) {
   // create the model
   IAMSoftContactFactory factory_iam;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
+  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   // create the corresponding data object
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
   // Generating random state and control vectors
   const Eigen::VectorXd& x = model->get_state()->rand();
@@ -74,10 +74,10 @@ void test_calc_returns_a_cost(
     Vector3MaskType mask_type = Vector3MaskType::z ) {
   // create the model
   IAMSoftContactFactory factory_iam;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
+  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   // create the corresponding data object and set the cost to nan
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
   data->cost = nan("");
   // Getting the cost value computed by calc()
@@ -92,13 +92,13 @@ void test_calc_returns_a_cost(
 
 
 void test_partial_derivatives_against_numdiff(
-    const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model) {
+    const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model) {
   // create the corresponding data object and set the cost to nan
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
 
   crocoddyl::ActionModelNumDiff model_num_diff(model);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data_num_diff =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data_num_diff =
       model_num_diff.createData();
 
   // Generating random values for the state and control
@@ -133,7 +133,7 @@ void test_partial_derivatives_action_model(
     Vector3MaskType mask_type = Vector3MaskType::z ) {
   // create the model
   IAMSoftContactFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
+  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory.create(iam_type, dam_type, ref_type, mask_type);
   test_partial_derivatives_against_numdiff(model);
 }
@@ -142,13 +142,13 @@ void test_partial_derivatives_action_model(
 
 
 void test_partial_derivatives_against_numdiff_terminal(
-    const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model) {
+    const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model) {
   // create the corresponding data object and set the cost to nan
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
 
   crocoddyl::ActionModelNumDiff model_num_diff(model);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data_num_diff =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data_num_diff =
       model_num_diff.createData();
 
   // Generating random values for the state and control
@@ -182,7 +182,7 @@ void test_partial_derivatives_action_model_terminal(
     Vector3MaskType mask_type = Vector3MaskType::z ) {
   // create the model
   IAMSoftContactFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
+  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory.create(iam_type, dam_type, ref_type, mask_type);
   model->set_dt(0.);
   test_partial_derivatives_against_numdiff_terminal(model);
@@ -198,24 +198,24 @@ void test_calc_equivalent_euler(
     Vector3MaskType mask_type = Vector3MaskType::z ) {
   // Create IAM soft from DAMSoft
   IAMSoftContactFactory factory_iam;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& modelsoft = factory_iam.create(iam_type, dam_type, ref_type, mask_type);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataSoft = modelsoft->createData();
+  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& modelsoft = factory_iam.create(iam_type, dam_type, ref_type, mask_type);
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataSoft = modelsoft->createData();
   // Set gains to 0
   modelsoft->get_differential()->set_Kp(Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));
   modelsoft->get_differential()->set_Kv(Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));
 
   // Create IAM Euler from DAMfree (incompatible with DAMSoft)
-  boost::shared_ptr<crocoddyl::StateMultibody> statemb = boost::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_differential()->get_state()); 
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree = boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
-          statemb, modelsoft->get_differential()->get_actuation(), boost::make_shared<crocoddyl::CostModelSum>(*modelsoft->get_differential()->get_costs()));
+  std::shared_ptr<crocoddyl::StateMultibody> statemb = std::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_differential()->get_state()); 
+  std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree = std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
+          statemb, modelsoft->get_differential()->get_actuation(), std::make_shared<crocoddyl::CostModelSum>(*modelsoft->get_differential()->get_costs()));
   // Add gravity cost on free model
   if(modelsoft->get_differential()->get_with_gravity_torque_reg()){
-    boost::shared_ptr<crocoddyl::CostModelAbstract> cost = boost::make_shared<crocoddyl::CostModelResidual>(
-            statemb, boost::make_shared<crocoddyl::ResidualModelControlGrav>( statemb, modelfree->get_actuation()->get_nu() ));
+    std::shared_ptr<crocoddyl::CostModelAbstract> cost = std::make_shared<crocoddyl::CostModelResidual>(
+            statemb, std::make_shared<crocoddyl::ResidualModelControlGrav>( statemb, modelfree->get_actuation()->get_nu() ));
     modelfree->get_costs()->addCost( "grav_reg", cost, modelsoft->get_differential()->get_tau_grav_weight());
   }
-  boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(modelfree, modelsoft->get_dt(), true);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler = modelEuler->createData();
+  std::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler = std::make_shared<crocoddyl::IntegratedActionModelEuler>(modelfree, modelsoft->get_dt(), true);
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler = modelEuler->createData();
 
   // Generating random state and control vectors
   std::size_t nx = statemb->get_nx();
@@ -238,24 +238,24 @@ void test_calcDiff_equivalent_euler(
     Vector3MaskType mask_type = Vector3MaskType::z ) {
   // Create IAM soft from DAMSoft
   IAMSoftContactFactory factory_iam;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& modelsoft = factory_iam.create(iam_type, dam_type, ref_type, mask_type);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataSoft = modelsoft->createData();
+  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& modelsoft = factory_iam.create(iam_type, dam_type, ref_type, mask_type);
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataSoft = modelsoft->createData();
   // Set gains to 0
   modelsoft->get_differential()->set_Kp(Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));
   modelsoft->get_differential()->set_Kv(Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));
 
   // Create IAM Euler from DAMfree (incompatible with DAMSoft)
-  boost::shared_ptr<crocoddyl::StateMultibody> statemb = boost::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_differential()->get_state()); 
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree = boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
-          statemb, modelsoft->get_differential()->get_actuation(), boost::make_shared<crocoddyl::CostModelSum>(*modelsoft->get_differential()->get_costs()));
+  std::shared_ptr<crocoddyl::StateMultibody> statemb = std::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_differential()->get_state()); 
+  std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree = std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
+          statemb, modelsoft->get_differential()->get_actuation(), std::make_shared<crocoddyl::CostModelSum>(*modelsoft->get_differential()->get_costs()));
   // Add gravity cost on free model
   if(modelsoft->get_differential()->get_with_gravity_torque_reg()){
-    boost::shared_ptr<crocoddyl::CostModelAbstract> cost = boost::make_shared<crocoddyl::CostModelResidual>(
-            statemb, boost::make_shared<crocoddyl::ResidualModelControlGrav>( statemb, modelfree->get_actuation()->get_nu() ));
+    std::shared_ptr<crocoddyl::CostModelAbstract> cost = std::make_shared<crocoddyl::CostModelResidual>(
+            statemb, std::make_shared<crocoddyl::ResidualModelControlGrav>( statemb, modelfree->get_actuation()->get_nu() ));
     modelfree->get_costs()->addCost( "grav_reg", cost, modelsoft->get_differential()->get_tau_grav_weight());
   }
-  boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler = boost::make_shared<crocoddyl::IntegratedActionModelEuler>(modelfree, modelsoft->get_dt(), true);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler = modelEuler->createData();
+  std::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler = std::make_shared<crocoddyl::IntegratedActionModelEuler>(modelfree, modelsoft->get_dt(), true);
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler = modelEuler->createData();
 
   // Generating random state and control vectors
   std::size_t nx = statemb->get_nx();

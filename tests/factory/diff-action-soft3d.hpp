@@ -52,12 +52,12 @@ class DAMSoftContact3DFactory {
   explicit DAMSoftContact3DFactory();
   ~DAMSoftContact3DFactory();
 
-  boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics> create(
+  std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics> create(
       DAMSoftContact3DTypes::Type type,
       pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL) const;
 
   // Soft contact 3D dynamics
-  boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics>
+  std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics>
   create_augmentedDAMSoft3D(StateModelTypes::Type state_type,
                             ActuationModelTypes::Type actuation_type,
                             pinocchio::ReferenceFrame ref_type) const;

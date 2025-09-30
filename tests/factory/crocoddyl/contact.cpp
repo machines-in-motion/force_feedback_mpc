@@ -63,13 +63,13 @@ std::ostream& operator<<(std::ostream& os,
 ContactModelFactory::ContactModelFactory() {}
 ContactModelFactory::~ContactModelFactory() {}
 
-boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
+std::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
     ContactModelTypes::Type contact_type, PinocchioModelTypes::Type model_type,
     Eigen::Vector2d gains, const std::string frame_name, std::size_t nu) const {
   PinocchioModelFactory model_factory(model_type);
-  boost::shared_ptr<crocoddyl::StateMultibody> state =
-      boost::make_shared<crocoddyl::StateMultibody>(model_factory.create());
-  boost::shared_ptr<crocoddyl::ContactModelAbstract> contact;
+  std::shared_ptr<crocoddyl::StateMultibody> state =
+      std::make_shared<crocoddyl::StateMultibody>(model_factory.create());
+  std::shared_ptr<crocoddyl::ContactModelAbstract> contact;
   std::size_t frame_id = 0;
   if (frame_name == "") {
     frame_id = model_factory.get_frame_ids()[0];
@@ -84,7 +84,7 @@ boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
       pinocchio::SE3 M = pinocchio::SE3::Random();
       gains[0] =
           0;  // TODO(cmastalli): remove hard-coded zero when fixed the contact
-      contact = boost::make_shared<crocoddyl::ContactModel1D>(
+      contact = std::make_shared<crocoddyl::ContactModel1D>(
           state, frame_id, 0., pinocchio::ReferenceFrame::LOCAL, M.rotation(),
           nu, gains);
       break;
@@ -93,7 +93,7 @@ boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
       pinocchio::SE3 M = pinocchio::SE3::Random();
       gains[0] =
           0;  // TODO(cmastalli): remove hard-coded zero when fixed the contact
-      contact = boost::make_shared<crocoddyl::ContactModel1D>(
+      contact = std::make_shared<crocoddyl::ContactModel1D>(
           state, frame_id, 0., pinocchio::ReferenceFrame::WORLD, M.rotation(),
           nu, gains);
       break;
@@ -102,38 +102,38 @@ boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
       pinocchio::SE3 M = pinocchio::SE3::Random();
       gains[0] =
           0;  // TODO(cmastalli): remove hard-coded zero when fixed the contact
-      contact = boost::make_shared<crocoddyl::ContactModel1D>(
+      contact = std::make_shared<crocoddyl::ContactModel1D>(
           state, frame_id, 0., pinocchio::ReferenceFrame::LOCAL_WORLD_ALIGNED,
           M.rotation(), nu, gains);
       break;
     }
     case ContactModelTypes::ContactModel3D_LOCAL:
-      contact = boost::make_shared<crocoddyl::ContactModel3D>(
+      contact = std::make_shared<crocoddyl::ContactModel3D>(
           state, frame_id, Eigen::Vector3d::Zero(),
           pinocchio::ReferenceFrame::LOCAL, nu, gains);
       break;
     case ContactModelTypes::ContactModel3D_WORLD:
-      contact = boost::make_shared<crocoddyl::ContactModel3D>(
+      contact = std::make_shared<crocoddyl::ContactModel3D>(
           state, frame_id, Eigen::Vector3d::Zero(),
           pinocchio::ReferenceFrame::WORLD, nu, gains);
       break;
     case ContactModelTypes::ContactModel3D_LWA:
-      contact = boost::make_shared<crocoddyl::ContactModel3D>(
+      contact = std::make_shared<crocoddyl::ContactModel3D>(
           state, frame_id, Eigen::Vector3d::Zero(),
           pinocchio::ReferenceFrame::LOCAL_WORLD_ALIGNED, nu, gains);
       break;
     case ContactModelTypes::ContactModel6D_LOCAL:
-      contact = boost::make_shared<crocoddyl::ContactModel6D>(
+      contact = std::make_shared<crocoddyl::ContactModel6D>(
           state, frame_id, pinocchio::SE3::Identity(),
           pinocchio::ReferenceFrame::LOCAL, nu, gains);
       break;
     case ContactModelTypes::ContactModel6D_WORLD:
-      contact = boost::make_shared<crocoddyl::ContactModel6D>(
+      contact = std::make_shared<crocoddyl::ContactModel6D>(
           state, frame_id, pinocchio::SE3::Identity(),
           pinocchio::ReferenceFrame::WORLD, nu, gains);
       break;
     case ContactModelTypes::ContactModel6D_LWA:
-      contact = boost::make_shared<crocoddyl::ContactModel6D>(
+      contact = std::make_shared<crocoddyl::ContactModel6D>(
           state, frame_id, pinocchio::SE3::Identity(),
           pinocchio::ReferenceFrame::LOCAL_WORLD_ALIGNED, nu, gains);
       break;
@@ -144,13 +144,13 @@ boost::shared_ptr<crocoddyl::ContactModelAbstract> ContactModelFactory::create(
   return contact;
 }
 
-boost::shared_ptr<crocoddyl::ContactModelAbstract> create_random_contact() {
+std::shared_ptr<crocoddyl::ContactModelAbstract> create_random_contact() {
   static bool once = true;
   if (once) {
     srand((unsigned)time(NULL));
     once = false;
   }
-  boost::shared_ptr<crocoddyl::ContactModelAbstract> contact;
+  std::shared_ptr<crocoddyl::ContactModelAbstract> contact;
   ContactModelFactory factory;
   if (rand() % 4 == 0) {
     contact = factory.create(ContactModelTypes::ContactModel1D_LOCAL,

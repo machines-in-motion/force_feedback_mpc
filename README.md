@@ -10,6 +10,14 @@ Optimal control toolbox to achieve force feedback control in MPC. This library i
 - [eigenpy](https://github.com/stack-of-tasks/eigenpy) (>=2.7.10)
 Optionally [OpenMP](https://www.openmp.org/) if Crocoddyl was built with the multi-threading option.
 
+## For the Python demo scripts
+- [croco_mpc_utils](https://github.com/machines-in-motion/mim_robots)
+- [mim_robots](https://github.com/machines-in-motion/mim_robots)
+- [PyBullet](https://pybullet.org/wordpress/)  
+- PyYAML
+- importlib_resources
+- matplotlib
+
 # How to use it
 Simply prototype your OCP using Crocoddyl as you would normally do, but use the custom integrated action models provided in this library (`IntegratedActionModelLPF` and `IAMSoftContactAugmented`).
 

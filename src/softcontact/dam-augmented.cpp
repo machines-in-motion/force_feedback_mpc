@@ -26,22 +26,34 @@ namespace softcontact {
 
 
 DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDynamics(
-    boost::shared_ptr<StateMultibody> state, 
-    boost::shared_ptr<ActuationModelAbstract> actuation,
-    boost::shared_ptr<CostModelSum> costs,
+    std::shared_ptr<StateMultibody> state, 
+    std::shared_ptr<ActuationModelAbstract> actuation,
+    std::shared_ptr<CostModelSum> costs,
     const pinocchio::FrameIndex frameId,
     const VectorXs& Kp, 
     const VectorXs& Kv,
     const Vector3s& oPc,
     const std::size_t nc,
-    const pinocchio::ReferenceFrame ref)
-    : DAMBase(state, actuation, costs) {
+    std::shared_ptr<ConstraintModelManager> constraints)
+    : DAMBase(state, 
+              actuation->get_nu(), 
+              costs->get_nr(), 
+              constraints ? constraints->get_ng() : 0,
+              constraints ? constraints->get_nh() : 0),
+      actuation_(actuation),
+      costs_(costs),
+      constraints_(constraints),
+      pinocchio_(*state->get_pinocchio().get()),
+      without_armature_(true) {
   if (this->get_costs()->get_nu() != this->get_nu()) {
     throw_pretty("Invalid argument: "
                  << "Costs doesn't have the same control dimension (it should be " + std::to_string(this->get_nu()) + ")");
   }
+  // std::cout << "pin.effortLimit  = " << this->get_pinocchio().effortLimit.tail(this->get_nu()) << std::endl;
   DAMBase::set_u_lb(double(-1.) * this->get_pinocchio().effortLimit.tail(this->get_nu()));
   DAMBase::set_u_ub(double(+1.) * this->get_pinocchio().effortLimit.tail(this->get_nu()));
+  this->set_g_lb(-std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
+  this->set_g_ub(std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
   // Soft contact model parameters
   if(Kp.maxCoeff() < double(0.) || Kv.maxCoeff() < double(0.)){
      throw_pretty("Invalid argument: "
@@ -55,8 +67,9 @@ DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDy
   Kv_ = Kv;
   oPc_ = oPc;
   frameId_ = frameId;
-  ref_ = ref;
   // By default the cost is expressed in the same frame as the dynamics
+  // and the dynamics is expressed in LOCAL
+  ref_ = pinocchio::ReferenceFrame::LOCAL; 
   cost_ref_ = ref_;
   // If gains are too small, set contact to inactive
   if(Kp.maxCoeff() <= double(1e-9) && Kv.maxCoeff() <= double(1e-9)){
@@ -76,89 +89,118 @@ DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDy
   force_des_ = VectorXs::Zero(nc_);
   with_gravity_torque_reg_ = false;
   tau_grav_weight_ = double(0.);
+  with_force_rate_reg_cost_ = false;
 }
 
 
 DAMSoftContactAbstractAugmentedFwdDynamics::~DAMSoftContactAbstractAugmentedFwdDynamics() {}
 
 
-
 void DAMSoftContactAbstractAugmentedFwdDynamics::calc(
-                const boost::shared_ptr<DifferentialActionDataAbstract>&, 
-                const Eigen::Ref<const VectorXs>& x,
-                const Eigen::Ref<const VectorXs>& f,
-                const Eigen::Ref<const VectorXs>& u) {
-  if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
-    throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " + std::to_string(this->get_state()->get_nx()) + ")");
-  }
-  if (static_cast<std::size_t>(f.size()) != this->get_nc()) {
-    throw_pretty("Invalid argument: "
-                 << "f has wrong dimension (it should be 3)");
-  }
-  if (static_cast<std::size_t>(u.size()) != this->get_nu()) {
-    throw_pretty("Invalid argument: "
-                 << "u has wrong dimension (it should be " + std::to_string(this->get_nu()) + ")");
-  }
+    const std::shared_ptr<DifferentialActionDataAbstract>& data,
+    const Eigen::Ref<const VectorXs>& x,
+    const Eigen::Ref<const VectorXs>& f) {
+  calc(data, x, f, unone_);
 }
-
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::calc(
-                const boost::shared_ptr<DifferentialActionDataAbstract>&, 
-                const Eigen::Ref<const VectorXs>& x,
-                const Eigen::Ref<const VectorXs>& f) {
-  if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
-    throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " + std::to_string(this->get_state()->get_nx()) + ")");
-  }
-  if (static_cast<std::size_t>(f.size()) != this->get_nc()) {
-    throw_pretty("Invalid argument: "
-                 << "f has wrong dimension (it should be 3)");
-  }
-}
-
 
 void DAMSoftContactAbstractAugmentedFwdDynamics::calcDiff(
-                const boost::shared_ptr<DifferentialActionDataAbstract>&, 
-                const Eigen::Ref<const VectorXs>& x,
-                const Eigen::Ref<const VectorXs>& f,
-                const Eigen::Ref<const VectorXs>& u) {
-  if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
-    throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " + std::to_string(this->get_state()->get_nx()) + ")");
-  }
-  if (static_cast<std::size_t>(f.size()) != this->get_nc()) {
-    throw_pretty("Invalid argument: "
-                 << "f has wrong dimension (it should be 3)");
-  }
-  if (static_cast<std::size_t>(u.size()) != this->get_nu()) {
-    throw_pretty("Invalid argument: "
-                 << "u has wrong dimension (it should be " + std::to_string(this->get_nu()) + ")");
-  }
+    const std::shared_ptr<DifferentialActionDataAbstract>& data,
+    const Eigen::Ref<const VectorXs>& x,
+    const Eigen::Ref<const VectorXs>& f) {
+  calcDiff(data, x, f, unone_);
 }
 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::calcDiff(
-                const boost::shared_ptr<DifferentialActionDataAbstract>&, 
-                const Eigen::Ref<const VectorXs>& x,
-                const Eigen::Ref<const VectorXs>& f) {
-  if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
-    throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " + std::to_string(this->get_state()->get_nx()) + ")");
-  }
-  if (static_cast<std::size_t>(f.size()) != this->get_nc()) {
-    throw_pretty("Invalid argument: "
-                 << "f has wrong dimension (it should be 3)");
-  }
-}
-
-
-
-
-
-boost::shared_ptr<DifferentialActionDataAbstractTpl<double> >
+std::shared_ptr<DifferentialActionDataAbstractTpl<double> >
 DAMSoftContactAbstractAugmentedFwdDynamics::createData() {
-  return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
+  return std::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
+}
+
+
+bool DAMSoftContactAbstractAugmentedFwdDynamics::checkData(
+    const std::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double>>&) {
+  return false;
+}
+
+std::size_t DAMSoftContactAbstractAugmentedFwdDynamics::get_ng() const {
+  if (constraints_ != nullptr) {
+    return constraints_->get_ng();
+  } else {
+    return DAMBase::get_ng();
+  }
+}
+
+std::size_t DAMSoftContactAbstractAugmentedFwdDynamics::get_nh() const {
+  if (constraints_ != nullptr) {
+    return constraints_->get_nh();
+  } else {
+    return DAMBase::get_nh();
+  }
+}
+
+const typename crocoddyl::MathBaseTpl<double>::VectorXs&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_g_lb() const {
+  if (constraints_ != nullptr) {
+    return constraints_->get_lb();
+  } else {
+    return g_lb_;
+  }
+}
+
+const typename crocoddyl::MathBaseTpl<double>::VectorXs&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_g_ub() const {
+  if (constraints_ != nullptr) {
+    return constraints_->get_ub();
+  } else {
+    return g_ub_;
+  }
+}
+
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_g_lb(
+    const VectorXs& g_lb) {
+  if (static_cast<std::size_t>(g_lb.size()) != ng_) {
+    throw_pretty(
+        "Invalid argument: "
+        << "inequality lower bound has wrong dimension (it should be " +
+               std::to_string(ng_) + ")");
+  }
+  g_lb_ = g_lb;
+}
+
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_g_ub(
+    const VectorXs& g_ub) {
+  if (static_cast<std::size_t>(g_ub.size()) != ng_) {
+    throw_pretty(
+        "Invalid argument: "
+        << "inequality upper bound has wrong dimension (it should be " +
+               std::to_string(ng_) + ")");
+  }
+  g_ub_ = g_ub;
+}
+
+void DAMSoftContactAbstractAugmentedFwdDynamics::print(
+    std::ostream& os) const {
+  os << "DifferentialActionModelFreeFwdDynamics {nx=" << state_->get_nx()
+     << ", ndx=" << state_->get_ndx() << ", nu=" << nu_ << "}";
+}
+
+pinocchio::ModelTpl<double>&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_pinocchio() const {
+  return pinocchio_;
+}
+
+const std::shared_ptr<ActuationModelAbstract >&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_actuation() const {
+  return actuation_;
+}
+
+const std::shared_ptr<CostModelSum >&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_costs() const {
+  return costs_;
+}
+
+const std::shared_ptr<ConstraintModelManager >&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_constraints() const {
+  return constraints_;
 }
 
 

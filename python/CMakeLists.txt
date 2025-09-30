@@ -1,29 +1,34 @@
-set(${PY_NAME}_SOURCES
-  lowpassfilter/state.cpp
-  lowpassfilter/action.cpp
-  softcontact/state.cpp
-  softcontact/dam-augmented.cpp
-  softcontact/dam3d-augmented.cpp
-  softcontact/dam1d-augmented.cpp
-  softcontact/iam-augmented.cpp
-  main.cpp
-  )
+# Find Python
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
-add_library(${PY_NAME}_pywrap SHARED ${${PY_NAME}_SOURCES})
-target_link_libraries(${PY_NAME}_pywrap PUBLIC ${PROJECT_NAME})
-target_include_directories(${PY_NAME}_pywrap SYSTEM PRIVATE ${PYTHON_INCLUDE_DIR})
-set_target_properties(${PY_NAME}_pywrap PROPERTIES
-  INSTALL_RPATH "\$ORIGIN/../../.."
-  LIBRARY_OUTPUT_DIRECTORY ${PY_NAME}_pywrap
-  PREFIX ""
-  SUFFIX ${PYTHON_EXT_SUFFIX})
-TARGET_LINK_BOOST_PYTHON(${PY_NAME}_pywrap PRIVATE)
-install(TARGETS ${PY_NAME}_pywrap DESTINATION ${${PY_NAME}_INSTALL_DIR})
+# Define the Python sub-packages
+set(PYTHON_PACKAGES
+    lpf_mpc
+    soft_mpc
+    core_mpc_utils
+)
 
-set(${PY_NAME}_PYTHON
-  __init__.py
-  )
-
-foreach(python ${${PY_NAME}_PYTHON})
-  PYTHON_INSTALL_ON_SITE(${PY_NAME} ${python})
+# Install the __init__.py files and modules for each sub-package
+foreach(PACKAGE ${PYTHON_PACKAGES})
+    install(FILES ${PACKAGE}/__init__.py
+            DESTINATION ${PYTHON_SITELIB}/${PROJECT_NAME}/${PACKAGE})
+    
+    file(GLOB MODULES "${PACKAGE}/*.py")
+    
+    foreach(MODULE ${MODULES})
+        get_filename_component(MODULE_NAME ${MODULE} NAME)
+        install(FILES ${MODULE}
+                DESTINATION ${PYTHON_SITELIB}/${PROJECT_NAME}/${PACKAGE})
+        
+        # add_custom_target(
+        #     "${MODULE_NAME}"
+        #     ${CMAKE_COMMAND}
+        #     -E
+        #     env
+        #     PYTHONPATH=${PROJECT_BINARY_DIR}/bindings/python:$ENV{PYTHONPATH}
+        #     ${Python3_EXECUTABLE}
+        #     "${PROJECT_SOURCE_DIR}/python/${PACKAGE}/${MODULE_NAME}"
+        #     \${INPUT})
+    endforeach()
 endforeach()
+

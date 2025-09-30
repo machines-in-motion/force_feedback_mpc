@@ -21,7 +21,7 @@ using namespace force_feedback_mpc::unittest;
 
 void test_state_dimension(StateSoftContactModelTypes::Type state_type, std::size_t nc) {
   StateSoftContactModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
   BOOST_CHECK(static_cast<std::size_t>(state->zero().size()) == state->get_ny());
   BOOST_CHECK(static_cast<std::size_t>(state->rand().size()) == state->get_ny());
   BOOST_CHECK(state->get_ny() == (state->get_nq() + state->get_nv() + state->get_nc()));
@@ -34,8 +34,8 @@ void test_state_dimension(StateSoftContactModelTypes::Type state_type, std::size
 void test_state_dimension_0(StateSoftContactModelTypes::Type state_type) {  
   StateSoftContactModelFactory factory;
   StateModelFactory factoryMultibody; 
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody = factoryMultibody.create(mapStateSoftContactToStateMultibody.at(state_type));
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody = factoryMultibody.create(mapStateSoftContactToStateMultibody.at(state_type));
   BOOST_CHECK(state0->get_ny() == stateMultibody->get_nx());
   BOOST_CHECK(state0->get_ndy() == stateMultibody->get_ndx());
   BOOST_CHECK(state0->get_nq() == stateMultibody->get_nq());
@@ -47,7 +47,7 @@ void test_state_dimension_0(StateSoftContactModelTypes::Type state_type) {
 
 void test_integrate_against_difference(StateSoftContactModelTypes::Type state_type, std::size_t nc) {
   StateSoftContactModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
   // Generating random states
   const Eigen::VectorXd& x1 = state->rand();
   const Eigen::VectorXd& x2 = state->rand();
@@ -66,8 +66,8 @@ void test_integrate_against_difference(StateSoftContactModelTypes::Type state_ty
 void test_integrate_against_difference_0(StateSoftContactModelTypes::Type state_type) {
   StateSoftContactModelFactory factory;
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateSoftContactToStateMultibody.at(state_type));
   // Generating random states
   const Eigen::VectorXd& x1 = state0->rand();
@@ -85,7 +85,7 @@ void test_integrate_against_difference_0(StateSoftContactModelTypes::Type state_
 
 void test_difference_against_integrate(StateSoftContactModelTypes::Type state_type, std::size_t nc) {
   StateSoftContactModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state =
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state =
       factory.create(state_type, nc);
   // Generating random states
   const Eigen::VectorXd& x = state->rand();
@@ -103,8 +103,8 @@ void test_difference_against_integrate(StateSoftContactModelTypes::Type state_ty
 void test_difference_against_integrate_0(StateSoftContactModelTypes::Type state_type) {
   StateSoftContactModelFactory factory;
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateSoftContactToStateMultibody.at(state_type));
   // Generating random states
   const Eigen::VectorXd& x1 = state0->rand();
@@ -122,7 +122,7 @@ void test_difference_against_integrate_0(StateSoftContactModelTypes::Type state_
 
 void test_Jdiff_firstsecond(StateSoftContactModelTypes::Type state_type, std::size_t nc) {
   StateSoftContactModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& x1 = state->rand();
   const Eigen::VectorXd& x2 = state->rand();
@@ -150,8 +150,8 @@ void test_Jdiff_firstsecond(StateSoftContactModelTypes::Type state_type, std::si
 void test_Jdiff_firstsecond_0(StateSoftContactModelTypes::Type state_type) {
   StateSoftContactModelFactory factory;
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateSoftContactToStateMultibody.at(state_type));
   const Eigen::VectorXd& x3 = state0->rand();
   const Eigen::VectorXd& x4 = state0->rand();
@@ -197,7 +197,7 @@ void test_Jdiff_firstsecond_0(StateSoftContactModelTypes::Type state_type) {
 
 void test_Jint_firstsecond(StateSoftContactModelTypes::Type state_type, std::size_t nc) {
   StateSoftContactModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& x = state->rand();
   const Eigen::VectorXd& dx = Eigen::VectorXd::Random(state->get_ndy());
@@ -224,8 +224,8 @@ void test_Jint_firstsecond(StateSoftContactModelTypes::Type state_type, std::siz
 void test_Jint_firstsecond_0(StateSoftContactModelTypes::Type state_type) {
   StateSoftContactModelFactory factory;
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateSoftContactToStateMultibody.at(state_type));
   const Eigen::VectorXd& x1 = state0->rand();
   const Eigen::VectorXd& dx1 = Eigen::VectorXd::Random(state0->get_ndy());
@@ -273,7 +273,7 @@ void test_Jint_firstsecond_0(StateSoftContactModelTypes::Type state_type) {
 
 void test_Jdiff_num_diff_firstsecond(StateSoftContactModelTypes::Type state_type, std::size_t nc) {
   StateSoftContactModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& x1 = state->rand();
   const Eigen::VectorXd& x2 = state->rand();
@@ -305,7 +305,7 @@ void test_Jdiff_num_diff_firstsecond(StateSoftContactModelTypes::Type state_type
 
 void test_Jint_num_diff_firstsecond(StateSoftContactModelTypes::Type state_type, std::size_t nc) {
   StateSoftContactModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& x = state->rand();
   const Eigen::VectorXd& dx = Eigen::VectorXd::Random(state->get_ndy());
@@ -337,7 +337,7 @@ void test_Jint_num_diff_firstsecond(StateSoftContactModelTypes::Type state_type,
 
 void test_Jdiff_against_numdiff(StateSoftContactModelTypes::Type state_type, std::size_t nc) {
   StateSoftContactModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
   // Generating random values for the initial and terminal states
   const Eigen::VectorXd& x1 = state->rand();
   const Eigen::VectorXd& x2 = state->rand();
@@ -366,7 +366,7 @@ void test_Jdiff_against_numdiff(StateSoftContactModelTypes::Type state_type, std
 
 void test_Jintegrate_against_numdiff(StateSoftContactModelTypes::Type state_type, std::size_t nc) {
   StateSoftContactModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
   // Generating random values for the initial state and its rate of change
   const Eigen::VectorXd& x = state->rand();
   const Eigen::VectorXd& dx = Eigen::VectorXd::Random(state->get_ndy());
@@ -391,9 +391,9 @@ void test_Jintegrate_against_numdiff(StateSoftContactModelTypes::Type state_type
 
   // Check Jdiff against state multibody when nc=0
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 =
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 =
       factory.create(state_type, 0);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateSoftContactToStateMultibody.at(state_type));
   Eigen::MatrixXd Jint_1SoftContact(
       Eigen::MatrixXd::Zero(state0->get_ndy(), state0->get_ndy()));
@@ -413,8 +413,8 @@ void test_Jintegrate_against_numdiff(StateSoftContactModelTypes::Type state_type
 void test_Jintegrate_against_numdiff_0(StateSoftContactModelTypes::Type state_type) {
   StateSoftContactModelFactory factory;
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateSoftContactToStateMultibody.at(state_type));
   const Eigen::VectorXd& x = state0->rand();
   const Eigen::VectorXd& dx = Eigen::VectorXd::Random(state0->get_ndy());
@@ -437,7 +437,7 @@ void test_Jintegrate_against_numdiff_0(StateSoftContactModelTypes::Type state_ty
 
 void test_JintegrateTransport(StateSoftContactModelTypes::Type state_type, std::size_t nc) {
   StateSoftContactModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
   // Generating random values for the initial state and its rate of change
   const Eigen::VectorXd& x = state->rand();
   const Eigen::VectorXd& dx = Eigen::VectorXd::Random(state->get_ndy());
@@ -461,8 +461,8 @@ void test_JintegrateTransport(StateSoftContactModelTypes::Type state_type, std::
 void test_JintegrateTransport_0(StateSoftContactModelTypes::Type state_type) {
   StateSoftContactModelFactory factory;
   StateModelFactory factoryMultibody;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
-  const boost::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state0 = factory.create(state_type, 0);
+  const std::shared_ptr<crocoddyl::StateAbstract>& stateMultibody =
       factoryMultibody.create(mapStateSoftContactToStateMultibody.at(state_type));
   const Eigen::VectorXd& x1 = state0->rand();
   const Eigen::VectorXd& dx1 = Eigen::VectorXd::Random(state0->get_ndy());
@@ -488,7 +488,7 @@ void test_JintegrateTransport_0(StateSoftContactModelTypes::Type state_type) {
 
 void test_Jdiff_and_Jintegrate_are_inverses(StateSoftContactModelTypes::Type state_type, std::size_t nc) {
   StateSoftContactModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
   // Generating random states
   const Eigen::VectorXd& x1 = state->rand();
   const Eigen::VectorXd& dx = Eigen::VectorXd::Random(state->get_ndy());
@@ -515,7 +515,7 @@ void test_Jdiff_and_Jintegrate_are_inverses(StateSoftContactModelTypes::Type sta
 
 void test_velocity_from_Jintegrate_Jdiff(StateSoftContactModelTypes::Type state_type, std::size_t nc) {
   StateSoftContactModelFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
+  const std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>& state = factory.create(state_type, nc);
   // Generating random states
   const Eigen::VectorXd& x1 = state->rand();
   Eigen::VectorXd dx = Eigen::VectorXd::Random(state->get_ndy());

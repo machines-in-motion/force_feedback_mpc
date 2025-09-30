@@ -26,7 +26,7 @@ class StateSoftContact : public crocoddyl::StateAbstract {
 
   enum JointType { FreeFlyer = 0, Spherical, Simple };
 
-  explicit StateSoftContact(boost::shared_ptr<pinocchio::ModelTpl<double> > model, std::size_t nc);
+  explicit StateSoftContact(std::shared_ptr<pinocchio::ModelTpl<double> > model, std::size_t nc);
   virtual ~StateSoftContact();
 
   virtual VectorXs zero() const;
@@ -53,7 +53,7 @@ class StateSoftContact : public crocoddyl::StateAbstract {
                                    Eigen::Ref<MatrixXs> Jin,
                                    const crocoddyl::Jcomponent firstsecond) const;
 
-  const boost::shared_ptr<pinocchio::ModelTpl<double> >& get_pinocchio() const;
+  const std::shared_ptr<pinocchio::ModelTpl<double> >& get_pinocchio() const;
   const std::size_t& get_nc() const;
   const std::size_t& get_ny() const;
   const std::size_t& get_ndy() const;
@@ -66,13 +66,13 @@ class StateSoftContact : public crocoddyl::StateAbstract {
   using Base::nv_;
   using Base::nx_;
   using Base::ub_;
-  boost::shared_ptr<pinocchio::ModelTpl<double> > pinocchio_;
+  std::shared_ptr<pinocchio::ModelTpl<double> > pinocchio_;
   std::size_t nc_;
   std::size_t ny_;
   std::size_t ndy_;
 
  private:
-  // boost::shared_ptr<pinocchio::ModelTpl<double> > pinocchio_;
+  // std::shared_ptr<pinocchio::ModelTpl<double> > pinocchio_;
   VectorXs y0_;
   JointType joint_type_;
   

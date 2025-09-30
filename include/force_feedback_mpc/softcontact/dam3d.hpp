@@ -67,9 +67,9 @@ class DifferentialActionModelSoftContact3DFwdDynamicsTpl
    * 
    */
   DifferentialActionModelSoftContact3DFwdDynamicsTpl(
-      boost::shared_ptr<StateMultibody> state,
-      boost::shared_ptr<ActuationModelAbstract> actuation,
-      boost::shared_ptr<CostModelSum> costs,
+      std::shared_ptr<StateMultibody> state,
+      std::shared_ptr<ActuationModelAbstract> actuation,
+      std::shared_ptr<CostModelSum> costs,
       const pinocchio::FrameIndex frameId,
       const double Kp, 
       const double Kv,
@@ -86,7 +86,7 @@ class DifferentialActionModelSoftContact3DFwdDynamicsTpl
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+  virtual void calc(const std::shared_ptr<DifferentialActionDataAbstract>& data, 
                     const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& u);
 
@@ -98,7 +98,7 @@ class DifferentialActionModelSoftContact3DFwdDynamicsTpl
    * @param[in] data  Free forward-dynamics data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
-  virtual void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+  virtual void calc(const std::shared_ptr<DifferentialActionDataAbstract>& data, 
                     const Eigen::Ref<const VectorXs>& x);
 
   /**
@@ -109,7 +109,7 @@ class DifferentialActionModelSoftContact3DFwdDynamicsTpl
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
   virtual void calcDiff(
-      const boost::shared_ptr<DifferentialActionDataAbstract>& data,
+      const std::shared_ptr<DifferentialActionDataAbstract>& data,
       const Eigen::Ref<const VectorXs>& x, 
       const Eigen::Ref<const VectorXs>& u);
 
@@ -120,7 +120,7 @@ class DifferentialActionModelSoftContact3DFwdDynamicsTpl
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
   virtual void calcDiff(
-      const boost::shared_ptr<DifferentialActionDataAbstract>& data,
+      const std::shared_ptr<DifferentialActionDataAbstract>& data,
       const Eigen::Ref<const VectorXs>& x);
   
     /**
@@ -128,7 +128,7 @@ class DifferentialActionModelSoftContact3DFwdDynamicsTpl
    *
    * @return soft contact forward-dynamics data
    */
-  virtual boost::shared_ptr<DifferentialActionDataAbstract> createData();
+  virtual std::shared_ptr<DifferentialActionDataAbstract> createData();
   
   void set_force_cost(const Vector3s& force_des, const Scalar force_weight);
 

@@ -32,28 +32,28 @@ std::ostream& operator<<(std::ostream& os, IAMSoftContactTypes::Type type) {
 IAMSoftContactFactory::IAMSoftContactFactory() {}
 IAMSoftContactFactory::~IAMSoftContactFactory() {}
 
-boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>
+std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>
 IAMSoftContactFactory::create(IAMSoftContactTypes::Type iam_type,
                               DAMSoftContactAbstractTypes::Type dam_type,
                               pinocchio::ReferenceFrame ref_type,
                               Vector3MaskType mask_type) const {
-  boost::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented> iam;
+  std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented> iam;
   switch (iam_type) {
     case IAMSoftContactTypes::IAMSoftContactAugmented: {
-      boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics> dam =
+      std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics> dam =
           DAMSoftContact3DFactory().create(mapDAMSoftAbstractTo3D.at(dam_type), ref_type);
       double time_step = 1e-3;
       bool with_cost_residual = true;
-      iam = boost::make_shared<force_feedback_mpc::softcontact::IAMSoftContactAugmented>(
+      iam = std::make_shared<force_feedback_mpc::softcontact::IAMSoftContactAugmented>(
           dam, time_step, with_cost_residual);
       break;
     }
     case IAMSoftContactTypes::IAMSoftContact1DAugmented: {
-      boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics> dam =
+      std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics> dam =
           DAMSoftContact1DFactory().create(mapDAMSoftAbstractTo1D.at(dam_type), ref_type, mask_type);
       double time_step = 1e-3;
       bool with_cost_residual = true;
-      iam = boost::make_shared<force_feedback_mpc::softcontact::IAMSoftContactAugmented>(
+      iam = std::make_shared<force_feedback_mpc::softcontact::IAMSoftContactAugmented>(
           dam, time_step, with_cost_residual);
       break;
     }

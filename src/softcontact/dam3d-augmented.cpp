@@ -27,22 +27,22 @@ namespace softcontact {
 
 
 DAMSoftContact3DAugmentedFwdDynamics::DAMSoftContact3DAugmentedFwdDynamics(
-    boost::shared_ptr<StateMultibody> state, 
-    boost::shared_ptr<ActuationModelAbstract> actuation,
-    boost::shared_ptr<CostModelSum> costs,
+    std::shared_ptr<StateMultibody> state, 
+    std::shared_ptr<ActuationModelAbstract> actuation,
+    std::shared_ptr<CostModelSum> costs,
     const pinocchio::FrameIndex frameId,
     const VectorXs& Kp, 
     const VectorXs& Kv,
     const Vector3s& oPc,
-    const pinocchio::ReferenceFrame ref)
-    : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 3, ref) {}
+    std::shared_ptr<ConstraintModelManager> constraints)
+    : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 3, constraints) {}
 
 
 DAMSoftContact3DAugmentedFwdDynamics::~DAMSoftContact3DAugmentedFwdDynamics() {}
 
 
 void DAMSoftContact3DAugmentedFwdDynamics::calc(
-            const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
+            const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const VectorXs>& x,
             const Eigen::Ref<const VectorXs>& f,
             const Eigen::Ref<const VectorXs>& u) {
@@ -87,7 +87,9 @@ void DAMSoftContact3DAugmentedFwdDynamics::calc(
       d->u_drift = d->multibody.actuation->tau - d->pinocchio.nle;
       //  Compute jacobian transpose lambda
       pinocchio::getFrameJacobian(this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL, d->lJ);
-      d->xout.noalias() = d->Minv * d->u_drift + d->Minv * d->lJ.topRows(3).transpose() * d->pinForce.linear(); 
+      d->xout.noalias() = d->Minv * d->u_drift;
+      d->tmp_mat_.noalias() = d->Minv * d->lJ.topRows(3).transpose();
+      d->xout.noalias() += d->tmp_mat_ * d->pinForce.linear(); 
      
     // ABA without armature
     } else {
@@ -165,12 +167,18 @@ void DAMSoftContact3DAugmentedFwdDynamics::calc(
       d->cost += 0.5 * d->fout.transpose() * force_rate_reg_weight_.asDiagonal() * d->fout;  // penalize time derivative of the force 
     }
   }
+
+  // Constraints (on multibody state x=(q,v))
+  if (this->get_constraints() != nullptr) {
+    d->constraints->resize(this, d);
+    this->get_constraints()->calc(d->constraints, x, u);
+  }
 }
 
 
 
 void DAMSoftContact3DAugmentedFwdDynamics::calc(
-            const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
+            const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
             const Eigen::Ref<const VectorXs>& x,
             const Eigen::Ref<const VectorXs>& f) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
@@ -221,13 +229,19 @@ void DAMSoftContact3DAugmentedFwdDynamics::calc(
       d->cost += 0.5* d->fout.transpose() * force_rate_reg_weight_.asDiagonal() * d->fout;  // penalize time derivative of the force 
     }
   }
+
+  // Constraints (on multibody state x=(q,v))
+  if (this->get_constraints() != nullptr) {
+    d->constraints->resize(this, d);
+    this->get_constraints()->calc(d->constraints, x);
+  }
 }
 
 
 
 
 void DAMSoftContact3DAugmentedFwdDynamics::calcDiff(
-    const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
+    const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
     const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& f,
     const Eigen::Ref<const VectorXs>& u) {
@@ -422,12 +436,17 @@ void DAMSoftContact3DAugmentedFwdDynamics::calcDiff(
       d->Luu +=  d->dfdt_du.transpose() * force_rate_reg_weight_.asDiagonal() * d->dfdt_du;
     }
   }
+
+  // Constraints on multibody state x=(q,v)
+  if (this->get_constraints() != nullptr) {
+    this->get_constraints()->calcDiff(d->constraints, x, u);
+  }
 }
 
 
 
 void DAMSoftContact3DAugmentedFwdDynamics::calcDiff(
-    const boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
+    const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& data, 
     const Eigen::Ref<const VectorXs>& x,
     const Eigen::Ref<const VectorXs>& f) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
@@ -505,12 +524,27 @@ void DAMSoftContact3DAugmentedFwdDynamics::calcDiff(
       d->Lxx += d->dfdt_dx.transpose() * force_rate_reg_weight_.asDiagonal() * d->dfdt_dx;
     }
   }
+
+  // Constraints on multibody state x=(q,v)
+  if (this->get_constraints() != nullptr) {
+    this->get_constraints()->calcDiff(d->constraints, x);
+  }
 }
 
 
-boost::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double> >
+std::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double> >
 DAMSoftContact3DAugmentedFwdDynamics::createData() {
-  return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
+  return std::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
+}
+
+bool DAMSoftContact3DAugmentedFwdDynamics::checkData(
+    const std::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double>>& data) {
+  std::shared_ptr<Data> d = std::dynamic_pointer_cast<Data>(data);
+  if (d != NULL) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 }  // namespace softcontact

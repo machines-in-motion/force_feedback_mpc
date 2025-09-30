@@ -1,0 +1,3 @@
+from .aug_ocp import OptimalControlProblemSoftContactAugmented
+from .aug_data import OCPDataHandlerSoftContactAugmented, MPCDataHandlerSoftContactAugmented
+from .ocp import OptimalControlProblemSoftContact

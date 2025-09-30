@@ -10,10 +10,10 @@
 #define FORCE_FEEDBACK_MPC_COST_FACTORY_HPP_
 
 #include "activation.hpp"
-#include "crocoddyl/core/cost-base.hpp"
-#include "crocoddyl/core/costs/cost-sum.hpp"
-#include "crocoddyl/core/numdiff/cost.hpp"
-#include "crocoddyl/multibody/states/multibody.hpp"
+#include <crocoddyl/core/cost-base.hpp>
+#include <crocoddyl/core/costs/cost-sum.hpp>
+#include <crocoddyl/core/numdiff/cost.hpp>
+#include <crocoddyl/multibody/states/multibody.hpp>
 #include "state.hpp"
 
 namespace force_feedback_mpc {
@@ -82,23 +82,23 @@ class CostModelFactory {
   explicit CostModelFactory();
   ~CostModelFactory();
 
-  boost::shared_ptr<crocoddyl::CostModelAbstract> create(
+  std::shared_ptr<crocoddyl::CostModelAbstract> create(
       CostModelTypes::Type cost_type, StateModelTypes::Type state_type,
       ActivationModelTypes::Type activation_type,
       std::size_t nu = std::numeric_limits<std::size_t>::max()) const;
-  boost::shared_ptr<crocoddyl::CostModelAbstract> create(
+  std::shared_ptr<crocoddyl::CostModelAbstract> create(
       CostModelNoFFTypes::Type cost_type,
       ActivationModelTypes::Type activation_type,
       std::size_t nu = std::numeric_limits<std::size_t>::max()) const;
 
 #ifdef PINOCCHIO_WITH_HPP_FCL
-  boost::shared_ptr<crocoddyl::CostModelAbstract> create(
+  std::shared_ptr<crocoddyl::CostModelAbstract> create(
       CostModelCollisionTypes::Type cost_type, StateModelTypes::Type state_type,
       std::size_t nu = std::numeric_limits<std::size_t>::max()) const;
 #endif  // PINOCCHIO_WITH_HPP_FCL
 };
 
-boost::shared_ptr<crocoddyl::CostModelAbstract> create_random_cost(
+std::shared_ptr<crocoddyl::CostModelAbstract> create_random_cost(
     StateModelTypes::Type state_type,
     std::size_t nu = std::numeric_limits<std::size_t>::max());
 }  // namespace unittest

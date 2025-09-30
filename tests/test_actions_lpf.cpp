@@ -28,7 +28,7 @@ void test_check_data(
     ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // create the model
   ActionModelLPFFactory factory_iam;
-  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
+  const std::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
       factory_iam.create(iam_type, dam_type, contact_type);
 
   // Run the print function
@@ -36,7 +36,7 @@ void test_check_data(
   tmp << *model;
 
   // create the corresponding data object
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
 
   BOOST_CHECK(model->checkData(data));
@@ -48,10 +48,13 @@ void test_calc_returns_state(
     ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // create the model
   ActionModelLPFFactory factory_iam;
-  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
+  const std::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
       factory_iam.create(iam_type, dam_type, contact_type);
+//   std::cout << "iam.ng = " << model->get_ng() << std::endl;
+//   std::cout << "iam.g_lb = " << model->get_g_lb() << std::endl;
+
   // create the corresponding data object
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
 
   // Generating random state and control vectors
@@ -71,11 +74,11 @@ void test_calc_returns_a_cost(
     ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // create the model
   ActionModelLPFFactory factory_iam;
-  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
+  const std::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
       factory_iam.create(iam_type, dam_type, contact_type);
 
   // create the corresponding data object and set the cost to nan
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
 
   data->cost = nan("");
@@ -90,13 +93,13 @@ void test_calc_returns_a_cost(
 }
 
 void test_partial_derivatives_against_numdiff(
-    const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model) {
+    const std::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model) {
   // create the corresponding data object and set the cost to nan
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
 
   crocoddyl::ActionModelNumDiff model_num_diff(model);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data_num_diff =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data_num_diff =
       model_num_diff.createData();
 
   // Generating random values for the state and control
@@ -144,19 +147,19 @@ void test_partial_derivatives_action_model(
     ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // create the model
   ActionModelLPFFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
+  const std::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
       factory.create(iam_type, dam_type, contact_type);
   test_partial_derivatives_against_numdiff(model);
 }
 
 void test_partial_derivatives_against_numdiff_terminal(
-    const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model) {
+    const std::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model) {
   // create the corresponding data object and set the cost to nan
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
 
   crocoddyl::ActionModelNumDiff model_num_diff(model);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data_num_diff =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data_num_diff =
       model_num_diff.createData();
 
   // Generating random values for the state and control
@@ -192,7 +195,7 @@ void test_partial_derivatives_action_model_terminal(
     ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // create the model
   ActionModelLPFFactory factory;
-  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
+  const std::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& model =
       factory.create(iam_type, dam_type, contact_type);
   model->set_dt(0);
   test_partial_derivatives_against_numdiff_terminal(model);
@@ -204,26 +207,26 @@ void test_calc_alpha0_equivalent_euler(
     ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // Create IAM LPF
   ActionModelLPFFactory factory_iam;
-  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
+  const std::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
       factory_iam.create(iam_type, dam_type, contact_type);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
       modelLPF->createData();
 
   // Create IAM Euler from iamLPF.DAM and iamLPF.dt (with cost residual)
-  boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler =
-      boost::make_shared<crocoddyl::IntegratedActionModelEuler>(
+  std::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler =
+      std::make_shared<crocoddyl::IntegratedActionModelEuler>(
           modelLPF->get_differential(), modelLPF->get_dt(), true);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler =
       modelEuler->createData();
 
   // Generating random values for the state and control
   std::size_t nx = modelEuler->get_state()->get_nx();
   // std::size_t ndx = modelEuler->get_state()->get_ndx();
   std::size_t ntau =
-      boost::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)
+      std::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)
           ->get_ntau();
   std::size_t ntau_state =
-      boost::static_pointer_cast<force_feedback_mpc::lpf::StateLPF>(modelLPF->get_state())
+      std::static_pointer_cast<force_feedback_mpc::lpf::StateLPF>(modelLPF->get_state())
           ->get_ntau();
   const Eigen::VectorXd y = modelLPF->get_state()->rand();
   const Eigen::VectorXd& w = Eigen::VectorXd::Random(modelLPF->get_nw());
@@ -258,9 +261,9 @@ void test_calc_alpha0_equivalent_euler(
   // Test terminal calc
   modelLPF->set_dt(0.);
   modelEuler->set_dt(0.);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPFTerminal =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPFTerminal =
       modelLPF->createData();
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataEulerTerminal =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataEulerTerminal =
       modelEuler->createData();
   modelLPF->calc(dataLPFTerminal, y);
   modelEuler->calc(dataEulerTerminal, x);
@@ -276,16 +279,16 @@ void test_calc_NONE_equivalent_euler(
     ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // Create IAM LPF
   ActionModelLPFFactory factory_iam;
-  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
+  const std::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
       factory_iam.create(iam_type, dam_type, contact_type);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
       modelLPF->createData();
 
   // Create IAM Euler from DAM and iamLPF.dt (with cost residual)
-  boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler =
-      boost::make_shared<crocoddyl::IntegratedActionModelEuler>(
+  std::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler =
+      std::make_shared<crocoddyl::IntegratedActionModelEuler>(
           modelLPF->get_differential(), modelLPF->get_dt(), true);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler =
       modelEuler->createData();
 
   // Generating random values for the state and control
@@ -293,10 +296,10 @@ void test_calc_NONE_equivalent_euler(
   // std::size_t ndx = modelEuler->get_state()->get_ndx();
   // std::size_t nv = modelEuler->get_state()->get_nv();
   std::size_t ntau =
-      boost::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)
+      std::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)
           ->get_ntau();
   std::size_t ntau_state =
-      boost::static_pointer_cast<force_feedback_mpc::lpf::StateLPF>(modelLPF->get_state())
+      std::static_pointer_cast<force_feedback_mpc::lpf::StateLPF>(modelLPF->get_state())
           ->get_ntau();
   BOOST_CHECK(ntau == 0);
   BOOST_CHECK(ntau_state == 0);
@@ -327,9 +330,9 @@ void test_calc_NONE_equivalent_euler(
   // Test terminal calc
   modelLPF->set_dt(0.);
   modelEuler->set_dt(0.);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPFTerminal =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPFTerminal =
       modelLPF->createData();
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataEulerTerminal =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataEulerTerminal =
       modelEuler->createData();
   modelLPF->calc(dataLPFTerminal, y);
   modelEuler->calc(dataEulerTerminal, y);
@@ -345,16 +348,16 @@ void test_calc_NONE_equivalent_euler(
 
 //   // Create IAM LPF
 //   ActionModelLPFFactory factory_iam;
-//   const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
+//   const std::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
 //       factory_iam.create(iam_type, dam_type, contact_type);
-//   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
+//   const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
 //   modelLPF->createData();
 
 //   // Create IAM Euler from DAM and iamLPF.dt (with cost residual)
-//   boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler =
-//     boost::make_shared<crocoddyl::IntegratedActionModelEuler>(modelLPF->get_differential(),
+//   std::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler =
+//     std::make_shared<crocoddyl::IntegratedActionModelEuler>(modelLPF->get_differential(),
 //     modelLPF->get_dt(), true);
-//   const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler =
+//   const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler =
 //   modelEuler->createData();
 
 //   // Generating random values for the state and control
@@ -362,7 +365,7 @@ void test_calc_NONE_equivalent_euler(
 //   std::size_t ndx = modelEuler->get_state()->get_ndx();
 //   std::size_t nv = modelEuler->get_state()->get_nv();
 //   std::size_t ntau =
-//   boost::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)->get_ntau();
+//   std::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)->get_ntau();
 //   std::size_t nu = modelEuler->get_nu();
 //   const Eigen::VectorXd y = modelLPF->get_state()->rand();
 //   const Eigen::VectorXd& w = Eigen::VectorXd::Random(modelLPF->get_nw());
@@ -402,16 +405,16 @@ void test_calcDiff_explicit_equivalent_euler(
     ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
   // Create IAM LPF
   ActionModelLPFFactory factory_iam;
-  const boost::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
+  const std::shared_ptr<force_feedback_mpc::lpf::IntegratedActionModelLPF>& modelLPF =
       factory_iam.create(iam_type, dam_type, contact_type);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPF =
       modelLPF->createData();
 
   // Create IAM Euler from DAM and iamLPF.dt (with cost residual)
-  boost::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler =
-      boost::make_shared<crocoddyl::IntegratedActionModelEuler>(
+  std::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler =
+      std::make_shared<crocoddyl::IntegratedActionModelEuler>(
           modelLPF->get_differential(), modelLPF->get_dt(), true);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler =
       modelEuler->createData();
 
   // Generating random values for the state and control
@@ -419,7 +422,7 @@ void test_calcDiff_explicit_equivalent_euler(
   std::size_t ndx = modelEuler->get_state()->get_ndx();
   // std::size_t nv = modelEuler->get_state()->get_nv();
   std::size_t ntau =
-      boost::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)
+      std::static_pointer_cast<force_feedback_mpc::lpf::IntegratedActionModelLPF>(modelLPF)
           ->get_ntau();
   std::size_t nu = modelEuler->get_nu();
   const Eigen::VectorXd y = modelLPF->get_state()->rand();
@@ -504,9 +507,9 @@ void test_calcDiff_explicit_equivalent_euler(
   // Computing the action
   modelLPF->set_dt(0.);
   modelEuler->set_dt(0.);
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPFTerminal =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataLPFTerminal =
       modelLPF->createData();
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& dataEulerTerminal =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataEulerTerminal =
       modelEuler->createData();
   modelLPF->calc(dataLPFTerminal, y);
   modelEuler->calc(dataEulerTerminal, x);

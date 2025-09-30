@@ -46,7 +46,10 @@ struct DADSoftContact1DAugmentedFwdDynamics
         dfdt3d_df(3, 1),
         dfdt3d_dx_copy(3, model->get_state()->get_ndx()),
         dfdt3d_du_copy(3, model->get_nu()),
-        dfdt3d_df_copy(3, 1)
+        dfdt3d_df_copy(3, 1),
+        tmp_mat_(model->get_state()->get_nv(), 3),
+        tmp_mat2_(3, model->get_state()->get_nv()),
+        tmp_mat3_(1, model->get_state()->get_ndx())
         {
     aba_df3d.setZero();
     aba_df3d_copy.setZero();
@@ -61,6 +64,11 @@ struct DADSoftContact1DAugmentedFwdDynamics
     dfdt3d_dx_copy.setZero();
     dfdt3d_du_copy.setZero();
     dfdt3d_df_copy.setZero();
+    tmp_vec_.setZero();
+    tmp_mat_.setZero();
+    tmp_mat2_.setZero();
+    tmp_mat3_.setZero();
+    tmp_skew_.setZero();
   }
 
   using Base::pinocchio;
@@ -69,7 +77,8 @@ struct DADSoftContact1DAugmentedFwdDynamics
   using Base::Minv;
   using Base::u_drift;
   using Base::tmp_xstatic;
-
+  using Base::constraints;
+  
   using Base::dtau_dx;
   // Contact frame rotation and Jacobians
   using Base::oRf;
@@ -148,6 +157,16 @@ struct DADSoftContact1DAugmentedFwdDynamics
   using Base::Lxx;
   using Base::r;
   using Base::xout;
+  using Base::g;
+  using Base::Gx;
+  using Base::Gu;
+
+  // tmp 
+  Vector3s tmp_vec_;
+  Matrix3s tmp_skew_;
+  MatrixXs tmp_mat_;
+  MatrixXs tmp_mat2_;
+  MatrixXs tmp_mat3_;
 };
 
 
@@ -174,6 +193,7 @@ class DAMSoftContact1DAugmentedFwdDynamics
   typedef crocoddyl::StateMultibodyTpl<double> StateMultibody;
   typedef crocoddyl::ActuationModelAbstractTpl<double> ActuationModelAbstract;
   typedef crocoddyl::DifferentialActionDataAbstractTpl<double> DifferentialActionDataAbstract;
+  typedef crocoddyl::ConstraintModelManagerTpl<double> ConstraintModelManager;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::Vector3s Vector3s;
   typedef typename MathBase::MatrixXs MatrixXs;
@@ -192,19 +212,20 @@ class DAMSoftContact1DAugmentedFwdDynamics
    * @param[in] Kp               Soft contact model stiffness
    * @param[in] Kv               Soft contact model damping
    * @param[in] oPc              Anchor point of the contact model in WORLD coordinates
-   * @param[in] ref              Pinocchio reference frame in which the contact force is to be expressed
+   * @param[in] type             Mask of 1D contact
+   * @param[in] constraints      Constraints
    * 
    */
   DAMSoftContact1DAugmentedFwdDynamics(
-      boost::shared_ptr<StateMultibody> state,
-      boost::shared_ptr<ActuationModelAbstract> actuation,
-      boost::shared_ptr<CostModelSum> costs,
+      std::shared_ptr<StateMultibody> state,
+      std::shared_ptr<ActuationModelAbstract> actuation,
+      std::shared_ptr<CostModelSum> costs,
       const pinocchio::FrameIndex frameId,
       const VectorXs& Kp, 
       const VectorXs& Kv,
       const Vector3s& oPc,
-      const pinocchio::ReferenceFrame ref = pinocchio::LOCAL,
-      const Vector3MaskType& type = Vector3MaskType::z);
+      const Vector3MaskType& type = Vector3MaskType::z,
+      std::shared_ptr<ConstraintModelManager> constraints = nullptr);
   virtual ~DAMSoftContact1DAugmentedFwdDynamics();
 
   /**
@@ -217,7 +238,7 @@ class DAMSoftContact1DAugmentedFwdDynamics
    * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+  virtual void calc(const std::shared_ptr<DifferentialActionDataAbstract>& data, 
                     const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& f,
                     const Eigen::Ref<const VectorXs>& u);
@@ -231,7 +252,7 @@ class DAMSoftContact1DAugmentedFwdDynamics
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
    */
-  virtual void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+  virtual void calc(const std::shared_ptr<DifferentialActionDataAbstract>& data, 
                     const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& f);
 
@@ -244,7 +265,7 @@ class DAMSoftContact1DAugmentedFwdDynamics
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
   virtual void calcDiff(
-      const boost::shared_ptr<DifferentialActionDataAbstract>& data,
+      const std::shared_ptr<DifferentialActionDataAbstract>& data,
       const Eigen::Ref<const VectorXs>& x, 
       const Eigen::Ref<const VectorXs>& f, 
       const Eigen::Ref<const VectorXs>& u);
@@ -257,7 +278,7 @@ class DAMSoftContact1DAugmentedFwdDynamics
    * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
    */
   virtual void calcDiff(
-      const boost::shared_ptr<DifferentialActionDataAbstract>& data,
+      const std::shared_ptr<DifferentialActionDataAbstract>& data,
       const Eigen::Ref<const VectorXs>& x,
       const Eigen::Ref<const VectorXs>& f);
   
@@ -266,11 +287,38 @@ class DAMSoftContact1DAugmentedFwdDynamics
    *
    * @return soft contact forward-dynamics data
    */
-  virtual boost::shared_ptr<DifferentialActionDataAbstract> createData();
+  virtual std::shared_ptr<DifferentialActionDataAbstract> createData();
 
+  /**
+   * @brief Checks that a specific data belongs to the free inverse-dynamics
+   * model
+   */
+  virtual bool checkData(
+      const std::shared_ptr<DifferentialActionDataAbstract>& data);
+      
   const Vector3MaskType& get_type() const;
 
   void set_type(const Vector3MaskType& inType);
+
+  /**
+   * @brief Return the number of inequality constraints
+   */
+  virtual std::size_t get_ng() const;
+
+  /**
+   * @brief Return the number of equality constraints
+   */
+  virtual std::size_t get_nh() const;
+
+  /**
+   * @brief Return the lower bound of the inequality constraints
+   */
+  virtual const VectorXs& get_g_lb() const;
+
+  /**
+   * @brief Return the upper bound of the inequality constraints
+   */
+  virtual const VectorXs& get_g_ub() const;
 
   protected:
     using Base::Kp_;
@@ -293,6 +341,15 @@ class DAMSoftContact1DAugmentedFwdDynamics
     using Base::cost_ref_;
     using Base::with_force_rate_reg_cost_;
     using Base::force_rate_reg_weight_;
+    
+    using Base::g_lb_;
+    using Base::g_ub_;
+
+    using Base::state_;
+    using Base::costs_;
+    using Base::actuation_;
+    using Base::constraints_;
+    using Base::pinocchio_;
 };
 
 }  // namespace softcontact

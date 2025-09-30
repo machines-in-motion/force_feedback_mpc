@@ -22,13 +22,13 @@ void test_check_data(DAMSoftContact3DFrictionTypes::Type action_type,
                      PinocchioReferenceTypes::Type ref_type) {
   // create the model
   DAMSoftContact3DFrictionFactory factory;
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model =
+  std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model =
       factory.create(action_type, ref_type);
   // Run the print function
   std::ostringstream tmp;
   tmp << *model;
   // create the corresponding data object
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
       model->createData();
   BOOST_CHECK(model->checkData(data));
 }
@@ -37,9 +37,9 @@ void test_calc_returns_state(DAMSoftContact3DFrictionTypes::Type action_type,
                              PinocchioReferenceTypes::Type ref_type) {
   // create the model
   DAMSoftContact3DFrictionFactory factory;
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model = factory.create(action_type, ref_type);
+  std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model = factory.create(action_type, ref_type);
   // create the corresponding data object
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data = model->createData();
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data = model->createData();
   // Generating random state and control vectors
   const Eigen::VectorXd x = model->get_state()->rand();
   const Eigen::VectorXd f = Eigen::Vector3d::Random();
@@ -53,10 +53,10 @@ void test_calc_returns_a_cost(DAMSoftContact3DFrictionTypes::Type action_type,
                               PinocchioReferenceTypes::Type ref_type) {
   // create the model
   DAMSoftContact3DFrictionFactory factory;
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model =
+  std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model =
       factory.create(action_type, ref_type);
   // create the corresponding data object and set the cost to nan
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
       model->createData();
   data->cost = nan("");
   // Getting the cost value computed by calc()
@@ -72,7 +72,7 @@ void test_attributes(DAMSoftContact3DFrictionTypes::Type action_type,
                      PinocchioReferenceTypes::Type ref_type) {
   // create the model
   DAMSoftContact3DFrictionFactory factory;
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model =
+  std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model =
       factory.create(action_type, ref_type);
   double disturbance = std::sqrt(2.0 * std::numeric_limits<double>::epsilon());
   double tol = sqrt(disturbance);
@@ -171,9 +171,9 @@ void test_attributes(DAMSoftContact3DFrictionTypes::Type action_type,
 
 
 // Test partials against numdiff
-void test_partials_numdiff(boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model){
+void test_partials_numdiff(std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model){
   // create the corresponding data object
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data = model->createData();
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data = model->createData();
   // Generating random values for the state and control
   std::size_t ndx = model->get_state()->get_ndx();
   std::size_t nx = model->get_state()->get_nx();
@@ -188,7 +188,7 @@ void test_partials_numdiff(boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFri
 
   // numdiff by hand because ND not adapted to augmented calc and calcDiff
   const Eigen::VectorXd& xn0 = data->xout;
-  const Eigen::VectorXd& fn0 = boost::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(data)->fout;
+  const Eigen::VectorXd& fn0 = std::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(data)->fout;
   const double c0 = data->cost;
   // perturbations
   Eigen::VectorXd dx = Eigen::VectorXd::Zero(ndx);
@@ -198,11 +198,11 @@ void test_partials_numdiff(boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFri
   Eigen::VectorXd fp = Eigen::VectorXd::Zero(nc);
   double disturbance = std::sqrt(2.0 * std::numeric_limits<double>::epsilon());
   // data
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data_num_diff = model->createData();
-  boost::shared_ptr<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics> data_num_diff_cast = boost::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(data_num_diff);
-  std::vector<boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>> data_x;
-  std::vector<boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>> data_f;
-  std::vector<boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract>> data_u;
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data_num_diff = model->createData();
+  std::shared_ptr<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics> data_num_diff_cast = std::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(data_num_diff);
+  std::vector<std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>> data_x;
+  std::vector<std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>> data_f;
+  std::vector<std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>> data_u;
   for (std::size_t i = 0; i < ndx; ++i) {
       data_x.push_back(model->createData());
   }
@@ -218,7 +218,7 @@ void test_partials_numdiff(boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFri
     dx(ix) = disturbance;
     model->get_state()->integrate(x, dx, xp);
     model->calc(data_x[ix], xp, f, u);
-    boost::shared_ptr<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics> data_ix_cast = boost::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(data_x[ix]);
+    std::shared_ptr<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics> data_ix_cast = std::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(data_x[ix]);
     const Eigen::VectorXd& xn = data_ix_cast->xout;
     const Eigen::VectorXd& fn = data_ix_cast->fout;
     const double c = data_ix_cast->cost;
@@ -232,7 +232,7 @@ void test_partials_numdiff(boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFri
   for (std::size_t idf = 0; idf < nc; ++idf) {
     df(idf) = disturbance;
     model->calc(data_f[idf], x, f + df, u);
-    boost::shared_ptr<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics> data_idf_cast = boost::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(data_f[idf]);
+    std::shared_ptr<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics> data_idf_cast = std::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(data_f[idf]);
     const Eigen::VectorXd& xn = data_idf_cast->xout;
     const Eigen::VectorXd& fn = data_idf_cast->fout;
     const double c = data_idf_cast->cost;
@@ -246,7 +246,7 @@ void test_partials_numdiff(boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFri
   for (unsigned iu = 0; iu < nu; ++iu) {
     du(iu) = disturbance;
     model->calc(data_u[iu], x, f, u + du);
-    boost::shared_ptr<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics> data_iu_cast = boost::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(data_u[iu]);
+    std::shared_ptr<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics> data_iu_cast = std::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(data_u[iu]);
     const Eigen::VectorXd& xn = data_iu_cast->xout;
     const Eigen::VectorXd& fn = data_iu_cast->fout;
     const double c = data_iu_cast->cost;
@@ -259,7 +259,7 @@ void test_partials_numdiff(boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFri
   // Second-order cost derivatives 
 
   // Checking the partial derivatives against NumDiff
-  boost::shared_ptr<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics> datacast = boost::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(data);
+  std::shared_ptr<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics> datacast = std::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(data);
   double tol = 1e-3; //sqrt(disturbance);
   BOOST_CHECK((datacast->Fx - data_num_diff_cast->Fx).isZero(NUMDIFF_MODIFIER * tol));
   BOOST_CHECK((datacast->Fu - data_num_diff_cast->Fu).isZero(NUMDIFF_MODIFIER * tol));
@@ -294,7 +294,7 @@ void test_partial_derivatives_against_numdiff(
     PinocchioReferenceTypes::Type ref_type) {
   // create the model
   DAMSoftContact3DFrictionFactory factory;
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model = factory.create(action_type, ref_type);
+  std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model = factory.create(action_type, ref_type);
   test_partials_numdiff(model);
 }
 
@@ -303,7 +303,7 @@ void test_partial_derivatives_against_numdiff_armature(
     PinocchioReferenceTypes::Type ref_type) {
   // create the model
   DAMSoftContact3DFrictionFactory factory;
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model = factory.create(action_type, ref_type);
+  std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> model = factory.create(action_type, ref_type);
   Eigen::VectorXd armature = 1e-3*Eigen::VectorXd::Ones(model->get_state()->get_nv());
   // optional armature
   int nbase = model->get_state()->get_nv() - model->get_nu();
@@ -317,16 +317,16 @@ void test_partial_derivatives_against_numdiff_armature(
 
 
 // Test equivalence with free dynamics when Kp,Kv=0
-void test_calc_free(boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> modelsoft,
+void test_calc_free(std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> modelsoft,
                     Eigen::VectorXd armature) {
   // Create DAM free
-  boost::shared_ptr<crocoddyl::StateMultibody> statemb = boost::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_state()); 
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree = boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
-          statemb, modelsoft->get_actuation(), boost::make_shared<crocoddyl::CostModelSum>(*modelsoft->get_costs()));
+  std::shared_ptr<crocoddyl::StateMultibody> statemb = std::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_state()); 
+  std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree = std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
+          statemb, modelsoft->get_actuation(), std::make_shared<crocoddyl::CostModelSum>(*modelsoft->get_costs()));
   // Add gravity cost on free model
   if(modelsoft->get_with_gravity_torque_reg()){
-    boost::shared_ptr<crocoddyl::CostModelAbstract> cost = boost::make_shared<crocoddyl::CostModelResidual>(
-            statemb, boost::make_shared<crocoddyl::ResidualModelControlGrav>( statemb, modelfree->get_actuation()->get_nu() ));
+    std::shared_ptr<crocoddyl::CostModelAbstract> cost = std::make_shared<crocoddyl::CostModelResidual>(
+            statemb, std::make_shared<crocoddyl::ResidualModelControlGrav>( statemb, modelfree->get_actuation()->get_nu() ));
     modelfree->get_costs()->addCost( "grav_reg", cost, modelsoft->get_tau_grav_weight());
   }
   // optional armature
@@ -341,8 +341,8 @@ void test_calc_free(boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFw
     modelsoft->set_armature(armature);
     modelsoft->set_with_armature(true);
   }
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> datafree = modelfree->createData();
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> datasoft = modelsoft->createData();
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> datafree = modelfree->createData();
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> datasoft = modelsoft->createData();
   // Generating random state and control vectors
   const Eigen::VectorXd x = modelsoft->get_state()->rand();
   const Eigen::VectorXd f = Eigen::Vector3d::Zero();
@@ -357,7 +357,7 @@ void test_calc_equivalent_free(DAMSoftContact3DFrictionTypes::Type action_type,
                                PinocchioReferenceTypes::Type ref_type) {
   // create the model
   DAMSoftContact3DFrictionFactory factory;
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> modelsoft =
+  std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> modelsoft =
       factory.create(action_type, ref_type);
   
   // Set 0 stiffness and damping
@@ -370,7 +370,7 @@ void test_calc_equivalent_free(DAMSoftContact3DFrictionTypes::Type action_type,
   // Test that freeFwdDyn = SoftContact(Kp=0;Kv=0), WITH armature
   test_calc_free(modelsoft, 1e-3*Eigen::VectorXd::Ones(modelsoft->get_state()->get_nv()));
 
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> modelsoft2 =
+  std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> modelsoft2 =
       factory.create(action_type, ref_type);
   // Set non-zero stiffness and damping
   modelsoft2->set_Kp(Eigen::VectorXd::Ones(modelsoft->get_nc()) * 100.);
@@ -384,17 +384,17 @@ void test_calc_equivalent_free(DAMSoftContact3DFrictionTypes::Type action_type,
 }
 
 
-void test_calcDiff_free(boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> modelsoft, 
+void test_calcDiff_free(std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> modelsoft, 
                         Eigen::VectorXd armature){
   // Create DAM free
-  boost::shared_ptr<crocoddyl::StateMultibody> statemb = boost::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_state()); 
-  boost::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree =
-      boost::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
-          statemb, modelsoft->get_actuation(), boost::make_shared<crocoddyl::CostModelSum>(*modelsoft->get_costs()));
+  std::shared_ptr<crocoddyl::StateMultibody> statemb = std::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_state()); 
+  std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree =
+      std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
+          statemb, modelsoft->get_actuation(), std::make_shared<crocoddyl::CostModelSum>(*modelsoft->get_costs()));
   // Add gravity cost on free model
   if(modelsoft->get_with_gravity_torque_reg()){
-    boost::shared_ptr<crocoddyl::CostModelAbstract> cost = boost::make_shared<crocoddyl::CostModelResidual>(
-            statemb, boost::make_shared<crocoddyl::ResidualModelControlGrav>( statemb, modelfree->get_actuation()->get_nu() ));
+    std::shared_ptr<crocoddyl::CostModelAbstract> cost = std::make_shared<crocoddyl::CostModelResidual>(
+            statemb, std::make_shared<crocoddyl::ResidualModelControlGrav>( statemb, modelfree->get_actuation()->get_nu() ));
     modelfree->get_costs()->addCost( "grav_reg", cost, modelsoft->get_tau_grav_weight());
   }
   // optional armature
@@ -409,8 +409,8 @@ void test_calcDiff_free(boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFricti
     modelsoft->set_armature(armature);
     modelsoft->set_with_armature(true);
   }
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> datafree = modelfree->createData();
-  boost::shared_ptr<crocoddyl::DifferentialActionDataAbstract> datasoft = modelsoft->createData();
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> datafree = modelfree->createData();
+  std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> datasoft = modelsoft->createData();
   // Generating random state and control vectors
   const Eigen::VectorXd x = modelsoft->get_state()->rand();
   const Eigen::VectorXd f = Eigen::Vector3d::Zero();
@@ -436,7 +436,7 @@ void test_calcDiff_free(boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFricti
   //   std::cout << " -------------------------------------  " << std::endl;
   //   std::cout << " -------------------------------------  " << std::endl;
   //   std::cout << " armature = " << modelsoft->get_with_armature() << std::endl;
-  //   std::cout << " fout = " << boost::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(datasoft)->fout << std::endl;
+  //   std::cout << " fout = " << std::static_pointer_cast<sobec::DADSoftContact3DAugmentedFrictionFwdDynamics>(datasoft)->fout << std::endl;
   //   // std::cout << modelsoft->get_with_armature() << std::endl;
   //   // std::cout << " Kp, Kv = " << std::endl;
   //   // std::cout << modelsoft->get_Kp() << ", " << modelsoft->get_Kp() << std::endl;
@@ -456,7 +456,7 @@ void test_calcDiff_equivalent_free(DAMSoftContact3DFrictionTypes::Type action_ty
   // create the model
   std::cout << "Test = " << action_type << "_" << ref_type << std::endl;
   DAMSoftContact3DFrictionFactory factory;
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> modelsoft =
+  std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> modelsoft =
       factory.create(action_type, ref_type);
   // Set 0 stiffness and damping
   modelsoft->set_Kp(Eigen::VectorXd::Zero(modelsoft->get_nc()));
@@ -467,7 +467,7 @@ void test_calcDiff_equivalent_free(DAMSoftContact3DFrictionTypes::Type action_ty
   test_calcDiff_free(modelsoft, Eigen::VectorXd::Zero(modelsoft->get_state()->get_nv()));
   // Test that freeFwdDyn = SoftContact(Kp=0;Kv=0), WITH armature
   test_calcDiff_free(modelsoft, 1e-3*Eigen::VectorXd::Ones(modelsoft->get_state()->get_nv()));
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> modelsoft2 =
+  std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> modelsoft2 =
       factory.create(action_type, ref_type);
   // Set non-zero stiffness and damping
   modelsoft2->set_Kp(Eigen::VectorXd::Ones(modelsoft->get_nc()) * 100.);

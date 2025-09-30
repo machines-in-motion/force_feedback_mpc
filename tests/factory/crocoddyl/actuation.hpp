@@ -9,8 +9,8 @@
 #ifndef FORCE_FEEDBACK_MPC_ACTUATION_FACTORY_HPP_
 #define FORCE_FEEDBACK_MPC_ACTUATION_FACTORY_HPP_
 
-#include "crocoddyl/core/actuation-base.hpp"
-#include "crocoddyl/core/numdiff/actuation.hpp"
+#include <crocoddyl/core/actuation-base.hpp>
+#include <crocoddyl/core/numdiff/actuation.hpp>
 #include "state.hpp"
 
 namespace force_feedback_mpc {
@@ -44,7 +44,7 @@ class ActuationModelFactory {
   explicit ActuationModelFactory();
   ~ActuationModelFactory();
 
-  boost::shared_ptr<crocoddyl::ActuationModelAbstract> create(
+  std::shared_ptr<crocoddyl::ActuationModelAbstract> create(
       ActuationModelTypes::Type actuation_type,
       StateModelTypes::Type state_type) const;
 };
@@ -60,8 +60,8 @@ class ActuationModelFactory {
  * @param u[in]      Control vector
  */
 void updateActuation(
-    const boost::shared_ptr<crocoddyl::ActuationModelAbstract>& model,
-    const boost::shared_ptr<crocoddyl::ActuationDataAbstract>& data,
+    const std::shared_ptr<crocoddyl::ActuationModelAbstract>& model,
+    const std::shared_ptr<crocoddyl::ActuationDataAbstract>& data,
     const Eigen::VectorXd& x, const Eigen::VectorXd& u);
 
 }  // namespace unittest

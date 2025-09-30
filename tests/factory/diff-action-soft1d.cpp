@@ -47,11 +47,11 @@ DAMSoftContact1DFactory::DAMSoftContact1DFactory() {}
 DAMSoftContact1DFactory::~DAMSoftContact1DFactory() {}
 
 
-boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>
+std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>
 DAMSoftContact1DFactory::create(DAMSoftContact1DTypes::Type dam_type,
                               pinocchio::ReferenceFrame ref_type,
                               Vector3MaskType mask_type) const {
-  boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics> action;
+  std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics> action;
   switch (dam_type) {
     // TalosArm 
     case DAMSoftContact1DTypes::
@@ -89,19 +89,19 @@ DAMSoftContact1DFactory::create(DAMSoftContact1DTypes::Type dam_type,
 }
 
 
-boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>
+std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>
 DAMSoftContact1DFactory::create_augmentedDAMSoft1D(StateModelTypes::Type state_type,
                                                  ActuationModelTypes::Type actuation_type,
                                                  pinocchio::ReferenceFrame ref_type,
                                                  Vector3MaskType mask_type) const {
-  boost::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics> action;
-  boost::shared_ptr<crocoddyl::StateMultibody> state;
-  boost::shared_ptr<crocoddyl::ActuationModelAbstract> actuation;
-  boost::shared_ptr<crocoddyl::ContactModelMultiple> contact;
-  boost::shared_ptr<crocoddyl::CostModelSum> cost;
-  state = boost::static_pointer_cast<crocoddyl::StateMultibody>(StateModelFactory().create(state_type));
+  std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics> action;
+  std::shared_ptr<crocoddyl::StateMultibody> state;
+  std::shared_ptr<crocoddyl::ActuationModelAbstract> actuation;
+  std::shared_ptr<crocoddyl::ContactModelMultiple> contact;
+  std::shared_ptr<crocoddyl::CostModelSum> cost;
+  state = std::static_pointer_cast<crocoddyl::StateMultibody>(StateModelFactory().create(state_type));
   actuation = ActuationModelFactory().create(actuation_type, state_type);
-  cost = boost::make_shared<crocoddyl::CostModelSum>(state, actuation->get_nu());
+  cost = std::make_shared<crocoddyl::CostModelSum>(state, actuation->get_nu());
   std::string frameName = "";
 
   switch (state_type) {
@@ -135,12 +135,13 @@ DAMSoftContact1DFactory::create_augmentedDAMSoft1D(StateModelTypes::Type state_t
   Eigen::VectorXd Kp = Eigen::VectorXd::Ones(1)*100;
   Eigen::VectorXd Kv = Eigen::VectorXd::Ones(1)*10;
   Eigen::Vector3d oPc = Eigen::Vector3d::Zero();
-  action = boost::make_shared<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>(
+  std::shared_ptr<crocoddyl::ConstraintModelManager> constraint = std::make_shared<crocoddyl::ConstraintModelManager>(state, actuation->get_nu());
+  action = std::make_shared<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>(
       state, 
       actuation, 
       cost, 
       state->get_pinocchio()->getFrameId(frameName), 
-      Kp, Kv, oPc, ref_type, mask_type);
+      Kp, Kv, oPc, mask_type, constraint);
   action->set_force_des(Eigen::VectorXd::Zero(1));
   action->set_force_weight(Eigen::VectorXd::Ones(1)*0.01);
   action->set_with_force_cost(true);
@@ -150,6 +151,7 @@ DAMSoftContact1DFactory::create_augmentedDAMSoft1D(StateModelTypes::Type state_t
   action->set_force_rate_reg_weight(1e-6*Eigen::VectorXd::Ones(1));
   pinocchio::ReferenceFrame cost_ref = pinocchio::LOCAL;
   action->set_cost_ref(cost_ref);
+  action->set_ref(ref_type);
   return action;
 }
 

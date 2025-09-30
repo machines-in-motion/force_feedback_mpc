@@ -69,9 +69,9 @@ class DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl
    * 
    */
   DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl(
-      boost::shared_ptr<StateMultibody> state,
-      boost::shared_ptr<ActuationModelAbstract> actuation,
-      boost::shared_ptr<CostModelSum> costs,
+      std::shared_ptr<StateMultibody> state,
+      std::shared_ptr<ActuationModelAbstract> actuation,
+      std::shared_ptr<CostModelSum> costs,
       const pinocchio::FrameIndex frameId,
       const VectorXs& Kp, 
       const VectorXs& Kv,
@@ -89,7 +89,7 @@ class DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl
    * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+  virtual void calc(const std::shared_ptr<DifferentialActionDataAbstract>& data, 
                     const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& f,
                     const Eigen::Ref<const VectorXs>& u);
@@ -103,7 +103,7 @@ class DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
    */
-  virtual void calc(const boost::shared_ptr<DifferentialActionDataAbstract>& data, 
+  virtual void calc(const std::shared_ptr<DifferentialActionDataAbstract>& data, 
                     const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& f);
 
@@ -116,7 +116,7 @@ class DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
   virtual void calcDiff(
-      const boost::shared_ptr<DifferentialActionDataAbstract>& data,
+      const std::shared_ptr<DifferentialActionDataAbstract>& data,
       const Eigen::Ref<const VectorXs>& x, 
       const Eigen::Ref<const VectorXs>& f, 
       const Eigen::Ref<const VectorXs>& u);
@@ -129,7 +129,7 @@ class DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl
    * @param[in] f     Force point \f$\mathbf{f}\in\mathbb{R}^{nc}\f$
    */
   virtual void calcDiff(
-      const boost::shared_ptr<DifferentialActionDataAbstract>& data,
+      const std::shared_ptr<DifferentialActionDataAbstract>& data,
       const Eigen::Ref<const VectorXs>& x,
       const Eigen::Ref<const VectorXs>& f);
   
@@ -138,7 +138,7 @@ class DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl
    *
    * @return soft contact forward-dynamics data
    */
-  virtual boost::shared_ptr<DifferentialActionDataAbstract> createData();
+  virtual std::shared_ptr<DifferentialActionDataAbstract> createData();
 
   const Scalar get_mu() const { return mu_; };
   void set_mu(const Scalar inMu) { mu_ = inMu; };

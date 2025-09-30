@@ -49,9 +49,9 @@ class LPFJointListFactory {
   ~LPFJointListFactory();
 
   std::vector<std::string> create_names(
-      boost::shared_ptr<pinocchio::Model> model,
+      std::shared_ptr<pinocchio::Model> model,
       LPFJointMaskType lpf_mask_type) const;
-  std::vector<int> create_ids(boost::shared_ptr<pinocchio::Model> model,
+  std::vector<int> create_ids(std::shared_ptr<pinocchio::Model> model,
                               LPFJointMaskType lpf_mask_type) const;
 };
 
@@ -74,7 +74,7 @@ class StateLPFModelFactory {
   explicit StateLPFModelFactory();
   ~StateLPFModelFactory();
 
-  boost::shared_ptr<force_feedback_mpc::lpf::StateLPF> create(
+  std::shared_ptr<force_feedback_mpc::lpf::StateLPF> create(
       StateLPFModelTypes::Type state_type,
       LPFJointMaskType lpf_mask_type = LPFJointMaskType::ALL) const;
 };

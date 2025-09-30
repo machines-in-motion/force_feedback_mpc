@@ -53,10 +53,10 @@ std::ostream& operator<<(std::ostream& os,
 DAMSoftContact3DFrictionFactory::DAMSoftContact3DFrictionFactory() {}
 DAMSoftContact3DFrictionFactory::~DAMSoftContact3DFrictionFactory() {}
 
-boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics>
+std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics>
 DAMSoftContact3DFrictionFactory::create(DAMSoftContact3DFrictionTypes::Type dam_type,
                               PinocchioReferenceTypes::Type ref_type) const {
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> action;
+  std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> action;
   switch (dam_type) {
     // TalosArm 
     case DAMSoftContact3DFrictionTypes::
@@ -93,18 +93,18 @@ DAMSoftContact3DFrictionFactory::create(DAMSoftContact3DFrictionTypes::Type dam_
   return action;
 }
 
-boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics>
+std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics>
 DAMSoftContact3DFrictionFactory::create_augmentedDAMSoft3DFriction(StateModelTypes::Type state_type,
                                                  ActuationModelTypes::Type actuation_type,
                                                  PinocchioReferenceTypes::Type ref_type) const {
-  boost::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> action;
-  boost::shared_ptr<crocoddyl::StateMultibody> state;
-  boost::shared_ptr<crocoddyl::ActuationModelAbstract> actuation;
-  boost::shared_ptr<crocoddyl::ContactModelMultiple> contact;
-  boost::shared_ptr<crocoddyl::CostModelSum> cost;
-  state = boost::static_pointer_cast<crocoddyl::StateMultibody>(StateModelFactory().create(state_type));
+  std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> action;
+  std::shared_ptr<crocoddyl::StateMultibody> state;
+  std::shared_ptr<crocoddyl::ActuationModelAbstract> actuation;
+  std::shared_ptr<crocoddyl::ContactModelMultiple> contact;
+  std::shared_ptr<crocoddyl::CostModelSum> cost;
+  state = std::static_pointer_cast<crocoddyl::StateMultibody>(StateModelFactory().create(state_type));
   actuation = ActuationModelFactory().create(actuation_type, state_type);
-  cost = boost::make_shared<crocoddyl::CostModelSum>(state, actuation->get_nu());
+  cost = std::make_shared<crocoddyl::CostModelSum>(state, actuation->get_nu());
   std::string frameName = "";
 
   pinocchio::ReferenceFrame pinRefFrame;
@@ -154,7 +154,7 @@ DAMSoftContact3DFrictionFactory::create_augmentedDAMSoft3DFriction(StateModelTyp
   Eigen::VectorXd Kp = Eigen::VectorXd::Ones(3)*100;
   Eigen::VectorXd Kv = Eigen::VectorXd::Ones(3)*10;
   Eigen::Vector3d oPc = Eigen::Vector3d::Zero();
-  action = boost::make_shared<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics>(
+  action = std::make_shared<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics>(
       state, 
       actuation, 
       cost, 

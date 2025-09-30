@@ -41,18 +41,22 @@ class IntegratedActionDataLPF : public crocoddyl::ActionDataAbstract {
     differential = model->get_differential()->createData();
     const std::size_t& ndy = model->get_state()->get_ndx();
     dy = VectorXs::Zero(ndy);
+    Gy.resize(model->get_ng(), model->get_state()->get_ndx());
+    Gy.setZero();
+    Gu.resize(model->get_ng(), model->get_nu());
+    Gu.setZero();
     // for wlim cost
-    activation = boost::static_pointer_cast<ActivationDataQuadraticBarrier>(
+    activation = std::static_pointer_cast<ActivationDataQuadraticBarrier>(
         model->activation_model_tauLim_->createData());
   }
   virtual ~IntegratedActionDataLPF() {}
 
-  boost::shared_ptr<DifferentialActionDataAbstract> differential;
+  std::shared_ptr<DifferentialActionDataAbstract> differential;
   VectorXs dy;
 
   // PinocchioData pinocchio;                                       // for reg
   // cost
-  boost::shared_ptr<ActivationDataQuadraticBarrier> activation;  // for lim cost
+  std::shared_ptr<ActivationDataQuadraticBarrier> activation;  // for lim cost
 
   using Base::cost;
   using Base::r;
@@ -66,6 +70,7 @@ class IntegratedActionDataLPF : public crocoddyl::ActionDataAbstract {
   MatrixXs& Lyy = Base::Lxx;
   MatrixXs& Lyw = Base::Lxu;
   MatrixXs& Lww = Base::Luu;
+  MatrixXs& Gy = Base::Gx;
 };
 
 
@@ -86,37 +91,37 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
   typedef crocoddyl::ActivationBoundsTpl<double> ActivationBounds;
 
   IntegratedActionModelLPF(
-      boost::shared_ptr<DifferentialActionModelAbstract> model,
+      std::shared_ptr<DifferentialActionModelAbstract> model,
       std::vector<std::string> lpf_joint_names = {},
       const double& time_step = double(1e-3),
       const bool& with_cost_residual = true, const double& fc = 0,
       const bool& tau_plus_integration = true, const int& filter = 0);
   virtual ~IntegratedActionModelLPF();
 
-  virtual void calc(const boost::shared_ptr<ActionDataAbstract>& data,
+  virtual void calc(const std::shared_ptr<ActionDataAbstract>& data,
                     const Eigen::Ref<const VectorXs>& y,
                     const Eigen::Ref<const VectorXs>& w);
 
-  virtual void calc(const boost::shared_ptr<ActionDataAbstract>& data,
+  virtual void calc(const std::shared_ptr<ActionDataAbstract>& data,
                     const Eigen::Ref<const VectorXs>& y);
 
-  virtual void calcDiff(const boost::shared_ptr<ActionDataAbstract>& data,
+  virtual void calcDiff(const std::shared_ptr<ActionDataAbstract>& data,
                         const Eigen::Ref<const VectorXs>& y,
                         const Eigen::Ref<const VectorXs>& w);
 
-  virtual void calcDiff(const boost::shared_ptr<ActionDataAbstract>& data,
+  virtual void calcDiff(const std::shared_ptr<ActionDataAbstract>& data,
                         const Eigen::Ref<const VectorXs>& y);
 
-  virtual boost::shared_ptr<ActionDataAbstract> createData();
-  virtual bool checkData(const boost::shared_ptr<ActionDataAbstract>& data);
+  virtual std::shared_ptr<ActionDataAbstract> createData();
+  virtual bool checkData(const std::shared_ptr<ActionDataAbstract>& data);
 
-  virtual void quasiStatic(const boost::shared_ptr<ActionDataAbstract>& data,
+  virtual void quasiStatic(const std::shared_ptr<ActionDataAbstract>& data,
                            Eigen::Ref<VectorXs> u,
                            const Eigen::Ref<const VectorXs>& x,
                            const std::size_t maxiter = 100,
                            const double tol = double(1e-9));
 
-  const boost::shared_ptr<DifferentialActionModelAbstract>& get_differential()
+  const std::shared_ptr<DifferentialActionModelAbstract>& get_differential()
       const;
   const double& get_dt() const;
   const double& get_fc() const;
@@ -141,8 +146,17 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
   void set_fc(const double& fc);
   void set_alpha(const double& alpha);
   void set_differential(
-      boost::shared_ptr<DifferentialActionModelAbstract> model);
+      std::shared_ptr<DifferentialActionModelAbstract> model);
 
+  void set_with_lpf_torque_constraint(const bool inBool) {with_lpf_torque_constraint_ = inBool; };
+  const bool& get_with_lpf_torque_constraint() const { return with_lpf_torque_constraint_; };
+
+  void set_lpf_torque_lb(const VectorXs& inVec); //{ lpf_torque_lb_ = inVec; };
+  const VectorXs& get_lpf_torque_lb() const { return lpf_torque_lb_; };
+
+  void set_lpf_torque_ub(const VectorXs& inVec); // { lpf_torque_ub_ = inVec; };
+  const VectorXs& get_lpf_torque_ub() const { return lpf_torque_ub_; };
+  
   // hard-coded costs
   void set_control_reg_cost(const double& cost_weight_w_reg,
                             const VectorXs& cost_ref_w_reg);
@@ -150,10 +164,24 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
 
   void compute_alpha(const double& fc);
 
+  /**
+   * @brief Modify the lower bound of the inequality constraints
+   */
+  void set_g_lb(const VectorXs& g_lb);
+
+  /**
+   * @brief Modify the upper bound of the inequality constraints
+   */
+  void set_g_ub(const VectorXs& g_ub);
+
+
  protected:
   using Base::has_control_limits_;  //!< Indicates whether any of the control
                                     //!< limits are active
   using Base::nr_;                  //!< Dimension of the cost residual
+  using Base::ng_;                  //!< Number of inequality constraints
+  using Base::g_lb_;                //!< Lower bound of the inequality constraints
+  using Base::g_ub_;                //!< Upper bound of the inequality constraints
   using Base::nu_;                  //!< Control dimension
   using Base::u_lb_;                //!< Lower control limits
   using Base::u_ub_;                //!< Upper control limits
@@ -164,29 +192,26 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
   using Base::state_;  //!< Model of the state
 
  public:
-  boost::shared_ptr<ActivationModelQuadraticBarrier>
+  std::shared_ptr<ActivationModelQuadraticBarrier>
       activation_model_tauLim_;  //!< for lim cost
 
  private:
-  boost::shared_ptr<DifferentialActionModelAbstract> differential_;
+  std::shared_ptr<DifferentialActionModelAbstract> differential_;
   double time_step_;
   double time_step2_;
   double alpha_;
   bool with_cost_residual_;
   double fc_;
-  // bool enable_integration_;
   double tauReg_weight_;  //!< Cost weight for unfiltered torque regularization
   VectorXs tauReg_reference_;  //!< Cost reference for unfiltered torque
                                //!< regularization
   VectorXs tauReg_residual_,
       tauLim_residual_;  //!< Residuals for LPF torques reg and lim
-  // bool gravity_reg_;                          //!< Use gravity torque for
-  // unfiltered torque reg, or user-provided reference?
   double tauLim_weight_;       //!< Cost weight for unfiltered torque limits
   bool tau_plus_integration_;  //!< Use tau+ = LPF(tau,w) in acceleration
                                //!< computation, or tau
   int filter_;                 //!< Type of LPF used>
-  boost::shared_ptr<PinocchioModel> pin_model_;  //!< for reg cost
+  std::shared_ptr<PinocchioModel> pin_model_;  //!< for reg cost
   bool is_terminal_;  //!< is it a terminal model or not ? (deactivate cost on w
                       //!< if true)
   std::vector<std::string>
@@ -202,6 +227,11 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
                                          //!< low-pass filtered
   std::vector<int> non_lpf_torque_ids_;  //!< Vector of torque ids that are NOT
                                          //!< low-passs filtered
+  bool with_lpf_torque_constraint_; // Add box constraint on the LPF torques dimensions
+  VectorXs lpf_torque_lb_;
+  VectorXs lpf_torque_ub_;
+  VectorXs g_lb_new_;
+  VectorXs g_ub_new_;
 };
 
 
@@ -209,3 +239,34 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
 }  // namespace force_feedback_mpc
 
 #endif  // FORCE_FEEDBACK_MPC_LPF_HPP_
+
+// Same logic as in Proxsuite and Pinocchio to check eigen malloc
+#ifdef FORCE_FEEDBACK_MPC_EIGEN_CHECK_MALLOC
+#ifndef EIGEN_RUNTIME_NO_MALLOC
+#define EIGEN_RUNTIME_NO_MALLOC_WAS_NOT_DEFINED
+#define EIGEN_RUNTIME_NO_MALLOC
+#endif
+#endif
+
+
+#include <Eigen/Core>
+#include <cassert>
+
+#ifdef FORCE_FEEDBACK_MPC_EIGEN_CHECK_MALLOC
+#ifdef EIGEN_RUNTIME_NO_MALLOC_WAS_NOT_DEFINED
+#undef EIGEN_RUNTIME_NO_MALLOC
+#undef EIGEN_RUNTIME_NO_MALLOC_WAS_NOT_DEFINED
+#endif
+#endif
+
+// Check memory allocation for Eigen
+#ifdef FORCE_FEEDBACK_MPC_EIGEN_CHECK_MALLOC
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC(allowed)                                       \
+  ::Eigen::internal::set_is_malloc_allowed(allowed)
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED() FORCE_FEEDBACK_MPC_EIGEN_MALLOC(true)
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED() FORCE_FEEDBACK_MPC_EIGEN_MALLOC(false)
+#else
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC(allowed)
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED()
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED()
+#endif
