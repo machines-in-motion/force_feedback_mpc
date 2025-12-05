@@ -1,4 +1,5 @@
 set(${PY_NAME}_SOURCES
+  include/${PROJECT_NAME}/python.hpp
   lowpassfilter/state.cpp
   lowpassfilter/action.cpp
   softcontact/state.cpp
@@ -9,7 +10,7 @@ set(${PY_NAME}_SOURCES
   frictioncone/residual-friction-cone.cpp
   frictioncone/residual-friction-cone-augmented.cpp
   main.cpp
-  )
+)
 
 add_library(${PY_NAME}_pywrap SHARED ${${PY_NAME}_SOURCES})
 target_link_libraries(${PY_NAME}_pywrap PUBLIC ${PROJECT_NAME} eigenpy::eigenpy)

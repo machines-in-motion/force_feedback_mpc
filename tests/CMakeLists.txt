@@ -32,13 +32,8 @@ set(${PROJECT_NAME}_FACTORY_TEST
   )
 
 add_library(${PROJECT_NAME}_unittest SHARED ${${PROJECT_NAME}_FACTORY_TEST})
-add_project_dependency(example-robot-data 4.0.9 REQUIRED PKG_CONFIG_REQUIRES
-"example-robot-data >= 4.0.9")
-# add_project_dependency(pinocchio REQUIRED)
-# add_project_dependency(crocoddyl REQUIRED)
-target_link_libraries(
-  ${PROJECT_NAME}_unittest PUBLIC ${PROJECT_NAME}
-                                  example-robot-data::example-robot-data)
+target_link_libraries(${PROJECT_NAME}_unittest PUBLIC ${PROJECT_NAME}
+  example-robot-data::example-robot-data)
 
 # add_unit_test(test_states test_states.cpp)
 # target_link_libraries(test_states PUBLIC ${PROJECT_NAME}_unittest)
@@ -69,8 +64,6 @@ target_link_libraries(test_actions_soft PUBLIC ${PROJECT_NAME}_unittest)
 
 # ADD_UNIT_TEST(test_diff_actions_soft3d_friction test_diff_actions_soft3d_friction.cpp)
 # target_link_libraries(test_diff_actions_soft3d_friction PUBLIC ${PROJECT_NAME}_unittest)
-
-
 
 if(BUILD_PYTHON_INTERFACE)
   add_subdirectory(python)

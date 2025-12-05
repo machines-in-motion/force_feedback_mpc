@@ -19,18 +19,25 @@ set(PROJECT_USE_CMAKE_EXPORT TRUE)
 set(CUSTOM_HEADER_DIR ${PROJECT_NAME})
 
 # Check if the submodule cmake have been initialized
-set(JRL_CMAKE_MODULES "${CMAKE_CURRENT_LIST_DIR}/cmake")
-IF(NOT EXISTS "${CMAKE_SOURCE_DIR}/cmake/base.cmake")
-  IF(${CMAKE_VERSION} VERSION_LESS "3.14.0")
-    MESSAGE(FATAL_ERROR "\nPlease run the following command first:\ngit submodule update --init\n")
-  ELSE()
-    include(FetchContent)
-    FetchContent_Declare("jrl-cmakemodules"
-      GIT_REPOSITORY "https://github.com/jrl-umi3218/jrl-cmakemodules.git")
-    FetchContent_MakeAvailable("jrl-cmakemodules")
-    FetchContent_GetProperties("jrl-cmakemodules" SOURCE_DIR JRL_CMAKE_MODULES)
-  ENDIF()
-ENDIF()
+find_package(jrl-cmakemodules QUIET CONFIG)
+if(jrl-cmakemodules_FOUND)
+  message(STATUS "JRL cmakemodules found on system at ${JRL_CMAKE_MODULES}")
+  get_property(
+    JRL_CMAKE_MODULES
+    TARGET jrl-cmakemodules::jrl-cmakemodules
+    PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+elseif(EXISTS "${CMAKE_SOURCE_DIR}/cmake/base.cmake")
+  message(STATUS "JRL cmakemodules found in the source tree.")
+  set(JRL_CMAKE_MODULES "${CMAKE_SOURCE_DIR}/cmake")
+else()
+  message(STATUS "JRL cmakemodules not found. Let's fetch it.")
+  include(FetchContent)
+  FetchContent_Declare(
+    "jrl-cmakemodules"
+    GIT_REPOSITORY "https://github.com/jrl-umi3218/jrl-cmakemodules.git")
+  FetchContent_MakeAvailable("jrl-cmakemodules")
+  FetchContent_GetProperties("jrl-cmakemodules" SOURCE_DIR JRL_CMAKE_MODULES)
+endif()
 
 # JRL-cmakemodule setup
 include("${JRL_CMAKE_MODULES}/base.cmake")
@@ -47,31 +54,26 @@ add_compile_options(-Wno-error)
 apply_default_apple_configuration()
 
 # Project dependencies
-find_package(Boost REQUIRED COMPONENTS unit_test_framework)
-find_package(OpenMP REQUIRED COMPONENTS CXX)
-
+add_project_dependency(OpenMP REQUIRED COMPONENTS CXX)
 add_project_dependency(crocoddyl REQUIRED)
 add_project_dependency(pinocchio REQUIRED)
-add_project_dependency(example-robot-data 4.0.7 REQUIRED PKG_CONFIG_REQUIRES
-"example-robot-data >= 4.0.7")
-
 if(BUILD_PYTHON_INTERFACE)
   add_project_dependency(eigenpy 3.0.0 REQUIRED)
   FINDPYTHON()
   string(REGEX REPLACE "-" "_" PY_NAME ${PROJECT_NAME})
   set(${PY_NAME}_INSTALL_DIR ${PYTHON_SITELIB}/${PY_NAME})
-  SEARCH_FOR_BOOST_PYTHON()
 endif()
 
 if(CHECK_RUNTIME_MALLOC)
-  message(STATUS "Check if some memory allocations are performed at runtime.")
+  message(STATUS "Check if Eigen memory allocations are performed at runtime.")
   add_definitions(-DFORCE_FEEDBACK_MPC_EIGEN_CHECK_MALLOC)
   add_definitions(-DEIGEN_RUNTIME_NO_MALLOC)
+  message(STATUS "Add debug flags and no optimization. Valgrind can be used.")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -fstack-protector")
 endif()
 
 # Main Library
 set(${PROJECT_NAME}_HEADERS
-  include/${PROJECT_NAME}/python.hpp
   include/${PROJECT_NAME}/lowpassfilter/state.hpp
   include/${PROJECT_NAME}/lowpassfilter/action.hpp
   include/${PROJECT_NAME}/softcontact/state.hpp
@@ -99,35 +101,33 @@ set(${PROJECT_NAME}_SOURCES
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
 target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
-
 if(SUFFIX_SO_VERSION)
   set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION})
 endif()
-
-# Main Executable
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} crocoddyl::crocoddyl)
+target_link_libraries(${PROJECT_NAME} crocoddyl::crocoddyl)
 set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib")
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
 # Python Bindings
 if(BUILD_PYTHON_INTERFACE)
   add_subdirectory(bindings)
+  add_subdirectory(python)
 endif()
 
-# # Benchmarks
-# if(BUILD_BENCHMARKS)
-#   add_subdirectory(benchmarks)
-# endif()
+# Benchmarks
+if(BUILD_BENCHMARKS)
+  add_subdirectory(benchmarks)
+endif()
 
-# # Unit tests
-# add_subdirectory(tests)
-
-# Python packages 
-add_subdirectory(python)
+# Unit tests
+include(CTest)
+if (BUILD_TESTING)
+  add_project_dependency(Boost REQUIRED COMPONENTS unit_test_framework)
+  add_project_dependency(example-robot-data 4.0.9 REQUIRED PKG_CONFIG_REQUIRES
+"example-robot-data >= 4.0.9")
+  add_subdirectory(tests)
+endif()
 
 # Installation
 install(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
 install(FILES package.xml DESTINATION share/${PROJECT_NAME})
-
-# # Add flags for Valgrind (if desired)
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fstack-protector")  # Add debug symbols and no optimization
