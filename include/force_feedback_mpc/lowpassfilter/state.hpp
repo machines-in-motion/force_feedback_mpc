@@ -17,7 +17,10 @@ namespace lpf{
 
 class StateLPF : public crocoddyl::StateAbstract {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+#ifdef CROCODDYL_DERIVED_FLOATINGPOINT_CAST
+  CROCODDYL_DERIVED_FLOATINGPOINT_CAST(base_class, derived_class);
+#endif
 
   typedef crocoddyl::MathBaseTpl<double> MathBase;
   typedef crocoddyl::StateAbstractTpl<double> Base;
