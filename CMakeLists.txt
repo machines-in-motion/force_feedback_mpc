@@ -9,34 +9,36 @@ set(PROJECT_URL https://github.com/${PROJECT_NAMESPACE}/${PROJECT_NAME})
 set(CMAKE_VERBOSE_MAKEFILE on)
 
 # Project options
-option(BUILD_PYTHON_INTERFACE "Build the python binding" ON)
 option(SUFFIX_SO_VERSION "Suffix library name with its version" ON)
 option(CHECK_RUNTIME_MALLOC "Check eigen mallocs" OFF)
 option(BUILD_BENCHMARKS "Build the benchmarks" OFF)
 
 # Project configuration
-set(PROJECT_USE_CMAKE_EXPORT TRUE)
-set(CUSTOM_HEADER_DIR ${PROJECT_NAME})
+if(NOT BUILD_STANDALONE_PYTHON_INTERFACE)
+  set(PROJECT_USE_CMAKE_EXPORT TRUE)
+endif()
 
 # Check if the submodule cmake have been initialized
-find_package(jrl-cmakemodules QUIET CONFIG)
-if(jrl-cmakemodules_FOUND)
-  message(STATUS "JRL cmakemodules found on system at ${JRL_CMAKE_MODULES}")
-  get_property(
-    JRL_CMAKE_MODULES
-    TARGET jrl-cmakemodules::jrl-cmakemodules
-    PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-elseif(EXISTS "${CMAKE_SOURCE_DIR}/cmake/base.cmake")
+if(EXISTS "${CMAKE_SOURCE_DIR}/cmake/base.cmake")
   message(STATUS "JRL cmakemodules found in the source tree.")
   set(JRL_CMAKE_MODULES "${CMAKE_SOURCE_DIR}/cmake")
 else()
-  message(STATUS "JRL cmakemodules not found. Let's fetch it.")
-  include(FetchContent)
-  FetchContent_Declare(
-    "jrl-cmakemodules"
-    GIT_REPOSITORY "https://github.com/jrl-umi3218/jrl-cmakemodules.git")
-  FetchContent_MakeAvailable("jrl-cmakemodules")
-  FetchContent_GetProperties("jrl-cmakemodules" SOURCE_DIR JRL_CMAKE_MODULES)
+  find_package(jrl-cmakemodules QUIET CONFIG)
+  if(jrl-cmakemodules_FOUND)
+    get_property(
+      JRL_CMAKE_MODULES
+      TARGET jrl-cmakemodules::jrl-cmakemodules
+      PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+    message(STATUS "JRL cmakemodules found on system at ${JRL_CMAKE_MODULES}")
+  else()
+    message(STATUS "JRL cmakemodules not found. Let's fetch it.")
+    include(FetchContent)
+    FetchContent_Declare(
+      "jrl-cmakemodules"
+      GIT_REPOSITORY "https://github.com/jrl-umi3218/jrl-cmakemodules.git")
+    FetchContent_MakeAvailable("jrl-cmakemodules")
+    FetchContent_GetProperties("jrl-cmakemodules" SOURCE_DIR JRL_CMAKE_MODULES)
+  endif()
 endif()
 
 # JRL-cmakemodule setup
@@ -50,7 +52,6 @@ COMPUTE_PROJECT_ARGS(PROJECT_ARGS LANGUAGES CXX)
 project(${PROJECT_NAME} ${PROJECT_ARGS})
 
 add_compile_options(-Wno-error)
-
 apply_default_apple_configuration()
 
 # Project dependencies
@@ -73,40 +74,43 @@ if(CHECK_RUNTIME_MALLOC)
 endif()
 
 # Main Library
-set(${PROJECT_NAME}_HEADERS
-  include/${PROJECT_NAME}/lowpassfilter/state.hpp
-  include/${PROJECT_NAME}/lowpassfilter/action.hpp
-  include/${PROJECT_NAME}/softcontact/state.hpp
-  include/${PROJECT_NAME}/softcontact/dam-augmented.hpp
-  include/${PROJECT_NAME}/softcontact/dam3d-augmented.hpp
-  include/${PROJECT_NAME}/softcontact/dam1d-augmented.hpp
-  include/${PROJECT_NAME}/softcontact/iam-augmented.hpp
-  # include/${PROJECT_NAME}/softcontact/multicontact.hpp
-  include/${PROJECT_NAME}/frictioncone/residual-friction-cone.hpp
-  include/${PROJECT_NAME}/frictioncone/residual-friction-cone-augmented.hpp
-)
+if(BUILD_STANDALONE_PYTHON_INTERFACE)
+  add_project_dependency(${PROJECT_NAME} REQUIRED CONFIG)
+else()
+  set(${PROJECT_NAME}_HEADERS
+    include/${PROJECT_NAME}/lowpassfilter/state.hpp
+    include/${PROJECT_NAME}/lowpassfilter/action.hpp
+    include/${PROJECT_NAME}/softcontact/state.hpp
+    include/${PROJECT_NAME}/softcontact/dam-augmented.hpp
+    include/${PROJECT_NAME}/softcontact/dam3d-augmented.hpp
+    include/${PROJECT_NAME}/softcontact/dam1d-augmented.hpp
+    include/${PROJECT_NAME}/softcontact/iam-augmented.hpp
+    # include/${PROJECT_NAME}/softcontact/multicontact.hpp
+    include/${PROJECT_NAME}/frictioncone/residual-friction-cone.hpp
+    include/${PROJECT_NAME}/frictioncone/residual-friction-cone-augmented.hpp
+  )
+  set(${PROJECT_NAME}_SOURCES
+    src/lowpassfilter/state.cpp
+    src/lowpassfilter/action.cpp
+    src/softcontact/state.cpp
+    src/softcontact/dam-augmented.cpp
+    src/softcontact/dam3d-augmented.cpp
+    src/softcontact/dam1d-augmented.cpp
+    src/softcontact/iam-augmented.cpp
+    # src/softcontact/multicontact.cpp
+    src/frictioncone/residual-friction-cone.cpp
+    src/frictioncone/residual-friction-cone-augmented.cpp
+  )
 
-set(${PROJECT_NAME}_SOURCES
-  src/lowpassfilter/state.cpp
-  src/lowpassfilter/action.cpp
-  src/softcontact/state.cpp
-  src/softcontact/dam-augmented.cpp
-  src/softcontact/dam3d-augmented.cpp
-  src/softcontact/dam1d-augmented.cpp
-  src/softcontact/iam-augmented.cpp
-  # src/softcontact/multicontact.cpp
-  src/frictioncone/residual-friction-cone.cpp
-  src/frictioncone/residual-friction-cone-augmented.cpp
-)
-
-add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
-target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
-if(SUFFIX_SO_VERSION)
-  set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION})
+  add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
+  target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
+  if(SUFFIX_SO_VERSION)
+    set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION})
+  endif()
+  target_link_libraries(${PROJECT_NAME} crocoddyl::crocoddyl)
+  set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib")
+  set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 endif()
-target_link_libraries(${PROJECT_NAME} crocoddyl::crocoddyl)
-set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib")
-set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
 # Python Bindings
 if(BUILD_PYTHON_INTERFACE)
@@ -120,14 +124,18 @@ if(BUILD_BENCHMARKS)
 endif()
 
 # Unit tests
-include(CTest)
-if (BUILD_TESTING)
+if(BUILD_TESTING AND NOT BUILD_STANDALONE_PYTHON_INTERFACE)
   add_project_dependency(Boost REQUIRED COMPONENTS unit_test_framework)
   add_project_dependency(example-robot-data 4.0.9 REQUIRED PKG_CONFIG_REQUIRES
 "example-robot-data >= 4.0.9")
   add_subdirectory(tests)
 endif()
+if(BUILD_TESTING AND BUILD_PYTHON_INTERFACE)
+  add_subdirectory(tests/python)
+endif()
 
 # Installation
-install(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
-install(FILES package.xml DESTINATION share/${PROJECT_NAME})
+if(NOT BUILD_STANDALONE_PYTHON_INTERFACE)
+  install(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
+  install(FILES package.xml DESTINATION share/${PROJECT_NAME})
+endif()

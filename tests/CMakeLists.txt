@@ -64,7 +64,3 @@ target_link_libraries(test_actions_soft PUBLIC ${PROJECT_NAME}_unittest)
 
 # ADD_UNIT_TEST(test_diff_actions_soft3d_friction test_diff_actions_soft3d_friction.cpp)
 # target_link_libraries(test_diff_actions_soft3d_friction PUBLIC ${PROJECT_NAME}_unittest)
-
-if(BUILD_PYTHON_INTERFACE)
-  add_subdirectory(python)
-endif()
