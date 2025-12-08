@@ -6,7 +6,7 @@
 // individual files. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "force_feedback_mpc/python.hpp"
+#include "python.hpp"
 #include "force_feedback_mpc/softcontact/iam-augmented.hpp"
 
 #include <eigenpy/std-vector.hpp>

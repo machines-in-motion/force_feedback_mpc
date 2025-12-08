@@ -103,6 +103,7 @@ else()
   )
 
   add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
+  add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
   if(SUFFIX_SO_VERSION)
     set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION})

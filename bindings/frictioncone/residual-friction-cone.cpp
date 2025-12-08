@@ -6,7 +6,7 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "force_feedback_mpc/python.hpp"
+#include "python.hpp"
 #include "force_feedback_mpc/frictioncone/residual-friction-cone.hpp"
 
 namespace force_feedback_mpc {
