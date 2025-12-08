@@ -50,7 +50,7 @@ struct CostModelNoFFTypes {
   static const std::vector<Type> all;
 };
 
-#ifdef PINOCCHIO_WITH_HPP_FCL
+#if defined(PINOCCHIO_WITH_HPP_FCL) && defined(CROCODDYL_WITH_PAIR_COLLISION)
 struct CostModelCollisionTypes {
   enum Type { CostModelResidualPairCollision, NbCostModelCollisionTypes };
   static std::vector<Type> init_all() {
@@ -63,13 +63,13 @@ struct CostModelCollisionTypes {
   }
   static const std::vector<Type> all;
 };
-#endif  // PINOCCHIO_WITH_HPP_FCL
+#endif  // PINOCCHIO_WITH_HPP_FCL && CROCODDYL_WITH_PAIR_COLLISION
 
 std::ostream& operator<<(std::ostream& os, CostModelTypes::Type type);
 std::ostream& operator<<(std::ostream& os, CostModelNoFFTypes::Type type);
-#ifdef PINOCCHIO_WITH_HPP_FCL
+#if defined(PINOCCHIO_WITH_HPP_FCL) && defined(CROCODDYL_WITH_PAIR_COLLISION)
 std::ostream& operator<<(std::ostream& os, CostModelCollisionTypes::Type type);
-#endif  // PINOCCHIO_WITH_HPP_FCL
+#endif  // PINOCCHIO_WITH_HPP_FCL && CROCODDYL_WITH_PAIR_COLLISION
 
 class CostModelFactory {
  public:
@@ -91,11 +91,11 @@ class CostModelFactory {
       ActivationModelTypes::Type activation_type,
       std::size_t nu = std::numeric_limits<std::size_t>::max()) const;
 
-#ifdef PINOCCHIO_WITH_HPP_FCL
+#if defined(PINOCCHIO_WITH_HPP_FCL) && defined(CROCODDYL_WITH_PAIR_COLLISION)
   std::shared_ptr<crocoddyl::CostModelAbstract> create(
       CostModelCollisionTypes::Type cost_type, StateModelTypes::Type state_type,
       std::size_t nu = std::numeric_limits<std::size_t>::max()) const;
-#endif  // PINOCCHIO_WITH_HPP_FCL
+#endif  // PINOCCHIO_WITH_HPP_FCL && CROCODDYL_WITH_PAIR_COLLISION
 };
 
 std::shared_ptr<crocoddyl::CostModelAbstract> create_random_cost(
