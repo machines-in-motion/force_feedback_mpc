@@ -21,11 +21,10 @@ RANDOM_SEED = 1 #19
 
 
 from force_feedback_mpc.core_mpc_utils import path_utils, misc_utils, mpc_utils
-
-from croco_mpc_utils import pinocchio_utils as pin_utils
-
 from force_feedback_mpc.lpf_mpc.data import OCPDataHandlerLPF
 from force_feedback_mpc.lpf_mpc.ocp import OptimalControlProblemLPF, getJointAndStateIds
+
+from croco_mpc_utils import pinocchio_utils as pin_utils
 from croco_mpc_utils.utils import load_yaml_file
 
 import mim_solvers
