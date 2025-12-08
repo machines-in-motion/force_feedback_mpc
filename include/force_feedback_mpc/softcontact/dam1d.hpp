@@ -37,6 +37,8 @@ class DifferentialActionModelSoftContact1DFwdDynamicsTpl
     : public crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<_Scalar> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  CROCODDYL_DERIVED_CAST(crocoddyl::DifferentialActionModelFreeFwdDynamicsBase,
+                         DifferentialActionModelSoftContact1DFwdDynamicsTpl)
 
   typedef _Scalar Scalar;
   typedef crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<Scalar> Base;
@@ -124,8 +126,8 @@ class DifferentialActionModelSoftContact1DFwdDynamicsTpl
   virtual void calcDiff(
       const std::shared_ptr<DifferentialActionDataAbstract>& data,
       const Eigen::Ref<const VectorXs>& x);
-  
-    /**
+
+  /**
    * @brief Create the soft contact forward-dynamics data
    *
    * @return soft contact forward-dynamics data

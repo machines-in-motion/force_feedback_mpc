@@ -157,6 +157,13 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   virtual void calcDiff(const std::shared_ptr<ActionDataAbstract>& data,
                         const Eigen::Ref<const VectorXs>& y);
 
+  virtual std::shared_ptr<crocoddyl::ActionModelBase> cloneAsDouble() const {
+    return std::make_shared<IAMSoftContactAugmented>(*this);
+  }
+  virtual std::shared_ptr<crocoddyl::ActionModelBase> cloneAsFloat() const {
+    return std::make_shared<IAMSoftContactAugmented>(*this);
+  }
+
   virtual std::shared_ptr<ActionDataAbstract> createData();
 
   virtual bool checkData(const std::shared_ptr<ActionDataAbstract>& data);

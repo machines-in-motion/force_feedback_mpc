@@ -17,11 +17,6 @@ namespace lpf{
 
 class StateLPF : public crocoddyl::StateAbstract {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-#ifdef CROCODDYL_DERIVED_FLOATINGPOINT_CAST
-  CROCODDYL_DERIVED_FLOATINGPOINT_CAST(base_class, derived_class);
-#endif
-
   typedef crocoddyl::MathBaseTpl<double> MathBase;
   typedef crocoddyl::StateAbstractTpl<double> Base;
   typedef typename MathBase::VectorXs VectorXs;
@@ -56,6 +51,12 @@ class StateLPF : public crocoddyl::StateAbstract {
                                    const Eigen::Ref<const VectorXs>& dy,
                                    Eigen::Ref<MatrixXs> Jin,
                                    const crocoddyl::Jcomponent firstsecond) const;
+  std::shared_ptr<crocoddyl::StateBase> cloneAsDouble() const override {
+    return std::make_shared<StateLPF>(*this);
+  }
+  std::shared_ptr<crocoddyl::StateBase> cloneAsFloat() const override {
+    return std::make_shared<StateLPF>(*this);
+  }
 
   const std::shared_ptr<pinocchio::ModelTpl<double> >& get_pinocchio() const;
   const std::size_t& get_ntau() const;
