@@ -127,8 +127,7 @@ endif()
 # Unit tests
 if(BUILD_TESTING AND NOT BUILD_STANDALONE_PYTHON_INTERFACE)
   add_project_dependency(Boost REQUIRED COMPONENTS unit_test_framework)
-  add_project_dependency(example-robot-data 4.0.9 REQUIRED PKG_CONFIG_REQUIRES
-"example-robot-data >= 4.0.9")
+  add_project_dependency(example-robot-data 4.0.9 REQUIRED)
   add_subdirectory(tests)
 endif()
 if(BUILD_TESTING AND BUILD_PYTHON_INTERFACE)
@@ -138,5 +137,4 @@ endif()
 # Installation
 if(NOT BUILD_STANDALONE_PYTHON_INTERFACE)
   install(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
-  install(FILES package.xml DESTINATION share/${PROJECT_NAME})
 endif()
