@@ -14,7 +14,6 @@
 #include <crocoddyl/core/utils/exception.hpp>
 #include <crocoddyl/multibody/actuations/floating-base.hpp>
 #include <crocoddyl/multibody/actuations/full.hpp>
-// #include <crocoddyl/multibody/actuations/multicopter-base.hpp>
 
 namespace force_feedback_mpc {
 namespace unittest {
