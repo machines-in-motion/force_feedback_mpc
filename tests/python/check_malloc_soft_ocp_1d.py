@@ -20,7 +20,10 @@ np.set_printoptions(precision=4, linewidth=180)
 RANDOM_SEED = 1 #19
 
 
-from force_feedback_mpc.core_mpc_utils import path_utils, misc_utils, mpc_utils, pin_utils
+from force_feedback_mpc.core_mpc_utils import path_utils, misc_utils, mpc_utils
+
+from croco_mpc_utils import pinocchio_utils as pin_utils
+
 from force_feedback_mpc.soft_mpc.aug_ocp import OptimalControlProblemSoftContactAugmented
 from force_feedback_mpc.soft_mpc.aug_data import OCPDataHandlerSoftContactAugmented
 from force_feedback_mpc.soft_mpc.utils import SoftContactModel1D
