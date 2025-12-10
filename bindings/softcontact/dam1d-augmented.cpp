@@ -6,7 +6,7 @@
 // individual files. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "force_feedback_mpc/python.hpp"
+#include "force_feedback_mpc/force_feedback_mpc_python.hpp"
 #include "force_feedback_mpc/softcontact/dam1d-augmented.hpp"
 
 namespace force_feedback_mpc {

@@ -6,7 +6,7 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "force_feedback_mpc/python.hpp"
+#include "force_feedback_mpc/force_feedback_mpc_python.hpp"
 #include "force_feedback_mpc/lowpassfilter/state.hpp"
 
 namespace force_feedback_mpc {

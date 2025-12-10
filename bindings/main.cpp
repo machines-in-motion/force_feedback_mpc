@@ -1,4 +1,4 @@
-#include "force_feedback_mpc/python.hpp"
+#include "force_feedback_mpc/force_feedback_mpc_python.hpp"
 
 BOOST_PYTHON_MODULE(force_feedback_mpc_pywrap) { 
 

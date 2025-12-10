@@ -71,7 +71,7 @@ endif()
 
 # Main Library
 set(${PROJECT_NAME}_HEADERS
-  include/${PROJECT_NAME}/python.hpp
+  include/${PROJECT_NAME}/force_feedback_mpc_python.hpp
   include/${PROJECT_NAME}/lowpassfilter/state.hpp
   include/${PROJECT_NAME}/lowpassfilter/action.hpp
   include/${PROJECT_NAME}/softcontact/state.hpp
@@ -106,7 +106,9 @@ endif()
 
 # Main Executable
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} crocoddyl::crocoddyl)
-set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib")
+if(UNIX)
+  set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib")
+endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
 # Python Bindings

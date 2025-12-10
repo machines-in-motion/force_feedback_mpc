@@ -1,5 +1,5 @@
-#ifndef __force_feedback_mpc_python__
-#define __force_feedback_mpc_python__
+#ifndef __force_feedback_mpc_force_feedback_mpc_python__
+#define __force_feedback_mpc_force_feedback_mpc_python__
 
 #include <pinocchio/fwd.hpp>
 #include <boost/python.hpp>
