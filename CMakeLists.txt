@@ -109,9 +109,13 @@ else()
     set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION})
   endif()
   target_link_libraries(${PROJECT_NAME} crocoddyl::crocoddyl)
-  set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib")
+  if(UNIX)
+    get_relative_rpath(${CMAKE_INSTALL_PREFIX}/lib ${PROJECT_NAME}_INSTALL_RPATH)
+    set_target_properties(${PYTHON_LIB_NAME} PROPERTIES INSTALL_RPATH "${${PROJECT_NAME}_INSTALL_RPATH}")
+  endif()
   set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 endif()
+
 
 # Python Bindings
 if(BUILD_PYTHON_INTERFACE)
