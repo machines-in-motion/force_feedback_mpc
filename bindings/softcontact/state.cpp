@@ -6,7 +6,7 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "force_feedback_mpc/python.hpp"
+#include "force-feedback-mpc-python.hpp"
 #include "force_feedback_mpc/softcontact/state.hpp"
 
 namespace force_feedback_mpc {

@@ -8,6 +8,7 @@
 
 #include "pinocchio_model.hpp"
 
+#include <example-robot-data/path.hpp>
 #include <pinocchio/algorithm/center-of-mass.hpp>
 #include <pinocchio/algorithm/centroidal-derivatives.hpp>
 #include <pinocchio/algorithm/centroidal.hpp>

@@ -29,10 +29,10 @@ const std::vector<CostModelTypes::Type> CostModelTypes::all(
     CostModelTypes::init_all());
 const std::vector<CostModelNoFFTypes::Type> CostModelNoFFTypes::all(
     CostModelNoFFTypes::init_all());
-#ifdef PINOCCHIO_WITH_HPP_FCL
+#if defined(PINOCCHIO_WITH_HPP_FCL) && defined(CROCODDYL_WITH_PAIR_COLLISION)
 const std::vector<CostModelCollisionTypes::Type> CostModelCollisionTypes::all(
     CostModelCollisionTypes::init_all());
-#endif  // PINOCCHIO_WITH_HPP_FCL
+#endif  // PINOCCHIO_WITH_HPP_FCL && CROCODDYL_WITH_PAIR_COLLISION
 
 std::ostream& operator<<(std::ostream& os, CostModelTypes::Type type) {
   switch (type) {
@@ -68,7 +68,7 @@ std::ostream& operator<<(std::ostream& os, CostModelNoFFTypes::Type type) {
   return os;
 }
 
-#ifdef PINOCCHIO_WITH_HPP_FCL
+#if defined(PINOCCHIO_WITH_HPP_FCL) && defined(CROCODDYL_WITH_PAIR_COLLISION)
 std::ostream& operator<<(std::ostream& os, CostModelCollisionTypes::Type type) {
   switch (type) {
     case CostModelCollisionTypes::CostModelResidualPairCollision:
@@ -82,7 +82,7 @@ std::ostream& operator<<(std::ostream& os, CostModelCollisionTypes::Type type) {
   }
   return os;
 }
-#endif  // PINOCCHIO_WITH_HPP_FCL
+#endif  // PINOCCHIO_WITH_HPP_FCL && CROCODDYL_WITH_PAIR_COLLISION
 
 CostModelFactory::CostModelFactory() {}
 CostModelFactory::~CostModelFactory() {}
@@ -155,7 +155,7 @@ std::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(
   return cost;
 }
 
-#ifdef PINOCCHIO_WITH_HPP_FCL
+#if defined(PINOCCHIO_WITH_HPP_FCL) && defined(CROCODDYL_WITH_PAIR_COLLISION)
 std::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(
     CostModelCollisionTypes::Type cost_type, StateModelTypes::Type state_type,
     std::size_t nu) const {
@@ -204,7 +204,7 @@ std::shared_ptr<crocoddyl::CostModelAbstract> CostModelFactory::create(
   }
   return cost;
 }
-#endif  // PINOCCHIO_WITH_HPP_FCL
+#endif  // PINOCCHIO_WITH_HPP_FCL && CROCODDYL_WITH_PAIR_COLLISION
 
 std::shared_ptr<crocoddyl::CostModelAbstract> create_random_cost(
     StateModelTypes::Type state_type, std::size_t nu) {

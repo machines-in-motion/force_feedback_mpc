@@ -157,6 +157,13 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   virtual void calcDiff(const std::shared_ptr<ActionDataAbstract>& data,
                         const Eigen::Ref<const VectorXs>& y);
 
+  virtual std::shared_ptr<crocoddyl::ActionModelBase> cloneAsDouble() const {
+    return std::make_shared<IAMSoftContactAugmented>(*this);
+  }
+  virtual std::shared_ptr<crocoddyl::ActionModelBase> cloneAsFloat() const {
+    return std::make_shared<IAMSoftContactAugmented>(*this);
+  }
+
   virtual std::shared_ptr<ActionDataAbstract> createData();
 
   virtual bool checkData(const std::shared_ptr<ActionDataAbstract>& data);
@@ -178,7 +185,7 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   void set_differential(std::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model);
 
   void set_with_force_constraint(const bool inBool) {with_force_constraint_ = inBool; };
-  const bool get_with_force_constraint() const { return with_force_constraint_; };
+  bool get_with_force_constraint() const { return with_force_constraint_; };
 
   void set_force_lb(const VectorXs& inVec);
   const VectorXs& get_force_lb() const { return force_lb_; };
@@ -187,7 +194,7 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   const VectorXs& get_force_ub() const { return force_ub_; };
 
   // void set_with_friction_cone_constraint(const bool inBool) {with_friction_cone_constraint_ = inBool; };
-  const bool get_with_friction_cone_constraint() const { return with_friction_cone_constraint_; };
+  bool get_with_friction_cone_constraint() const { return with_friction_cone_constraint_; };
 
   void set_friction_cone_constraints(const std::vector<std::shared_ptr<ResidualModelFrictionConeAugmented>>& frictionConstraints);
   const std::vector<std::shared_ptr<ResidualModelFrictionConeAugmented>>& get_friction_cone_constraints() const { return friction_constraints_; };
@@ -202,7 +209,7 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
    */
   void set_g_ub(const VectorXs& g_ub);
 
-  const std::size_t get_nf() const { return nf_; };
+  std::size_t get_nf() const { return nf_; };
 
   // Re-size the constraint size according to friction constraints size
   void resizeIneqConstraint(std::shared_ptr<crocoddyl::ActionDataAbstract>& data);

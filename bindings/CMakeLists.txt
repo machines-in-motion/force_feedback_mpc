@@ -9,11 +9,15 @@ set(${PY_NAME}_SOURCES
   frictioncone/residual-friction-cone.cpp
   frictioncone/residual-friction-cone-augmented.cpp
   main.cpp
-  )
+)
 
 add_library(${PY_NAME}_pywrap SHARED ${${PY_NAME}_SOURCES})
-target_link_libraries(${PY_NAME}_pywrap PUBLIC ${PROJECT_NAME} eigenpy::eigenpy)
-target_include_directories(${PY_NAME}_pywrap SYSTEM PRIVATE ${PYTHON_INCLUDE_DIR})
+target_link_libraries(${PY_NAME}_pywrap PUBLIC
+  ${PROJECT_NAME}::${PROJECT_NAME} eigenpy::eigenpy)
+target_include_directories(${PY_NAME}_pywrap
+  SYSTEM PRIVATE ${PYTHON_INCLUDE_DIR}
+  PRIVATE ${CMAKE_CURRENT_LIST_DIR}
+)
 set_target_properties(${PY_NAME}_pywrap PROPERTIES
   INSTALL_RPATH "\$ORIGIN/../../.."
   LIBRARY_OUTPUT_DIRECTORY ${PY_NAME}_pywrap

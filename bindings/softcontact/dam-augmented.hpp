@@ -98,6 +98,20 @@ class DAMSoftContactAbstractAugmentedFwdDynamics_wrap : public DAMSoftContactAbs
     return this->DAMSoftContactAbstractAugmentedFwdDynamics::createData();
   }
 
+  virtual std::shared_ptr<crocoddyl::DifferentialActionModelBase> cloneAsDouble() const {
+    if (boost::python::override cloneAsDouble = this->get_override("cloneAsDouble")) {
+      return bp::call<std::shared_ptr<crocoddyl::DifferentialActionModelBase> >(cloneAsDouble.ptr());
+    }
+    throw std::runtime_error("cloneAsDouble() not implemented in Python derived class");
+  }
+
+  virtual std::shared_ptr<crocoddyl::DifferentialActionModelBase> cloneAsFloat() const {
+    if (boost::python::override cloneAsFloat = this->get_override("cloneAsFloat")) {
+      return bp::call<std::shared_ptr<crocoddyl::DifferentialActionModelBase> >(cloneAsFloat.ptr());
+    }
+    throw std::runtime_error("cloneAsFloat() not implemented in Python derived class");
+  }
+
 };
 
 // BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(DifferentialActionModel_quasiStatic_wraps,

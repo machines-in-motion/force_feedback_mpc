@@ -14,7 +14,6 @@
 #include <crocoddyl/core/utils/exception.hpp>
 #include <crocoddyl/multibody/actuations/floating-base.hpp>
 #include <crocoddyl/multibody/actuations/full.hpp>
-#include <crocoddyl/multibody/actuations/multicopter-base.hpp>
 
 namespace force_feedback_mpc {
 namespace unittest {
@@ -29,9 +28,6 @@ std::ostream& operator<<(std::ostream& os, ActuationModelTypes::Type type) {
       break;
     case ActuationModelTypes::ActuationModelFloatingBase:
       os << "ActuationModelFloatingBase";
-      break;
-    case ActuationModelTypes::ActuationModelMultiCopterBase:
-      os << "ActuationModelMultiCopterBase";
       break;
     case ActuationModelTypes::ActuationModelSquashingFull:
       os << "ActuationModelSquashingFull";
@@ -75,17 +71,6 @@ ActuationModelFactory::create(ActuationModelTypes::Type actuation_type,
           std::static_pointer_cast<crocoddyl::StateMultibody>(state);
       actuation = std::make_shared<crocoddyl::ActuationModelFloatingBase>(
           state_multibody);
-      break;
-    case ActuationModelTypes::ActuationModelMultiCopterBase:
-      state_multibody =
-          std::static_pointer_cast<crocoddyl::StateMultibody>(state);
-      tau_f = Eigen::MatrixXd::Zero(6, 4);
-      tau_f.row(2).fill(1.0);
-      tau_f.row(3) << 0.0, 0.1525, 0.0, -0.1525;
-      tau_f.row(4) << -0.1525, 0.0, 0.1525, 0.0;
-      tau_f.row(5) << -0.01515, 0.01515, -0.01515, 0.01515;
-      actuation = std::make_shared<crocoddyl::ActuationModelMultiCopterBase>(
-          state_multibody, tau_f);
       break;
     case ActuationModelTypes::ActuationModelSquashingFull:
       state_multibody =

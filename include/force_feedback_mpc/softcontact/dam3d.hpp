@@ -36,6 +36,8 @@ class DifferentialActionModelSoftContact3DFwdDynamicsTpl
     : public crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<_Scalar> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  CROCODDYL_DERIVED_CAST(crocoddyl::DifferentialActionModelBase,
+                         DifferentialActionModelSoftContact3DFwdDynamicsTpl)
 
   typedef _Scalar Scalar;
   typedef crocoddyl::DifferentialActionModelFreeFwdDynamicsTpl<Scalar> Base;

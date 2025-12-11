@@ -239,6 +239,13 @@ class DAMSoftContact3DAugmentedFwdDynamics : public DAMSoftContactAbstractAugmen
       const Eigen::Ref<const VectorXs>& x,
       const Eigen::Ref<const VectorXs>& f);
   
+  virtual std::shared_ptr<crocoddyl::DifferentialActionModelBase> cloneAsDouble() const {
+    return std::make_shared<DAMSoftContact3DAugmentedFwdDynamics>(*this);
+  }
+  virtual std::shared_ptr<crocoddyl::DifferentialActionModelBase> cloneAsFloat() const {
+    return std::make_shared<DAMSoftContact3DAugmentedFwdDynamics>(*this);
+  }
+
     /**
    * @brief Create the soft contact forward-dynamics data
    *

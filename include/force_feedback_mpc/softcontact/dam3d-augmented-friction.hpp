@@ -38,6 +38,7 @@ class DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl
     : public sobec::DAMSoftContactAbstractAugmentedFwdDynamicsTpl<_Scalar> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  CROCODDYL_DERIVED_CAST(StateBase, DAMSoftContact3DAugmentedFrictionFwdDynamicsTpl)
 
   typedef _Scalar Scalar;
   typedef sobec::DAMSoftContactAbstractAugmentedFwdDynamicsTpl<Scalar> Base;

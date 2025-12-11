@@ -1,5 +1,5 @@
-#ifndef __force_feedback_mpc_python__
-#define __force_feedback_mpc_python__
+#ifndef FORCE_FEEDBACK_MPC_FORCE_FEEDBACK_MPC_PYTHON
+#define FORCE_FEEDBACK_MPC_FORCE_FEEDBACK_MPC_PYTHON
 
 #include <pinocchio/fwd.hpp>
 #include <boost/python.hpp>
@@ -42,4 +42,4 @@ namespace frictioncone{
 } // namespace force_feedback_mpc
 
 
-#endif
+#endif  // FORCE_FEEDBACK_MPC_FORCE_FEEDBACK_MPC_PYTHON

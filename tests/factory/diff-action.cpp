@@ -101,12 +101,6 @@ DifferentialActionModelFactory::create(DifferentialActionModelTypes::Type type,
                                                                          true);
       break;
     case DifferentialActionModelTypes::
-        DifferentialActionModelFreeFwdDynamics_Hector:
-      action = create_freeFwdDynamics(
-          StateModelTypes::StateMultibody_Hector,
-          ActuationModelTypes::ActuationModelMultiCopterBase);
-      break;
-    case DifferentialActionModelTypes::
         DifferentialActionModelFreeFwdDynamics_TalosArm:
       action = create_freeFwdDynamics(StateModelTypes::StateMultibody_TalosArm,
                                       ActuationModelTypes::ActuationModelFull);

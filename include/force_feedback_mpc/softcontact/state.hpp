@@ -52,6 +52,12 @@ class StateSoftContact : public crocoddyl::StateAbstract {
                                    const Eigen::Ref<const VectorXs>& dy,
                                    Eigen::Ref<MatrixXs> Jin,
                                    const crocoddyl::Jcomponent firstsecond) const;
+  virtual std::shared_ptr<crocoddyl::StateBase> cloneAsDouble() const {
+    return std::make_shared<StateSoftContact>(*this);
+  }
+  virtual std::shared_ptr<crocoddyl::StateBase> cloneAsFloat() const {
+    return std::make_shared<StateSoftContact>(*this);
+  }
 
   const std::shared_ptr<pinocchio::ModelTpl<double> >& get_pinocchio() const;
   const std::size_t& get_nc() const;
