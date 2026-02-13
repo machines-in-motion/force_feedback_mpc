@@ -51,7 +51,7 @@ v0 = np.asarray(config['dq0'])
 x0 = np.concatenate([q0, v0]) 
 # Get pin wrapper
 from mim_robots.robot_loader import load_pinocchio_wrapper
-robot = load_pinocchio_wrapper('iiwa_ft_sensor_shell', locked_joints=['A7'])
+robot = load_pinocchio_wrapper('iiwa_ft_sensor_shell', locked_joints=['A7', 'A6', 'A5'])
 # Get initial frame placement + dimensions of joint space
 frame_name = config['frame_of_interest']
 id_endeff = robot.model.getFrameId(frame_name)
@@ -65,11 +65,23 @@ oMf = robot.data.oMf[id_endeff]
 oPc = oMf.translation + np.asarray(config['oPc_offset'])
 oMc = oMf.copy()
 oMc.translation = oPc.copy()
-if('1D' in config['contactType']):
-    softContactModel = SoftContactModel1D(np.asarray(config['Kp']), np.asarray(config['Kv']), oPc, id_endeff, config['contactType'], config['pinRefFrame'])
-else:
-    softContactModel = SoftContactModel3D(np.asarray(config['Kp']), np.asarray(config['Kv']), oPc, id_endeff, config['pinRefFrame'])
 
+# helper to ensure 1D array
+def get_1d_array(val):
+    arr = np.asarray(val)
+    if arr.ndim == 0:
+        return arr.reshape(1)
+    return arr
+
+Kp = get_1d_array(config['Kp'])
+Kv = get_1d_array(config['Kv'])
+
+if('1D' in config['contactType']):
+    softContactModel = SoftContactModel1D(Kp, Kv, oPc, id_endeff, config['contactType'], config['pinRefFrame'])
+else:
+    softContactModel = SoftContactModel3D(Kp, Kv, oPc, id_endeff, config['pinRefFrame'])
+y0 = np.hstack([x0, softContactModel.computeForce_(robot.model, q0, v0)])  
+logger.debug(str(y0))
 # v0 = np.random.rand(nv)
 f0 = 45 #200 #softContactModel.computeForce_(robot.model, q0, v0)
 y0 = np.hstack([x0, f0])  
@@ -79,8 +91,9 @@ logger.debug(str(y0))
 ### OCP SETUP ###
 # # # # # # # # # 
 softContactModel.print()
-ocp = OptimalControlProblemSoftContactAugmented(robot, config)
-problem = ocp.initialize(y0, softContactModel)
+# Initialize OCP once
+ocp_wrapper = OptimalControlProblemSoftContactAugmented(robot, config)
+problem = ocp_wrapper.initialize(y0, softContactModel)
 # Warmstart and solve
 import pinocchio as pin
 import mim_solvers
@@ -100,16 +113,16 @@ import pinocchio as pin
 for k,m in enumerate(models):
     m.differential.cost_ref = pin.LOCAL_WORLD_ALIGNED
 
-solver.with_callbacks = True
+solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
 solver.solve(xs_init, us_init, maxiter=config['maxiter'], isFeasible=False)
 
 print(solver.xs[0])
-# werpighewoib
+
 if(PLOT):
     #  Plot
     ddp_handler = OCPDataHandlerSoftContactAugmented(solver.problem, softContactModel)
     ddp_data = ddp_handler.extract_data(solver.xs, solver.us, model=robot.model)
-    _, _ = ddp_handler.plot_ddp_results(ddp_data, which_plots=['f'], 
+    _, _ = ddp_handler.plot_ocp_results(ddp_data, which_plots=['f'], 
                                                         colors=['r'], 
                                                         markers=['.'], 
                                                         SHOW=True)
