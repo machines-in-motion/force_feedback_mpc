@@ -23,4 +23,4 @@ KP: 0.
 KV: 0.
 
 RECORD_VIDEO: False
-DATA_SAVE_DIR: "/home/skleff/go2_classical"
+DATA_SAVE_DIR: "data/go2_classical"

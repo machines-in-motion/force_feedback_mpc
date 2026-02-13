@@ -40,8 +40,8 @@ from force_feedback_mpc.core_mpc_utils import sim_utils as simulator_utils
 from croco_mpc_utils import pinocchio_utils as pin_utils
 from croco_mpc_utils.ocp_core_data import save_data
 from croco_mpc_utils.math_utils import circle_point_WORLD
-from lpf_mpc.data import MPCDataHandlerLPF
-from lpf_mpc.ocp import OptimalControlProblemLPF, getJointAndStateIds
+from force_feedback_mpc.lpf_mpc.data import MPCDataHandlerLPF
+from force_feedback_mpc.lpf_mpc.ocp import OptimalControlProblemLPF, getJointAndStateIds
 
 import mim_solvers
 from mim_robots.robot_loader import load_bullet_wrapper

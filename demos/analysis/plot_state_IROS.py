@@ -8,7 +8,7 @@ import sys
 from core_mpc_utils.misc_utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
 logger = CustomLogger(__name__, log_level_name=GLOBAL_LOG_LEVEL, USE_LONG_FORMAT=GLOBAL_LOG_FORMAT).logger
 
-from core_mpc_utils import data_utils
+from force_feedback_mpc.core_mpc_utils import data_utils
 
 PREFIX = '/home/skleff/force-feedback/data/'
 data_file_name = 'iiwa_contact_circle_MPC_bullet__BIAS=True_NOISE=True_DELAY=True_Fp=0.5_Fc=0.5_Fs1.0' 

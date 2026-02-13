@@ -1,6 +1,6 @@
 import sys
 from . import analysis_utils
-from core_mpc_utils import data_utils, plot_utils
+from force_feedback_mpc.core_mpc_utils import data_utils, plot_utils
 import numpy as np
 
 from core_mpc_utils.misc_utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT

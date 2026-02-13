@@ -231,7 +231,8 @@ class Go2MPCClassical:
         self.USE_MUJOCO = USE_MUJOCO
         if(self.USE_MUJOCO):
             print("Loading XML Go2")
-            self.assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
+            # self.assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
+            self.assets_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'assets') # Assuming assets are relavtive or handled by user
             self.urdf_path = os.path.join(self.assets_path, 'urdf/go2_with_arm.urdf')
             self.xml_path = os.path.join(self.assets_path, 'mujoco/go2_with_arm.xml')
             self.pin_robot = pin.RobotWrapper.BuildFromURDF(self.urdf_path, self.assets_path, pin.JointModelFreeFlyer())

@@ -1,42 +1,100 @@
-# force_feedback_mpc
-Optimal control toolbox to achieve force feedback control in MPC. This library is basically an extension of the Crocoddyl optimal control library: it implements custom action models in C++ with unittests and python bindings. In particular, it contains the core classes used in MPC experiments of the following papers
-- S. Kleff, et. al, "Introducing Force Feedback in Model-Predictive Control", IROSS 2022. [PDF](https://hal.science/hal-03594295/document)
+# Force Feedback MPC
+
+Optimal control toolbox to achieve force feedback control in MPC. This library is basically an extension of the Crocoddyl optimal control library: it implements custom action models in C++ with unittests and python bindings. In particular, it contains the core classes used in MPC experiments of the following papers:
+- S. Kleff, et. al, "Introducing Force Feedback in Model-Predictive Control", IROS 2022. [PDF](https://hal.science/hal-03594295/document)
 - S. Kleff, et. al, "Force Feedback in Model-Predictive Control: A Soft Contact Approach" [PDF](https://hal.science/hal-04572399/) (under review)
 
 The code to reproduce our experiments (i.e. real-time implementation of the force-feedback MPC), along with our experimental data are available in [this separate repository](https://github.com/machines-in-motion/force_feedback_dgh).
 
-# Dependencies
-- [Crocoddyl](https://github.com/loco-3d/crocoddyl) (>=3.0)
-- [Pinocchio](https://github.com/stack-of-tasks/pinocchio)
-- [boost](https://www.boost.org/)
-- [eigenpy](https://github.com/stack-of-tasks/eigenpy) (>=2.7.10)
-- [Optional] [OpenMP](https://www.openmp.org/) if Crocoddyl was built from source with the multi-threading option.
+## Installation
 
-## For the Python demo scripts
-- [croco_mpc_utils](https://github.com/machines-in-motion/mim_robots)
-- [mim_robots](https://github.com/machines-in-motion/mim_robots)
-- [PyBullet](https://pybullet.org/wordpress/)  
-- PyYAML
-- importlib_resources
-- matplotlib
+We recommend using **Conda** to manage dependencies. This library is compatible with Python 3.10-3.13 (Python 3.14 is currently incompatible with MuJoCo).
 
-# Installation
+### 1. Create a Conda Environment
+
+```bash
+conda create -n force_feedback python=3.12
+conda activate force_feedback
 ```
-git clone --recursive https://github.com/machines-in-motion/force_feedback_mpc.git
+
+### 2. Install Dependencies
+
+Install Core dependencies from conda-forge:
+
+```bash
+conda install -c conda-forge pinocchio crocoddyl mim-solvers
+conda install -c conda-forge numpy matplotlib pyyaml importlib_resources pybullet
+```
+
+Install additional Python dependencies:
+
+```bash
+pip install .
+```
+
+> **Note:** The `croco_mpc_utils` and `mim_robots` packages are required for the demos. Install them via
+```bash
+pip install . --no-deps
+```
+
+### 3. Build and Install
+
+```bash
 mkdir build && cd build
-cmake .. 
-make -j6 && sudo make install
+cmake .. -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
+make -j4
+make install
 ```
 
-# How to use it
-Simply prototype your OCP using Crocoddyl as you would normally do, but use the custom integrated action models provided in this library (`IntegratedActionModelLPF` and `IAMSoftContactAugmented`). Example python scripts can be found in the `demos` directory (simulated force and polishing tasks).
+## Running the Demos
 
-In the `python` directory, OCP utilities are implemented. These are simplified interfaces to Crocoddyl's API ; they allow the quick proto-typing of OCPs from templated YAML files (i.e. this is an extension of [croco_mpc_utils](https://github.com/machines-in-motion/mim_robots) to force-feedback OCPs).
+The demos are located in the `demos/` directory.
 
-The real-time controllers used on the real robot for the paper experiments are implemented in a separate repository, [force_feedback_dgh](https://github.com/machines-in-motion/force_feedback_dgh). In this separate repo, you will also find the experimental data used to generate the paper figures.
+### Classical Force Control (KUKA iiwa)
+These demos use the classical force control formulation (hard contact).
 
-# Citing this work
+```bash
+python demos/force_tracking/classical/force_tracking_classical_mpc.py
 ```
+
+### Soft Contact MPC (Force Tracking)
+These demos use the soft contact formulation for force tracking.
+
+```bash
+python demos/force_tracking/soft/force_tracking_soft_mpc.py
+```
+
+### Polishing Task
+Demos for the polishing task (circular motion while maintaining force).
+
+```bash
+python demos/polishing/classical/polishing_classical_mpc.py
+```
+
+### Go2 Quadruped (MuJoCo)
+**Requires MuJoCo.** Ensure `mujoco` is installed (`conda install -c conda-forge mujoco-python`).
+Note: Go2Py assets must be available.
+
+```bash
+python demos/go2arm/Go2MPC_demo_classical.py
+```
+
+## Dependencies Table
+
+| Package | Version | Source |
+|---------|---------|--------|
+| Crocoddyl | >= 3.0 | conda-forge |
+| Pinocchio | >= 3.0 | conda-forge |
+| mim-solvers | >= 0.0.5 | conda-forge |
+| eigenpy | >= 3.0 | conda-forge |
+| Python | 3.10 - 3.13 | conda-forge |
+
+**Known Issues:**
+- Python 3.14 is currently incompatible with `mujoco-python`. Use Python 3.12 or 3.13.
+
+## Citing this work
+
+```bibtex
 @unpublished{kleff:hal-04572399,
   TITLE = {{Force Feedback in Model-Predictive Control: A Soft Contact Approach}},
   AUTHOR = {Kleff, S{\'e}bastien and Jordana, Armand and Khorrambakht, Rooholla and Mansard, Nicolas and Righetti, Ludovic},

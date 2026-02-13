@@ -19,7 +19,7 @@ The goal of this script is to setup OCP (play with weights)
 import sys
 sys.path.append('.')
 
-from croco_mpc_utils.misc_utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
+from croco_mpc_utils.utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
 logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
 
 
@@ -47,7 +47,6 @@ import os
 # Read config file
 config_name = 'polishing_soft'
 config = path_utils.load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/'+config_name+'.yml')
-# config = path_utils.load_yaml_file('/home/skleff/ws/workspace/src/force-feedback/demos/contact/config/iiwa_aug_soft_contact_OCP.yml')
 q0 = np.asarray(config['q0'])
 v0 = np.asarray(config['dq0'])
 x0 = np.concatenate([q0, v0]) 

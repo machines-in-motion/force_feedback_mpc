@@ -268,7 +268,7 @@ if(RECORD_VIDEO):
             writer.append_data(img)
         writer.close()
         print("Closed writer")
-    output_path = '/home/skleff/go2_mpc_classical_INT='+str(WITH_INTEGRAL)+'_meshcat.mp4'
+    output_path = './go2_mpc_classical_INT='+str(WITH_INTEGRAL)+'_meshcat.mp4'
     create_video_from_rgba(image_array_list, output_path)
 
 
