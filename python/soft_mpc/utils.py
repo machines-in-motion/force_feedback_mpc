@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import scipy
 import pinocchio as pin
 
+from croco_mpc_utils.utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
+logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
+
 class SoftContactModel3D:
     def __init__(self, Kp, Kv, oPc, frameId, pinRef):
         '''
@@ -143,17 +146,26 @@ class SoftContactModel1D:
         self.contactType = contactType
 
     def set_contactType(self, contactType):
+        try:
+            import force_feedback_mpc
+            Vector3MaskType = force_feedback_mpc.Vector3MaskType
+        except ImportError:
+            class Vector3MaskType:
+                x = 0
+                y = 1
+                z = 2
+        
         assert(contactType in ['1Dx', '1Dy', '1Dz'])
         self.contact_type = contactType
         if(contactType == '1Dx'):
             self.mask = 0
-            self.maskType = force_feedback_mpc.Vector3MaskType.x
+            self.maskType = Vector3MaskType.x
         if(contactType == '1Dy'):
             self.mask = 1
-            self.maskType = force_feedback_mpc.Vector3MaskType.y
+            self.maskType = Vector3MaskType.y
         if(contactType == '1Dz'):
             self.mask = 2
-            self.maskType = force_feedback_mpc.Vector3MaskType.z
+            self.maskType = Vector3MaskType.z
        
     def setPinRef(self, pinRef):
         if(type(pinRef) == str):
