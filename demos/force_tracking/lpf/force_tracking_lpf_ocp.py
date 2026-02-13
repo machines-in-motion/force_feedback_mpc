@@ -51,7 +51,7 @@ v0 = np.asarray(config['dq0'])
 x0 = np.concatenate([q0, v0])   
 # Get pin wrapper
 from mim_robots.robot_loader import load_pinocchio_wrapper
-robot = load_pinocchio_wrapper('iiwa_ft_sensor_shell', locked_joints=['A7'])
+robot = load_pinocchio_wrapper('iiwa_ft_sensor_shell')
 # Get initial frame placement + dimensions of joint space
 frame_name = config['frame_of_interest']
 id_endeff = robot.model.getFrameId(frame_name)
@@ -97,9 +97,9 @@ solver.solve(xs_init, us_init, maxiter=config['maxiter'], isFeasible=False)
 
 if(PLOT):
     #  Plot
-    ddp_handler = OCPDataHandlerLPF(solver.problem, n_lpf=len(robot.model.names[1:]))
-    ddp_data = ddp_handler.extract_data(ee_frame_name=frame_name, ct_frame_name=frame_name)
-    _, _ = ddp_handler.plot_ddp_results(ddp_data, which_plots=['all'], 
+    ocp_data_handler = OCPDataHandlerLPF(solver.problem, n_lpf=len(robot.model.names[1:]))
+    ocp_data = ocp_data_handler.extract_data(solver.xs, solver.us)
+    _, _ = ocp_data_handler.plot_ocp_results(ocp_data, which_plots=['all'], 
                                                         colors=['r'], 
                                                         markers=['.'], 
                                                         SHOW=True)

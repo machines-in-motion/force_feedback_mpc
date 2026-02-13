@@ -120,9 +120,9 @@ print(solver.xs[0])
 
 if(PLOT):
     #  Plot
-    ddp_handler = OCPDataHandlerSoftContactAugmented(solver.problem, softContactModel)
-    ddp_data = ddp_handler.extract_data(solver.xs, solver.us, model=robot.model)
-    _, _ = ddp_handler.plot_ocp_results(ddp_data, which_plots=['f'], 
+    ocp_data_handler = OCPDataHandlerSoftContactAugmented(solver.problem, softContactModel)
+    ocp_data = ocp_data_handler.extract_data(solver.xs, solver.us, model=robot.model)
+    _, _ = ocp_data_handler.plot_ocp_results(ocp_data, which_plots=['f'], 
                                                         colors=['r'], 
                                                         markers=['.'], 
                                                         SHOW=True)
