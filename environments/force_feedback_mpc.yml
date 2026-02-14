@@ -1,0 +1,33 @@
+name: force_feedback_mpc
+channels:
+  - conda-forge
+dependencies:
+  # Core computation
+  - python=3.12
+  - numpy
+  - scipy
+  - matplotlib
+  
+  # Robotics & Control (STABLE VERSIONS)
+  - pinocchio=3.8.0
+  - crocoddyl>=3.2.0
+  - mim-solvers=0.2.0
+  
+  # Simulation & Visualization
+  - pybullet
+  - mujoco
+  - meshcat-python
+  - opencv
+
+  # Utilities
+  - pyyaml
+  - pytest
+  - pip
+  
+# Installation instructions:
+# conda env create -f force_feedback_stable.yml
+# conda activate force_feedback_stable
+# install force_feedback_mpc from source (cmake + make install with DCMAKE_INSTALL_PREFIX=path/to/conda/env)
+# pip install -e /path/to/Go2Py  # if using Go2 demos
+# pip install /path/to/croco_mpc_utils --no-deps # 
+# pip install /path/to/mim_robots --no-deps  # 

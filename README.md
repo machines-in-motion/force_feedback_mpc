@@ -6,91 +6,90 @@ Optimal control toolbox to achieve force feedback control in MPC. This library i
 
 The code to reproduce our experiments (i.e. real-time implementation of the force-feedback MPC), along with our experimental data are available in [this separate repository](https://github.com/machines-in-motion/force_feedback_dgh).
 
+## Dependencies
+
+**Python compatibility:** 3.10-3.13
+
+### Core dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| [Pinocchio](https://github.com/stack-of-tasks/pinocchio) >= 3.7.0 | Robot dynamics & kinematics |
+| [Crocoddyl](https://github.com/lariodante/crocoddyl) | >= 3.2.0 | Optimal control library |
+| [mim-solvers](https://github.com/machines-in-motion/mim_solvers) | 0.2.0 | Optimization solvers |
+| CMake | >= 3.10 | Build system |
+
+### Demo dependencies
+
+**For force tracking & polishing demos (Kuka Iiwa):**
+- [NumPy](https://numpy.org/), [SciPy](https://scipy.org/), [Matplotlib](https://matplotlib.org/)
+- [PyBullet](https://pybullet.org/) (physics simulation)
+
+**For Go2 multi-contact demos (requires above + specific deps below):**
+- [MuJoCo](https://mujoco.org/) (physics engine)
+- [meshcat-python](https://github.com/rdeits/meshcat-python) (3D visualization)
+- [OpenCV](https://opencv.org/) (computer vision - Go2Py dependency)
+- [Go2Py](https://github.com/machines-in-motion/Go2Py/tree/mpc) (Go2 quadruped interface)
+
 ## Installation
 
-We recommend using **Conda** to manage dependencies. This library is compatible with Python 3.10-3.13 (Python 3.14 is currently incompatible with MuJoCo).
-
-### 1. Create a Conda Environment
+Using the provided conda environment file:
 
 ```bash
-conda create -n force_feedback python=3.12
-conda activate force_feedback
-```
+# 1. Create environment from file
+conda env create -f environments/force_feedback_mpc.yml
+conda activate force_feedback_mpc
 
-### 2. Install Dependencies
-
-Install Core dependencies from conda-forge:
-
-```bash
-conda install -c conda-forge pinocchio crocoddyl mim-solvers
-conda install -c conda-forge numpy matplotlib pyyaml importlib_resources pybullet
-```
-
-Install additional Python dependencies:
-
-```bash
-pip install .
-```
-
-> **Note:** The `croco_mpc_utils` and `mim_robots` packages are required for the demos. Install them via
-```bash
-pip install . --no-deps
-```
-
-### 3. Build and Install
-
-```bash
+# 2. Build and install force_feedback_mpc from source
 mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
 make -j4
 make install
+
+# 3. Install required Python packages (from workspace root)
+cd ..
+pip install -e ./croco_mpc_utils --no-deps 
+pip install -e ./mim_robots --no-deps
+
+# 4. [Optional] Install Go2Py for Go2 demos
+pip install -e /path/to/Go2Py
 ```
 
 ## Running the Demos
 
-The demos are located in the `demos/` directory.
+The demos are located in the `demos/` directory. First, activate the environment:
 
-### Classical Force Control (KUKA iiwa)
-These demos use the classical force control formulation (hard contact).
+```bash
+conda activate force_feedback_mpc
+```
+
+### Classical MPC (rigid contact force model)
 
 ```bash
 python demos/force_tracking/classical/force_tracking_classical_mpc.py
 ```
 
-### Soft Contact MPC (Force Tracking)
-These demos use the soft contact formulation for force tracking.
+### Force-feedback MPC (soft contact force model)
 
 ```bash
 python demos/force_tracking/soft/force_tracking_soft_mpc.py
 ```
 
-### Polishing Task
-Demos for the polishing task (circular motion while maintaining force).
+### Polishing Task (apply constant normal force while tracking end-effector circle)
 
 ```bash
 python demos/polishing/classical/polishing_classical_mpc.py
+python demos/polishing/soft/polishing_soft_mpc.py
 ```
 
-### Go2 Quadruped (MuJoCo)
-**Requires MuJoCo.** Ensure `mujoco` is installed (`conda install -c conda-forge mujoco-python`).
-Note: Go2Py assets must be available.
+### Go2 Quadruped (whole-body multi-contact MPC)
+
+Requires [Go2Py](https://github.com/machines-in-motion/Go2Py/tree/mpc) to be installed.
 
 ```bash
 python demos/go2arm/Go2MPC_demo_classical.py
+python demos/go2arm/Go2MPC_demo_soft.py
 ```
-
-## Dependencies Table
-
-| Package | Version | Source |
-|---------|---------|--------|
-| Crocoddyl | >= 3.0 | conda-forge |
-| Pinocchio | >= 3.0 | conda-forge |
-| mim-solvers | >= 0.0.5 | conda-forge |
-| eigenpy | >= 3.0 | conda-forge |
-| Python | 3.10 - 3.13 | conda-forge |
-
-**Known Issues:**
-- Python 3.14 is currently incompatible with `mujoco-python`. Use Python 3.12 or 3.13.
 
 ## Citing this work
 

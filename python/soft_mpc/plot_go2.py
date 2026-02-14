@@ -14,9 +14,9 @@ if(TYPE == 'classical'):
     DATA_PATH    = '/home/skleff/go2_classical_INT=False_Fmin=25_Fmax=80_maxit=1000_fweight=0.0005.npz'
     CONFIG_PATH  = '/home/skleff/force_feedback_ws/force_feedback_mpc/demos/go2arm/Go2MPC_demo_classical.yml'
 else:
-    from force_feedback_mpc.soft_mpc.Go2MPC_wrapper_soft import Go2MPCSoft as Go2MPCWrapper
+    from demos.go2arm.Go2MPC_wrapper_soft import Go2MPCSoft as Go2MPCWrapper
     DATA_PATH    = '/home/skleff/go2_soft_Fmax=80_maxit=1000_fweight=0.0005.npz' #go2_soft_Fmax=80_maxit=1000_fweight=0.001_CONSTANT.npz' #'
-    CONFIG_PATH  = '/home/skleff/force_feedback_ws/force_feedback_mpc/python/soft_mpc/Go2MPC_demo_soft.yml'
+    CONFIG_PATH  = '/home/skleff/force_feedback_ws/force_feedback_mpc/demos/go2arm/Go2MPC_demo_soft.yml'
 
 print("Loading data from: ", DATA_PATH)
 print("Loading config from: ", CONFIG_PATH)

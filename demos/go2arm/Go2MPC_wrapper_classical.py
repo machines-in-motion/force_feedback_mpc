@@ -231,8 +231,13 @@ class Go2MPCClassical:
         self.USE_MUJOCO = USE_MUJOCO
         if(self.USE_MUJOCO):
             print("Loading XML Go2")
-            # self.assets_path = '/home/skleff/force_feedback_ws/Go2Py/Go2Py/assets/'
-            self.assets_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'assets') # Assuming assets are relavtive or handled by user
+            # Dynamically resolve Go2Py assets path (works with pip install -e .)
+            try:
+                import Go2Py
+                self.assets_path = os.path.join(os.path.dirname(Go2Py.__file__), 'assets')
+            except (ImportError, AttributeError):
+                # Fallback: look in local demos directory
+                self.assets_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'assets')
             self.urdf_path = os.path.join(self.assets_path, 'urdf/go2_with_arm.urdf')
             self.xml_path = os.path.join(self.assets_path, 'mujoco/go2_with_arm.xml')
             self.pin_robot = pin.RobotWrapper.BuildFromURDF(self.urdf_path, self.assets_path, pin.JointModelFreeFlyer())
@@ -526,9 +531,11 @@ class Go2MPCClassical:
         dq_[6:] = dq[self.unitree_to_mpc_idx]
         x = np.hstack([q_, dq_])
         self.solver.problem.x0 = x
-        self.xs = list(self.solver.xs[1:]) + [self.solver.xs[-1]]
+        xs_list = list(self.solver.xs)
+        self.xs = xs_list[1:] + [xs_list[-1]]
         self.xs[0] = x
-        self.us = list(self.us[1:]) + [self.us[-1]] 
+        us_list = list(self.us)
+        self.us = us_list[1:] + [us_list[-1]]   
         self.solver.solve(self.xs, self.us, self.max_iterations)
         self.xs, self.us = self.solver.xs, self.solver.us
         return self.getSolution()
