@@ -80,7 +80,7 @@ contacts:
 # Cost function composition (a.k.a which terms will be actually used in the OCP)
 # to select from the list : 'stateReg', 'ctrlReg', 'ctrlRegGrav', 'stateLim', 'ctrlLim'
 #                           'force', 'friction', 'translation', 'velocity', 'placement'
-WHICH_COSTS: ['force', 'translation', 'stateReg', 'ctrlRegGrav']  
+WHICH_COSTS: ['force', 'translation', 'stateReg', 'ctrlReg']  
 
 # Cost function weights and activations
  # 'force' : end-effector frame force (translation + rotation)

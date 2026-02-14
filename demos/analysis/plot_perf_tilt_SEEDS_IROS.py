@@ -1,7 +1,7 @@
 import sys
 from turtle import rt
 import analysis_utils
-from core_mpc_utils import data_utils, pin_utils
+from force_feedback_mpc.core_mpc_utils import data_utils, pin_utils
 import numpy as np
 import matplotlib.pyplot as plt
 

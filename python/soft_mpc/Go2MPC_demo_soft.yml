@@ -1,5 +1,5 @@
 # Simu
-USE_MUJOCO: False
+USE_MUJOCO: True
 DT_SIMU: 0.001
 N_SIMU: 1000
 

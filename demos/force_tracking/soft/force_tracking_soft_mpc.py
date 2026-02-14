@@ -63,9 +63,9 @@ def solveOCP(q, v, f, solver, nb_iter, target_reach, anchor_point, TASK_PHASE, t
         # Update initial state + warm-start
         x = np.concatenate([q, v, f]) # 1Dz contact
         solver.problem.x0 = x
-        xs_init = list(solver.xs[1:]) + [solver.xs[-1]]
+        xs_init = list(solver.xs)[1:] + [list(solver.xs)[-1]]
         xs_init[0] = x
-        us_init = list(solver.us[1:]) + [solver.us[-1]] 
+        us_init = list(solver.us)[1:] + [list(solver.us)[-1]] 
         # Get OCP nodes
         m = list(solver.problem.runningModels) + [solver.problem.terminalModel]
         # Update OCP for reaching phase

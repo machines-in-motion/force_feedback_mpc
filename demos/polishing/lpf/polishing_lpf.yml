@@ -146,6 +146,9 @@ frameRotationWeightTerminal: 10. #0.1 #1.
 frameRotationRef: 'DEFAULT'
 frameRotationFrameName: 'contact'
 
+# armature
+armature:  [.0, .0, .0, .0, .0, .0] 
+
 
 # # # # # # # # # # # # # # # # # # # # # #
 # Low-level simulation (actuation model)  #

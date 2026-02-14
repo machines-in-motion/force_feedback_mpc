@@ -13,7 +13,7 @@ foreach(PACKAGE ${PYTHON_PACKAGES})
     install(FILES ${PACKAGE}/__init__.py
             DESTINATION ${PYTHON_SITELIB}/${PROJECT_NAME}/${PACKAGE})
     
-    file(GLOB MODULES "${PACKAGE}/*.py")
+    file(GLOB MODULES "${PACKAGE}/*.py" "${PACKAGE}/*.yml")
     
     foreach(MODULE ${MODULES})
         get_filename_component(MODULE_NAME ${MODULE} NAME)

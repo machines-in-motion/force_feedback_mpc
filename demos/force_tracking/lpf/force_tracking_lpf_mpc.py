@@ -27,7 +27,7 @@ the actuation dynamics is modeled as a low pass filter (LPF) in the optimization
 import sys
 sys.path.append('.')
 
-from croco_mpc_utils.misc_utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
+from croco_mpc_utils.utils import CustomLogger, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT
 logger = CustomLogger(__name__, GLOBAL_LOG_LEVEL, GLOBAL_LOG_FORMAT).logger
 
 
@@ -37,8 +37,9 @@ RANDOM_SEED = 1
 
 from force_feedback_mpc.core_mpc_utils import path_utils, mpc_utils, misc_utils
 
-from lpf_mpc.data import DDPDataHandlerLPF, MPCDataHandlerLPF
-from lpf_mpc.ocp import OptimalControlProblemLPF, getJointAndStateIds
+from croco_mpc_utils import pinocchio_utils as pin_utils
+from force_feedback_mpc.lpf_mpc.data import OCPDataHandlerLPF, MPCDataHandlerLPF
+from force_feedback_mpc.lpf_mpc.ocp import OptimalControlProblemLPF, getJointAndStateIds
 
 def main(robot_name='iiwa', simulator='bullet', PLOT_INIT=False):
 
@@ -53,11 +54,11 @@ def main(robot_name='iiwa', simulator='bullet', PLOT_INIT=False):
   v0 = np.asarray(config['dq0'])
   x0 = np.concatenate([q0, v0])   
   if(simulator == 'bullet'):
-    from core_mpc_utils import sim_utils as simulator_utils
+    from force_feedback_mpc.core_mpc_utils import sim_utils as simulator_utils
     env, robot_simulator, _ = simulator_utils.init_bullet_simulation(robot_name, dt=dt_simu, x0=x0)
     robot = robot_simulator.pin_robot
   elif(simulator == 'raisim'):
-    from core_mpc_utils import raisim_utils as simulator_utils
+    from force_feedback_mpc.core_mpc_utils import raisim_utils as simulator_utils
     env, robot_simulator = simulator_utils.init_raisim_simulation(robot_name, dt=dt_simu, x0=x0)  
     robot = robot_simulator
   else:
@@ -84,7 +85,7 @@ def main(robot_name='iiwa', simulator='bullet', PLOT_INIT=False):
   # # # # # # # # 
   ### OCP SETUP ###
   # # # # # # # # # 
-  # Create DDP solver + compute warm start torque
+  # Create OCP solver + compute warm start torque
   # f_ext = pin_utils.get_external_joint_torques(contact_placement.copy(), config['frameForceRef'], robot)
   u0 = pin_utils.get_u_grav(q0, robot.model, config['armature']) # pin_utils.get_tau(q0, v0, np.zeros((nq,1)), f_ext, robot.model, config['armature'])
   lpf_joint_names = robot.model.names[1:] #['A2', 'A3'] 
@@ -114,7 +115,7 @@ def main(robot_name='iiwa', simulator='bullet', PLOT_INIT=False):
 
   # Plot initial solution
   if(PLOT_INIT):
-    ddp_handler = DDPDataHandlerLPF(ddp, n_lpf)
+    ddp_handler = OCPDataHandlerLPF(ddp, n_lpf)
     ddp_data = ddp_handler.extract_data(ee_frame_name=frame_of_interest, ct_frame_name=frame_of_interest)
     _, _ = ddp_handler.plot_ddp_results(ddp_data, which_plots=config['WHICH_PLOTS'], 
                                                         colors=['r'], 

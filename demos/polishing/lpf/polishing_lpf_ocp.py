@@ -31,8 +31,8 @@ from force_feedback_mpc.core_mpc_utils import path_utils, misc_utils
 from croco_mpc_utils import pinocchio_utils as pin_utils
 from croco_mpc_utils.math_utils import circle_point_WORLD
 
-from lpf_mpc.ocp import OptimalControlProblemLPF, getJointAndStateIds
-from lpf_mpc.data import OCPDataHandlerLPF
+from force_feedback_mpc.lpf_mpc.ocp import OptimalControlProblemLPF, getJointAndStateIds
+from force_feedback_mpc.lpf_mpc.data import OCPDataHandlerLPF
 
 import mim_solvers
 from mim_robots.robot_loader import load_pinocchio_wrapper
@@ -40,21 +40,22 @@ from mim_robots.robot_loader import load_pinocchio_wrapper
 
 WARM_START_IK = True
 
+import os
 
-def main(robot_name='iiwa', PLOT=False, DISPLAY=True):
+def main(PLOT=False, DISPLAY=True):
 
     # # # # # # # # # # # #
     ### LOAD ROBOT MODEL ## 
     # # # # # # # # # # # # 
     # Read config file
-    config, _ = path_utils.load_config_file(__file__, robot_name)
+    config = path_utils.load_yaml_file(os.path.dirname(os.path.realpath(__file__))+'/polishing_lpf.yml')
     q0 = np.asarray(config['q0'])
     v0 = np.asarray(config['dq0'])
     x0 = np.concatenate([q0, v0])   
     # Get pin wrapper
-    robot = load_pinocchio_wrapper('iiwa')
+    robot = load_pinocchio_wrapper('iiwa', locked_joints=['A7'])
     # Get initial frame placement + dimensions of joint space
-    frame_name = config['frameTranslationFrameName']
+    frame_name = config['contacts'][0]['contactModelFrameName']
     id_endeff = robot.model.getFrameId(frame_name)
     nq, nv = robot.model.nq, robot.model.nv
     nx = nq+nv; nu = nq
@@ -122,6 +123,7 @@ def main(robot_name='iiwa', PLOT=False, DISPLAY=True):
 
     # Solve initial
     solver = mim_solvers.SolverSQP(ocp)
+    solver.setCallbacks([mim_solvers.CallbackVerbose(), mim_solvers.CallbackLogger()])
     solver.solve(xs_init, us_init, maxiter=config['maxiter'], isFeasible=False)
 
 
@@ -314,5 +316,5 @@ def main(robot_name='iiwa', PLOT=False, DISPLAY=True):
 
 if __name__=='__main__':
     args = misc_utils.parse_OCP_script(sys.argv[1:])
-    main(args.robot_name, args.PLOT, args.DISPLAY)
+    main(args.PLOT, args.DISPLAY)
 

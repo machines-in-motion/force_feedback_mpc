@@ -12,15 +12,13 @@ MAX_ITER_2: 1000
 
 # Task
 FWEIGHT: 0.0005
+FDOTWEIGHT: 0. 
 FMIN: 80   # desired contact force at end-effector (min)
 FMAX: 80   # desired contact force at end-effector (max)
 MU: 0.75   # environment friction coefficient (ground / wall)
-
 # CONTROL
-USE_INTEGRAL: True
-INTEGRAL_GAIN: 0.1
 KP: 0.
 KV: 0.
 
 RECORD_VIDEO: False
-DATA_SAVE_DIR: "data/go2_classical"
+DATA_SAVE_DIR: "/home/skleff/go2_soft"

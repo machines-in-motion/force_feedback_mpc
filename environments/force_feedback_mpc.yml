@@ -1,0 +1,36 @@
+name: force_feedback_mpc
+channels:
+  - conda-forge
+dependencies:
+  # Core computation
+  - python=3.12
+  - numpy
+  - scipy
+  - matplotlib
+  
+  # Robotics & Control (TESTED & WORKING VERSIONS)
+  # Note: Pinocchio must be 3.8.0 (Crocoddyl 3.2.0 requires exactly 3.8.0)
+  # Pinocchio 3.9.0 not compatible until Crocoddyl updates
+  - pinocchio=3.8.0
+  - crocoddyl>=3.2.0
+  - mim-solvers=0.2.0
+  
+  # Simulation & Visualization
+  - pybullet
+  - mujoco
+  - meshcat-python
+  - opencv
+
+  # Utilities
+  - pyyaml
+  - pytest
+  - pip
+  
+# Installation instructions:
+# conda env create -f force_feedback_mpc.yml
+# conda activate force_feedback_mpc
+# cd /path/to/force_feedback_mpc && mkdir build && cd build
+# cmake .. -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX && make -j4 && make install
+# cd .. && pip install -e ./croco_mpc_utils --no-deps 
+# pip install -e ./mim_robots --no-deps
+# [optional] pip install -e /path/to/Go2Py  # for Go2 demos 

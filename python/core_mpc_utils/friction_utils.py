@@ -38,9 +38,9 @@ class ResidualFrictionCone(crocoddyl.ResidualModelAbstract):
     def calc(self, data, x, u=None): 
         F = data.shared.contacts.contacts[self.contact_name].f.vector[:3]   
         if(self.normal == 'z'):
-            data.r[0] = np.array([self.mu * np.abs(F[2]) - np.sqrt(F[0]**2 + F[1]**2)])
+            data.r[0] = self.mu * np.abs(F[2]) - np.sqrt(F[0]**2 + F[1]**2)
         elif(self.normal == 'x'):
-            data.r[0] = np.array([self.mu * np.abs(F[0]) - np.sqrt(F[1]**2 + F[2]**2)])
+            data.r[0] = self.mu * np.abs(F[0]) - np.sqrt(F[1]**2 + F[2]**2)
         else:
             ValueError('Friction with normal=y is not supported.')
 
