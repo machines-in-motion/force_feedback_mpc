@@ -14,7 +14,7 @@ The code to reproduce our experiments (i.e. real-time implementation of the forc
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| [Pinocchio](https://github.com/stack-of-tasks/pinocchio) >= 3.7.0 | Robot dynamics & kinematics |
+| [Pinocchio](https://github.com/stack-of-tasks/pinocchio) | 3.8.0 | Robot dynamics & kinematics |
 | [Crocoddyl](https://github.com/lariodante/crocoddyl) | >= 3.2.0 | Optimal control library |
 | [mim-solvers](https://github.com/machines-in-motion/mim_solvers) | 0.2.0 | Optimization solvers |
 | CMake | >= 3.10 | Build system |
@@ -90,6 +90,12 @@ Requires [Go2Py](https://github.com/machines-in-motion/Go2Py/tree/mpc) to be ins
 python demos/go2arm/Go2MPC_demo_classical.py
 python demos/go2arm/Go2MPC_demo_soft.py
 ```
+
+## Known Compatibility Constraints
+
+**⚠️ Pinocchio 3.9.0 not compatible:** Crocoddyl 3.2.0 requires Pinocchio 3.8.0 exactly. We'll update when Crocoddyl releases a compatible version.
+
+**Alternative older versions:** If you need Pinocchio 3.7.0, use Crocoddyl 3.0.1.1 and mim-solvers 0.1.1 (slower but works). See [documentation files](/) for details.
 
 ## Citing this work
 
