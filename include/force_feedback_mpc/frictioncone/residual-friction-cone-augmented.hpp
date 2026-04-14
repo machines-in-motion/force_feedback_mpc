@@ -13,9 +13,9 @@
 #include <crocoddyl/core/residual-base.hpp>
 #include <crocoddyl/core/utils/exception.hpp>
 #include <crocoddyl/multibody/data/contacts.hpp>
+#include <crocoddyl/multibody/data/impulses.hpp>
 #include <crocoddyl/multibody/fwd.hpp>
 #include <crocoddyl/multibody/states/multibody.hpp>
-#include <crocoddyl/multibody/data/impulses.hpp>
 
 namespace force_feedback_mpc {
 namespace frictioncone {
@@ -32,17 +32,15 @@ struct ResidualDataFrictionConeAugmented
 
   template <class Model>
   ResidualDataFrictionConeAugmented(Model* const model,
-                           DataCollectorAbstract* const data)
+                                    DataCollectorAbstract* const data)
       : Base(model, data) {
     dcone_df.resize(3);
     dcone_df.setZero();
     residual = 0;
-}
+  }
   VectorXs dcone_df;
-  double residual;  
+  double residual;
 };
-
-
 
 /**
  * @brief Contact friction cone residual
@@ -78,9 +76,8 @@ class ResidualModelFrictionConeAugmented
    * or inverse dynamics (false)
    */
   ResidualModelFrictionConeAugmented(std::shared_ptr<StateMultibody> state,
-                            const pinocchio::FrameIndex id,
-                            const double coef,
-                            const std::size_t nu);
+                                     const pinocchio::FrameIndex id,
+                                     const double coef, const std::size_t nu);
 
   /**
    * @brief Initialize the contact friction cone residual model
@@ -93,8 +90,8 @@ class ResidualModelFrictionConeAugmented
    * @param[in] fref   Reference friction cone
    */
   ResidualModelFrictionConeAugmented(std::shared_ptr<StateMultibody> state,
-                                      const pinocchio::FrameIndex id,
-                                      const double coef);
+                                     const pinocchio::FrameIndex id,
+                                     const double coef);
   virtual ~ResidualModelFrictionConeAugmented();
 
   /**
@@ -132,10 +129,10 @@ class ResidualModelFrictionConeAugmented
    */
   pinocchio::FrameIndex get_id() const;
 
-  void set_friction_coef(const double inDouble) {coef_ = inDouble; };
+  void set_friction_coef(const double inDouble) { coef_ = inDouble; };
   const double& get_friction_coef() const { return coef_; };
 
-  void set_active(const bool inBool) {active_ = inBool; };
+  void set_active(const bool inBool) { active_ = inBool; };
   const bool& get_active() const { return active_; };
 
   /**
@@ -154,7 +151,6 @@ class ResidualModelFrictionConeAugmented
   double coef_;
   bool active_;
 };
-
 
 }  // namespace frictioncone
 }  // namespace force_feedback_mpc

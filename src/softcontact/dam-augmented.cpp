@@ -6,6 +6,8 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "force_feedback_mpc/softcontact/dam-augmented.hpp"
+
 #include <crocoddyl/core/utils/exception.hpp>
 #include <crocoddyl/core/utils/math.hpp>
 #include <pinocchio/algorithm/centroidal.hpp>
@@ -16,28 +18,20 @@
 #include <pinocchio/algorithm/rnea-derivatives.hpp>
 #include <pinocchio/algorithm/rnea.hpp>
 
-#include "force_feedback_mpc/softcontact/dam-augmented.hpp"
-
 using namespace crocoddyl;
-
 
 namespace force_feedback_mpc {
 namespace softcontact {
 
-
-DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDynamics(
-    std::shared_ptr<StateMultibody> state, 
-    std::shared_ptr<ActuationModelAbstract> actuation,
-    std::shared_ptr<CostModelSum> costs,
-    const pinocchio::FrameIndex frameId,
-    const VectorXs& Kp, 
-    const VectorXs& Kv,
-    const Vector3s& oPc,
-    const std::size_t nc,
-    std::shared_ptr<ConstraintModelManager> constraints)
-    : DAMBase(state, 
-              actuation->get_nu(), 
-              costs->get_nr(), 
+DAMSoftContactAbstractAugmentedFwdDynamics::
+    DAMSoftContactAbstractAugmentedFwdDynamics(
+        std::shared_ptr<StateMultibody> state,
+        std::shared_ptr<ActuationModelAbstract> actuation,
+        std::shared_ptr<CostModelSum> costs,
+        const pinocchio::FrameIndex frameId, const VectorXs& Kp,
+        const VectorXs& Kv, const Vector3s& oPc, const std::size_t nc,
+        std::shared_ptr<ConstraintModelManager> constraints)
+    : DAMBase(state, actuation->get_nu(), costs->get_nr(),
               constraints ? constraints->get_ng() : 0,
               constraints ? constraints->get_nh() : 0),
       actuation_(actuation),
@@ -46,22 +40,27 @@ DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDy
       pinocchio_(*state->get_pinocchio().get()),
       without_armature_(true) {
   if (this->get_costs()->get_nu() != this->get_nu()) {
-    throw_pretty("Invalid argument: "
-                 << "Costs doesn't have the same control dimension (it should be " + std::to_string(this->get_nu()) + ")");
+    throw_pretty(
+        "Invalid argument: "
+        << "Costs doesn't have the same control dimension (it should be " +
+               std::to_string(this->get_nu()) + ")");
   }
-  // std::cout << "pin.effortLimit  = " << this->get_pinocchio().effortLimit.tail(this->get_nu()) << std::endl;
-  DAMBase::set_u_lb(double(-1.) * this->get_pinocchio().effortLimit.tail(this->get_nu()));
-  DAMBase::set_u_ub(double(+1.) * this->get_pinocchio().effortLimit.tail(this->get_nu()));
-  this->set_g_lb(-std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
-  this->set_g_ub(std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
+  // std::cout << "pin.effortLimit  = " <<
+  // this->get_pinocchio().effortLimit.tail(this->get_nu()) << std::endl;
+  DAMBase::set_u_lb(double(-1.) *
+                    this->get_pinocchio().effortLimit.tail(this->get_nu()));
+  DAMBase::set_u_ub(double(+1.) *
+                    this->get_pinocchio().effortLimit.tail(this->get_nu()));
+  this->set_g_lb(-std::numeric_limits<double>::infinity() *
+                 VectorXs::Ones(this->get_ng()));
+  this->set_g_ub(std::numeric_limits<double>::infinity() *
+                 VectorXs::Ones(this->get_ng()));
   // Soft contact model parameters
-  if(Kp.maxCoeff() < double(0.) || Kv.maxCoeff() < double(0.)){
-     throw_pretty("Invalid argument: "
-                << "Kp and Kv must be positive "); 
+  if (Kp.maxCoeff() < double(0.) || Kv.maxCoeff() < double(0.)) {
+    throw_pretty("Invalid argument: " << "Kp and Kv must be positive ");
   }
-  if(Kv.size() != nc || Kv.size() != nc){
-     throw_pretty("Invalid argument: "
-                << "Kp and Kv must have size " << nc); 
+  if (Kv.size() != nc || Kv.size() != nc) {
+    throw_pretty("Invalid argument: " << "Kp and Kv must have size " << nc);
   }
   Kp_ = Kp;
   Kv_ = Kv;
@@ -69,10 +68,10 @@ DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDy
   frameId_ = frameId;
   // By default the cost is expressed in the same frame as the dynamics
   // and the dynamics is expressed in LOCAL
-  ref_ = pinocchio::ReferenceFrame::LOCAL; 
+  ref_ = pinocchio::ReferenceFrame::LOCAL;
   cost_ref_ = ref_;
   // If gains are too small, set contact to inactive
-  if(Kp.maxCoeff() <= double(1e-9) && Kv.maxCoeff() <= double(1e-9)){
+  if (Kp.maxCoeff() <= double(1e-9) && Kv.maxCoeff() <= double(1e-9)) {
     active_contact_ = false;
   } else {
     active_contact_ = true;
@@ -92,32 +91,29 @@ DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDy
   with_force_rate_reg_cost_ = false;
 }
 
-
-DAMSoftContactAbstractAugmentedFwdDynamics::~DAMSoftContactAbstractAugmentedFwdDynamics() {}
-
+DAMSoftContactAbstractAugmentedFwdDynamics::
+    ~DAMSoftContactAbstractAugmentedFwdDynamics() {}
 
 void DAMSoftContactAbstractAugmentedFwdDynamics::calc(
     const std::shared_ptr<DifferentialActionDataAbstract>& data,
-    const Eigen::Ref<const VectorXs>& x,
-    const Eigen::Ref<const VectorXs>& f) {
+    const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& f) {
   calc(data, x, f, unone_);
 }
 
 void DAMSoftContactAbstractAugmentedFwdDynamics::calcDiff(
     const std::shared_ptr<DifferentialActionDataAbstract>& data,
-    const Eigen::Ref<const VectorXs>& x,
-    const Eigen::Ref<const VectorXs>& f) {
+    const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& f) {
   calcDiff(data, x, f, unone_);
 }
 
-std::shared_ptr<DifferentialActionDataAbstractTpl<double> >
+std::shared_ptr<DifferentialActionDataAbstractTpl<double>>
 DAMSoftContactAbstractAugmentedFwdDynamics::createData() {
   return std::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
-
 bool DAMSoftContactAbstractAugmentedFwdDynamics::checkData(
-    const std::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double>>&) {
+    const std::shared_ptr<
+        crocoddyl::DifferentialActionDataAbstractTpl<double>>&) {
   return false;
 }
 
@@ -177,8 +173,7 @@ void DAMSoftContactAbstractAugmentedFwdDynamics::set_g_ub(
   g_ub_ = g_ub;
 }
 
-void DAMSoftContactAbstractAugmentedFwdDynamics::print(
-    std::ostream& os) const {
+void DAMSoftContactAbstractAugmentedFwdDynamics::print(std::ostream& os) const {
   os << "DifferentialActionModelFreeFwdDynamics {nx=" << state_->get_nx()
      << ", ndx=" << state_->get_ndx() << ", nu=" << nu_ << "}";
 }
@@ -188,236 +183,220 @@ DAMSoftContactAbstractAugmentedFwdDynamics::get_pinocchio() const {
   return pinocchio_;
 }
 
-const std::shared_ptr<ActuationModelAbstract >&
+const std::shared_ptr<ActuationModelAbstract>&
 DAMSoftContactAbstractAugmentedFwdDynamics::get_actuation() const {
   return actuation_;
 }
 
-const std::shared_ptr<CostModelSum >&
+const std::shared_ptr<CostModelSum>&
 DAMSoftContactAbstractAugmentedFwdDynamics::get_costs() const {
   return costs_;
 }
 
-const std::shared_ptr<ConstraintModelManager >&
+const std::shared_ptr<ConstraintModelManager>&
 DAMSoftContactAbstractAugmentedFwdDynamics::get_constraints() const {
   return constraints_;
 }
 
-
-
 void DAMSoftContactAbstractAugmentedFwdDynamics::set_Kp(const VectorXs& inKp) {
   if (inKp.maxCoeff() < 0.) {
-    throw_pretty("Invalid argument: "
-                 << "Stiffness should be positive");
+    throw_pretty("Invalid argument: " << "Stiffness should be positive");
   }
   Kp_ = inKp;
-  if(Kp_.maxCoeff() <= double(1e-9) && Kv_.maxCoeff() <= double(1e-9)){
+  if (Kp_.maxCoeff() <= double(1e-9) && Kv_.maxCoeff() <= double(1e-9)) {
     active_contact_ = false;
   } else {
     active_contact_ = true;
   }
 }
-
 
 void DAMSoftContactAbstractAugmentedFwdDynamics::set_Kv(const VectorXs& inKv) {
   if (inKv.maxCoeff() < 0.) {
-    throw_pretty("Invalid argument: "
-                 << "Damping should be positive");
+    throw_pretty("Invalid argument: " << "Damping should be positive");
   }
   Kv_ = inKv;
-  if(Kp_.maxCoeff() <= double(1e-9) && Kv_.maxCoeff() <= double(1e-9)){
+  if (Kp_.maxCoeff() <= double(1e-9) && Kv_.maxCoeff() <= double(1e-9)) {
     active_contact_ = false;
   } else {
     active_contact_ = true;
   }
 }
 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_oPc(const Vector3s& inoPc) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_oPc(
+    const Vector3s& inoPc) {
   if (inoPc.size() != 3) {
-    throw_pretty("Invalid argument: "
-                 << "Anchor point position should have size 3");
+    throw_pretty(
+        "Invalid argument: " << "Anchor point position should have size 3");
   }
   oPc_ = inoPc;
 }
 
-
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_ref(const pinocchio::ReferenceFrame inRef) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_ref(
+    const pinocchio::ReferenceFrame inRef) {
   ref_ = inRef;
 }
 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_cost_ref(const pinocchio::ReferenceFrame inRef) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_cost_ref(
+    const pinocchio::ReferenceFrame inRef) {
   cost_ref_ = inRef;
 }
 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_id(const pinocchio::FrameIndex inId) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_id(
+    const pinocchio::FrameIndex inId) {
   frameId_ = inId;
 }
 
-
-const typename MathBaseTpl<double>::VectorXs& DAMSoftContactAbstractAugmentedFwdDynamics::get_Kp() const {
+const typename MathBaseTpl<double>::VectorXs&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_Kp() const {
   return Kp_;
 }
 
-
-const typename MathBaseTpl<double>::VectorXs& DAMSoftContactAbstractAugmentedFwdDynamics::get_Kv() const {
+const typename MathBaseTpl<double>::VectorXs&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_Kv() const {
   return Kv_;
 }
 
-
-const typename MathBaseTpl<double>::Vector3s& DAMSoftContactAbstractAugmentedFwdDynamics::get_oPc() const {
+const typename MathBaseTpl<double>::Vector3s&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_oPc() const {
   return oPc_;
 }
 
-
-const pinocchio::ReferenceFrame& DAMSoftContactAbstractAugmentedFwdDynamics::get_ref() const {
+const pinocchio::ReferenceFrame&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_ref() const {
   return ref_;
 }
 
-
-const pinocchio::ReferenceFrame& DAMSoftContactAbstractAugmentedFwdDynamics::get_cost_ref() const {
+const pinocchio::ReferenceFrame&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_cost_ref() const {
   return cost_ref_;
 }
 
-
-
-const pinocchio::FrameIndex& DAMSoftContactAbstractAugmentedFwdDynamics::get_id() const {
+const pinocchio::FrameIndex&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_id() const {
   return frameId_;
 }
 
-
 // armature
 
-const typename MathBaseTpl<double>::VectorXs& DAMSoftContactAbstractAugmentedFwdDynamics::get_armature() const {
+const typename MathBaseTpl<double>::VectorXs&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_armature() const {
   return armature_;
 }
-
-
 
 bool DAMSoftContactAbstractAugmentedFwdDynamics::get_with_armature() const {
   return with_armature_;
 }
 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_with_armature(const bool inBool) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_with_armature(
+    const bool inBool) {
   with_armature_ = inBool;
 }
 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_armature(const VectorXs& armature) {
-  if (static_cast<std::size_t>(armature.size()) != this->get_state()->get_nv()) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_armature(
+    const VectorXs& armature) {
+  if (static_cast<std::size_t>(armature.size()) !=
+      this->get_state()->get_nv()) {
     throw_pretty("Invalid argument: "
-                 << "The armature dimension is wrong (it should be " + std::to_string(this->get_state()->get_nv()) + ")");
+                 << "The armature dimension is wrong (it should be " +
+                        std::to_string(this->get_state()->get_nv()) + ")");
   }
   armature_ = armature;
 }
-
 
 bool DAMSoftContactAbstractAugmentedFwdDynamics::get_active_contact() const {
   return active_contact_;
 }
 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_active_contact(const bool inActive) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_active_contact(
+    const bool inActive) {
   active_contact_ = inActive;
 }
-
-
-
 
 bool DAMSoftContactAbstractAugmentedFwdDynamics::get_with_force_cost() const {
   return with_force_cost_;
 }
 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_with_force_cost(const bool inBool) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_with_force_cost(
+    const bool inBool) {
   with_force_cost_ = inBool;
 }
 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_force_des(const VectorXs& inForceDes) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_force_des(
+    const VectorXs& inForceDes) {
   if (std::size_t(inForceDes.size()) != nc_) {
-    throw_pretty("Invalid argument: "
-                 << "Desired force should be have size " << nc_);
+    throw_pretty("Invalid argument: " << "Desired force should be have size "
+                                      << nc_);
   }
   force_des_ = inForceDes;
 }
 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_force_weight(const VectorXs& inForceWeights) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_force_weight(
+    const VectorXs& inForceWeights) {
   if (inForceWeights.maxCoeff() < 0.) {
-    throw_pretty("Invalid argument: "
-                 << "Force cost weights should be positive");
+    throw_pretty(
+        "Invalid argument: " << "Force cost weights should be positive");
   }
   force_weight_ = inForceWeights;
 }
 
-
-const typename MathBaseTpl<double>::VectorXs& DAMSoftContactAbstractAugmentedFwdDynamics::get_force_des() const {
+const typename MathBaseTpl<double>::VectorXs&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_force_des() const {
   return force_des_;
 }
 
-
-const typename MathBaseTpl<double>::VectorXs& DAMSoftContactAbstractAugmentedFwdDynamics::get_force_weight() const {
+const typename MathBaseTpl<double>::VectorXs&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_force_weight() const {
   return force_weight_;
 }
 
+// Force rate reg cost
 
-//Force rate reg cost 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_with_force_rate_reg_cost(const bool inBool) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_with_force_rate_reg_cost(
+    const bool inBool) {
   with_force_rate_reg_cost_ = inBool;
 }
 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_force_rate_reg_weight(const VectorXs& inForceRegWeights) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_force_rate_reg_weight(
+    const VectorXs& inForceRegWeights) {
   if (inForceRegWeights.maxCoeff() < 0.) {
-    throw_pretty("Invalid argument: "
-                 << "Force rate cost weights should be positive");
+    throw_pretty(
+        "Invalid argument: " << "Force rate cost weights should be positive");
   }
   force_rate_reg_weight_ = inForceRegWeights;
 }
 
-
-bool DAMSoftContactAbstractAugmentedFwdDynamics::get_with_force_rate_reg_cost() const {
+bool DAMSoftContactAbstractAugmentedFwdDynamics::get_with_force_rate_reg_cost()
+    const {
   return with_force_rate_reg_cost_;
 }
 
-
-const typename MathBaseTpl<double>::VectorXs& DAMSoftContactAbstractAugmentedFwdDynamics::get_force_rate_reg_weight() const {
+const typename MathBaseTpl<double>::VectorXs&
+DAMSoftContactAbstractAugmentedFwdDynamics::get_force_rate_reg_weight() const {
   return force_rate_reg_weight_;
 }
 
-
-
-
-
-bool DAMSoftContactAbstractAugmentedFwdDynamics::get_with_gravity_torque_reg() const {
+bool DAMSoftContactAbstractAugmentedFwdDynamics::get_with_gravity_torque_reg()
+    const {
   return with_gravity_torque_reg_;
 }
 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_with_gravity_torque_reg(const bool inBool) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_with_gravity_torque_reg(
+    const bool inBool) {
   with_gravity_torque_reg_ = inBool;
 }
-
 
 double DAMSoftContactAbstractAugmentedFwdDynamics::get_tau_grav_weight() const {
   return tau_grav_weight_;
 }
 
-
-void DAMSoftContactAbstractAugmentedFwdDynamics::set_tau_grav_weight(const double inWeight) {
+void DAMSoftContactAbstractAugmentedFwdDynamics::set_tau_grav_weight(
+    const double inWeight) {
   if (inWeight < 0.) {
     throw_pretty("Invalid argument: "
                  << "Gravity torque regularization weight should be positive");
   }
   tau_grav_weight_ = inWeight;
 }
-
 
 }  // namespace softcontact
 }  // namespace force_feedback_mpc

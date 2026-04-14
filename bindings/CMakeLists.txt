@@ -1,35 +1,40 @@
 set(${PY_NAME}_SOURCES
-  lowpassfilter/state.cpp
-  lowpassfilter/action.cpp
-  softcontact/state.cpp
-  softcontact/dam-augmented.cpp
-  softcontact/dam3d-augmented.cpp
-  softcontact/dam1d-augmented.cpp
-  softcontact/iam-augmented.cpp
-  frictioncone/residual-friction-cone.cpp
-  frictioncone/residual-friction-cone-augmented.cpp
-  main.cpp
+    lowpassfilter/state.cpp
+    lowpassfilter/action.cpp
+    softcontact/state.cpp
+    softcontact/dam-augmented.cpp
+    softcontact/dam3d-augmented.cpp
+    softcontact/dam1d-augmented.cpp
+    softcontact/iam-augmented.cpp
+    frictioncone/residual-friction-cone.cpp
+    frictioncone/residual-friction-cone-augmented.cpp
+    main.cpp
 )
 
 add_library(${PY_NAME}_pywrap SHARED ${${PY_NAME}_SOURCES})
-target_link_libraries(${PY_NAME}_pywrap PUBLIC
-  ${PROJECT_NAME}::${PROJECT_NAME} eigenpy::eigenpy)
-target_include_directories(${PY_NAME}_pywrap
-  SYSTEM PRIVATE ${PYTHON_INCLUDE_DIR}
-  PRIVATE ${CMAKE_CURRENT_LIST_DIR}
+target_link_libraries(
+    ${PY_NAME}_pywrap
+    PUBLIC ${PROJECT_NAME}::${PROJECT_NAME} eigenpy::eigenpy
 )
-set_target_properties(${PY_NAME}_pywrap PROPERTIES
-  INSTALL_RPATH "\$ORIGIN/../../.."
-  LIBRARY_OUTPUT_DIRECTORY ${PY_NAME}_pywrap
-  PREFIX ""
-  SUFFIX ${PYTHON_EXT_SUFFIX})
-TARGET_LINK_BOOST_PYTHON(${PY_NAME}_pywrap PRIVATE)
+target_include_directories(
+    ${PY_NAME}_pywrap
+    SYSTEM
+    PRIVATE ${PYTHON_INCLUDE_DIR}
+    PRIVATE ${CMAKE_CURRENT_LIST_DIR}
+)
+set_target_properties(
+    ${PY_NAME}_pywrap
+    PROPERTIES
+        INSTALL_RPATH "\$ORIGIN/../../.."
+        LIBRARY_OUTPUT_DIRECTORY ${PY_NAME}_pywrap
+        PREFIX ""
+        SUFFIX ${PYTHON_EXT_SUFFIX}
+)
+target_link_boost_python(${PY_NAME}_pywrap PRIVATE)
 install(TARGETS ${PY_NAME}_pywrap DESTINATION ${${PY_NAME}_INSTALL_DIR})
 
-set(${PY_NAME}_PYTHON
-  __init__.py
-  )
+set(${PY_NAME}_PYTHON __init__.py)
 
 foreach(python ${${PY_NAME}_PYTHON})
-  PYTHON_INSTALL_ON_SITE(${PY_NAME} ${python})
+    python_install_on_site(${PY_NAME} ${python})
 endforeach()

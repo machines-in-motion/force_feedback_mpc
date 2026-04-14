@@ -52,13 +52,15 @@ class DAMSoftContact3DFrictionFactory {
 
   std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics> create(
       DAMSoftContact3DFrictionTypes::Type type,
-      PinocchioReferenceTypes::Type ref_type = PinocchioReferenceTypes::LOCAL) const;
+      PinocchioReferenceTypes::Type ref_type =
+          PinocchioReferenceTypes::LOCAL) const;
 
   // Soft contact 3D dynamics
   std::shared_ptr<sobec::DAMSoftContact3DAugmentedFrictionFwdDynamics>
-  create_augmentedDAMSoft3DFriction(StateModelTypes::Type state_type,
-                            ActuationModelTypes::Type actuation_type,
-                            PinocchioReferenceTypes::Type ref_type) const;
+  create_augmentedDAMSoft3DFriction(
+      StateModelTypes::Type state_type,
+      ActuationModelTypes::Type actuation_type,
+      PinocchioReferenceTypes::Type ref_type) const;
 };
 
 }  // namespace unittest

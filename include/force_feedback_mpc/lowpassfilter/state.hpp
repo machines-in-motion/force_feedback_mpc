@@ -9,11 +9,11 @@
 #ifndef FORCE_FEEDBACK_MPC_STATELPF_HPP_
 #define FORCE_FEEDBACK_MPC_STATELPF_HPP_
 
-#include <pinocchio/multibody/model.hpp>
 #include <crocoddyl/multibody/states/multibody.hpp>
+#include <pinocchio/multibody/model.hpp>
 
 namespace force_feedback_mpc {
-namespace lpf{
+namespace lpf {
 
 class StateLPF : public crocoddyl::StateAbstract {
  public:
@@ -24,8 +24,8 @@ class StateLPF : public crocoddyl::StateAbstract {
 
   enum JointType { FreeFlyer = 0, Spherical, Simple };
 
-  explicit StateLPF(std::shared_ptr<pinocchio::ModelTpl<double> > model,
-                       std::vector<int> lpf_joint_ids);
+  explicit StateLPF(std::shared_ptr<pinocchio::ModelTpl<double>> model,
+                    std::vector<int> lpf_joint_ids);
   virtual ~StateLPF();
 
   virtual VectorXs zero() const;
@@ -36,21 +36,19 @@ class StateLPF : public crocoddyl::StateAbstract {
   virtual void integrate(const Eigen::Ref<const VectorXs>& y,
                          const Eigen::Ref<const VectorXs>& dy,
                          Eigen::Ref<VectorXs> yout) const;
-  virtual void Jdiff(const Eigen::Ref<const VectorXs>&,
-                     const Eigen::Ref<const VectorXs>&,
-                     Eigen::Ref<MatrixXs> Jfirst, Eigen::Ref<MatrixXs> Jsecond,
-                     const crocoddyl::Jcomponent firstsecond = crocoddyl::both) const;
+  virtual void Jdiff(
+      const Eigen::Ref<const VectorXs>&, const Eigen::Ref<const VectorXs>&,
+      Eigen::Ref<MatrixXs> Jfirst, Eigen::Ref<MatrixXs> Jsecond,
+      const crocoddyl::Jcomponent firstsecond = crocoddyl::both) const;
 
-  virtual void Jintegrate(const Eigen::Ref<const VectorXs>& y,
-                          const Eigen::Ref<const VectorXs>& dy,
-                          Eigen::Ref<MatrixXs> Jfirst,
-                          Eigen::Ref<MatrixXs> Jsecond,
-                          const crocoddyl::Jcomponent firstsecond = crocoddyl::both,
-                          const crocoddyl::AssignmentOp = crocoddyl::setto) const;
-  virtual void JintegrateTransport(const Eigen::Ref<const VectorXs>& y,
-                                   const Eigen::Ref<const VectorXs>& dy,
-                                   Eigen::Ref<MatrixXs> Jin,
-                                   const crocoddyl::Jcomponent firstsecond) const;
+  virtual void Jintegrate(
+      const Eigen::Ref<const VectorXs>& y, const Eigen::Ref<const VectorXs>& dy,
+      Eigen::Ref<MatrixXs> Jfirst, Eigen::Ref<MatrixXs> Jsecond,
+      const crocoddyl::Jcomponent firstsecond = crocoddyl::both,
+      const crocoddyl::AssignmentOp = crocoddyl::setto) const;
+  virtual void JintegrateTransport(
+      const Eigen::Ref<const VectorXs>& y, const Eigen::Ref<const VectorXs>& dy,
+      Eigen::Ref<MatrixXs> Jin, const crocoddyl::Jcomponent firstsecond) const;
   std::shared_ptr<crocoddyl::StateBase> cloneAsDouble() const override {
     return std::make_shared<StateLPF>(*this);
   }
@@ -58,7 +56,7 @@ class StateLPF : public crocoddyl::StateAbstract {
     return std::make_shared<StateLPF>(*this);
   }
 
-  const std::shared_ptr<pinocchio::ModelTpl<double> >& get_pinocchio() const;
+  const std::shared_ptr<pinocchio::ModelTpl<double>>& get_pinocchio() const;
   const std::size_t& get_ntau() const;
   const std::size_t& get_ny() const;
   const std::size_t& get_ndy() const;
@@ -76,11 +74,10 @@ class StateLPF : public crocoddyl::StateAbstract {
   std::size_t ndy_;
 
  private:
-  std::shared_ptr<pinocchio::ModelTpl<double> > pinocchio_;
+  std::shared_ptr<pinocchio::ModelTpl<double>> pinocchio_;
   VectorXs y0_;
   JointType joint_type_;
 };
-
 
 }  // namespace lpf
 }  // namespace force_feedback_mpc

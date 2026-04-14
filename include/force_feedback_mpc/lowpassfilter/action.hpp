@@ -21,7 +21,6 @@
 namespace force_feedback_mpc {
 namespace lpf {
 
-
 class IntegratedActionDataLPF : public crocoddyl::ActionDataAbstract {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -31,8 +30,10 @@ class IntegratedActionDataLPF : public crocoddyl::ActionDataAbstract {
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
   typedef pinocchio::DataTpl<double> PinocchioData;
-  typedef crocoddyl::DifferentialActionDataAbstractTpl<double> DifferentialActionDataAbstract;
-  typedef crocoddyl::ActivationDataQuadraticBarrierTpl<double> ActivationDataQuadraticBarrier; 
+  typedef crocoddyl::DifferentialActionDataAbstractTpl<double>
+      DifferentialActionDataAbstract;
+  typedef crocoddyl::ActivationDataQuadraticBarrierTpl<double>
+      ActivationDataQuadraticBarrier;
 
   template <class Model>
   explicit IntegratedActionDataLPF(Model* const model)
@@ -73,8 +74,8 @@ class IntegratedActionDataLPF : public crocoddyl::ActionDataAbstract {
   MatrixXs& Gy = Base::Gx;
 };
 
-
-class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double> {
+class IntegratedActionModelLPF
+    : public crocoddyl::ActionModelAbstractTpl<double> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -82,12 +83,14 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
   typedef crocoddyl::ActionModelAbstractTpl<double> Base;
   typedef IntegratedActionDataLPF Data;
   typedef crocoddyl::ActionDataAbstractTpl<double> ActionDataAbstract;
-  typedef crocoddyl::DifferentialActionModelAbstractTpl<double> DifferentialActionModelAbstract;
+  typedef crocoddyl::DifferentialActionModelAbstractTpl<double>
+      DifferentialActionModelAbstract;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
   typedef crocoddyl::StateMultibodyTpl<double> StateMultibody;
   typedef pinocchio::ModelTpl<double> PinocchioModel;
-  typedef crocoddyl::ActivationModelQuadraticBarrierTpl<double> ActivationModelQuadraticBarrier;
+  typedef crocoddyl::ActivationModelQuadraticBarrierTpl<double>
+      ActivationModelQuadraticBarrier;
   typedef crocoddyl::ActivationBoundsTpl<double> ActivationBounds;
 
   IntegratedActionModelLPF(
@@ -152,18 +155,22 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
   void set_dt(const double& dt);
   void set_fc(const double& fc);
   void set_alpha(const double& alpha);
-  void set_differential(
-      std::shared_ptr<DifferentialActionModelAbstract> model);
+  void set_differential(std::shared_ptr<DifferentialActionModelAbstract> model);
 
-  void set_with_lpf_torque_constraint(const bool inBool) {with_lpf_torque_constraint_ = inBool; };
-  const bool& get_with_lpf_torque_constraint() const { return with_lpf_torque_constraint_; };
+  void set_with_lpf_torque_constraint(const bool inBool) {
+    with_lpf_torque_constraint_ = inBool;
+  };
+  const bool& get_with_lpf_torque_constraint() const {
+    return with_lpf_torque_constraint_;
+  };
 
-  void set_lpf_torque_lb(const VectorXs& inVec); //{ lpf_torque_lb_ = inVec; };
+  void set_lpf_torque_lb(const VectorXs& inVec);  //{ lpf_torque_lb_ = inVec; };
   const VectorXs& get_lpf_torque_lb() const { return lpf_torque_lb_; };
 
-  void set_lpf_torque_ub(const VectorXs& inVec); // { lpf_torque_ub_ = inVec; };
+  void set_lpf_torque_ub(
+      const VectorXs& inVec);  // { lpf_torque_ub_ = inVec; };
   const VectorXs& get_lpf_torque_ub() const { return lpf_torque_ub_; };
-  
+
   // hard-coded costs
   void set_control_reg_cost(const double& cost_weight_w_reg,
                             const VectorXs& cost_ref_w_reg);
@@ -181,14 +188,13 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
    */
   void set_g_ub(const VectorXs& g_ub);
 
-
  protected:
+  using Base::g_lb_;  //!< Lower bound of the inequality constraints
+  using Base::g_ub_;  //!< Upper bound of the inequality constraints
   using Base::has_control_limits_;  //!< Indicates whether any of the control
                                     //!< limits are active
-  using Base::nr_;                  //!< Dimension of the cost residual
   using Base::ng_;                  //!< Number of inequality constraints
-  using Base::g_lb_;                //!< Lower bound of the inequality constraints
-  using Base::g_ub_;                //!< Upper bound of the inequality constraints
+  using Base::nr_;                  //!< Dimension of the cost residual
   using Base::nu_;                  //!< Control dimension
   using Base::u_lb_;                //!< Lower control limits
   using Base::u_ub_;                //!< Upper control limits
@@ -213,7 +219,7 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
   VectorXs tauReg_reference_;  //!< Cost reference for unfiltered torque
                                //!< regularization
   VectorXs tauReg_residual_,
-      tauLim_residual_;  //!< Residuals for LPF torques reg and lim
+      tauLim_residual_;        //!< Residuals for LPF torques reg and lim
   double tauLim_weight_;       //!< Cost weight for unfiltered torque limits
   bool tau_plus_integration_;  //!< Use tau+ = LPF(tau,w) in acceleration
                                //!< computation, or tau
@@ -234,13 +240,13 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
                                          //!< low-pass filtered
   std::vector<int> non_lpf_torque_ids_;  //!< Vector of torque ids that are NOT
                                          //!< low-passs filtered
-  bool with_lpf_torque_constraint_; // Add box constraint on the LPF torques dimensions
+  bool with_lpf_torque_constraint_;  // Add box constraint on the LPF torques
+                                     // dimensions
   VectorXs lpf_torque_lb_;
   VectorXs lpf_torque_ub_;
   VectorXs g_lb_new_;
   VectorXs g_ub_new_;
 };
-
 
 }  // namespace lpf
 }  // namespace force_feedback_mpc
@@ -255,7 +261,6 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
 #endif
 #endif
 
-
 #include <Eigen/Core>
 #include <cassert>
 
@@ -268,10 +273,12 @@ class IntegratedActionModelLPF : public crocoddyl::ActionModelAbstractTpl<double
 
 // Check memory allocation for Eigen
 #ifdef FORCE_FEEDBACK_MPC_EIGEN_CHECK_MALLOC
-#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC(allowed)                                       \
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC(allowed) \
   ::Eigen::internal::set_is_malloc_allowed(allowed)
-#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED() FORCE_FEEDBACK_MPC_EIGEN_MALLOC(true)
-#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED() FORCE_FEEDBACK_MPC_EIGEN_MALLOC(false)
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED() \
+  FORCE_FEEDBACK_MPC_EIGEN_MALLOC(true)
+#define FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED() \
+  FORCE_FEEDBACK_MPC_EIGEN_MALLOC(false)
 #else
 #define FORCE_FEEDBACK_MPC_EIGEN_MALLOC(allowed)
 #define FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED()

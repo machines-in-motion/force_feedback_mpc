@@ -6,14 +6,13 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "force_feedback_mpc/lowpassfilter/action.hpp"
+
 #include <cmath>
 #include <crocoddyl/core/utils/exception.hpp>
 #include <iostream>
 
-#include "force_feedback_mpc/lowpassfilter/action.hpp"
-
 using namespace crocoddyl;
-
 
 namespace force_feedback_mpc {
 namespace lpf {
@@ -25,8 +24,7 @@ IntegratedActionModelLPF::IntegratedActionModelLPF(
     const bool& tau_plus_integration, const int& filter)
     : Base(model->get_state(), model->get_nu(),
            model->get_nr() + 2 * lpf_joint_names.size(),
-           model->get_ng() + lpf_joint_names.size(),
-           0),
+           model->get_ng() + lpf_joint_names.size(), 0),
       nw_(model->get_nu()),
       differential_(model),
       time_step_(time_step),
@@ -115,9 +113,8 @@ IntegratedActionModelLPF::IntegratedActionModelLPF(
   VectorXs wub = state_->get_ub().tail(ntau_);
   // Base::set_u_lb(wlb);
   // Base::set_u_ub(wub);
-  activation_model_tauLim_ =
-      std::make_shared<ActivationModelQuadraticBarrier>(
-          ActivationBounds(wlb, wub));
+  activation_model_tauLim_ = std::make_shared<ActivationModelQuadraticBarrier>(
+      ActivationBounds(wlb, wub));
   // cost weights are zero by default
   tauReg_weight_ = double(0.);
   tauLim_weight_ = double(0.);
@@ -125,32 +122,34 @@ IntegratedActionModelLPF::IntegratedActionModelLPF(
   tauLim_residual_.resize(ntau_);
   // no constraints initially
   with_lpf_torque_constraint_ = false;
-  lpf_torque_lb_ = -std::numeric_limits<double>::infinity()*VectorXs::Ones(ntau_);
-  lpf_torque_ub_ = std::numeric_limits<double>::infinity()*VectorXs::Ones(ntau_);
-  this->set_g_lb(-std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
-  this->set_g_ub(std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
+  lpf_torque_lb_ =
+      -std::numeric_limits<double>::infinity() * VectorXs::Ones(ntau_);
+  lpf_torque_ub_ =
+      std::numeric_limits<double>::infinity() * VectorXs::Ones(ntau_);
+  this->set_g_lb(-std::numeric_limits<double>::infinity() *
+                 VectorXs::Ones(this->get_ng()));
+  this->set_g_ub(std::numeric_limits<double>::infinity() *
+                 VectorXs::Ones(this->get_ng()));
   // temp variable used to update the force bounds
-  g_lb_new_ =  this->get_g_lb();
-  g_ub_new_ =  this->get_g_ub();
+  g_lb_new_ = this->get_g_lb();
+  g_ub_new_ = this->get_g_ub();
 }
-
 
 IntegratedActionModelLPF::~IntegratedActionModelLPF() {}
 
-void IntegratedActionModelLPF::set_lpf_torque_lb(const VectorXs& inVec){
+void IntegratedActionModelLPF::set_lpf_torque_lb(const VectorXs& inVec) {
   lpf_torque_lb_ = inVec;
   g_lb_new_ = this->get_g_lb();
   g_lb_new_.segment(differential_->get_ng(), ntau_) = lpf_torque_lb_;
   this->set_g_lb(g_lb_new_);
 }
 
-void IntegratedActionModelLPF::set_lpf_torque_ub(const VectorXs& inVec){
+void IntegratedActionModelLPF::set_lpf_torque_ub(const VectorXs& inVec) {
   lpf_torque_ub_ = inVec;
   g_ub_new_ = this->get_g_ub();
   g_ub_new_.segment(differential_->get_ng(), ntau_) = lpf_torque_ub_;
   this->set_g_ub(g_ub_new_);
 }
-
 
 void IntegratedActionModelLPF::calc(
     const std::shared_ptr<ActionDataAbstract>& data,
@@ -159,14 +158,14 @@ void IntegratedActionModelLPF::calc(
   const std::size_t& nx = differential_->get_state()->get_nx();
 
   if (static_cast<std::size_t>(y.size()) != ny_) {
-    throw_pretty("Invalid argument: "
-                 << "y has wrong dimension (it should be " +
-                        std::to_string(ny_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "y has wrong dimension (it should be " +
+                                    std::to_string(ny_) + ")");
   }
   if (static_cast<std::size_t>(w.size()) != nw_) {
-    throw_pretty("Invalid argument: "
-                 << "w has wrong dimension (it should be " +
-                        std::to_string(nw_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "w has wrong dimension (it should be " +
+                                    std::to_string(nw_) + ")");
   }
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
@@ -190,14 +189,14 @@ void IntegratedActionModelLPF::calc(
   const Eigen::Ref<const VectorXs>& tau = d->tau_tmp;
   // std::cout << "[lpf.calc] tau = " << tau << std::endl;
   if (static_cast<std::size_t>(x.size()) != nx) {
-    throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " +
-                        std::to_string(nx) + ")");
+    throw_pretty(
+        "Invalid argument: " << "x has wrong dimension (it should be " +
+                                    std::to_string(nx) + ")");
   }
   if (static_cast<std::size_t>(tau.size()) != nw_) {
-    throw_pretty("Invalid argument: "
-                 << "tau has wrong dimension (it should be " +
-                        std::to_string(nw_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "tau has wrong dimension (it should be " +
+                                    std::to_string(nw_) + ")");
   }
   if (static_cast<std::size_t>(d->Fy.rows()) !=
       std::static_pointer_cast<StateLPF>(state_)->get_ndy()) {
@@ -218,9 +217,9 @@ void IntegratedActionModelLPF::calc(
                ")");
   }
   if (static_cast<std::size_t>(d->Fw.cols()) != nw_) {
-    throw_pretty("Invalid argument: "
-                 << "Fw.cols() has wrong dimension (it should be " +
-                        std::to_string(nw_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "Fw.cols() has wrong dimension (it should be " +
+                                    std::to_string(nw_) + ")");
   }
   if (static_cast<std::size_t>(d->r.size()) !=
       differential_->get_nr() + 2 * ntau_) {
@@ -239,9 +238,9 @@ void IntegratedActionModelLPF::calc(
                ")");
   }
   if (static_cast<std::size_t>(d->Lw.size()) != nw_) {
-    throw_pretty("Invalid argument: "
-                 << "Lw has wrong dimension (it should be " +
-                        std::to_string(nw_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "Lw has wrong dimension (it should be " +
+                                    std::to_string(nw_) + ")");
   }
 
   // Compute acceleration and cost (DAM, i.e. CT model)
@@ -313,7 +312,7 @@ void IntegratedActionModelLPF::calc(
   // Hard-code LPF torque constraint residual here
   d->g.head(differential_->get_ng()) = d->differential->g;
   // hard code force constraint residual here
-  if(with_lpf_torque_constraint_){
+  if (with_lpf_torque_constraint_) {
     d->g.tail(ntau_) = w(lpf_torque_ids_);
   }
   // Update RESIDUAL
@@ -331,16 +330,15 @@ void IntegratedActionModelLPF::calc(
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }  // calc
 
-
 void IntegratedActionModelLPF::calc(
     const std::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y) {
   const std::size_t& nx = differential_->get_state()->get_nx();
 
   if (static_cast<std::size_t>(y.size()) != ny_) {
-    throw_pretty("Invalid argument: "
-                 << "y has wrong dimension (it should be " +
-                        std::to_string(ny_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "y has wrong dimension (it should be " +
+                                    std::to_string(ny_) + ")");
   }
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
@@ -362,7 +360,6 @@ void IntegratedActionModelLPF::calc(
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }  // calc
 
-
 void IntegratedActionModelLPF::calcDiff(
     const std::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y, const Eigen::Ref<const VectorXs>& w) {
@@ -371,14 +368,14 @@ void IntegratedActionModelLPF::calcDiff(
   const std::size_t& ndx = differential_->get_state()->get_ndx();
 
   if (static_cast<std::size_t>(y.size()) != ny_) {
-    throw_pretty("Invalid argument: "
-                 << "y has wrong dimension (it should be " +
-                        std::to_string(ny_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "y has wrong dimension (it should be " +
+                                    std::to_string(ny_) + ")");
   }
   if (static_cast<std::size_t>(w.size()) != nw_) {
-    throw_pretty("Invalid argument: "
-                 << "w has wrong dimension (it should be " +
-                        std::to_string(nw_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "w has wrong dimension (it should be " +
+                                    std::to_string(nw_) + ")");
   }
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
@@ -459,10 +456,12 @@ void IntegratedActionModelLPF::calcDiff(
 #if EIGEN_VERSION_AT_LEAST(3, 4, 0)
     d->Fw.topRows(nv)(Eigen::indexing::all, non_lpf_torque_ids_).noalias() =
         da_du(Eigen::indexing::all, non_lpf_torque_ids_) * time_step2_;
-    d->Fw.block(nv, 0, nv, nw_)(Eigen::indexing::all, non_lpf_torque_ids_).noalias() =
+    d->Fw.block(nv, 0, nv, nw_)(Eigen::indexing::all, non_lpf_torque_ids_)
+        .noalias() =
         da_du(Eigen::indexing::all, non_lpf_torque_ids_) * time_step_;
-    d->Fw.bottomRows(ntau_)(Eigen::indexing::all, lpf_torque_ids_).diagonal().array() +=
-        double(1 - alpha_);
+    d->Fw.bottomRows(ntau_)(Eigen::indexing::all, lpf_torque_ids_)
+        .diagonal()
+        .array() += double(1 - alpha_);
 #else
     for (std::size_t i = 0; i < non_lpf_torque_ids_.size(); i++) {
       d->Fw.topRows(nv).col(non_lpf_torque_ids_[i]).noalias() =
@@ -487,7 +486,8 @@ void IntegratedActionModelLPF::calcDiff(
     d->Ly.tail(ntau_).noalias() =
         time_step_ * d->differential->Lu(lpf_torque_ids_);
     d->Lyy.block(0, ndx, ndx, ntau_).noalias() =
-        time_step_ * d->differential->Lxu(Eigen::indexing::all, lpf_torque_ids_);
+        time_step_ *
+        d->differential->Lxu(Eigen::indexing::all, lpf_torque_ids_);
     d->Lyy.block(ndx, 0, ntau_, ndx).noalias() =
         time_step_ *
         d->differential->Lxu.transpose()(lpf_torque_ids_, Eigen::indexing::all);
@@ -517,8 +517,10 @@ void IntegratedActionModelLPF::calcDiff(
     d->Lw(non_lpf_torque_ids_).noalias() =
         time_step_ * d->differential->Lu(non_lpf_torque_ids_);
     d->Lyw.topRows(ndx)(Eigen::indexing::all, non_lpf_torque_ids_).noalias() =
-        time_step_ * d->differential->Lxu(Eigen::indexing::all, non_lpf_torque_ids_);
-    d->Lyw.bottomRows(ntau_)(Eigen::indexing::all, non_lpf_torque_ids_).noalias() =
+        time_step_ *
+        d->differential->Lxu(Eigen::indexing::all, non_lpf_torque_ids_);
+    d->Lyw.bottomRows(ntau_)(Eigen::indexing::all, non_lpf_torque_ids_)
+        .noalias() =
         time_step_ * d->differential->Luu(lpf_torque_ids_, non_lpf_torque_ids_);
     d->Lww(non_lpf_torque_ids_, non_lpf_torque_ids_).noalias() =
         time_step_ *
@@ -581,11 +583,11 @@ void IntegratedActionModelLPF::calcDiff(
     d->Gy.topLeftCorner(differential_->get_ng(), ndx) = d->differential->Gx;
     d->Gu.topLeftCorner(differential_->get_ng(), nu_) = d->differential->Gu;
     // d->Gu.resize(differential_->get_ng(), nu_);
-    if(with_lpf_torque_constraint_){
+    if (with_lpf_torque_constraint_) {
       d->Gy.bottomRightCorner(ntau_, ntau_).diagonal().array() = double(1.);
     }
 
-  }    // tau integration
+  }  // tau integration
 
   //   // TAU PLUS INTEGRATION
   //   else {
@@ -609,7 +611,8 @@ void IntegratedActionModelLPF::calcDiff(
   //           alpha_ * alpha_ * da_du(Eigen::indexing::all, lpf_torque_ids_) *
   //           time_step2_;
   //       d->Fy.block(nv, ndx, nv, ntau_).noalias() =
-  //           alpha_ * da_du(Eigen::indexing::all, lpf_torque_ids_) * time_step_;
+  //           alpha_ * da_du(Eigen::indexing::all, lpf_torque_ids_) *
+  //           time_step_;
   // #else
   //       for (std::size_t i = 0; i < lpf_torque_ids_.size(); i++) {
   //         d->Fy.block(0, ndx, nv, ntau_).col(i).noalias() =
@@ -628,7 +631,8 @@ void IntegratedActionModelLPF::calcDiff(
   //       (1 - alpha_);
   // #if EIGEN_VERSION_AT_LEAST(3, 4, 0)
   //       d->Fw.block(nv, 0, nv, ntau_).noalias() =
-  //           da_du(Eigen::indexing::all, lpf_torque_ids_) * time_step_ * (1 - alpha_);
+  //           da_du(Eigen::indexing::all, lpf_torque_ids_) * time_step_ * (1 -
+  //           alpha_);
   // #else
   //       for (std::size_t i = 0; i < lpf_torque_ids_.size(); i++) {
   //         d->Fw.block(nv, 0, nv, ntau_).col(i).noalias() =
@@ -664,7 +668,8 @@ void IntegratedActionModelLPF::calcDiff(
   //           d->differential->Lxu(Eigen::indexing::all, lpf_torque_ids_);
   //       d->Lyy.block(ndx, 0, ntau_, ndx).noalias() =
   //           alpha_ * time_step_ *
-  //           d->differential->Lxu.transpose()(lpf_torque_ids_, Eigen::indexing::all);
+  //           d->differential->Lxu.transpose()(lpf_torque_ids_,
+  //           Eigen::indexing::all);
   //       d->Lyy.bottomRightCorner(ntau_, ntau_).noalias() =
   //           alpha_ * alpha_ * time_step_ *
   //           d->differential->Luu(lpf_torque_ids_, lpf_torque_ids_);
@@ -724,10 +729,12 @@ void IntegratedActionModelLPF::calcDiff(
   //       d->Lw.noalias() = (1 - alpha_) * d->differential->Lu;
   //       d->Lyy.topLeftCorner(ndx, ndx).noalias() = d->differential->Lxx;
   //       d->Lyy.block(0, ndx, ndx, ntau_).noalias() =
-  //           alpha_ * d->differential->Lxu(Eigen::indexing::all, lpf_torque_ids_);
+  //           alpha_ * d->differential->Lxu(Eigen::indexing::all,
+  //           lpf_torque_ids_);
   //       d->Lyy.block(ndx, 0, ntau_, ndx).noalias() =
   //           alpha_ *
-  //           d->differential->Lxu.transpose()(lpf_torque_ids_, Eigen::indexing::all);
+  //           d->differential->Lxu.transpose()(lpf_torque_ids_,
+  //           Eigen::indexing::all);
   //       d->Lyy.bottomRightCorner(ntau_, ntau_).noalias() =
   //           alpha_ * alpha_ *
   //           d->differential->Luu(lpf_torque_ids_, lpf_torque_ids_);
@@ -777,7 +784,6 @@ void IntegratedActionModelLPF::calcDiff(
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
-
 void IntegratedActionModelLPF::calcDiff(
     const std::shared_ptr<ActionDataAbstract>& data,
     const Eigen::Ref<const VectorXs>& y) {
@@ -785,9 +791,9 @@ void IntegratedActionModelLPF::calcDiff(
   const std::size_t& ndx = differential_->get_state()->get_ndx();
 
   if (static_cast<std::size_t>(y.size()) != ny_) {
-    throw_pretty("Invalid argument: "
-                 << "y has wrong dimension (it should be " +
-                        std::to_string(ny_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "y has wrong dimension (it should be " +
+                                    std::to_string(ny_) + ")");
   }
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   // Static casting the data
@@ -830,12 +836,10 @@ void IntegratedActionModelLPF::calcDiff(
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
-
-std::shared_ptr<ActionDataAbstractTpl<double> >
+std::shared_ptr<ActionDataAbstractTpl<double>>
 IntegratedActionModelLPF::createData() {
   return std::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
-
 
 bool IntegratedActionModelLPF::checkData(
     const std::shared_ptr<ActionDataAbstract>& data) {
@@ -847,54 +851,40 @@ bool IntegratedActionModelLPF::checkData(
   }
 }
 
-
-const std::shared_ptr<DifferentialActionModelAbstractTpl<double> >&
+const std::shared_ptr<DifferentialActionModelAbstractTpl<double>>&
 IntegratedActionModelLPF::get_differential() const {
   return differential_;
 }
 
+const double& IntegratedActionModelLPF::get_dt() const { return time_step_; }
 
-const double& IntegratedActionModelLPF::get_dt() const {
-  return time_step_;
-}
-
-
-const double& IntegratedActionModelLPF::get_fc() const {
-  return fc_;
-}
-
+const double& IntegratedActionModelLPF::get_fc() const { return fc_; }
 
 void IntegratedActionModelLPF::set_dt(const double& dt) {
   if (dt < 0.) {
-    throw_pretty("Invalid argument: "
-                 << "dt has positive value");
+    throw_pretty("Invalid argument: " << "dt has positive value");
   }
   time_step_ = dt;
   time_step2_ = dt * dt;
 }
 
-
 void IntegratedActionModelLPF::set_fc(const double& fc) {
   // Set the cut-off frequency
   if (fc <= 0.) {
-    throw_pretty("Invalid argument: "
-                 << "fc must be positive");
+    throw_pretty("Invalid argument: " << "fc must be positive");
   } else {
     fc_ = fc;
   }
 }
 
-
 void IntegratedActionModelLPF::set_alpha(const double& alpha) {
   // Set the cut-off frequency
   if (alpha < 0. || alpha > 1) {
-    throw_pretty("Invalid argument: "
-                 << "alpha must be in [0,1]");
+    throw_pretty("Invalid argument: " << "alpha must be in [0,1]");
   } else {
     alpha_ = alpha;
   }
 }
-
 
 void IntegratedActionModelLPF::compute_alpha(const double& fc) {
   // Update alpha parameter
@@ -918,7 +908,6 @@ void IntegratedActionModelLPF::compute_alpha(const double& fc) {
     alpha_ = 0;
   }
 }
-
 
 void IntegratedActionModelLPF::set_differential(
     std::shared_ptr<DifferentialActionModelAbstract> model) {
@@ -955,8 +944,8 @@ void IntegratedActionModelLPF::set_g_ub(const VectorXs& g_ub) {
   g_ub_ = g_ub;
 }
 
-void IntegratedActionModelLPF::set_control_reg_cost(
-    const double& weight, const VectorXs& ref) {
+void IntegratedActionModelLPF::set_control_reg_cost(const double& weight,
+                                                    const VectorXs& ref) {
   if (weight < 0.) {
     throw_pretty("cost weight is positive ");
   }
@@ -967,29 +956,26 @@ void IntegratedActionModelLPF::set_control_reg_cost(
   tauReg_reference_ = ref;
 }
 
-
-void IntegratedActionModelLPF::set_control_lim_cost(
-    const double& weight) {
+void IntegratedActionModelLPF::set_control_lim_cost(const double& weight) {
   if (weight < 0.) {
     throw_pretty("cost weight is positive ");
   }
   tauLim_weight_ = weight;
 }
 
-
 void IntegratedActionModelLPF::quasiStatic(
     const std::shared_ptr<ActionDataAbstract>& data, Eigen::Ref<VectorXs> u,
     const Eigen::Ref<const VectorXs>& x, const std::size_t maxiter,
     const double tol) {
   if (static_cast<std::size_t>(u.size()) != nu_) {
-    throw_pretty("Invalid argument: "
-                 << "u has wrong dimension (it should be " +
-                        std::to_string(nu_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "u has wrong dimension (it should be " +
+                                    std::to_string(nu_) + ")");
   }
   if (static_cast<std::size_t>(x.size()) != state_->get_nx()) {
-    throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " +
-                        std::to_string(state_->get_nx()) + ")");
+    throw_pretty(
+        "Invalid argument: " << "x has wrong dimension (it should be " +
+                                    std::to_string(state_->get_nx()) + ")");
   }
 
   // Static casting the data

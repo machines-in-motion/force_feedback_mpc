@@ -15,15 +15,15 @@
 #include <crocoddyl/multibody/states/multibody.hpp>
 #include <pinocchio/multibody/model.hpp>
 
-#include "force_feedback_mpc/frictioncone/residual-friction-cone-augmented.hpp"
-
-#include "state.hpp"
 #include "dam3d-augmented.hpp"
+#include "force_feedback_mpc/frictioncone/residual-friction-cone-augmented.hpp"
+#include "state.hpp"
 
 namespace force_feedback_mpc {
 namespace softcontact {
 
-struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double> {
+struct IADSoftContactAugmented
+    : public crocoddyl::ActionDataAbstractTpl<double> {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef crocoddyl::MathBaseTpl<double> MathBase;
@@ -31,11 +31,11 @@ struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double>
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
   typedef pinocchio::DataTpl<double> PinocchioData;
-  typedef crocoddyl::DifferentialActionDataAbstractTpl<double> DifferentialActionDataAbstract;
+  typedef crocoddyl::DifferentialActionDataAbstractTpl<double>
+      DifferentialActionDataAbstract;
 
   template <class Model>
-  explicit IADSoftContactAugmented(Model* const model)
-      : Base(model) {
+  explicit IADSoftContactAugmented(Model* const model) : Base(model) {
     differential = model->get_differential()->createData();
     const std::size_t& ndy = model->get_state()->get_ndx();
     dy = VectorXs::Zero(ndy);
@@ -82,13 +82,13 @@ struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double>
   // Re-size the constraint size according to friction constraints size
   template <class Model>
   void resizeIneqConstraint(Model* const model) {
-    // std::cout << "BEFORE friction_cone_residual = " << friction_cone_residual.size() << std::endl;
-    // std::cout << "BEFORE dcone_df = " << dcone_df.size() << std::endl;
-    // std::cout << "BEFORE g = " << g.size() << std::endl;
-    // std::cout << "BEFORE G = " << Gy.size() << std::endl;
-    // std::cout << "BEFORE G = " << Gu.size() << std::endl;
-    VectorXs g_lb_old_ =  model->get_g_lb();
-    VectorXs g_ub_old_ =  model->get_g_ub();
+    // std::cout << "BEFORE friction_cone_residual = " <<
+    // friction_cone_residual.size() << std::endl; std::cout << "BEFORE dcone_df
+    // = " << dcone_df.size() << std::endl; std::cout << "BEFORE g = " <<
+    // g.size() << std::endl; std::cout << "BEFORE G = " << Gy.size() <<
+    // std::endl; std::cout << "BEFORE G = " << Gu.size() << std::endl;
+    VectorXs g_lb_old_ = model->get_g_lb();
+    VectorXs g_ub_old_ = model->get_g_ub();
     // std::cout << "BEFORE g_lb = " << g_lb_old_ << std::endl;
     // std::cout << "BEFORE g_ub = " << g_ub_old_ << std::endl;
     const std::size_t ndx = model->get_differential()->get_state()->get_ndx();
@@ -100,27 +100,27 @@ struct IADSoftContactAugmented : public crocoddyl::ActionDataAbstractTpl<double>
     Gu.conservativeResize(ng, nu);
     // std::cout << "Size after = " << Gy.size() << std::endl;
     // new bounds (add friction cone bounds)
-    VectorXs g_lb_new_ =  model->get_g_lb();
-    VectorXs g_ub_new_ =  model->get_g_ub();
+    VectorXs g_lb_new_ = model->get_g_lb();
+    VectorXs g_ub_new_ = model->get_g_ub();
     // std::cout << "AFTER g_lb = " << g_lb_new_ << std::endl;
     // std::cout << "AFTER g_ub = " << g_ub_new_ << std::endl;
     // this->set_g_lb(-std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
     // this->set_g_ub(std::numeric_limits<double>::infinity()*VectorXs::Ones(this->get_ng()));
-    g_lb_new_.tail(nf) = 0.*VectorXs::Ones(nf);
-    g_ub_new_.tail(nf) = std::numeric_limits<double>::infinity()*VectorXs::Ones(nf);
+    g_lb_new_.tail(nf) = 0. * VectorXs::Ones(nf);
+    g_ub_new_.tail(nf) =
+        std::numeric_limits<double>::infinity() * VectorXs::Ones(nf);
     // std::cout << "AFTER g_lb_new_ = " << g_lb_new_ << std::endl;
     // std::cout << "AFTER g_ub_new_ = " << g_ub_new_ << std::endl;
-  // temp variable used to update the force bounds
-
+    // temp variable used to update the force bounds
 
     // new (&g) Eigen::Map<VectorXs>(data->g.data(), ng);
     // new (&Gx) Eigen::Map<MatrixXs>(data->Gx.data(), ng, ndx);
     // new (&Gu) Eigen::Map<MatrixXs>(data->Gu.data(), ng, nu);
   };
-
 };
 
-class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double> {
+class IAMSoftContactAugmented
+    : public crocoddyl::ActionModelAbstractTpl<double> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -128,19 +128,23 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   typedef crocoddyl::ActionModelAbstractTpl<double> Base;
   typedef IADSoftContactAugmented Data;
   typedef crocoddyl::ActionDataAbstractTpl<double> ActionDataAbstract;
-  typedef crocoddyl::DifferentialActionModelAbstractTpl<double> DifferentialActionModelAbstract;
+  typedef crocoddyl::DifferentialActionModelAbstractTpl<double>
+      DifferentialActionModelAbstract;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
   typedef crocoddyl::StateMultibodyTpl<double> StateMultibody;
   typedef pinocchio::ModelTpl<double> PinocchioModel;
-  typedef force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented ResidualModelFrictionConeAugmented;
-  typedef force_feedback_mpc::frictioncone::ResidualDataFrictionConeAugmented ResidualDataFrictionConeAugmented;
+  typedef force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented
+      ResidualModelFrictionConeAugmented;
+  typedef force_feedback_mpc::frictioncone::ResidualDataFrictionConeAugmented
+      ResidualDataFrictionConeAugmented;
 
   IAMSoftContactAugmented(
       std::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model,
       const double& time_step = double(1e-3),
       const bool& with_cost_residual = true,
-      const std::vector<std::shared_ptr<ResidualModelFrictionConeAugmented>> friction_constraints = {});
+      const std::vector<std::shared_ptr<ResidualModelFrictionConeAugmented>>
+          friction_constraints = {});
   virtual ~IAMSoftContactAugmented();
 
   virtual void calc(const std::shared_ptr<ActionDataAbstract>& data,
@@ -168,23 +172,26 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
 
   virtual bool checkData(const std::shared_ptr<ActionDataAbstract>& data);
 
-//   virtual void quasiStatic(const std::shared_ptr<ActionDataAbstract>& data,
-//                            Eigen::Ref<VectorXs> u,
-//                            const Eigen::Ref<const VectorXs>& x,
-//                            const std::size_t& maxiter = 100,
-//                            const double& tol = double(1e-9));
+  //   virtual void quasiStatic(const std::shared_ptr<ActionDataAbstract>& data,
+  //                            Eigen::Ref<VectorXs> u,
+  //                            const Eigen::Ref<const VectorXs>& x,
+  //                            const std::size_t& maxiter = 100,
+  //                            const double& tol = double(1e-9));
 
-  const std::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>& get_differential()
-      const;
+  const std::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>&
+  get_differential() const;
   const double& get_dt() const;
 
   const std::size_t& get_nc() const { return nc_; };
   const std::size_t& get_ny() const { return ny_; };
 
   void set_dt(const double& dt);
-  void set_differential(std::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model);
+  void set_differential(
+      std::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> model);
 
-  void set_with_force_constraint(const bool inBool) {with_force_constraint_ = inBool; };
+  void set_with_force_constraint(const bool inBool) {
+    with_force_constraint_ = inBool;
+  };
   bool get_with_force_constraint() const { return with_force_constraint_; };
 
   void set_force_lb(const VectorXs& inVec);
@@ -193,11 +200,19 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   void set_force_ub(const VectorXs& inVec);
   const VectorXs& get_force_ub() const { return force_ub_; };
 
-  // void set_with_friction_cone_constraint(const bool inBool) {with_friction_cone_constraint_ = inBool; };
-  bool get_with_friction_cone_constraint() const { return with_friction_cone_constraint_; };
+  // void set_with_friction_cone_constraint(const bool inBool)
+  // {with_friction_cone_constraint_ = inBool; };
+  bool get_with_friction_cone_constraint() const {
+    return with_friction_cone_constraint_;
+  };
 
-  void set_friction_cone_constraints(const std::vector<std::shared_ptr<ResidualModelFrictionConeAugmented>>& frictionConstraints);
-  const std::vector<std::shared_ptr<ResidualModelFrictionConeAugmented>>& get_friction_cone_constraints() const { return friction_constraints_; };
+  void set_friction_cone_constraints(
+      const std::vector<std::shared_ptr<ResidualModelFrictionConeAugmented>>&
+          frictionConstraints);
+  const std::vector<std::shared_ptr<ResidualModelFrictionConeAugmented>>&
+  get_friction_cone_constraints() const {
+    return friction_constraints_;
+  };
 
   /**
    * @brief Modify the lower bound of the inequality constraints
@@ -212,25 +227,26 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   std::size_t get_nf() const { return nf_; };
 
   // Re-size the constraint size according to friction constraints size
-  void resizeIneqConstraint(std::shared_ptr<crocoddyl::ActionDataAbstract>& data);
+  void resizeIneqConstraint(
+      std::shared_ptr<crocoddyl::ActionDataAbstract>& data);
 
  protected:
+  using Base::g_lb_;  //!< Lower bound of the inequality constraints
+  using Base::g_ub_;  //!< Upper bound of the inequality constraints
   using Base::has_control_limits_;  //!< Indicates whether any of the control
                                     //!< limits are active
+  using Base::ng_;                  //!< Number of inequality constraints
+  using Base::nh_;                  //!< Number of inequality constraints
   using Base::nr_;                  //!< Dimension of the cost residual
   using Base::nu_;                  //!< Control dimension
   using Base::state_;               //!< Model of the state
   using Base::u_lb_;                //!< Lower control limits
   using Base::u_ub_;                //!< Upper control limits
-  using Base::ng_;                  //!< Number of inequality constraints
-  using Base::nh_;                  //!< Number of inequality constraints
-  using Base::g_lb_;                //!< Lower bound of the inequality constraints
-  using Base::g_ub_;                //!< Upper bound of the inequality constraints
   using Base::unone_;               //!< Neutral state
   std::size_t nc_;                  //!< Contact model dimension
   std::size_t ny_;                  //!< Augmented state dimension : nq+nv+ntau
 
-  std::size_t nf_;                  //!< Number of friction cone constraints
+  std::size_t nf_;  //!< Number of friction cone constraints
 
  private:
   std::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics> differential_;
@@ -240,16 +256,19 @@ class IAMSoftContactAugmented : public crocoddyl::ActionModelAbstractTpl<double>
   std::shared_ptr<PinocchioModel> pin_model_;  //!< for reg cost
   bool is_terminal_;  //!< is it a terminal model or not ? (deactivate cost on w
                       //!< if true)
-  bool with_force_constraint_; // Add box constraint on the contact force
+  bool with_force_constraint_;  // Add box constraint on the contact force
   VectorXs force_lb_;
   VectorXs force_ub_;
   VectorXs g_lb_new_;
   VectorXs g_ub_new_;
-  bool with_friction_cone_constraint_; // Add friction cone constraint on the force
-  double friction_coef_;              // Friction coefficient
+  bool with_friction_cone_constraint_;  // Add friction cone constraint on the
+                                        // force
+  double friction_coef_;                // Friction coefficient
 
-  std::vector<std::shared_ptr<ResidualModelFrictionConeAugmented>> friction_constraints_;
-  std::vector<std::shared_ptr<ResidualDataFrictionConeAugmented>> friction_datas_;
+  std::vector<std::shared_ptr<ResidualModelFrictionConeAugmented>>
+      friction_constraints_;
+  std::vector<std::shared_ptr<ResidualDataFrictionConeAugmented>>
+      friction_datas_;
 };
 
 }  // namespace softcontact

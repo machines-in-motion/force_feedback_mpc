@@ -10,15 +10,15 @@
 #ifndef FORCE_FEEDBACK_MPC_DIFF_ACTION_FACTORY_HPP_
 #define FORCE_FEEDBACK_MPC_DIFF_ACTION_FACTORY_HPP_
 
-#include "crocoddyl/actuation.hpp"
-#include "crocoddyl/contact.hpp"
-#include "crocoddyl/state.hpp"
-#include "crocoddyl/cost.hpp"
-
 #include <crocoddyl/core/diff-action-base.hpp>
 #include <crocoddyl/core/numdiff/diff-action.hpp>
 #include <crocoddyl/multibody/actions/contact-fwddyn.hpp>
 #include <crocoddyl/multibody/actions/free-fwddyn.hpp>
+
+#include "crocoddyl/actuation.hpp"
+#include "crocoddyl/contact.hpp"
+#include "crocoddyl/cost.hpp"
+#include "crocoddyl/state.hpp"
 
 namespace force_feedback_mpc {
 namespace unittest {
@@ -61,8 +61,7 @@ class DifferentialActionModelFactory {
 
   std::shared_ptr<crocoddyl::DifferentialActionModelAbstract> create(
       DifferentialActionModelTypes::Type type,
-      ContactModelTypes::Type contact_type,
-      bool with_baumgarte = true) const;
+      ContactModelTypes::Type contact_type, bool with_baumgarte = true) const;
 
   std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
   create_freeFwdDynamics(StateModelTypes::Type state_type,

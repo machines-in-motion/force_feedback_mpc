@@ -14,15 +14,14 @@
 
 namespace force_feedback_mpc {
 
-
 // template <typename Scalar>
 // class DifferentialActionModelPendulumTpl;
 // template <typename Scalar>
 // struct DifferentialActionDataPendulumTpl;
 
-// typedef DifferentialActionModelPendulumTpl<double> DifferentialActionModelPendulum;
-// typedef DifferentialActionDataPendulumTpl<double> DifferentialActionDataPendulum;
-
+// typedef DifferentialActionModelPendulumTpl<double>
+// DifferentialActionModelPendulum; typedef
+// DifferentialActionDataPendulumTpl<double> DifferentialActionDataPendulum;
 
 // template <typename Scalar>
 // class ResidualModelFrameDistanceTpl;
@@ -31,7 +30,6 @@ namespace force_feedback_mpc {
 
 // typedef ResidualModelFrameDistanceTpl<double> ResidualModelFrameDistance;
 // typedef ResidualDataFrameDistanceTpl<double> ResidualDataFrameDistance;
-
 
 }  // namespace force_feedback_mpc
 

@@ -6,8 +6,9 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "force-feedback-mpc-python.hpp"
 #include "force_feedback_mpc/frictioncone/residual-friction-cone.hpp"
+
+#include "force-feedback-mpc-python.hpp"
 
 namespace force_feedback_mpc {
 namespace frictioncone {
@@ -15,22 +16,21 @@ namespace frictioncone {
 namespace bp = boost::python;
 
 void exposeResidualFrictionCone() {
-  bp::register_ptr_to_python<
-      std::shared_ptr<ResidualModelFrictionCone> >();
+  bp::register_ptr_to_python<std::shared_ptr<ResidualModelFrictionCone>>();
 
   bp::class_<ResidualModelFrictionCone,
-             bp::bases<crocoddyl::ResidualModelAbstract> >(
-      "ResidualModelFrictionCone",
-      "Nonlinear (Lorentz) friction cone.",
-      bp::init<std::shared_ptr<crocoddyl::StateMultibody>, pinocchio::FrameIndex,
-               double, std::size_t >(
+             bp::bases<crocoddyl::ResidualModelAbstract>>(
+      "ResidualModelFrictionCone", "Nonlinear (Lorentz) friction cone.",
+      bp::init<std::shared_ptr<crocoddyl::StateMultibody>,
+               pinocchio::FrameIndex, double, std::size_t>(
           bp::args("self", "state", "id", "coef", "nu"),
           "Initialize the contact friction cone residual model.\n\n"
           ":param state: state of the multibody system\n"
           ":param id: reference frame id\n"
           ":param coef: friction coefficient mu\n"
           ":param nu: dimension of control vector"))
-      .def(bp::init<std::shared_ptr<crocoddyl::StateMultibody>, pinocchio::FrameIndex, double>(
+      .def(bp::init<std::shared_ptr<crocoddyl::StateMultibody>,
+                    pinocchio::FrameIndex, double>(
           bp::args("self", "state", "id", "coef"),
           "Initialize the contact friction cone residual model.\n\n"
           "The default nu is obtained from state.nv. Note that this "
@@ -52,7 +52,8 @@ void exposeResidualFrictionCone() {
       .def<void (ResidualModelFrictionCone::*)(
           const std::shared_ptr<crocoddyl::ResidualDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
-          "calc", &crocoddyl::ResidualModelAbstract::calc, bp::args("self", "data", "x"))
+          "calc", &crocoddyl::ResidualModelAbstract::calc,
+          bp::args("self", "data", "x"))
       .def<void (ResidualModelFrictionCone::*)(
           const std::shared_ptr<crocoddyl::ResidualDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
@@ -79,23 +80,23 @@ void exposeResidualFrictionCone() {
           "returns the allocated data for the contact friction cone residual.\n"
           ":param data: shared data\n"
           ":return residual data.")
-      .add_property("id",
-                    bp::make_function(
-                        &ResidualModelFrictionCone::get_id,
-                        bp::return_value_policy<bp::return_by_value>()),
-                    "frame id")
+      .add_property(
+          "id",
+          bp::make_function(&ResidualModelFrictionCone::get_id,
+                            bp::return_value_policy<bp::return_by_value>()),
+          "frame id")
       .add_property(
           "coef",
           bp::make_function(&ResidualModelFrictionCone::get_friction_coef,
                             bp::return_value_policy<bp::return_by_value>()),
           &ResidualModelFrictionCone::set_friction_coef,
-          "Friction cone coefficient"); 
-    //   .def(CopyableVisitor<ResidualModelFrictionCone>());
+          "Friction cone coefficient");
+  //   .def(CopyableVisitor<ResidualModelFrictionCone>());
 
-  bp::register_ptr_to_python<
-      std::shared_ptr<ResidualDataFrictionCone> >();
+  bp::register_ptr_to_python<std::shared_ptr<ResidualDataFrictionCone>>();
 
-  bp::class_<ResidualDataFrictionCone, bp::bases<crocoddyl::ResidualDataAbstract> >(
+  bp::class_<ResidualDataFrictionCone,
+             bp::bases<crocoddyl::ResidualDataAbstract>>(
       "ResidualDataFrictionCone",
       "Data for contact friction cone residual.\n\n",
       bp::init<ResidualModelFrictionCone*, crocoddyl::DataCollectorAbstract*>(
@@ -103,35 +104,31 @@ void exposeResidualFrictionCone() {
           "Create contact friction cone residual data.\n\n"
           ":param model: contact friction cone residual model\n"
           ":param data: shared data")[bp::with_custodian_and_ward<
-          1, 2, bp::with_custodian_and_ward<1, 3> >()])
+          1, 2, bp::with_custodian_and_ward<1, 3>>()])
       .add_property(
           "contact",
           bp::make_getter(&ResidualDataFrictionCone::contact,
                           bp::return_value_policy<bp::return_by_value>()),
           bp::make_setter(&ResidualDataFrictionCone::contact),
           "contact data associated with the current residual")
-      .add_property(
-          "f3d",
-          bp::make_getter(&ResidualDataFrictionCone::f3d,
-                          bp::return_internal_reference<>()),
-          "Contact force")
-      .add_property(
-          "dcone_df",
-          bp::make_getter(&ResidualDataFrictionCone::dcone_df,
-                          bp::return_internal_reference<>()),
-          "Derivative of the friction cone w.r.t. contact force")
-      .add_property(
-          "df_dx",
-          bp::make_getter(&ResidualDataFrictionCone::df_dx,
-                          bp::return_internal_reference<>()),
-          "Derivative of the contact force w.r.t. state")
-      .add_property(
-          "df_du",
-          bp::make_getter(&ResidualDataFrictionCone::df_du,
-                          bp::return_internal_reference<>()),
-          "Derivative of the contact force w.r.t. control");
-    //   .def(CopyableVisitor<ResidualDataFrictionCone>());
+      .add_property("f3d",
+                    bp::make_getter(&ResidualDataFrictionCone::f3d,
+                                    bp::return_internal_reference<>()),
+                    "Contact force")
+      .add_property("dcone_df",
+                    bp::make_getter(&ResidualDataFrictionCone::dcone_df,
+                                    bp::return_internal_reference<>()),
+                    "Derivative of the friction cone w.r.t. contact force")
+      .add_property("df_dx",
+                    bp::make_getter(&ResidualDataFrictionCone::df_dx,
+                                    bp::return_internal_reference<>()),
+                    "Derivative of the contact force w.r.t. state")
+      .add_property("df_du",
+                    bp::make_getter(&ResidualDataFrictionCone::df_du,
+                                    bp::return_internal_reference<>()),
+                    "Derivative of the contact force w.r.t. control");
+  //   .def(CopyableVisitor<ResidualDataFrictionCone>());
 }
 
-}  // namespace softcontact
+}  // namespace frictioncone
 }  // namespace force_feedback_mpc

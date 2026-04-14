@@ -1,38 +1,38 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Smoothing factor
+# Smoothing factor
 dt = 1e-2
-fsmp = 1./dt   # Sampling frequency
+fsmp = 1.0 / dt  # Sampling frequency
 
 
-fmax = fsmp # Cutoff frequency (constrained by Shannon ?)
+fmax = fsmp  # Cutoff frequency (constrained by Shannon ?)
 fc = np.linspace(0, fmax, 1000)
-# EMA
-alpha_0 = np.exp(-2*np.pi*fc*dt) # Exp MA
-# Euler
-alpha_1 = 1./(1+2*np.pi*fc*dt)   # Wiki
-# Exact
-y = np.cos(2*np.pi*fc*dt)
-alpha_2 = 1-(y-1+np.sqrt(y**2 - 4*y +3)) # Stack
+# EMA
+alpha_0 = np.exp(-2 * np.pi * fc * dt)  # Exp MA
+# Euler
+alpha_1 = 1.0 / (1 + 2 * np.pi * fc * dt)  # Wiki
+# Exact
+y = np.cos(2 * np.pi * fc * dt)
+alpha_2 = 1 - (y - 1 + np.sqrt(y**2 - 4 * y + 3))  # Stack
 fig = plt.figure()
-plt.plot(fc, alpha_0, label="EMA", linewidth=2.)
-plt.plot(fc, alpha_1, label="Euler", linewidth=2.)
-plt.plot(fc, alpha_2, label="Exact", linewidth=2.)
-plt.xlabel('Cut-off frequency $f_s$ ($Hz$)', size=16)
-plt.ylabel('Smoothing coefficient '+r'$\alpha$', size=16)
-plt.title(r'$\alpha$'+' coefficient vs cut-off frequency at $f_s = 1000Hz$', size=16)
+plt.plot(fc, alpha_0, label="EMA", linewidth=2.0)
+plt.plot(fc, alpha_1, label="Euler", linewidth=2.0)
+plt.plot(fc, alpha_2, label="Exact", linewidth=2.0)
+plt.xlabel("Cut-off frequency $f_s$ ($Hz$)", size=16)
+plt.ylabel("Smoothing coefficient " + r"$\alpha$", size=16)
+plt.title(r"$\alpha$" + " coefficient vs cut-off frequency at $f_s = 1000Hz$", size=16)
 plt.grid()
-plt.legend(prop={'size': 16})
+plt.legend(prop={"size": 16})
 plt.show()
 
-# # Filtering 
+# # Filtering
 # N = 1000
 # t = np.linspace(0,1,N)
 # freq_in = 20
 # input_signal = np.sin(t*2*np.pi*freq_in)
 
-# # Choose filter type 
+# # Choose filter type
 # FC = 1
 # # alpha = np.exp(-2*np.pi*FC*dt) # Exp MA
 # # alpha = 1./(1+2*np.pi*FC*dt)   # Wiki

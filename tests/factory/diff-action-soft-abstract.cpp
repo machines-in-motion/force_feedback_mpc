@@ -8,7 +8,6 @@
 
 #include "diff-action-soft-abstract.hpp"
 
-
 namespace force_feedback_mpc {
 namespace unittest {
 
@@ -18,16 +17,20 @@ const std::vector<DAMSoftContactAbstractTypes::Type>
 std::ostream& operator<<(std::ostream& os,
                          DAMSoftContactAbstractTypes::Type dam_type) {
   switch (dam_type) {
-    case DAMSoftContactAbstractTypes::DAMSoftContactAbstractAugmentedFwdDynamics_TalosArm:
+    case DAMSoftContactAbstractTypes::
+        DAMSoftContactAbstractAugmentedFwdDynamics_TalosArm:
       os << "DAMSoftContactAbstractAugmentedFwdDynamics_TalosArm";
       break;
-    case DAMSoftContactAbstractTypes::DAMSoftContactAbstractAugmentedFwdDynamics_HyQ:
+    case DAMSoftContactAbstractTypes::
+        DAMSoftContactAbstractAugmentedFwdDynamics_HyQ:
       os << "DAMSoftContactAbstractAugmentedFwdDynamics_HyQ";
       break;
-    case DAMSoftContactAbstractTypes::DAMSoftContactAbstractAugmentedFwdDynamics_RandomHumanoid:
+    case DAMSoftContactAbstractTypes::
+        DAMSoftContactAbstractAugmentedFwdDynamics_RandomHumanoid:
       os << "DAMSoftContactAbstractAugmentedFwdDynamics_RandomHumanoid";
       break;
-    case DAMSoftContactAbstractTypes::DAMSoftContactAbstractAugmentedFwdDynamics_Talos:
+    case DAMSoftContactAbstractTypes::
+        DAMSoftContactAbstractAugmentedFwdDynamics_Talos:
       os << "DAMSoftContactAbstractAugmentedFwdDynamics_Talos";
       break;
     default:
@@ -35,7 +38,6 @@ std::ostream& operator<<(std::ostream& os,
   }
   return os;
 }
-
 
 }  // namespace unittest
 }  // namespace force_feedback_mpc

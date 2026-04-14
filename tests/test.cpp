@@ -1,10 +1,11 @@
 #include <boost/test/unit_test.hpp>
+
 #include "force_feedback_mpc/sqp.hpp"
 
 BOOST_AUTO_TEST_SUITE(BOOST_TEST_MODULE)
 
 BOOST_AUTO_TEST_CASE(test_boost_estimator) {
-    // To implement
+  // To implement
 }
 
 BOOST_AUTO_TEST_SUITE_END()

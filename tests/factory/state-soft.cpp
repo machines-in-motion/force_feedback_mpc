@@ -6,6 +6,7 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "state-soft.hpp"
 
 #include <crocoddyl/core/states/euclidean.hpp>
 #include <crocoddyl/core/utils/exception.hpp>
@@ -17,17 +18,15 @@
 #include <pinocchio/multibody/sample-models.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 
-#include "state-soft.hpp"
-
 namespace force_feedback_mpc {
 namespace unittest {
 using namespace crocoddyl;
 
+const std::vector<StateSoftContactModelTypes::Type>
+    StateSoftContactModelTypes::all(StateSoftContactModelTypes::init_all());
 
-const std::vector<StateSoftContactModelTypes::Type> StateSoftContactModelTypes::all(
-    StateSoftContactModelTypes::init_all());
-
-std::ostream& operator<<(std::ostream& os, StateSoftContactModelTypes::Type type) {
+std::ostream& operator<<(std::ostream& os,
+                         StateSoftContactModelTypes::Type type) {
   switch (type) {
     case StateSoftContactModelTypes::StateSoftContact_TalosArm:
       os << "StateSoftContact_TalosArm";
@@ -53,17 +52,21 @@ std::ostream& operator<<(std::ostream& os, StateSoftContactModelTypes::Type type
 StateSoftContactModelFactory::StateSoftContactModelFactory() {}
 StateSoftContactModelFactory::~StateSoftContactModelFactory() {}
 
-std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact> StateSoftContactModelFactory::create(
+std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact>
+StateSoftContactModelFactory::create(
     StateSoftContactModelTypes::Type state_type, std::size_t nc) const {
   std::shared_ptr<pinocchio::Model> model;
   std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact> state;
   switch (state_type) {
     case StateSoftContactModelTypes::StateSoftContact_TalosArm: {
       model = PinocchioModelFactory(PinocchioModelTypes::TalosArm).create();
-      std::shared_ptr<crocoddyl::ActuationModelFull> actuation = 
+      std::shared_ptr<crocoddyl::ActuationModelFull> actuation =
           std::make_shared<crocoddyl::ActuationModelFull>(
-              StateModelFactory().create(StateModelTypes::StateMultibody_TalosArm));
-      state = std::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(model, nc);
+              StateModelFactory().create(
+                  StateModelTypes::StateMultibody_TalosArm));
+      state =
+          std::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(
+              model, nc);
 
       break;
     }
@@ -72,8 +75,11 @@ std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact> StateSoftCont
       std::shared_ptr<crocoddyl::ActuationModelFloatingBase> actuation =
           std::make_shared<crocoddyl::ActuationModelFloatingBase>(
               std::static_pointer_cast<crocoddyl::StateMultibody>(
-                  StateModelFactory().create(StateModelTypes::StateMultibody_HyQ)));
-      state = std::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(model, nc);
+                  StateModelFactory().create(
+                      StateModelTypes::StateMultibody_HyQ)));
+      state =
+          std::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(
+              model, nc);
       break;
     }
     case StateSoftContactModelTypes::StateSoftContact_Talos: {
@@ -81,8 +87,11 @@ std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact> StateSoftCont
       std::shared_ptr<crocoddyl::ActuationModelFloatingBase> actuation =
           std::make_shared<crocoddyl::ActuationModelFloatingBase>(
               std::static_pointer_cast<crocoddyl::StateMultibody>(
-                  StateModelFactory().create(StateModelTypes::StateMultibody_Talos)));
-      state = std::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(model, nc);
+                  StateModelFactory().create(
+                      StateModelTypes::StateMultibody_Talos)));
+      state =
+          std::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(
+              model, nc);
       break;
     }
     case StateSoftContactModelTypes::StateSoftContact_RandomHumanoid: {
@@ -91,8 +100,11 @@ std::shared_ptr<force_feedback_mpc::softcontact::StateSoftContact> StateSoftCont
       std::shared_ptr<crocoddyl::ActuationModelFloatingBase> actuation =
           std::make_shared<crocoddyl::ActuationModelFloatingBase>(
               std::static_pointer_cast<crocoddyl::StateMultibody>(
-                  StateModelFactory().create(StateModelTypes::StateMultibody_RandomHumanoid)));
-      state = std::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(model, nc);
+                  StateModelFactory().create(
+                      StateModelTypes::StateMultibody_RandomHumanoid)));
+      state =
+          std::make_shared<force_feedback_mpc::softcontact::StateSoftContact>(
+              model, nc);
       break;
     }
     default:

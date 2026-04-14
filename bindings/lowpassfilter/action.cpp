@@ -6,18 +6,19 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "force-feedback-mpc-python.hpp"
 #include "force_feedback_mpc/lowpassfilter/action.hpp"
+
+#include "force-feedback-mpc-python.hpp"
 
 namespace force_feedback_mpc {
 namespace lpf {
 
 namespace bp = boost::python;
 
-
 void exposeIntegratedActionModelLPF() {
-  bp::register_ptr_to_python<std::shared_ptr<IntegratedActionModelLPF> >();
-  bp::class_<IntegratedActionModelLPF, bp::bases<crocoddyl::ActionModelAbstract> >(
+  bp::register_ptr_to_python<std::shared_ptr<IntegratedActionModelLPF>>();
+  bp::class_<IntegratedActionModelLPF,
+             bp::bases<crocoddyl::ActionModelAbstract>>(
       "IntegratedActionModelLPF",
       "Sympletic Euler integrator for differential action models.\n\n"
       "This class implements a sympletic Euler integrator (a.k.a "
@@ -27,7 +28,7 @@ void exposeIntegratedActionModelLPF() {
       "dt, [alpha*tau + (1-alpha)*w]).",
       bp::init<std::shared_ptr<crocoddyl::DifferentialActionModelAbstract>,
                bp::optional<std::vector<std::string>, double, bool, double,
-                            bool, int> >(
+                            bool, int>>(
           bp::args("self", "diffModel", "LPFJointNames", "stepTime",
                    "withCostResidual", "fc", "tau_plus_integration", "filter"),
           "Initialize the sympletic Euler integrator.\n\n"
@@ -57,7 +58,8 @@ void exposeIntegratedActionModelLPF() {
       .def<void (IntegratedActionModelLPF::*)(
           const std::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
-          "calc", &crocoddyl::ActionModelAbstract::calc, bp::args("self", "data", "x"))
+          "calc", &crocoddyl::ActionModelAbstract::calc,
+          bp::args("self", "data", "x"))
       .def<void (IntegratedActionModelLPF::*)(
           const std::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
@@ -162,14 +164,16 @@ void exposeIntegratedActionModelLPF() {
           "upper bound on the box constraint on the LPF torque dimensions")
       .add_property(
           "with_lpf_torque_constraint",
-          bp::make_function(&IntegratedActionModelLPF::get_with_lpf_torque_constraint,
-                            bp::return_value_policy<bp::return_by_value>()),
+          bp::make_function(
+              &IntegratedActionModelLPF::get_with_lpf_torque_constraint,
+              bp::return_value_policy<bp::return_by_value>()),
           &IntegratedActionModelLPF::set_with_lpf_torque_constraint,
-          "activate box constraint on the contact LPF torque dimensions (default: False)");
+          "activate box constraint on the contact LPF torque dimensions "
+          "(default: False)");
 
-  bp::register_ptr_to_python<std::shared_ptr<IntegratedActionDataLPF> >();
+  bp::register_ptr_to_python<std::shared_ptr<IntegratedActionDataLPF>>();
 
-  bp::class_<IntegratedActionDataLPF, bp::bases<crocoddyl::ActionDataAbstract> >(
+  bp::class_<IntegratedActionDataLPF, bp::bases<crocoddyl::ActionDataAbstract>>(
       "IntegratedActionDataLPF", "Sympletic Euler integrator data.",
       bp::init<IntegratedActionModelLPF*>(
           bp::args("self", "model"),

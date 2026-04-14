@@ -18,13 +18,13 @@
 #include <crocoddyl/multibody/contacts/contact-6d.hpp>
 #include <crocoddyl/multibody/contacts/multiple-contacts.hpp>
 #include <crocoddyl/multibody/data/contacts.hpp>
+#include <crocoddyl/multibody/data/impulses.hpp>
 #include <crocoddyl/multibody/fwd.hpp>
 #include <crocoddyl/multibody/impulse-base.hpp>
 #include <crocoddyl/multibody/impulses/impulse-3d.hpp>
 #include <crocoddyl/multibody/impulses/impulse-6d.hpp>
 #include <crocoddyl/multibody/impulses/multiple-impulses.hpp>
 #include <crocoddyl/multibody/states/multibody.hpp>
-#include <crocoddyl/multibody/data/impulses.hpp>
 
 namespace force_feedback_mpc {
 namespace frictioncone {
@@ -82,7 +82,8 @@ struct ResidualDataFrictionCone
            it != d1->contacts->contacts.end(); ++it) {
         if (it->second->frame == id) {
           crocoddyl::ContactData2DTpl<double>* d2d =
-              dynamic_cast<crocoddyl::ContactData2DTpl<double>*>(it->second.get());
+              dynamic_cast<crocoddyl::ContactData2DTpl<double>*>(
+                  it->second.get());
           if (d2d != NULL) {
             contact_type = crocoddyl::Contact2D;
             found_contact = true;
@@ -90,7 +91,8 @@ struct ResidualDataFrictionCone
             break;
           }
           crocoddyl::ContactData3DTpl<double>* d3d =
-              dynamic_cast<crocoddyl::ContactData3DTpl<double>*>(it->second.get());
+              dynamic_cast<crocoddyl::ContactData3DTpl<double>*>(
+                  it->second.get());
           if (d3d != NULL) {
             contact_type = crocoddyl::Contact3D;
             found_contact = true;
@@ -98,7 +100,8 @@ struct ResidualDataFrictionCone
             break;
           }
           crocoddyl::ContactData6DTpl<double>* d6d =
-              dynamic_cast<crocoddyl::ContactData6DTpl<double>*>(it->second.get());
+              dynamic_cast<crocoddyl::ContactData6DTpl<double>*>(
+                  it->second.get());
           if (d6d != NULL) {
             contact_type = crocoddyl::Contact6D;
             found_contact = true;
@@ -111,14 +114,14 @@ struct ResidualDataFrictionCone
           break;
         }
       }
-    } 
-    else {
+    } else {
       for (typename ImpulseModelMultiple::ImpulseDataContainer::iterator it =
                d2->impulses->impulses.begin();
            it != d2->impulses->impulses.end(); ++it) {
         if (it->second->frame == id) {
           crocoddyl::ImpulseData3DTpl<double>* d3d =
-              dynamic_cast<crocoddyl::ImpulseData3DTpl<double>*>(it->second.get());
+              dynamic_cast<crocoddyl::ImpulseData3DTpl<double>*>(
+                  it->second.get());
           if (d3d != NULL) {
             contact_type = crocoddyl::Contact3D;
             found_contact = true;
@@ -126,7 +129,8 @@ struct ResidualDataFrictionCone
             break;
           }
           crocoddyl::ImpulseData6DTpl<double>* d6d =
-              dynamic_cast<crocoddyl::ImpulseData6DTpl<double>*>(it->second.get());
+              dynamic_cast<crocoddyl::ImpulseData6DTpl<double>*>(
+                  it->second.get());
           if (d6d != NULL) {
             contact_type = crocoddyl::Contact6D;
             found_contact = true;
@@ -146,21 +150,19 @@ struct ResidualDataFrictionCone
     }
   }
 
-  std::shared_ptr<crocoddyl::ForceDataAbstractTpl<double> >
-      contact;               //!< Contact force data
+  std::shared_ptr<crocoddyl::ForceDataAbstractTpl<double>>
+      contact;                          //!< Contact force data
   crocoddyl::ContactType contact_type;  //!< Type of contact (2D / 3D / 6D)
   using Base::r;
   using Base::Ru;
   using Base::Rx;
   using Base::shared;
-  
+
   Eigen::Vector3d f3d;
   VectorXs dcone_df;
   MatrixXs df_dx;
   MatrixXs df_du;
 };
-
-
 
 /**
  * @brief Contact friction cone residual
@@ -196,8 +198,7 @@ class ResidualModelFrictionCone
    * or inverse dynamics (false)
    */
   ResidualModelFrictionCone(std::shared_ptr<StateMultibody> state,
-                            const pinocchio::FrameIndex id,
-                            const double coef,
+                            const pinocchio::FrameIndex id, const double coef,
                             const std::size_t nu);
 
   /**
@@ -211,8 +212,7 @@ class ResidualModelFrictionCone
    * @param[in] fref   Reference friction cone
    */
   ResidualModelFrictionCone(std::shared_ptr<StateMultibody> state,
-                                      const pinocchio::FrameIndex id,
-                                      const double coef);
+                            const pinocchio::FrameIndex id, const double coef);
   virtual ~ResidualModelFrictionCone();
 
   /**
@@ -270,25 +270,25 @@ class ResidualModelFrictionCone
   virtual std::shared_ptr<ResidualDataAbstract> createData(
       DataCollectorAbstract* const data);
 
-//   /**
-//    * @brief Update the Jacobians of the contact friction cone residual
-//    *
-//    * @param[in] data  Contact friction cone residual data
-//    */
-//   void updateJacobians(const std::shared_ptr<ResidualDataAbstract>& data);
+  //   /**
+  //    * @brief Update the Jacobians of the contact friction cone residual
+  //    *
+  //    * @param[in] data  Contact friction cone residual data
+  //    */
+  //   void updateJacobians(const std::shared_ptr<ResidualDataAbstract>& data);
 
-//   /**
-//    * @brief Indicates if we are using the forward-dynamics (true) or
-//    * inverse-dynamics (false)
-//    */
-//   bool is_fwddyn() const;
+  //   /**
+  //    * @brief Indicates if we are using the forward-dynamics (true) or
+  //    * inverse-dynamics (false)
+  //    */
+  //   bool is_fwddyn() const;
 
   /**
    * @brief Return the reference frame id
    */
   pinocchio::FrameIndex get_id() const;
 
-  void set_friction_coef(const double inDouble) {coef_ = inDouble; };
+  void set_friction_coef(const double inDouble) { coef_ = inDouble; };
   const double& get_friction_coef() const { return coef_; };
 
   /**
@@ -303,15 +303,15 @@ class ResidualModelFrictionCone
   using Base::state_;
 
  private:
-//   bool fwddyn_;  //!< Indicates if we are using this function for forward
-                 //!< dynamics
-//   bool update_jacobians_;     //!< Indicates if we need to update the Jacobians
-                              //!< (used for inverse dynamics case)
+  //   bool fwddyn_;  //!< Indicates if we are using this function for forward
+  //!< dynamics
+  //   bool update_jacobians_;     //!< Indicates if we need to update the
+  //   Jacobians
+  //!< (used for inverse dynamics case)
   pinocchio::FrameIndex id_;  //!< Reference frame id
   double coef_;
-//   FrictionCone fref_;         //!< Reference contact friction cone
+  //   FrictionCone fref_;         //!< Reference contact friction cone
 };
-
 
 }  // namespace frictioncone
 }  // namespace force_feedback_mpc

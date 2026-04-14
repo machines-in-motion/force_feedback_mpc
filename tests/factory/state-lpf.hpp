@@ -48,9 +48,8 @@ class LPFJointListFactory {
   explicit LPFJointListFactory();
   ~LPFJointListFactory();
 
-  std::vector<std::string> create_names(
-      std::shared_ptr<pinocchio::Model> model,
-      LPFJointMaskType lpf_mask_type) const;
+  std::vector<std::string> create_names(std::shared_ptr<pinocchio::Model> model,
+                                        LPFJointMaskType lpf_mask_type) const;
   std::vector<int> create_ids(std::shared_ptr<pinocchio::Model> model,
                               LPFJointMaskType lpf_mask_type) const;
 };

@@ -48,7 +48,7 @@ make install
 
 # 3. Install required Python packages (from workspace root)
 cd ..
-pip install -e ./croco_mpc_utils --no-deps 
+pip install -e ./croco_mpc_utils --no-deps
 pip install -e ./mim_robots --no-deps
 
 # 4. [Optional] Install Go2Py for Go2 demos

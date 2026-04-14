@@ -6,10 +6,11 @@
 // individual files. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "force-feedback-mpc-python.hpp"
 #include "force_feedback_mpc/softcontact/iam-augmented.hpp"
 
 #include <eigenpy/std-vector.hpp>
+
+#include "force-feedback-mpc-python.hpp"
 
 namespace force_feedback_mpc {
 namespace softcontact {
@@ -19,14 +20,16 @@ namespace bp = boost::python;
 using eigenpy::StdVectorPythonVisitor;
 
 void exposeIAMSoftContactAugmented() {
+  typedef std::shared_ptr<
+      force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented>
+      ResidualModelFrictionConeAugmentedPtr;
+  StdVectorPythonVisitor<std::vector<ResidualModelFrictionConeAugmentedPtr>,
+                         true>::expose("StdVec_FrictionC one");
 
-  typedef std::shared_ptr<force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented> ResidualModelFrictionConeAugmentedPtr;
-  StdVectorPythonVisitor<std::vector<ResidualModelFrictionConeAugmentedPtr>, true>::expose(
-      "StdVec_FrictionC one");
+  bp::register_ptr_to_python<std::shared_ptr<IAMSoftContactAugmented>>();
 
-  bp::register_ptr_to_python<std::shared_ptr<IAMSoftContactAugmented> >();
-  
-  bp::class_<IAMSoftContactAugmented, bp::bases<crocoddyl::ActionModelAbstract> >(
+  bp::class_<IAMSoftContactAugmented,
+             bp::bases<crocoddyl::ActionModelAbstract>>(
       "IAMSoftContactAugmented",
       "Sympletic Euler integrator for differential action models.\n\n"
       "This class implements a sympletic Euler integrator (a.k.a "
@@ -35,13 +38,19 @@ void exposeIAMSoftContactAugmented() {
       "  [q+, v+, tau+] = StateLPF.integrate([q, v], [v + a * dt, a * dt] * "
       "dt, [alpha*tau + (1-alpha)*w]).",
       bp::init<std::shared_ptr<DAMSoftContactAbstractAugmentedFwdDynamics>,
-               bp::optional<double, bool, std::vector<std::shared_ptr<force_feedback_mpc::frictioncone::ResidualModelFrictionConeAugmented>> > >(
-          bp::args("self", "diffModel", "stepTime", "withCostResidual", "friction_constraints"),
+               bp::optional<double, bool,
+                            std::vector<std::shared_ptr<
+                                force_feedback_mpc::frictioncone::
+                                    ResidualModelFrictionConeAugmented>>>>(
+          bp::args("self", "diffModel", "stepTime", "withCostResidual",
+                   "friction_constraints"),
           "Initialize the sympletic Euler integrator.\n\n"
           ":param diffModel: differential action model\n"
           ":param stepTime: step time\n"
-          ":param withCostResidual: includes the cost residuals and derivatives computation, or tau\n"
-          ":param friction_constraints: list of friction cone constraint residual models"))
+          ":param withCostResidual: includes the cost residuals and "
+          "derivatives computation, or tau\n"
+          ":param friction_constraints: list of friction cone constraint "
+          "residual models"))
       .def<void (IAMSoftContactAugmented::*)(
           const std::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
@@ -57,7 +66,8 @@ void exposeIAMSoftContactAugmented() {
       .def<void (IAMSoftContactAugmented::*)(
           const std::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&)>(
-          "calc", &crocoddyl::ActionModelAbstract::calc, bp::args("self", "data", "x"))
+          "calc", &crocoddyl::ActionModelAbstract::calc,
+          bp::args("self", "data", "x"))
       .def<void (IAMSoftContactAugmented::*)(
           const std::shared_ptr<crocoddyl::ActionDataAbstract>&,
           const Eigen::Ref<const Eigen::VectorXd>&,
@@ -77,8 +87,8 @@ void exposeIAMSoftContactAugmented() {
           const Eigen::Ref<const Eigen::VectorXd>&)>(
           "calcDiff", &crocoddyl::ActionModelAbstract::calcDiff,
           bp::args("self", "data", "x"))
-      .def("createData", &IAMSoftContactAugmented::createData,
-           bp::args("self"), "Create the Euler integrator data.")
+      .def("createData", &IAMSoftContactAugmented::createData, bp::args("self"),
+           "Create the Euler integrator data.")
       .add_property(
           "differential",
           bp::make_function(&IAMSoftContactAugmented::get_differential,
@@ -121,18 +131,21 @@ void exposeIAMSoftContactAugmented() {
           "activate box constraint on the contact force (default: False)")
       .add_property(
           "with_friction_cone_constraint",
-          bp::make_function(&IAMSoftContactAugmented::get_with_friction_cone_constraint,
-                            bp::return_value_policy<bp::return_by_value>()),
-          "activate friction cone (Lorentz) constraint on the contact force (default: False)")
-      .add_property(
-          "friction_constraints",
-          bp::make_function(&IAMSoftContactAugmented::get_friction_cone_constraints,
-                            bp::return_value_policy<bp::return_by_value>()),
-          &IAMSoftContactAugmented::set_friction_cone_constraints, "friction cone constraint");
+          bp::make_function(
+              &IAMSoftContactAugmented::get_with_friction_cone_constraint,
+              bp::return_value_policy<bp::return_by_value>()),
+          "activate friction cone (Lorentz) constraint on the contact force "
+          "(default: False)")
+      .add_property("friction_constraints",
+                    bp::make_function(
+                        &IAMSoftContactAugmented::get_friction_cone_constraints,
+                        bp::return_value_policy<bp::return_by_value>()),
+                    &IAMSoftContactAugmented::set_friction_cone_constraints,
+                    "friction cone constraint");
 
-  bp::register_ptr_to_python<std::shared_ptr<IADSoftContactAugmented> >();
+  bp::register_ptr_to_python<std::shared_ptr<IADSoftContactAugmented>>();
 
-  bp::class_<IADSoftContactAugmented, bp::bases<crocoddyl::ActionDataAbstract> >(
+  bp::class_<IADSoftContactAugmented, bp::bases<crocoddyl::ActionDataAbstract>>(
       "IADSoftContactAugmented", "Sympletic Euler integrator data.",
       bp::init<IAMSoftContactAugmented*>(
           bp::args("self", "model"),

@@ -6,6 +6,7 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "state-lpf.hpp"
 
 #include <crocoddyl/core/states/euclidean.hpp>
 #include <crocoddyl/core/utils/exception.hpp>
@@ -15,8 +16,6 @@
 #include <pinocchio/fwd.hpp>
 #include <pinocchio/multibody/sample-models.hpp>
 #include <pinocchio/parsers/urdf.hpp>
-
-#include "state-lpf.hpp"
 
 namespace force_feedback_mpc {
 namespace unittest {
@@ -122,7 +121,8 @@ std::shared_ptr<force_feedback_mpc::lpf::StateLPF> StateLPFModelFactory::create(
                   StateModelTypes::StateMultibody_TalosArm));
       std::vector<int> lpf_joint_ids =
           LPFJointListFactory().create_ids(model, lpf_mask_type);
-      state = std::make_shared<force_feedback_mpc::lpf::StateLPF>(model, lpf_joint_ids);
+      state = std::make_shared<force_feedback_mpc::lpf::StateLPF>(
+          model, lpf_joint_ids);
 
       break;
     }
@@ -135,7 +135,8 @@ std::shared_ptr<force_feedback_mpc::lpf::StateLPF> StateLPFModelFactory::create(
                       StateModelTypes::StateMultibody_HyQ)));
       std::vector<int> lpf_joint_ids =
           LPFJointListFactory().create_ids(model, lpf_mask_type);
-      state = std::make_shared<force_feedback_mpc::lpf::StateLPF>(model, lpf_joint_ids);
+      state = std::make_shared<force_feedback_mpc::lpf::StateLPF>(
+          model, lpf_joint_ids);
       break;
     }
     case StateLPFModelTypes::StateLPF_Talos: {
@@ -147,7 +148,8 @@ std::shared_ptr<force_feedback_mpc::lpf::StateLPF> StateLPFModelFactory::create(
                       StateModelTypes::StateMultibody_Talos)));
       std::vector<int> lpf_joint_ids =
           LPFJointListFactory().create_ids(model, lpf_mask_type);
-      state = std::make_shared<force_feedback_mpc::lpf::StateLPF>(model, lpf_joint_ids);
+      state = std::make_shared<force_feedback_mpc::lpf::StateLPF>(
+          model, lpf_joint_ids);
       break;
     }
     case StateLPFModelTypes::StateLPF_RandomHumanoid: {
@@ -160,7 +162,8 @@ std::shared_ptr<force_feedback_mpc::lpf::StateLPF> StateLPFModelFactory::create(
                       StateModelTypes::StateMultibody_RandomHumanoid)));
       std::vector<int> lpf_joint_ids =
           LPFJointListFactory().create_ids(model, lpf_mask_type);
-      state = std::make_shared<force_feedback_mpc::lpf::StateLPF>(model, lpf_joint_ids);
+      state = std::make_shared<force_feedback_mpc::lpf::StateLPF>(
+          model, lpf_joint_ids);
       break;
     }
     default:

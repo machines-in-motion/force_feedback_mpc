@@ -6,110 +6,124 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "force_feedback_mpc/softcontact/dam1d-augmented.hpp"
+
 #include <crocoddyl/core/utils/exception.hpp>
 #include <crocoddyl/core/utils/math.hpp>
 #include <pinocchio/algorithm/centroidal.hpp>
 #include <pinocchio/algorithm/compute-all-terms.hpp>
 #include <pinocchio/algorithm/contact-dynamics.hpp>
-#include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/frames-derivatives.hpp>
+#include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/kinematics-derivatives.hpp>
 #include <pinocchio/algorithm/rnea-derivatives.hpp>
 #include <pinocchio/algorithm/rnea.hpp>
 
 #include "force_feedback_mpc/softcontact/dam-augmented.hpp"
-#include "force_feedback_mpc/softcontact/dam1d-augmented.hpp"
-
 
 namespace force_feedback_mpc {
 namespace softcontact {
 
-
 DAMSoftContact1DAugmentedFwdDynamics::DAMSoftContact1DAugmentedFwdDynamics(
-    std::shared_ptr<StateMultibody> state, 
+    std::shared_ptr<StateMultibody> state,
     std::shared_ptr<ActuationModelAbstract> actuation,
-    std::shared_ptr<CostModelSum> costs,
-    const pinocchio::FrameIndex frameId,
-    const VectorXs& Kp, 
-    const VectorXs& Kv,
-    const Vector3s& oPc,
+    std::shared_ptr<CostModelSum> costs, const pinocchio::FrameIndex frameId,
+    const VectorXs& Kp, const VectorXs& Kv, const Vector3s& oPc,
     const Vector3MaskType& type,
     std::shared_ptr<ConstraintModelManager> constraints)
-    : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 1, constraints) { type_ = type; }
-
+    : Base(state, actuation, costs, frameId, Kp, Kv, oPc, 1, constraints) {
+  type_ = type;
+}
 
 DAMSoftContact1DAugmentedFwdDynamics::~DAMSoftContact1DAugmentedFwdDynamics() {}
 
-
 void DAMSoftContact1DAugmentedFwdDynamics::calc(
-            const std::shared_ptr<DifferentialActionDataAbstract>& data, 
-            const Eigen::Ref<const VectorXs>& x,
-            const Eigen::Ref<const VectorXs>& f,
-            const Eigen::Ref<const VectorXs>& u) {
+    const std::shared_ptr<DifferentialActionDataAbstract>& data,
+    const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& f,
+    const Eigen::Ref<const VectorXs>& u) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
-    
     throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " + std::to_string(this->get_state()->get_nx()) + ")");
+                 << "x has wrong dimension (it should be " +
+                        std::to_string(this->get_state()->get_nx()) + ")");
   }
   if (static_cast<std::size_t>(f.size()) != 1) {
     throw_pretty("Invalid argument: f has wrong dimension (it should be 1)");
   }
   if (static_cast<std::size_t>(u.size()) != this->get_nu()) {
-    throw_pretty("Invalid argument: "
-                 << "u has wrong dimension (it should be " + std::to_string(this->get_nu()) + ")");
+    throw_pretty(
+        "Invalid argument: " << "u has wrong dimension (it should be " +
+                                    std::to_string(this->get_nu()) + ")");
   }
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   Data* d = static_cast<Data*>(data.get());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(this->get_state()->get_nq());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(this->get_state()->get_nv());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q =
+      x.head(this->get_state()->get_nq());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v =
+      x.tail(this->get_state()->get_nv());
   pinocchio::computeAllTerms(this->get_pinocchio(), d->pinocchio, q, v);
   pinocchio::updateFramePlacements(this->get_pinocchio(), d->pinocchio);
   d->oRf = d->pinocchio.oMf[frameId_].rotation();
   // Actuation calc
   this->get_actuation()->calc(d->multibody.actuation, x, u);
-  
+
   // If contact is active, compute aq = ABA(q,v,tau,fext)
-  if(active_contact_){
+  if (active_contact_) {
     // Compute external wrench for LOCAL f
     d->f3d = Vector3s::Zero();
     d->f3d(this->get_type()) = f(0);
     d->pinForce = pinocchio::ForceTpl<double>(d->f3d, Vector3s::Zero());
     // Rotate if not f not in LOCAL
-    if(ref_ != pinocchio::LOCAL){
-        d->pinForce = pinocchio::ForceTpl<double>(d->oRf.transpose() * d->f3d, Vector3s::Zero());
+    if (ref_ != pinocchio::LOCAL) {
+      d->pinForce = pinocchio::ForceTpl<double>(d->oRf.transpose() * d->f3d,
+                                                Vector3s::Zero());
     }
     d->fext[parentId_] = jMf_.act(d->pinForce);
 
     // ABA with armature
-    if(with_armature_){
+    if (with_armature_) {
       d->pinocchio.M.diagonal() += armature_;
       pinocchio::cholesky::decompose(this->get_pinocchio(), d->pinocchio);
       d->Minv.setZero();
-      pinocchio::cholesky::computeMinv(this->get_pinocchio(), d->pinocchio, d->Minv);
+      pinocchio::cholesky::computeMinv(this->get_pinocchio(), d->pinocchio,
+                                       d->Minv);
       d->u_drift = d->multibody.actuation->tau - d->pinocchio.nle;
       //  Compute jacobian transpose lambda
-      pinocchio::getFrameJacobian(this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL, d->lJ);
+      pinocchio::getFrameJacobian(this->get_pinocchio(), d->pinocchio, frameId_,
+                                  pinocchio::LOCAL, d->lJ);
       d->xout.noalias() = d->Minv * d->u_drift;
       d->tmp_mat_.noalias() = d->Minv * d->lJ.topRows(3).transpose();
-      d->xout.noalias() += d->tmp_mat_ * d->pinForce.linear(); 
-    // ABA without armature
+      d->xout.noalias() += d->tmp_mat_ * d->pinForce.linear();
+      // ABA without armature
     } else {
-      d->xout = pinocchio::aba(this->get_pinocchio(), d->pinocchio, q, v, d->multibody.actuation->tau, d->fext); 
+      d->xout = pinocchio::aba(this->get_pinocchio(), d->pinocchio, q, v,
+                               d->multibody.actuation->tau, d->fext);
     }
-    // Compute time derivative of contact force : need to forward kin with current acc
-    pinocchio::forwardKinematics(this->get_pinocchio(), d->pinocchio, q, v, d->xout);
-    d->la = pinocchio::getFrameAcceleration(this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL).linear();     
-    d->lv = pinocchio::getFrameVelocity(this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL).linear();
+    // Compute time derivative of contact force : need to forward kin with
+    // current acc
+    pinocchio::forwardKinematics(this->get_pinocchio(), d->pinocchio, q, v,
+                                 d->xout);
+    d->la = pinocchio::getFrameAcceleration(this->get_pinocchio(), d->pinocchio,
+                                            frameId_, pinocchio::LOCAL)
+                .linear();
+    d->lv = pinocchio::getFrameVelocity(this->get_pinocchio(), d->pinocchio,
+                                        frameId_, pinocchio::LOCAL)
+                .linear();
     d->fout3d = -Kp_(0) * d->lv - Kv_(0) * d->la;
     d->fout(0) = d->fout3d(this->get_type());
     d->fout3d_copy = d->fout3d;
     // Rotate if not f not in LOCAL
-    if(ref_ != pinocchio::LOCAL){
-        d->oa = pinocchio::getFrameAcceleration(this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL_WORLD_ALIGNED).linear();
-        d->ov = pinocchio::getFrameVelocity(this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL_WORLD_ALIGNED).linear();
-        d->fout3d = -Kp_(0)* d->ov - Kv_(0) * d->oa;
-        d->fout(0) = d->fout3d(this->get_type());
-    } 
+    if (ref_ != pinocchio::LOCAL) {
+      d->oa = pinocchio::getFrameAcceleration(this->get_pinocchio(),
+                                              d->pinocchio, frameId_,
+                                              pinocchio::LOCAL_WORLD_ALIGNED)
+                  .linear();
+      d->ov =
+          pinocchio::getFrameVelocity(this->get_pinocchio(), d->pinocchio,
+                                      frameId_, pinocchio::LOCAL_WORLD_ALIGNED)
+              .linear();
+      d->fout3d = -Kp_(0) * d->ov - Kv_(0) * d->oa;
+      d->fout(0) = d->fout3d(this->get_type());
+    }
   }
 
   // If contact NOT active : compute aq = ABA(q,v,tau)
@@ -119,11 +133,13 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
       d->pinocchio.M.diagonal() += armature_;
       pinocchio::cholesky::decompose(this->get_pinocchio(), d->pinocchio);
       d->Minv.setZero();
-      pinocchio::cholesky::computeMinv(this->get_pinocchio(), d->pinocchio, d->Minv);
+      pinocchio::cholesky::computeMinv(this->get_pinocchio(), d->pinocchio,
+                                       d->Minv);
       d->u_drift = d->multibody.actuation->tau - d->pinocchio.nle;
       d->xout.noalias() = d->Minv * d->u_drift;
     } else {
-      d->xout = pinocchio::aba(this->get_pinocchio(), d->pinocchio, q, v, d->multibody.actuation->tau);
+      d->xout = pinocchio::aba(this->get_pinocchio(), d->pinocchio, q, v,
+                               d->multibody.actuation->tau);
     }
   }
 
@@ -131,42 +147,51 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
 
   d->multibody.joint->a = d->xout;
   d->multibody.joint->tau = u;
-  
+
   // Computing the cost value and residuals
   this->get_costs()->calc(d->costs, x, u);
   d->cost = d->costs->cost;
 
   // hard coded cost not in contact
-  if(!active_contact_){
-    if(with_gravity_torque_reg_){
-      d->tau_grav_residual = d->multibody.actuation->tau - pinocchio::computeGeneralizedGravity(this->get_pinocchio(), d->pinocchio, q);
-      d->cost += 0.5*tau_grav_weight_*d->tau_grav_residual.transpose()*d->tau_grav_residual;
+  if (!active_contact_) {
+    if (with_gravity_torque_reg_) {
+      d->tau_grav_residual = d->multibody.actuation->tau -
+                             pinocchio::computeGeneralizedGravity(
+                                 this->get_pinocchio(), d->pinocchio, q);
+      d->cost += 0.5 * tau_grav_weight_ * d->tau_grav_residual.transpose() *
+                 d->tau_grav_residual;
     }
   }
 
-
   // Add hard-coded cost in contact
-  if(active_contact_){
-    if(with_force_cost_){
-      if(cost_ref_ != ref_){
-        if(cost_ref_ == pinocchio::LOCAL){
-          d->f_residual = d->oRf.transpose()(this->get_type(), this->get_type())*f - force_des_;
+  if (active_contact_) {
+    if (with_force_cost_) {
+      if (cost_ref_ != ref_) {
+        if (cost_ref_ == pinocchio::LOCAL) {
+          d->f_residual =
+              d->oRf.transpose()(this->get_type(), this->get_type()) * f -
+              force_des_;
+        } else {
+          d->f_residual =
+              d->oRf(this->get_type(), this->get_type()) * f - force_des_;
         }
-        else{
-          d->f_residual = d->oRf(this->get_type(), this->get_type())*f - force_des_;
-        }
-      }
-      else{
+      } else {
         d->f_residual = f - force_des_;
       }
-      d->cost += 0.5 * force_weight_(0) * d->f_residual.transpose() * d->f_residual;
+      d->cost +=
+          0.5 * force_weight_(0) * d->f_residual.transpose() * d->f_residual;
     }
-    if(with_gravity_torque_reg_){
-      d->tau_grav_residual = (d->multibody.actuation->tau - pinocchio::computeStaticTorque(this->get_pinocchio(), d->pinocchio, q, d->fext));
-      d->cost += 0.5*tau_grav_weight_*d->tau_grav_residual.transpose()*d->tau_grav_residual;
+    if (with_gravity_torque_reg_) {
+      d->tau_grav_residual =
+          (d->multibody.actuation->tau -
+           pinocchio::computeStaticTorque(this->get_pinocchio(), d->pinocchio,
+                                          q, d->fext));
+      d->cost += 0.5 * tau_grav_weight_ * d->tau_grav_residual.transpose() *
+                 d->tau_grav_residual;
     }
-    if(with_force_rate_reg_cost_){
-      d->cost += 0.5 * force_rate_reg_weight_(0) * d->fout.transpose() * d->fout;  // penalize time derivative of the force 
+    if (with_force_rate_reg_cost_) {
+      d->cost += 0.5 * force_rate_reg_weight_(0) * d->fout.transpose() *
+                 d->fout;  // penalize time derivative of the force
     }
   }
 
@@ -178,55 +203,64 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
-
-
 void DAMSoftContact1DAugmentedFwdDynamics::calc(
-            const std::shared_ptr<DifferentialActionDataAbstract>& data, 
-            const Eigen::Ref<const VectorXs>& x,
-            const Eigen::Ref<const VectorXs>& f) {
+    const std::shared_ptr<DifferentialActionDataAbstract>& data,
+    const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& f) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
     throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " + std::to_string(this->get_state()->get_nx()) + ")");
+                 << "x has wrong dimension (it should be " +
+                        std::to_string(this->get_state()->get_nx()) + ")");
   }
   if (static_cast<std::size_t>(f.size()) != this->get_nc()) {
-    throw_pretty("Invalid argument: "
-                 << "f has wrong dimension (it should be " + std::to_string(this->get_nc()) + ")");
+    throw_pretty(
+        "Invalid argument: " << "f has wrong dimension (it should be " +
+                                    std::to_string(this->get_nc()) + ")");
   }
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   Data* d = static_cast<Data*>(data.get());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(this->get_state()->get_nq());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(this->get_state()->get_nv());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q =
+      x.head(this->get_state()->get_nq());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v =
+      x.tail(this->get_state()->get_nv());
   pinocchio::computeAllTerms(this->get_pinocchio(), d->pinocchio, q, v);
   this->get_costs()->calc(d->costs, x);
   d->cost = d->costs->cost;
   // hard coded cost not in contact
-  if(!active_contact_){
-    if(with_gravity_torque_reg_){
-      d->tau_grav_residual = -pinocchio::computeGeneralizedGravity(this->get_pinocchio(), d->pinocchio, q);
-      d->cost += 0.5*tau_grav_weight_*d->tau_grav_residual.transpose()*d->tau_grav_residual;
+  if (!active_contact_) {
+    if (with_gravity_torque_reg_) {
+      d->tau_grav_residual = -pinocchio::computeGeneralizedGravity(
+          this->get_pinocchio(), d->pinocchio, q);
+      d->cost += 0.5 * tau_grav_weight_ * d->tau_grav_residual.transpose() *
+                 d->tau_grav_residual;
     }
-  }
-  else{
-    if(with_force_cost_){
-      if(cost_ref_ != ref_){
-        if(cost_ref_ == pinocchio::LOCAL){
-          d->f_residual = d->oRf.transpose()(this->get_type(), this->get_type())*f - force_des_;
+  } else {
+    if (with_force_cost_) {
+      if (cost_ref_ != ref_) {
+        if (cost_ref_ == pinocchio::LOCAL) {
+          d->f_residual =
+              d->oRf.transpose()(this->get_type(), this->get_type()) * f -
+              force_des_;
+        } else {
+          d->f_residual =
+              d->oRf(this->get_type(), this->get_type()) * f - force_des_;
         }
-        else{
-          d->f_residual = d->oRf(this->get_type(), this->get_type())*f - force_des_;
-        }
-      }
-      else{
+      } else {
         d->f_residual = f - force_des_;
       }
-      d->cost += 0.5 * force_weight_(0) * d->f_residual.transpose() * d->f_residual;
+      d->cost +=
+          0.5 * force_weight_(0) * d->f_residual.transpose() * d->f_residual;
     }
-    if(with_gravity_torque_reg_){
-      d->tau_grav_residual = (d->multibody.actuation->tau - pinocchio::computeStaticTorque(this->get_pinocchio(), d->pinocchio, q, d->fext));
-      d->cost += 0.5*tau_grav_weight_*d->tau_grav_residual.transpose()*d->tau_grav_residual;
+    if (with_gravity_torque_reg_) {
+      d->tau_grav_residual =
+          (d->multibody.actuation->tau -
+           pinocchio::computeStaticTorque(this->get_pinocchio(), d->pinocchio,
+                                          q, d->fext));
+      d->cost += 0.5 * tau_grav_weight_ * d->tau_grav_residual.transpose() *
+                 d->tau_grav_residual;
     }
-    if(with_force_rate_reg_cost_){
-      d->cost += 0.5 * force_rate_reg_weight_(0) * d->fout.transpose() * d->fout;  // penalize time derivative of the force 
+    if (with_force_rate_reg_cost_) {
+      d->cost += 0.5 * force_rate_reg_weight_(0) * d->fout.transpose() *
+                 d->fout;  // penalize time derivative of the force
     }
   }
 
@@ -238,146 +272,173 @@ void DAMSoftContact1DAugmentedFwdDynamics::calc(
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
-
-
-
 void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
-    const std::shared_ptr<DifferentialActionDataAbstract>& data, 
-    const Eigen::Ref<const VectorXs>& x,
-    const Eigen::Ref<const VectorXs>& f,
+    const std::shared_ptr<DifferentialActionDataAbstract>& data,
+    const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& f,
     const Eigen::Ref<const VectorXs>& u) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
     throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " + std::to_string(this->get_state()->get_nx()) + ")");
+                 << "x has wrong dimension (it should be " +
+                        std::to_string(this->get_state()->get_nx()) + ")");
   }
   if (static_cast<std::size_t>(f.size()) != 1) {
-    throw_pretty("Invalid argument: "
-                 << "f has wrong dimension (it should be 1)");
+    throw_pretty(
+        "Invalid argument: " << "f has wrong dimension (it should be 1)");
   }
   if (static_cast<std::size_t>(u.size()) != this->get_nu()) {
-    throw_pretty("Invalid argument: "
-                 << "u has wrong dimension (it should be " + std::to_string(this->get_nu()) + ")");
+    throw_pretty(
+        "Invalid argument: " << "u has wrong dimension (it should be " +
+                                    std::to_string(this->get_nu()) + ")");
   }
 
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
   const std::size_t nv = this->get_state()->get_nv();
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(this->get_state()->get_nq());
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v = x.tail(nv);
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q =
+      x.head(this->get_state()->get_nq());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> v =
+      x.tail(nv);
   Data* d = static_cast<Data*>(data.get());
   d->oRf = d->pinocchio.oMf[frameId_].rotation();
   // Actuation calcDiff
   this->get_actuation()->calcDiff(d->multibody.actuation, x, u);
 
   // If contact is active, compute ABA derivatives + force
-  if(active_contact_){
+  if (active_contact_) {
     // Compute Jacobian
-    // pinocchio::framesForwardKinematics(this->get_pinocchio(), d->pinocchio, q);
-    pinocchio::getFrameJacobian(this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL, d->lJ);
+    // pinocchio::framesForwardKinematics(this->get_pinocchio(), d->pinocchio,
+    // q);
+    pinocchio::getFrameJacobian(this->get_pinocchio(), d->pinocchio, frameId_,
+                                pinocchio::LOCAL, d->lJ);
 
     // Derivatives of d->xout (ABA) w.r.t. x and u in LOCAL (same in WORLD)
     // No armature
-    if(!with_armature_){
-      pinocchio::computeABADerivatives(this->get_pinocchio(), d->pinocchio, q, v, d->multibody.actuation->tau, d->fext, 
-                                                                  d->aba_dq, d->aba_dv, d->aba_dtau);
+    if (!with_armature_) {
+      pinocchio::computeABADerivatives(this->get_pinocchio(), d->pinocchio, q,
+                                       v, d->multibody.actuation->tau, d->fext,
+                                       d->aba_dq, d->aba_dv, d->aba_dtau);
       d->Fx.leftCols(nv) = d->aba_dq;
-      d->Fx.rightCols(nv) = d->aba_dv; 
+      d->Fx.rightCols(nv) = d->aba_dv;
       d->Fx.noalias() += d->aba_dtau * d->multibody.actuation->dtau_dx;
       d->Fu.noalias() = d->aba_dtau * d->multibody.actuation->dtau_du;
-      // Compute derivatives of d->xout (ABA) w.r.t. f in LOCAL 
-      d->tmp_mat_.noalias() = d->aba_dtau * d->lJ.topRows(3).transpose(); // (nv,3) = (nv,nv) (nv,3) 
-      d->aba_df3d.noalias() = d->tmp_mat_ * jMf_.rotation(); //* Matrix3s::Identity();
+      // Compute derivatives of d->xout (ABA) w.r.t. f in LOCAL
+      d->tmp_mat_.noalias() =
+          d->aba_dtau *
+          d->lJ.topRows(3).transpose();  // (nv,3) = (nv,nv) (nv,3)
+      d->aba_df3d.noalias() =
+          d->tmp_mat_ * jMf_.rotation();  //* Matrix3s::Identity();
       d->aba_df.noalias() = d->aba_df3d.col(this->get_type());
       // Skew term added to RNEA derivatives when force is expressed in LWA
-      if(ref_ != pinocchio::LOCAL){
-          d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;                // vec3
-          pinocchio::skew(d->tmp_vec_, d->tmp_skew_);                         // (3,3) 
-          d->tmp_mat2_.noalias() = d->tmp_skew_ * d->lJ.bottomRows(3);        // (3,nv) = (3,3) (3,nv) 
-          d->Fx.leftCols(nv).noalias() += d->tmp_mat_ * d->tmp_mat2_;         // (nv,3) (3,nv) = (nv,nv)
-          // Rotate dABA/df
-          d->tmp_mat_.noalias() = d->aba_df3d * d->oRf.transpose();
-          d->aba_df3d = d->tmp_mat_;
-          d->aba_df = d->aba_df3d.col(this->get_type());
-      }
-    // With armature
-    } else {
-        pinocchio::computeRNEADerivatives(this->get_pinocchio(), d->pinocchio, q, v, d->xout, d->fext);
-        d->dtau_dx.leftCols(nv) = d->multibody.actuation->dtau_dx.leftCols(nv) - d->pinocchio.dtau_dq;
-        d->dtau_dx.rightCols(nv) = d->multibody.actuation->dtau_dx.rightCols(nv) - d->pinocchio.dtau_dv;
-        d->Fx.noalias() = d->Minv * d->dtau_dx;
-        d->Fu.noalias() = d->Minv * d->multibody.actuation->dtau_du;
-        // Compute derivatives of d->xout (ABA) w.r.t. f in LOCAL 
-        d->tmp_mat_.noalias() = d->Minv * d->lJ.topRows(3).transpose(); // (nv,3) = (nv,nv) (nv,3) 
-        d->aba_df3d.noalias() = d->tmp_mat_ * jMf_.rotation(); //* Matrix3s::Identity();
+      if (ref_ != pinocchio::LOCAL) {
+        d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;  // vec3
+        pinocchio::skew(d->tmp_vec_, d->tmp_skew_);           // (3,3)
+        d->tmp_mat2_.noalias() =
+            d->tmp_skew_ * d->lJ.bottomRows(3);  // (3,nv) = (3,3) (3,nv)
+        d->Fx.leftCols(nv).noalias() +=
+            d->tmp_mat_ * d->tmp_mat2_;  // (nv,3) (3,nv) = (nv,nv)
+        // Rotate dABA/df
+        d->tmp_mat_.noalias() = d->aba_df3d * d->oRf.transpose();
+        d->aba_df3d = d->tmp_mat_;
         d->aba_df = d->aba_df3d.col(this->get_type());
-        // Skew term added to RNEA derivatives when force is expressed in LWA
-        if(ref_ != pinocchio::LOCAL){
-            d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;                // vec3
-            pinocchio::skew(d->tmp_vec_, d->tmp_skew_);                         // (3,3) 
-            d->tmp_mat2_.noalias() = d->tmp_skew_ * d->lJ.bottomRows(3);        // (3,nv) = (3,3) (3,nv) 
-            d->Fx.leftCols(nv).noalias() += d->tmp_mat_ * d->tmp_mat2_;         // (nv,3) (3,nv) = (nv,nv)
-            // Rotate dABA/df
-            d->tmp_mat_.noalias() = d->aba_df3d * d->oRf.transpose();
-            d->aba_df3d = d->tmp_mat_;
-            d->aba_df = d->aba_df3d.col(this->get_type());
-        }
       }
+      // With armature
+    } else {
+      pinocchio::computeRNEADerivatives(this->get_pinocchio(), d->pinocchio, q,
+                                        v, d->xout, d->fext);
+      d->dtau_dx.leftCols(nv) =
+          d->multibody.actuation->dtau_dx.leftCols(nv) - d->pinocchio.dtau_dq;
+      d->dtau_dx.rightCols(nv) =
+          d->multibody.actuation->dtau_dx.rightCols(nv) - d->pinocchio.dtau_dv;
+      d->Fx.noalias() = d->Minv * d->dtau_dx;
+      d->Fu.noalias() = d->Minv * d->multibody.actuation->dtau_du;
+      // Compute derivatives of d->xout (ABA) w.r.t. f in LOCAL
+      d->tmp_mat_.noalias() =
+          d->Minv * d->lJ.topRows(3).transpose();  // (nv,3) = (nv,nv) (nv,3)
+      d->aba_df3d.noalias() =
+          d->tmp_mat_ * jMf_.rotation();  //* Matrix3s::Identity();
+      d->aba_df = d->aba_df3d.col(this->get_type());
+      // Skew term added to RNEA derivatives when force is expressed in LWA
+      if (ref_ != pinocchio::LOCAL) {
+        d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;  // vec3
+        pinocchio::skew(d->tmp_vec_, d->tmp_skew_);           // (3,3)
+        d->tmp_mat2_.noalias() =
+            d->tmp_skew_ * d->lJ.bottomRows(3);  // (3,nv) = (3,3) (3,nv)
+        d->Fx.leftCols(nv).noalias() +=
+            d->tmp_mat_ * d->tmp_mat2_;  // (nv,3) (3,nv) = (nv,nv)
+        // Rotate dABA/df
+        d->tmp_mat_.noalias() = d->aba_df3d * d->oRf.transpose();
+        d->aba_df3d = d->tmp_mat_;
+        d->aba_df = d->aba_df3d.col(this->get_type());
+      }
+    }
 
-    // Derivatives of d->fout in LOCAL : important >> UPDATE FORWARD KINEMATICS with d->xout
-    pinocchio::getFrameVelocityDerivatives(this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL, 
-                                                    d->lv_dq, d->lv_dv);
+    // Derivatives of d->fout in LOCAL : important >> UPDATE FORWARD KINEMATICS
+    // with d->xout
+    pinocchio::getFrameVelocityDerivatives(this->get_pinocchio(), d->pinocchio,
+                                           frameId_, pinocchio::LOCAL, d->lv_dq,
+                                           d->lv_dv);
     d->lv_dx.leftCols(nv) = d->lv_dq;
     d->lv_dx.rightCols(nv) = d->lv_dv;
     // Derivatives of spatial acc w.r.t. (x, f, u)
-    pinocchio::getFrameAccelerationDerivatives(this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL, 
-                                                    d->v_dv, d->a_dq, d->a_dv, d->a_da);
-    d->da_dx.topRows(3).leftCols(nv) = d->a_dq.topRows(3); 
-    d->da_dx.topRows(3).leftCols(nv).noalias() += d->a_da.topRows(3) * d->Fx.leftCols(nv); 
+    pinocchio::getFrameAccelerationDerivatives(
+        this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL,
+        d->v_dv, d->a_dq, d->a_dv, d->a_da);
+    d->da_dx.topRows(3).leftCols(nv) = d->a_dq.topRows(3);
+    d->da_dx.topRows(3).leftCols(nv).noalias() +=
+        d->a_da.topRows(3) * d->Fx.leftCols(nv);
     d->da_dx.topRows(3).rightCols(nv) = d->a_dv.topRows(3);
-    d->da_dx.topRows(3).rightCols(nv).noalias() += d->a_da.topRows(3) * d->Fx.rightCols(nv); 
+    d->da_dx.topRows(3).rightCols(nv).noalias() +=
+        d->a_da.topRows(3) * d->Fx.rightCols(nv);
     d->da_du.topRows(3).noalias() = d->a_da.topRows(3) * d->Fu;
     d->da_df3d.topRows(3).noalias() = d->a_da.topRows(3) * d->aba_df3d;
     d->da_df.topRows(3) = d->da_df3d.topRows(3).col(this->get_type());
     // Derivatives of fdot w.r.t. (x,f,u)
-    d->dfdt3d_dx.noalias() = -Kp_(0)*d->lv_dx.topRows(3);
-    d->dfdt3d_dx.noalias() -= Kv_(0)*d->da_dx.topRows(3);
-    d->dfdt3d_du.noalias() = -Kv_(0)*d->da_du.topRows(3);
-    d->dfdt3d_df.noalias() = -Kv_(0)*d->da_df3d.topRows(3).col(this->get_type());
+    d->dfdt3d_dx.noalias() = -Kp_(0) * d->lv_dx.topRows(3);
+    d->dfdt3d_dx.noalias() -= Kv_(0) * d->da_dx.topRows(3);
+    d->dfdt3d_du.noalias() = -Kv_(0) * d->da_du.topRows(3);
+    d->dfdt3d_df.noalias() =
+        -Kv_(0) * d->da_df3d.topRows(3).col(this->get_type());
     d->dfdt_dx = d->dfdt3d_dx.row(this->get_type());
     d->dfdt_du = d->dfdt3d_du.row(this->get_type());
     d->dfdt_df = d->dfdt3d_df.row(this->get_type());
     d->dfdt3d_dx_copy = d->dfdt3d_dx;
     d->dfdt3d_du_copy = d->dfdt3d_du;
     d->dfdt3d_df_copy = d->dfdt3d_df;
-    //Rotate dfout_dx if not LOCAL 
-    if(ref_ != pinocchio::LOCAL){
-        pinocchio::getFrameJacobian(this->get_pinocchio(), d->pinocchio, frameId_, pinocchio::LOCAL_WORLD_ALIGNED, d->oJ);
-        d->tmp_vec_.noalias() = d->oRf * d->fout3d_copy;             // vec3
-        pinocchio::skew(d->tmp_vec_, d->tmp_skew_);                  // (3,3)
-        d->tmp_mat2_.noalias() = d->tmp_skew_ * d->oJ.bottomRows(3); // (3,nv)
-        d->dfdt3d_dx.leftCols(nv).noalias() = d->oRf * d->dfdt3d_dx_copy.leftCols(nv);
-        d->dfdt3d_dx.leftCols(nv).noalias() -= d->tmp_mat2_;
-        d->dfdt3d_dx.rightCols(nv).noalias() = d->oRf * d->dfdt3d_dx_copy.rightCols(nv);
-        d->dfdt3d_du.noalias() = d->oRf * d->dfdt3d_du_copy;
-        d->dfdt3d_df.noalias() = d->oRf * d->dfdt3d_df_copy;
-        d->dfdt_dx = d->dfdt3d_dx.row(this->get_type());
-        d->dfdt_du = d->dfdt3d_du.row(this->get_type());
-        d->dfdt_df = d->dfdt3d_df.row(this->get_type());
+    // Rotate dfout_dx if not LOCAL
+    if (ref_ != pinocchio::LOCAL) {
+      pinocchio::getFrameJacobian(this->get_pinocchio(), d->pinocchio, frameId_,
+                                  pinocchio::LOCAL_WORLD_ALIGNED, d->oJ);
+      d->tmp_vec_.noalias() = d->oRf * d->fout3d_copy;              // vec3
+      pinocchio::skew(d->tmp_vec_, d->tmp_skew_);                   // (3,3)
+      d->tmp_mat2_.noalias() = d->tmp_skew_ * d->oJ.bottomRows(3);  // (3,nv)
+      d->dfdt3d_dx.leftCols(nv).noalias() =
+          d->oRf * d->dfdt3d_dx_copy.leftCols(nv);
+      d->dfdt3d_dx.leftCols(nv).noalias() -= d->tmp_mat2_;
+      d->dfdt3d_dx.rightCols(nv).noalias() =
+          d->oRf * d->dfdt3d_dx_copy.rightCols(nv);
+      d->dfdt3d_du.noalias() = d->oRf * d->dfdt3d_du_copy;
+      d->dfdt3d_df.noalias() = d->oRf * d->dfdt3d_df_copy;
+      d->dfdt_dx = d->dfdt3d_dx.row(this->get_type());
+      d->dfdt_du = d->dfdt3d_du.row(this->get_type());
+      d->dfdt_df = d->dfdt3d_df.row(this->get_type());
     }
-  }
-  else {
+  } else {
     // Computing the dynamics derivatives
     if (!with_armature_) {
       // Computing the free forward dynamics with ABA derivatives
-      pinocchio::computeABADerivatives(this->get_pinocchio(), d->pinocchio, q, v, d->multibody.actuation->tau, 
-                                                      d->aba_dq, d->aba_dv, d->aba_dtau);
+      pinocchio::computeABADerivatives(this->get_pinocchio(), d->pinocchio, q,
+                                       v, d->multibody.actuation->tau,
+                                       d->aba_dq, d->aba_dv, d->aba_dtau);
       d->Fx.leftCols(nv) = d->aba_dq;
       d->Fx.rightCols(nv) = d->aba_dv;
       d->Fx.noalias() += d->aba_dtau * d->multibody.actuation->dtau_dx;
       d->Fu.noalias() = d->aba_dtau * d->multibody.actuation->dtau_du;
     } else {
-      pinocchio::computeRNEADerivatives(this->get_pinocchio(), d->pinocchio, q, v, d->xout);
-      d->dtau_dx.leftCols(nv) = d->multibody.actuation->dtau_dx.leftCols(nv) - d->pinocchio.dtau_dq;
-      d->dtau_dx.rightCols(nv) = d->multibody.actuation->dtau_dx.rightCols(nv) - d->pinocchio.dtau_dv;
+      pinocchio::computeRNEADerivatives(this->get_pinocchio(), d->pinocchio, q,
+                                        v, d->xout);
+      d->dtau_dx.leftCols(nv) =
+          d->multibody.actuation->dtau_dx.leftCols(nv) - d->pinocchio.dtau_dq;
+      d->dtau_dx.rightCols(nv) =
+          d->multibody.actuation->dtau_dx.rightCols(nv) - d->pinocchio.dtau_dv;
       d->Fx.noalias() = d->Minv * d->dtau_dx;
       d->Fu.noalias() = d->Minv * d->multibody.actuation->dtau_du;
     }
@@ -391,89 +452,137 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
   d->Luu = d->costs->Luu;
 
   // Add hard-coded gravity reg cost partials (no contact)
-  if(!active_contact_){
-    if(with_gravity_torque_reg_){
-      d->tau_grav_residual = (d->multibody.actuation->tau - pinocchio::computeGeneralizedGravity(this->get_pinocchio(), d->pinocchio, q));
-      Eigen::Block<MatrixXs, Eigen::Dynamic, Eigen::Dynamic, false> Rq = d->tau_grav_residual_x.topLeftCorner(nv, nv);
-      pinocchio::computeGeneralizedGravityDerivatives(this->get_pinocchio(), d->pinocchio, q, Rq);
+  if (!active_contact_) {
+    if (with_gravity_torque_reg_) {
+      d->tau_grav_residual = (d->multibody.actuation->tau -
+                              pinocchio::computeGeneralizedGravity(
+                                  this->get_pinocchio(), d->pinocchio, q));
+      Eigen::Block<MatrixXs, Eigen::Dynamic, Eigen::Dynamic, false> Rq =
+          d->tau_grav_residual_x.topLeftCorner(nv, nv);
+      pinocchio::computeGeneralizedGravityDerivatives(this->get_pinocchio(),
+                                                      d->pinocchio, q, Rq);
       Rq *= -1;
       d->tau_grav_residual_x += d->multibody.actuation->dtau_dx;
       d->tau_grav_residual_u = d->multibody.actuation->dtau_du;
-      d->Lx.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_x;
-      d->Lu.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_u;
-      d->Lxx.noalias() += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_x;
-      d->Lxu.noalias() += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_u;
-      d->Luu.noalias() += tau_grav_weight_ * d->tau_grav_residual_u.transpose() * d->tau_grav_residual_u;
+      d->Lx.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() *
+                         d->tau_grav_residual_x;
+      d->Lu.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() *
+                         d->tau_grav_residual_u;
+      d->Lxx.noalias() += tau_grav_weight_ *
+                          d->tau_grav_residual_x.transpose() *
+                          d->tau_grav_residual_x;
+      d->Lxu.noalias() += tau_grav_weight_ *
+                          d->tau_grav_residual_x.transpose() *
+                          d->tau_grav_residual_u;
+      d->Luu.noalias() += tau_grav_weight_ *
+                          d->tau_grav_residual_u.transpose() *
+                          d->tau_grav_residual_u;
     }
   }
 
   // add hard-coded cost
-  if(active_contact_){
-    if(with_force_cost_){
-      if(cost_ref_ != ref_){
-        if(cost_ref_ == pinocchio::LOCAL){
-          d->f_residual.noalias() = d->oRf.transpose()(this->get_type(), this->get_type())*f;
+  if (active_contact_) {
+    if (with_force_cost_) {
+      if (cost_ref_ != ref_) {
+        if (cost_ref_ == pinocchio::LOCAL) {
+          d->f_residual.noalias() =
+              d->oRf.transpose()(this->get_type(), this->get_type()) * f;
           d->f_residual -= force_des_;
-          d->f_residual_f(0,0) = d->oRf.transpose()(this->get_type(), this->get_type());
-          d->Lf.noalias() = force_weight_(0) * d->f_residual.transpose() * d->f_residual_f;
+          d->f_residual_f(0, 0) =
+              d->oRf.transpose()(this->get_type(), this->get_type());
+          d->Lf.noalias() =
+              force_weight_(0) * d->f_residual.transpose() * d->f_residual_f;
           d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;
           pinocchio::skew(d->tmp_vec_, d->tmp_skew_);
           d->tmp_mat2_.noalias() = d->tmp_skew_ * d->lJ.bottomRows(3);
-          d->f_residual_x.topLeftCorner(nc_, nv) = d->tmp_mat2_.row(this->get_type());
-          d->Lx.noalias() += force_weight_(0) * d->f_residual.transpose() * d->f_residual_x;
-          d->Lff.noalias() = force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
-        }
-        else{
-          d->f_residual.noalias() = d->oRf(this->get_type(), this->get_type()) * f;
+          d->f_residual_x.topLeftCorner(nc_, nv) =
+              d->tmp_mat2_.row(this->get_type());
+          d->Lx.noalias() +=
+              force_weight_(0) * d->f_residual.transpose() * d->f_residual_x;
+          d->Lff.noalias() =
+              force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
+        } else {
+          d->f_residual.noalias() =
+              d->oRf(this->get_type(), this->get_type()) * f;
           d->f_residual -= force_des_;
-          d->f_residual_f(0,0) = d->oRf(this->get_type(), this->get_type());
-          d->Lf.noalias() = force_weight_(0) * d->f_residual.transpose() * d->f_residual_f;
+          d->f_residual_f(0, 0) = d->oRf(this->get_type(), this->get_type());
+          d->Lf.noalias() =
+              force_weight_(0) * d->f_residual.transpose() * d->f_residual_f;
           d->tmp_vec_.noalias() = d->oRf * d->f3d;
           pinocchio::skew(d->tmp_vec_, d->tmp_skew_);
           d->tmp_mat2_.noalias() = d->tmp_skew_ * d->oJ.bottomRows(3);
-          d->f_residual_x.topLeftCorner(nc_, nv) = d->tmp_mat2_.row(this->get_type());
-          d->Lx.noalias() += force_weight_(0) * d->f_residual.transpose() * (d->tmp_skew_.row(this->get_type())) * d->f_residual_x;
-          d->Lff.noalias() = force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
+          d->f_residual_x.topLeftCorner(nc_, nv) =
+              d->tmp_mat2_.row(this->get_type());
+          d->Lx.noalias() += force_weight_(0) * d->f_residual.transpose() *
+                             (d->tmp_skew_.row(this->get_type())) *
+                             d->f_residual_x;
+          d->Lff.noalias() =
+              force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
         }
-      }
-      else{
+      } else {
         d->f_residual = f - force_des_;
         d->Lf = force_weight_(0) * d->f_residual.transpose();
-        d->Lff(0,0) = force_weight_(0);
+        d->Lff(0, 0) = force_weight_(0);
       }
     }
-    if(with_gravity_torque_reg_){
+    if (with_gravity_torque_reg_) {
       // Compute residual derivatives w.r.t. x, u and f
-      d->tau_grav_residual = (d->multibody.actuation->tau - pinocchio::computeStaticTorque(this->get_pinocchio(), d->pinocchio, q, d->fext));
-      Eigen::Block<MatrixXs, Eigen::Dynamic, Eigen::Dynamic, false> Rq = d->tau_grav_residual_x.topLeftCorner(nv, nv);
-      pinocchio::computeStaticTorqueDerivatives(this->get_pinocchio(), d->pinocchio, q, d->fext, Rq);
+      d->tau_grav_residual =
+          (d->multibody.actuation->tau -
+           pinocchio::computeStaticTorque(this->get_pinocchio(), d->pinocchio,
+                                          q, d->fext));
+      Eigen::Block<MatrixXs, Eigen::Dynamic, Eigen::Dynamic, false> Rq =
+          d->tau_grav_residual_x.topLeftCorner(nv, nv);
+      pinocchio::computeStaticTorqueDerivatives(this->get_pinocchio(),
+                                                d->pinocchio, q, d->fext, Rq);
       Rq *= -1;
       d->tau_grav_residual_x += d->multibody.actuation->dtau_dx;
       d->tau_grav_residual_u = d->multibody.actuation->dtau_du;
-      d->tau_grav_residual_f = d->lJ.row(this->get_type()).transpose(); 
-      if(ref_ != pinocchio::LOCAL){
-        d->tau_grav_residual_f.noalias() = (d->lJ.topRows(3).transpose() * d->oRf.row(this->get_type()).transpose()); //*= d->oRf.row(this->get_type()).transpose();  
-        d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;         // vec3
-        pinocchio::skew(d->tmp_vec_, d->tmp_skew_);                  // (3,3)
-        d->tmp_mat2_.noalias() = d->tmp_skew_ * d->lJ.bottomRows(3); // (3,nv)
-        d->tau_grav_residual_x.topLeftCorner(nv, nv).noalias() += (d->lJ.topRows(3)).transpose() * d->tmp_mat2_;
+      d->tau_grav_residual_f = d->lJ.row(this->get_type()).transpose();
+      if (ref_ != pinocchio::LOCAL) {
+        d->tau_grav_residual_f.noalias() =
+            (d->lJ.topRows(3).transpose() *
+             d->oRf.row(this->get_type())
+                 .transpose());  //*= d->oRf.row(this->get_type()).transpose();
+        d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;          // vec3
+        pinocchio::skew(d->tmp_vec_, d->tmp_skew_);                   // (3,3)
+        d->tmp_mat2_.noalias() = d->tmp_skew_ * d->lJ.bottomRows(3);  // (3,nv)
+        d->tau_grav_residual_x.topLeftCorner(nv, nv).noalias() +=
+            (d->lJ.topRows(3)).transpose() * d->tmp_mat2_;
       }
       // Add cost partials (approx. Hessian with jac^T jac)
-      d->Lf.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_f; 
-      d->Lff.noalias() += tau_grav_weight_ * d->tau_grav_residual_f.transpose() * d->tau_grav_residual_f; 
-      d->Lx.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_x;
-      d->Lu.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_u;
-      d->Lxx.noalias() += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_x;
-      d->Lxu.noalias() += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_u;
-      d->Luu.noalias() += tau_grav_weight_ * d->tau_grav_residual_u.transpose() * d->tau_grav_residual_u;
+      d->Lf.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() *
+                         d->tau_grav_residual_f;
+      d->Lff.noalias() += tau_grav_weight_ *
+                          d->tau_grav_residual_f.transpose() *
+                          d->tau_grav_residual_f;
+      d->Lx.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() *
+                         d->tau_grav_residual_x;
+      d->Lu.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() *
+                         d->tau_grav_residual_u;
+      d->Lxx.noalias() += tau_grav_weight_ *
+                          d->tau_grav_residual_x.transpose() *
+                          d->tau_grav_residual_x;
+      d->Lxu.noalias() += tau_grav_weight_ *
+                          d->tau_grav_residual_x.transpose() *
+                          d->tau_grav_residual_u;
+      d->Luu.noalias() += tau_grav_weight_ *
+                          d->tau_grav_residual_u.transpose() *
+                          d->tau_grav_residual_u;
     }
-    if(with_force_rate_reg_cost_){
-      d->Lf.noalias() += force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_df ;    
-      d->Lff.noalias() +=  force_rate_reg_weight_(0) * d->dfdt_df.transpose() * d->dfdt_df;  
-      d->Lx.noalias() += force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_dx;
-      d->Lxx.noalias() +=  force_rate_reg_weight_(0) * d->dfdt_dx.transpose() * d->dfdt_dx;
-      d->Lu.noalias() += force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_du;
-      d->Luu.noalias() +=  force_rate_reg_weight_(0) * d->dfdt_du.transpose() * d->dfdt_du;
+    if (with_force_rate_reg_cost_) {
+      d->Lf.noalias() +=
+          force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_df;
+      d->Lff.noalias() +=
+          force_rate_reg_weight_(0) * d->dfdt_df.transpose() * d->dfdt_df;
+      d->Lx.noalias() +=
+          force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_dx;
+      d->Lxx.noalias() +=
+          force_rate_reg_weight_(0) * d->dfdt_dx.transpose() * d->dfdt_dx;
+      d->Lu.noalias() +=
+          force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_du;
+      d->Luu.noalias() +=
+          force_rate_reg_weight_(0) * d->dfdt_du.transpose() * d->dfdt_du;
     }
   }
 
@@ -484,98 +593,129 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
-
-
 void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
-    const std::shared_ptr<DifferentialActionDataAbstract>& data, 
-    const Eigen::Ref<const VectorXs>& x,
-    const Eigen::Ref<const VectorXs>& f) {
+    const std::shared_ptr<DifferentialActionDataAbstract>& data,
+    const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& f) {
   if (static_cast<std::size_t>(x.size()) != this->get_state()->get_nx()) {
     throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " + std::to_string(this->get_state()->get_nx()) + ")");
+                 << "x has wrong dimension (it should be " +
+                        std::to_string(this->get_state()->get_nx()) + ")");
   }
   if (static_cast<std::size_t>(f.size()) != this->get_nc()) {
-    throw_pretty("Invalid argument: "
-                 << "f has wrong dimension (it should be " + std::to_string(this->get_nc()) + ")");
+    throw_pretty(
+        "Invalid argument: " << "f has wrong dimension (it should be " +
+                                    std::to_string(this->get_nc()) + ")");
   }
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_NOT_ALLOWED();
-  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(this->get_state()->get_nq());
+  const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q =
+      x.head(this->get_state()->get_nq());
   const std::size_t nv = this->get_state()->get_nv();
   Data* d = static_cast<Data*>(data.get());
   this->get_costs()->calcDiff(d->costs, x);
   // Add hard-coded costs partials (in contact)
-  if(!active_contact_){
-    if(with_gravity_torque_reg_){
-      d->tau_grav_residual = -pinocchio::computeGeneralizedGravity(this->get_pinocchio(), d->pinocchio, q);
-      Eigen::Block<MatrixXs, Eigen::Dynamic, Eigen::Dynamic, false> Rq = d->tau_grav_residual_x.topLeftCorner(nv, nv);
-      pinocchio::computeGeneralizedGravityDerivatives(this->get_pinocchio(), d->pinocchio, q, Rq);
+  if (!active_contact_) {
+    if (with_gravity_torque_reg_) {
+      d->tau_grav_residual = -pinocchio::computeGeneralizedGravity(
+          this->get_pinocchio(), d->pinocchio, q);
+      Eigen::Block<MatrixXs, Eigen::Dynamic, Eigen::Dynamic, false> Rq =
+          d->tau_grav_residual_x.topLeftCorner(nv, nv);
+      pinocchio::computeGeneralizedGravityDerivatives(this->get_pinocchio(),
+                                                      d->pinocchio, q, Rq);
       Rq *= -1;
-      d->Lx += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_x;
-      d->Lxx += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_x;
+      d->Lx += tau_grav_weight_ * d->tau_grav_residual.transpose() *
+               d->tau_grav_residual_x;
+      d->Lxx += tau_grav_weight_ * d->tau_grav_residual_x.transpose() *
+                d->tau_grav_residual_x;
     }
   }
-  // Add hard-coded costs partials (in contact) 
-  if(active_contact_){
-    if(with_force_cost_){
-      if(cost_ref_ != ref_){
-        if(cost_ref_ == pinocchio::LOCAL){
-          d->f_residual.noalias() = d->oRf.transpose()(this->get_type(), this->get_type())*f;
+  // Add hard-coded costs partials (in contact)
+  if (active_contact_) {
+    if (with_force_cost_) {
+      if (cost_ref_ != ref_) {
+        if (cost_ref_ == pinocchio::LOCAL) {
+          d->f_residual.noalias() =
+              d->oRf.transpose()(this->get_type(), this->get_type()) * f;
           d->f_residual -= force_des_;
-          d->f_residual_f(0,0) = d->oRf.transpose()(this->get_type(), this->get_type());
-          d->Lf.noalias() = force_weight_(0) * d->f_residual.transpose() * d->f_residual_f;
+          d->f_residual_f(0, 0) =
+              d->oRf.transpose()(this->get_type(), this->get_type());
+          d->Lf.noalias() =
+              force_weight_(0) * d->f_residual.transpose() * d->f_residual_f;
           d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;
           pinocchio::skew(d->tmp_vec_, d->tmp_skew_);
           d->tmp_mat2_.noalias() = d->tmp_skew_ * d->lJ.bottomRows(3);
-          d->f_residual_x.topLeftCorner(nc_, nv) = d->tmp_mat2_.row(this->get_type());
-          d->Lx.noalias() +=  force_weight_(0) * d->f_residual.transpose() * d->f_residual_x;
-          d->Lff.noalias() = force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
-        }
-        else{
-          d->f_residual.noalias() = d->oRf(this->get_type(), this->get_type()) * f;
+          d->f_residual_x.topLeftCorner(nc_, nv) =
+              d->tmp_mat2_.row(this->get_type());
+          d->Lx.noalias() +=
+              force_weight_(0) * d->f_residual.transpose() * d->f_residual_x;
+          d->Lff.noalias() =
+              force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
+        } else {
+          d->f_residual.noalias() =
+              d->oRf(this->get_type(), this->get_type()) * f;
           d->f_residual -= force_des_;
-          d->f_residual_f(0,0) = d->oRf(this->get_type(), this->get_type());
-          d->Lf.noalias() = force_weight_(0) * d->f_residual.transpose() * d->f_residual_f;
+          d->f_residual_f(0, 0) = d->oRf(this->get_type(), this->get_type());
+          d->Lf.noalias() =
+              force_weight_(0) * d->f_residual.transpose() * d->f_residual_f;
           d->tmp_vec_.noalias() = d->oRf * d->f3d;
           pinocchio::skew(d->tmp_vec_, d->tmp_skew_);
           d->tmp_mat2_.noalias() = d->tmp_skew_ * d->oJ.bottomRows(3);
-          d->f_residual_x.topLeftCorner(nc_, nv) = d->tmp_mat2_.row(this->get_type());
-          d->tmp_mat3_.noalias() = (d->tmp_skew_.row(this->get_type())) * d->f_residual_x;
-          d->Lx.noalias() += force_weight_(0) * d->f_residual.transpose() * d->tmp_mat3_;
-          d->Lff.noalias() = force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
+          d->f_residual_x.topLeftCorner(nc_, nv) =
+              d->tmp_mat2_.row(this->get_type());
+          d->tmp_mat3_.noalias() =
+              (d->tmp_skew_.row(this->get_type())) * d->f_residual_x;
+          d->Lx.noalias() +=
+              force_weight_(0) * d->f_residual.transpose() * d->tmp_mat3_;
+          d->Lff.noalias() =
+              force_weight_(0) * d->f_residual_f.transpose() * d->f_residual_f;
         }
-      }
-      else{
+      } else {
         d->f_residual = f - force_des_;
         d->Lf = force_weight_(0) * d->f_residual.transpose();
-        d->Lff(0,0) = force_weight_(0);
+        d->Lff(0, 0) = force_weight_(0);
       }
     }
-    if(with_gravity_torque_reg_){
+    if (with_gravity_torque_reg_) {
       // Compute residual derivatives w.r.t. x and f
-      d->tau_grav_residual = -pinocchio::computeStaticTorque(this->get_pinocchio(), d->pinocchio, q, d->fext);
-      Eigen::Block<MatrixXs, Eigen::Dynamic, Eigen::Dynamic, false> Rq = d->tau_grav_residual_x.topLeftCorner(nv, nv);
-      pinocchio::computeStaticTorqueDerivatives(this->get_pinocchio(), d->pinocchio, q, d->fext, Rq);
+      d->tau_grav_residual = -pinocchio::computeStaticTorque(
+          this->get_pinocchio(), d->pinocchio, q, d->fext);
+      Eigen::Block<MatrixXs, Eigen::Dynamic, Eigen::Dynamic, false> Rq =
+          d->tau_grav_residual_x.topLeftCorner(nv, nv);
+      pinocchio::computeStaticTorqueDerivatives(this->get_pinocchio(),
+                                                d->pinocchio, q, d->fext, Rq);
       Rq *= -1;
       d->tau_grav_residual_x += d->multibody.actuation->dtau_dx;
-      d->tau_grav_residual_f = d->lJ.row(this->get_type()).transpose(); 
-      if(ref_ != pinocchio::LOCAL){
-        d->tau_grav_residual_f.noalias() = (d->lJ.topRows(3).transpose() * d->oRf.row(this->get_type()).transpose()); 
+      d->tau_grav_residual_f = d->lJ.row(this->get_type()).transpose();
+      if (ref_ != pinocchio::LOCAL) {
+        d->tau_grav_residual_f.noalias() =
+            (d->lJ.topRows(3).transpose() *
+             d->oRf.row(this->get_type()).transpose());
         d->tmp_vec_.noalias() = d->oRf.transpose() * d->f3d;
         pinocchio::skew(d->tmp_vec_, d->tmp_skew_);
         d->tmp_mat2_.noalias() = d->tmp_skew_ * d->lJ.bottomRows(3);
-        d->tau_grav_residual_x.topLeftCorner(nv, nv).noalias() += (d->lJ.topRows(3)).transpose() * d->tmp_mat2_;
+        d->tau_grav_residual_x.topLeftCorner(nv, nv).noalias() +=
+            (d->lJ.topRows(3)).transpose() * d->tmp_mat2_;
       }
       // Add cost partials (approx. Hessian with jac^T jac)
-      d->Lf.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_f; 
-      d->Lff.noalias() += tau_grav_weight_ * d->tau_grav_residual_f.transpose() * d->tau_grav_residual_f; 
-      d->Lx.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() * d->tau_grav_residual_x;
-      d->Lxx.noalias() += tau_grav_weight_ * d->tau_grav_residual_x.transpose() * d->tau_grav_residual_x;
+      d->Lf.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() *
+                         d->tau_grav_residual_f;
+      d->Lff.noalias() += tau_grav_weight_ *
+                          d->tau_grav_residual_f.transpose() *
+                          d->tau_grav_residual_f;
+      d->Lx.noalias() += tau_grav_weight_ * d->tau_grav_residual.transpose() *
+                         d->tau_grav_residual_x;
+      d->Lxx.noalias() += tau_grav_weight_ *
+                          d->tau_grav_residual_x.transpose() *
+                          d->tau_grav_residual_x;
     }
-    if(with_force_rate_reg_cost_){
-      d->Lf.noalias() += force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_df ;    
-      d->Lff.noalias() += force_rate_reg_weight_(0) * d->dfdt_df.transpose() * d->dfdt_df;  
-      d->Lx.noalias() += force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_dx;
-      d->Lxx.noalias() += force_rate_reg_weight_(0) * d->dfdt_dx.transpose() * d->dfdt_dx;
+    if (with_force_rate_reg_cost_) {
+      d->Lf.noalias() +=
+          force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_df;
+      d->Lff.noalias() +=
+          force_rate_reg_weight_(0) * d->dfdt_df.transpose() * d->dfdt_df;
+      d->Lx.noalias() +=
+          force_rate_reg_weight_(0) * d->fout.transpose() * d->dfdt_dx;
+      d->Lxx.noalias() +=
+          force_rate_reg_weight_(0) * d->dfdt_dx.transpose() * d->dfdt_dx;
     }
   }
 
@@ -586,15 +726,14 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
   // FORCE_FEEDBACK_MPC_EIGEN_MALLOC_ALLOWED();
 }
 
-
-
-std::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double> >
+std::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double>>
 DAMSoftContact1DAugmentedFwdDynamics::createData() {
   return std::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this);
 }
 
 bool DAMSoftContact1DAugmentedFwdDynamics::checkData(
-    const std::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double>>& data) {
+    const std::shared_ptr<crocoddyl::DifferentialActionDataAbstractTpl<double>>&
+        data) {
   std::shared_ptr<Data> d = std::dynamic_pointer_cast<Data>(data);
   if (d != NULL) {
     return true;
@@ -603,13 +742,12 @@ bool DAMSoftContact1DAugmentedFwdDynamics::checkData(
   }
 }
 
-
 const Vector3MaskType& DAMSoftContact1DAugmentedFwdDynamics::get_type() const {
   return type_;
 }
 
-
-void DAMSoftContact1DAugmentedFwdDynamics::set_type(const Vector3MaskType& inType) {
+void DAMSoftContact1DAugmentedFwdDynamics::set_type(
+    const Vector3MaskType& inType) {
   type_ = inType;
 }
 

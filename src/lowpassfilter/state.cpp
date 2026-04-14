@@ -6,22 +6,18 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <pinocchio/algorithm/joint-configuration.hpp>
+#include "force_feedback_mpc/lowpassfilter/state.hpp"
 
 #include <crocoddyl/core/utils/exception.hpp>
-
-#include "force_feedback_mpc/lowpassfilter/state.hpp"
+#include <pinocchio/algorithm/joint-configuration.hpp>
 
 using namespace crocoddyl;
 
-
 namespace force_feedback_mpc {
-namespace lpf{
+namespace lpf {
 
-
-StateLPF::StateLPF(
-    std::shared_ptr<pinocchio::ModelTpl<double> > model,
-    std::vector<int> lpf_joint_ids)
+StateLPF::StateLPF(std::shared_ptr<pinocchio::ModelTpl<double>> model,
+                   std::vector<int> lpf_joint_ids)
     : Base(model->nq + model->nv + lpf_joint_ids.size(),
            2 * model->nv + lpf_joint_ids.size()),
       ntau_(lpf_joint_ids.size()),
@@ -71,29 +67,15 @@ StateLPF::StateLPF(
   y0_.tail(nv_ + ntau_) = VectorXs::Zero(nv_ + ntau_);
 }
 
-
 StateLPF::~StateLPF() {}
 
+const std::size_t& StateLPF::get_ntau() const { return ntau_; }
 
-const std::size_t& StateLPF::get_ntau() const {
-  return ntau_;
-}
+const std::size_t& StateLPF::get_ny() const { return ny_; }
 
+const std::size_t& StateLPF::get_ndy() const { return ndy_; }
 
-const std::size_t& StateLPF::get_ny() const {
-  return ny_;
-}
-
-
-const std::size_t& StateLPF::get_ndy() const {
-  return ndy_;
-}
-
-
-typename MathBaseTpl<double>::VectorXs StateLPF::zero() const {
-  return y0_;
-}
-
+typename MathBaseTpl<double>::VectorXs StateLPF::zero() const { return y0_; }
 
 typename MathBaseTpl<double>::VectorXs StateLPF::rand() const {
   VectorXs yrand = VectorXs::Random(ny_);
@@ -101,24 +83,23 @@ typename MathBaseTpl<double>::VectorXs StateLPF::rand() const {
   return yrand;
 }
 
-
 void StateLPF::diff(const Eigen::Ref<const VectorXs>& y0,
-                               const Eigen::Ref<const VectorXs>& y1,
-                               Eigen::Ref<VectorXs> dyout) const {
+                    const Eigen::Ref<const VectorXs>& y1,
+                    Eigen::Ref<VectorXs> dyout) const {
   if (static_cast<std::size_t>(y0.size()) != ny_) {
-    throw_pretty("Invalid argument: "
-                 << "y0 has wrong dimension (it should be " +
-                        std::to_string(ny_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "y0 has wrong dimension (it should be " +
+                                    std::to_string(ny_) + ")");
   }
   if (static_cast<std::size_t>(y1.size()) != ny_) {
-    throw_pretty("Invalid argument: "
-                 << "y1 has wrong dimension (it should be " +
-                        std::to_string(ny_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "y1 has wrong dimension (it should be " +
+                                    std::to_string(ny_) + ")");
   }
   if (static_cast<std::size_t>(dyout.size()) != ndy_) {
-    throw_pretty("Invalid argument: "
-                 << "dyout has wrong dimension (it should be " +
-                        std::to_string(ndy_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "dyout has wrong dimension (it should be " +
+                                    std::to_string(ndy_) + ")");
   }
 
   pinocchio::difference(*pinocchio_.get(), y0.head(nq_), y1.head(nq_),
@@ -127,24 +108,23 @@ void StateLPF::diff(const Eigen::Ref<const VectorXs>& y0,
   dyout.tail(ntau_) = y1.tail(ntau_) - y0.tail(ntau_);
 }
 
-
 void StateLPF::integrate(const Eigen::Ref<const VectorXs>& y,
-                                    const Eigen::Ref<const VectorXs>& dy,
-                                    Eigen::Ref<VectorXs> yout) const {
+                         const Eigen::Ref<const VectorXs>& dy,
+                         Eigen::Ref<VectorXs> yout) const {
   if (static_cast<std::size_t>(y.size()) != ny_) {
-    throw_pretty("Invalid argument: "
-                 << "y has wrong dimension (it should be " +
-                        std::to_string(ny_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "y has wrong dimension (it should be " +
+                                    std::to_string(ny_) + ")");
   }
   if (static_cast<std::size_t>(dy.size()) != ndy_) {
-    throw_pretty("Invalid argument: "
-                 << "dy has wrong dimension (it should be " +
-                        std::to_string(ndy_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "dy has wrong dimension (it should be " +
+                                    std::to_string(ndy_) + ")");
   }
   if (static_cast<std::size_t>(yout.size()) != ny_) {
-    throw_pretty("Invalid argument: "
-                 << "yout has wrong dimension (it should be " +
-                        std::to_string(ny_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "yout has wrong dimension (it should be " +
+                                    std::to_string(ny_) + ")");
   }
 
   pinocchio::integrate(*pinocchio_.get(), y.head(nq_), dy.head(nv_),
@@ -153,33 +133,31 @@ void StateLPF::integrate(const Eigen::Ref<const VectorXs>& y,
   yout.tail(ntau_) = y.tail(ntau_) + dy.tail(ntau_);
 }
 
-
 void StateLPF::Jdiff(const Eigen::Ref<const VectorXs>& y0,
-                                const Eigen::Ref<const VectorXs>& y1,
-                                Eigen::Ref<MatrixXs> Jfirst,
-                                Eigen::Ref<MatrixXs> Jsecond,
-                                const Jcomponent firstsecond) const {
+                     const Eigen::Ref<const VectorXs>& y1,
+                     Eigen::Ref<MatrixXs> Jfirst, Eigen::Ref<MatrixXs> Jsecond,
+                     const Jcomponent firstsecond) const {
   assert_pretty(
       is_a_Jcomponent(firstsecond),
       ("firstsecond must be one of the Jcomponent {both, first, second}"));
   if (static_cast<std::size_t>(y0.size()) != ny_) {
-    throw_pretty("Invalid argument: "
-                 << "y0 has wrong dimension (it should be " +
-                        std::to_string(ny_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "y0 has wrong dimension (it should be " +
+                                    std::to_string(ny_) + ")");
   }
   if (static_cast<std::size_t>(y1.size()) != ny_) {
-    throw_pretty("Invalid argument: "
-                 << "y1 has wrong dimension (it should be " +
-                        std::to_string(ny_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "y1 has wrong dimension (it should be " +
+                                    std::to_string(ny_) + ")");
   }
 
   if (firstsecond == first) {
     if (static_cast<std::size_t>(Jfirst.rows()) != ndy_ ||
         static_cast<std::size_t>(Jfirst.cols()) != ndy_) {
-      throw_pretty("Invalid argument: "
-                   << "Jfirst has wrong dimension (it should be " +
-                          std::to_string(ndy_) + "," + std::to_string(ndy_) +
-                          ")");
+      throw_pretty(
+          "Invalid argument: " << "Jfirst has wrong dimension (it should be " +
+                                      std::to_string(ndy_) + "," +
+                                      std::to_string(ndy_) + ")");
     }
 
     pinocchio::dDifference(*pinocchio_.get(), y0.head(nq_), y1.head(nq_),
@@ -189,10 +167,10 @@ void StateLPF::Jdiff(const Eigen::Ref<const VectorXs>& y0,
   } else if (firstsecond == second) {
     if (static_cast<std::size_t>(Jsecond.rows()) != ndy_ ||
         static_cast<std::size_t>(Jsecond.cols()) != ndy_) {
-      throw_pretty("Invalid argument: "
-                   << "Jsecond has wrong dimension (it should be " +
-                          std::to_string(ndy_) + "," + std::to_string(ndy_) +
-                          ")");
+      throw_pretty(
+          "Invalid argument: " << "Jsecond has wrong dimension (it should be " +
+                                      std::to_string(ndy_) + "," +
+                                      std::to_string(ndy_) + ")");
     }
     pinocchio::dDifference(*pinocchio_.get(), y0.head(nq_), y1.head(nq_),
                            Jsecond.topLeftCorner(nv_, nv_), pinocchio::ARG1);
@@ -201,17 +179,17 @@ void StateLPF::Jdiff(const Eigen::Ref<const VectorXs>& y0,
   } else {  // computing both
     if (static_cast<std::size_t>(Jfirst.rows()) != ndy_ ||
         static_cast<std::size_t>(Jfirst.cols()) != ndy_) {
-      throw_pretty("Invalid argument: "
-                   << "Jfirst has wrong dimension (it should be " +
-                          std::to_string(ndy_) + "," + std::to_string(ndy_) +
-                          ")");
+      throw_pretty(
+          "Invalid argument: " << "Jfirst has wrong dimension (it should be " +
+                                      std::to_string(ndy_) + "," +
+                                      std::to_string(ndy_) + ")");
     }
     if (static_cast<std::size_t>(Jsecond.rows()) != ndy_ ||
         static_cast<std::size_t>(Jsecond.cols()) != ndy_) {
-      throw_pretty("Invalid argument: "
-                   << "Jsecond has wrong dimension (it should be " +
-                          std::to_string(ndy_) + "," + std::to_string(ndy_) +
-                          ")");
+      throw_pretty(
+          "Invalid argument: " << "Jsecond has wrong dimension (it should be " +
+                                      std::to_string(ndy_) + "," +
+                                      std::to_string(ndy_) + ")");
     }
     pinocchio::dDifference(*pinocchio_.get(), y0.head(nq_), y1.head(nq_),
                            Jfirst.topLeftCorner(nv_, nv_), pinocchio::ARG0);
@@ -224,13 +202,12 @@ void StateLPF::Jdiff(const Eigen::Ref<const VectorXs>& y0,
   }
 }
 
-
 void StateLPF::Jintegrate(const Eigen::Ref<const VectorXs>& y,
-                                     const Eigen::Ref<const VectorXs>& dy,
-                                     Eigen::Ref<MatrixXs> Jfirst,
-                                     Eigen::Ref<MatrixXs> Jsecond,
-                                     const Jcomponent firstsecond,
-                                     const AssignmentOp op) const {
+                          const Eigen::Ref<const VectorXs>& dy,
+                          Eigen::Ref<MatrixXs> Jfirst,
+                          Eigen::Ref<MatrixXs> Jsecond,
+                          const Jcomponent firstsecond,
+                          const AssignmentOp op) const {
   assert_pretty(
       is_a_Jcomponent(firstsecond),
       ("firstsecond must be one of the Jcomponent {both, first, second}"));
@@ -239,10 +216,10 @@ void StateLPF::Jintegrate(const Eigen::Ref<const VectorXs>& y,
   if (firstsecond == first || firstsecond == both) {
     if (static_cast<std::size_t>(Jfirst.rows()) != ndy_ ||
         static_cast<std::size_t>(Jfirst.cols()) != ndy_) {
-      throw_pretty("Invalid argument: "
-                   << "Jfirst has wrong dimension (it should be " +
-                          std::to_string(ndy_) + "," + std::to_string(ndy_) +
-                          ")");
+      throw_pretty(
+          "Invalid argument: " << "Jfirst has wrong dimension (it should be " +
+                                      std::to_string(ndy_) + "," +
+                                      std::to_string(ndy_) + ")");
     }
     switch (op) {
       case setto:
@@ -275,10 +252,10 @@ void StateLPF::Jintegrate(const Eigen::Ref<const VectorXs>& y,
   if (firstsecond == second || firstsecond == both) {
     if (static_cast<std::size_t>(Jsecond.rows()) != ndy_ ||
         static_cast<std::size_t>(Jsecond.cols()) != ndy_) {
-      throw_pretty("Invalid argument: "
-                   << "Jsecond has wrong dimension (it should be " +
-                          std::to_string(ndy_) + "," + std::to_string(ndy_) +
-                          ")");
+      throw_pretty(
+          "Invalid argument: " << "Jsecond has wrong dimension (it should be " +
+                                      std::to_string(ndy_) + "," +
+                                      std::to_string(ndy_) + ")");
     }
     switch (op) {
       case setto:
@@ -310,10 +287,10 @@ void StateLPF::Jintegrate(const Eigen::Ref<const VectorXs>& y,
   }
 }
 
-
-void StateLPF::JintegrateTransport(
-    const Eigen::Ref<const VectorXs>& y, const Eigen::Ref<const VectorXs>& dy,
-    Eigen::Ref<MatrixXs> Jin, const Jcomponent firstsecond) const {
+void StateLPF::JintegrateTransport(const Eigen::Ref<const VectorXs>& y,
+                                   const Eigen::Ref<const VectorXs>& dy,
+                                   Eigen::Ref<MatrixXs> Jin,
+                                   const Jcomponent firstsecond) const {
   assert_pretty(
       is_a_Jcomponent(firstsecond),
       ("firstsecond must be one of the Jcomponent {both, first, second}"));
@@ -343,11 +320,10 @@ void StateLPF::JintegrateTransport(
   }
 }
 
-
-const std::shared_ptr<pinocchio::ModelTpl<double> >&
-StateLPF::get_pinocchio() const {
+const std::shared_ptr<pinocchio::ModelTpl<double>>& StateLPF::get_pinocchio()
+    const {
   return pinocchio_;
 }
 
-}  // namespace lpf 
+}  // namespace lpf
 }  // namespace force_feedback_mpc

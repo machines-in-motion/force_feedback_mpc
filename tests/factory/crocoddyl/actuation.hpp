@@ -11,6 +11,7 @@
 
 #include <crocoddyl/core/actuation-base.hpp>
 #include <crocoddyl/core/numdiff/actuation.hpp>
+
 #include "state.hpp"
 
 namespace force_feedback_mpc {

@@ -130,7 +130,6 @@ void test_partial_derivatives_against_numdiff(
   model_num_diff.calc(data_num_diff, x, u);
   model_num_diff.calcDiff(data_num_diff, x, u);
 
-
   // Computing the action derivatives
   model->calc(data, x, u);
   model->calcDiff(data, x, u);
@@ -148,13 +147,13 @@ void test_partial_derivatives_against_numdiff(
     BOOST_CHECK((data->Lxu - data_num_diff->Lxu).isZero(tol));
     BOOST_CHECK((data->Luu - data_num_diff->Luu).isZero(tol));
   }
-  if(!(data->Fx - data_num_diff->Fx).isZero(tol)){
+  if (!(data->Fx - data_num_diff->Fx).isZero(tol)) {
     std::cout << "Test = " << action_type << "_" << contact_type << std::endl;
     std::cout << " tol = " << tol << std::endl;
     std::cout << " Fx - Fx_nd " << std::endl;
     std::cout << data->Fx - data_num_diff->Fx << std::endl;
   }
-  if(!(data->Fu - data_num_diff->Fu).isZero(tol)){
+  if (!(data->Fu - data_num_diff->Fu).isZero(tol)) {
     std::cout << "Test = " << action_type << "_" << contact_type << std::endl;
     std::cout << " tol = " << tol << std::endl;
     std::cout << " Fu - Fu_nd " << std::endl;
@@ -162,23 +161,28 @@ void test_partial_derivatives_against_numdiff(
   }
 }
 
-
-
-// void test_calc_equivalent_free(DifferentialActionModelTypes::Type action_type,
+// void test_calc_equivalent_free(DifferentialActionModelTypes::Type
+// action_type,
 //                                ContactModelTypes::Type contact_type) {
 //   // create the model
 //   DifferentialActionModelFactory factory;
 //   std::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
 //       factory.create(action_type, contact_type);
-//   std::shared_ptr<sobec::DifferentialActionModelSoftContact3DFwdDynamics> modelsoft = std::static_pointer_cast<sobec::DifferentialActionModelSoftContact3DFwdDynamics>(model); 
-//   std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data = modelsoft->createData();
-  
+//   std::shared_ptr<sobec::DifferentialActionModelSoftContact3DFwdDynamics>
+//   modelsoft =
+//   std::static_pointer_cast<sobec::DifferentialActionModelSoftContact3DFwdDynamics>(model);
+//   std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
+//   modelsoft->createData();
+
 //   // Create DAM free
-//   std::shared_ptr<crocoddyl::StateMultibody> statemb = std::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_state()); 
-//   std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree =
+//   std::shared_ptr<crocoddyl::StateMultibody> statemb =
+//   std::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_state());
+//   std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
+//   modelfree =
 //       std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
 //           statemb, modelsoft->get_actuation(), modelsoft->get_costs());
-//   const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& datafree = modelfree->createData();
+//   const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& datafree
+//   = modelfree->createData();
 
 //   // Generating random state and control vectors
 //   const Eigen::VectorXd x = modelsoft->get_state()->rand();
@@ -195,22 +199,28 @@ void test_partial_derivatives_against_numdiff(
 //   BOOST_CHECK((data->xout - datafree->xout).isZero(1e-6));
 // }
 
-
-// void test_calcDiff_equivalent_free(DifferentialActionModelTypes::Type action_type,
+// void test_calcDiff_equivalent_free(DifferentialActionModelTypes::Type
+// action_type,
 //                                ContactModelTypes::Type contact_type) {
 //   // create the model
 //   DifferentialActionModelFactory factory;
 //   std::shared_ptr<crocoddyl::DifferentialActionModelAbstract> model =
 //       factory.create(action_type, contact_type);
-//   std::shared_ptr<sobec::DifferentialActionModelSoftContact3DFwdDynamics> modelsoft = std::static_pointer_cast<sobec::DifferentialActionModelSoftContact3DFwdDynamics>(model); 
-//   std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data = modelsoft->createData();
-  
+//   std::shared_ptr<sobec::DifferentialActionModelSoftContact3DFwdDynamics>
+//   modelsoft =
+//   std::static_pointer_cast<sobec::DifferentialActionModelSoftContact3DFwdDynamics>(model);
+//   std::shared_ptr<crocoddyl::DifferentialActionDataAbstract> data =
+//   modelsoft->createData();
+
 //   // Create DAM free
-//   std::shared_ptr<crocoddyl::StateMultibody> statemb = std::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_state()); 
-//   std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree =
+//   std::shared_ptr<crocoddyl::StateMultibody> statemb =
+//   std::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_state());
+//   std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
+//   modelfree =
 //       std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
 //           statemb, modelsoft->get_actuation(), modelsoft->get_costs());
-//   const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& datafree = modelfree->createData();
+//   const std::shared_ptr<crocoddyl::DifferentialActionDataAbstract>& datafree
+//   = modelfree->createData();
 
 //   // Generating random state and control vectors
 //   const Eigen::VectorXd x = modelsoft->get_state()->rand();
@@ -236,24 +246,23 @@ void test_partial_derivatives_against_numdiff(
 //   BOOST_CHECK((data->Luu - datafree->Luu).isZero(tol));
 // }
 
-
-
 //----------------------------------------------------------------------------//
 
 void register_action_model_unit_tests(
     DifferentialActionModelTypes::Type action_type,
-    ContactModelTypes::Type contact_type = ContactModelTypes::ContactModel3D_LOCAL) {
+    ContactModelTypes::Type contact_type =
+        ContactModelTypes::ContactModel3D_LOCAL) {
   boost::test_tools::output_test_stream test_name;
-  if (action_type == DifferentialActionModelTypes::
-              DifferentialActionModelLQR  ||
+  if (action_type == DifferentialActionModelTypes::DifferentialActionModelLQR ||
+      action_type ==
+          DifferentialActionModelTypes::DifferentialActionModelLQRDriftFree ||
       action_type == DifferentialActionModelTypes::
-              DifferentialActionModelLQRDriftFree ||
-      action_type == DifferentialActionModelTypes::
-              DifferentialActionModelFreeFwdDynamics_Hector ||
-      action_type == DifferentialActionModelTypes::
-              DifferentialActionModelFreeFwdDynamics_TalosArm) { // ||
-      // action_type == DifferentialActionModelTypes::
-      //         DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed) {
+                         DifferentialActionModelFreeFwdDynamics_Hector ||
+      action_type ==
+          DifferentialActionModelTypes::
+              DifferentialActionModelFreeFwdDynamics_TalosArm) {  // ||
+    // action_type == DifferentialActionModelTypes::
+    //         DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed) {
     test_name << "test_" << action_type;
   } else {
     test_name << "test_" << action_type << "_" << contact_type;
@@ -264,8 +273,8 @@ void register_action_model_unit_tests(
       boost::bind(&test_check_data, action_type, contact_type)));
   ts->add(BOOST_TEST_CASE(
       boost::bind(&test_calc_returns_state, action_type, contact_type)));
-  ts->add(BOOST_TEST_CASE(boost::bind(&test_calc_returns_a_cost, action_type,
-                                      contact_type)));
+  ts->add(BOOST_TEST_CASE(
+      boost::bind(&test_calc_returns_a_cost, action_type, contact_type)));
   ts->add(BOOST_TEST_CASE(boost::bind(&test_partial_derivatives_against_numdiff,
                                       action_type, contact_type)));
   // ts->add(BOOST_TEST_CASE(
@@ -274,47 +283,64 @@ void register_action_model_unit_tests(
 }
 
 bool init_function() {
-
   // free (no contact)
-  register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelLQR);
-  register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelLQRDriftFree);
-  register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_Hector);
-  register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm);
+  register_action_model_unit_tests(
+      DifferentialActionModelTypes::DifferentialActionModelLQR);
+  register_action_model_unit_tests(
+      DifferentialActionModelTypes::DifferentialActionModelLQRDriftFree);
+  register_action_model_unit_tests(
+      DifferentialActionModelTypes::
+          DifferentialActionModelFreeFwdDynamics_Hector);
+  register_action_model_unit_tests(
+      DifferentialActionModelTypes::
+          DifferentialActionModelFreeFwdDynamics_TalosArm);
   // register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelFreeFwdDynamics_TalosArm_Squashed);
 
   // contact 1D (Talos arm)
   for (size_t j = 0; j < ContactModelTypes::all.size(); ++j) {
-    if(ContactModelTypes::all[j] == ContactModelTypes::ContactModel1D_LOCAL ||
-       ContactModelTypes::all[j] == ContactModelTypes::ContactModel1D_WORLD ||
-       ContactModelTypes::all[j] == ContactModelTypes::ContactModel1D_LWA) {
-      register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics_TalosArm,
-                                      ContactModelTypes::all[j]);
-      register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamicsWithFriction_TalosArm,
-                                      ContactModelTypes::all[j]);
+    if (ContactModelTypes::all[j] == ContactModelTypes::ContactModel1D_LOCAL ||
+        ContactModelTypes::all[j] == ContactModelTypes::ContactModel1D_WORLD ||
+        ContactModelTypes::all[j] == ContactModelTypes::ContactModel1D_LWA) {
+      register_action_model_unit_tests(
+          DifferentialActionModelTypes::
+              DifferentialActionModelContactFwdDynamics_TalosArm,
+          ContactModelTypes::all[j]);
+      register_action_model_unit_tests(
+          DifferentialActionModelTypes::
+              DifferentialActionModelContactFwdDynamicsWithFriction_TalosArm,
+          ContactModelTypes::all[j]);
     }
   }
 
   // contact 3D (HyQ)
   for (size_t j = 0; j < ContactModelTypes::all.size(); ++j) {
-    if(ContactModelTypes::all[j] == ContactModelTypes::ContactModel3D_LOCAL ||
-       ContactModelTypes::all[j] == ContactModelTypes::ContactModel3D_WORLD ||
-       ContactModelTypes::all[j] == ContactModelTypes::ContactModel3D_LWA) {
-      register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics_HyQ,
-                                      ContactModelTypes::all[j]);
-      register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamicsWithFriction_HyQ,
-                                      ContactModelTypes::all[j]);
+    if (ContactModelTypes::all[j] == ContactModelTypes::ContactModel3D_LOCAL ||
+        ContactModelTypes::all[j] == ContactModelTypes::ContactModel3D_WORLD ||
+        ContactModelTypes::all[j] == ContactModelTypes::ContactModel3D_LWA) {
+      register_action_model_unit_tests(
+          DifferentialActionModelTypes::
+              DifferentialActionModelContactFwdDynamics_HyQ,
+          ContactModelTypes::all[j]);
+      register_action_model_unit_tests(
+          DifferentialActionModelTypes::
+              DifferentialActionModelContactFwdDynamicsWithFriction_HyQ,
+          ContactModelTypes::all[j]);
     }
   }
 
   // contact 6D (Talos)
   for (size_t j = 0; j < ContactModelTypes::all.size(); ++j) {
-    if(ContactModelTypes::all[j] == ContactModelTypes::ContactModel6D_LOCAL ||
-       ContactModelTypes::all[j] == ContactModelTypes::ContactModel6D_WORLD ||
-       ContactModelTypes::all[j] == ContactModelTypes::ContactModel6D_LWA) {
-      register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamics_Talos,
-                                      ContactModelTypes::all[j]);
-      register_action_model_unit_tests(DifferentialActionModelTypes::DifferentialActionModelContactFwdDynamicsWithFriction_Talos,
-                                      ContactModelTypes::all[j]);
+    if (ContactModelTypes::all[j] == ContactModelTypes::ContactModel6D_LOCAL ||
+        ContactModelTypes::all[j] == ContactModelTypes::ContactModel6D_WORLD ||
+        ContactModelTypes::all[j] == ContactModelTypes::ContactModel6D_LWA) {
+      register_action_model_unit_tests(
+          DifferentialActionModelTypes::
+              DifferentialActionModelContactFwdDynamics_Talos,
+          ContactModelTypes::all[j]);
+      register_action_model_unit_tests(
+          DifferentialActionModelTypes::
+              DifferentialActionModelContactFwdDynamicsWithFriction_Talos,
+          ContactModelTypes::all[j]);
     }
   }
 

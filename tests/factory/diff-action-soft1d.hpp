@@ -15,13 +15,12 @@
 
 #include "crocoddyl/actuation.hpp"
 #include "crocoddyl/contact.hpp"
-#include "crocoddyl/state.hpp"
 #include "crocoddyl/cost.hpp"
+#include "crocoddyl/state.hpp"
 #include "force_feedback_mpc/softcontact/dam1d-augmented.hpp"
 
 namespace force_feedback_mpc {
 namespace unittest {
-
 
 struct DAMSoftContact1DTypes {
   enum Type {
@@ -42,25 +41,27 @@ struct DAMSoftContact1DTypes {
   static const std::vector<Type> all;
 };
 
-std::ostream& operator<<(std::ostream& os,
-                         DAMSoftContact1DTypes::Type type);
+std::ostream& operator<<(std::ostream& os, DAMSoftContact1DTypes::Type type);
 
 class DAMSoftContact1DFactory {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  typedef typename force_feedback_mpc::softcontact::Vector3MaskType Vector3MaskType;
+  typedef
+      typename force_feedback_mpc::softcontact::Vector3MaskType Vector3MaskType;
 
   explicit DAMSoftContact1DFactory();
   ~DAMSoftContact1DFactory();
 
-  std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics> create(
-      DAMSoftContact1DTypes::Type type,
-      pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL,
-      Vector3MaskType mask_type = Vector3MaskType::z) const;
+  std::shared_ptr<
+      force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>
+  create(DAMSoftContact1DTypes::Type type,
+         pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL,
+         Vector3MaskType mask_type = Vector3MaskType::z) const;
 
   // Soft contact 1D dynamics
-  std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>
+  std::shared_ptr<
+      force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>
   create_augmentedDAMSoft1D(StateModelTypes::Type state_type,
                             ActuationModelTypes::Type actuation_type,
                             pinocchio::ReferenceFrame ref_type,

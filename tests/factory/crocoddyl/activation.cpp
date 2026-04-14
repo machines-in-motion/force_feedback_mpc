@@ -8,10 +8,11 @@
 
 #include "activation.hpp"
 
-#include "../../random_generator.hpp"
 #include <crocoddyl/core/activations/quadratic-barrier.hpp>
 #include <crocoddyl/core/activations/quadratic.hpp>
 #include <crocoddyl/core/utils/exception.hpp>
+
+#include "../../random_generator.hpp"
 
 namespace force_feedback_mpc {
 namespace unittest {
@@ -52,9 +53,8 @@ ActivationModelFactory::create(ActivationModelTypes::Type activation_type,
       activation = std::make_shared<crocoddyl::ActivationModelQuad>(nr);
       break;
     case ActivationModelTypes::ActivationModelQuadraticBarrier:
-      activation =
-          std::make_shared<crocoddyl::ActivationModelQuadraticBarrier>(
-              crocoddyl::ActivationBounds(lb, ub));
+      activation = std::make_shared<crocoddyl::ActivationModelQuadraticBarrier>(
+          crocoddyl::ActivationBounds(lb, ub));
       break;
     default:
       throw_pretty(__FILE__ ":\n Construct wrong ActivationModelTypes::Type");

@@ -7,6 +7,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "action-soft.hpp"
+
 #include <crocoddyl/core/utils/exception.hpp>
 
 namespace force_feedback_mpc {
@@ -40,20 +41,26 @@ IAMSoftContactFactory::create(IAMSoftContactTypes::Type iam_type,
   std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented> iam;
   switch (iam_type) {
     case IAMSoftContactTypes::IAMSoftContactAugmented: {
-      std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics> dam =
-          DAMSoftContact3DFactory().create(mapDAMSoftAbstractTo3D.at(dam_type), ref_type);
+      std::shared_ptr<
+          force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics>
+          dam = DAMSoftContact3DFactory().create(
+              mapDAMSoftAbstractTo3D.at(dam_type), ref_type);
       double time_step = 1e-3;
       bool with_cost_residual = true;
-      iam = std::make_shared<force_feedback_mpc::softcontact::IAMSoftContactAugmented>(
+      iam = std::make_shared<
+          force_feedback_mpc::softcontact::IAMSoftContactAugmented>(
           dam, time_step, with_cost_residual);
       break;
     }
     case IAMSoftContactTypes::IAMSoftContact1DAugmented: {
-      std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics> dam =
-          DAMSoftContact1DFactory().create(mapDAMSoftAbstractTo1D.at(dam_type), ref_type, mask_type);
+      std::shared_ptr<
+          force_feedback_mpc::softcontact::DAMSoftContact1DAugmentedFwdDynamics>
+          dam = DAMSoftContact1DFactory().create(
+              mapDAMSoftAbstractTo1D.at(dam_type), ref_type, mask_type);
       double time_step = 1e-3;
       bool with_cost_residual = true;
-      iam = std::make_shared<force_feedback_mpc::softcontact::IAMSoftContactAugmented>(
+      iam = std::make_shared<
+          force_feedback_mpc::softcontact::IAMSoftContactAugmented>(
           dam, time_step, with_cost_residual);
       break;
     }

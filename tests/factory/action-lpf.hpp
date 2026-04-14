@@ -9,17 +9,14 @@
 #ifndef FORCE_FEEDBACK_MPC_ACTION_LPF_FACTORY_HPP_
 #define FORCE_FEEDBACK_MPC_ACTION_LPF_FACTORY_HPP_
 
-#include <iterator>
-
 #include <crocoddyl/core/action-base.hpp>
 #include <crocoddyl/core/numdiff/action.hpp>
+#include <iterator>
 
 #include "crocoddyl/contact.hpp"
-
-#include "state-lpf.hpp"
 #include "diff-action.hpp"
-
 #include "force_feedback_mpc/lowpassfilter/action.hpp"
+#include "state-lpf.hpp"
 
 namespace force_feedback_mpc {
 namespace unittest {

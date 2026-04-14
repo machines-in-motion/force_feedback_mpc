@@ -3,7 +3,7 @@ from pinocchio.visualize import GepettoVisualizer
 import numpy as np
 
 
-def launch_viewer(robot, q0) :
+def launch_viewer(robot, q0):
     """
     Initialize gepetto viewer.
     [in] robot : RobotWrapper
@@ -16,7 +16,8 @@ def launch_viewer(robot, q0) :
     viz.display(q0)
     return viz
 
-def display_sphere(gui, name, coord, radius=.1, color=[1.,0.,0.,1.]) :
+
+def display_sphere(gui, name, coord, radius=0.1, color=[1.0, 0.0, 0.0, 1.0]):
     """
     Display a sphere in gepetto viewer.
     [in] viz    : Gepetto visualizer
@@ -25,17 +26,20 @@ def display_sphere(gui, name, coord, radius=.1, color=[1.,0.,0.,1.]) :
     [in] radius : Sphere radius
     [in] color  : Shpere color
     """
-    if(type(coord)==list):
+    if type(coord) == list:
         coord = np.asarray(coord)
     M = pin.SE3(np.identity(3), coord)
     tf = list(pin.SE3ToXYZQUAT(M))
-    if (gui.nodeExists(name)):
+    if gui.nodeExists(name):
         gui.deleteNode(name, True)
     gui.addSphere(name, radius, color)
     gui.applyConfiguration(name, tf)
     gui.refresh()
 
-def display_capsule(gui, name, pose, radius=.05, length=0.5, color=[1.,0.,0.,1.]) :
+
+def display_capsule(
+    gui, name, pose, radius=0.05, length=0.5, color=[1.0, 0.0, 0.0, 1.0]
+):
     """
     Display a capsule in gepetto viewer.
     [in] viz    : Gepetto visualizer
@@ -46,22 +50,31 @@ def display_capsule(gui, name, pose, radius=.05, length=0.5, color=[1.,0.,0.,1.]
     [in] color  : capsule color
     """
     tf = list(pin.SE3ToXYZQUAT(pose))
-    if (gui.nodeExists(name)):
+    if gui.nodeExists(name):
         gui.deleteNode(name, True)
     gui.addCapsule(name, radius, length, color)
     gui.applyConfiguration(name, tf)
     gui.refresh()
 
+
 def display_landmark(gui, nodeName, size):
     gui.addLandmark(nodeName, size)
 
-def clear_viewer(gui) :
+
+def clear_viewer(gui):
     """
     Clear all nodes from viewer but robot
     """
-    exclude = ['gepetto-gui', 'hpp-gui', 'hpp-gui/floor', 'python-pinocchio', 'world', 'world/pinocchio']
+    exclude = [
+        "gepetto-gui",
+        "hpp-gui",
+        "hpp-gui/floor",
+        "python-pinocchio",
+        "world",
+        "world/pinocchio",
+    ]
     for node in gui.getNodeList():
-        if(node in exclude or 'world/pinocchio' in node):
+        if node in exclude or "world/pinocchio" in node:
             pass
         else:
             gui.deleteNode(node, True)

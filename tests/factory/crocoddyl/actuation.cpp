@@ -49,8 +49,7 @@ ActuationModelFactory::create(ActuationModelTypes::Type actuation_type,
                               StateModelTypes::Type state_type) const {
   std::shared_ptr<crocoddyl::ActuationModelAbstract> actuation;
   StateModelFactory factory;
-  std::shared_ptr<crocoddyl::StateAbstract> state =
-      factory.create(state_type);
+  std::shared_ptr<crocoddyl::StateAbstract> state = factory.create(state_type);
   std::shared_ptr<crocoddyl::StateMultibody> state_multibody;
   // MultiCopter objects
   Eigen::MatrixXd tau_f;

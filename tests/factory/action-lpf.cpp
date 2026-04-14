@@ -51,8 +51,9 @@ ActionModelLPFFactory::create(ActionModelLPFTypes::Type iam_type,
   std::shared_ptr<crocoddyl::DifferentialActionModelAbstract> dam =
       DifferentialActionModelFactory().create(dam_type, contact_type);
   // std::cout << "[IAM LPF factory] dam.ng = " << dam->get_ng() << std::endl;
-  // std::cout << "[IAM LPF factory] dam.g_lb = " << dam->get_g_lb() << std::endl;
-  
+  // std::cout << "[IAM LPF factory] dam.g_lb = " << dam->get_g_lb() <<
+  // std::endl;
+
   switch (iam_type) {
     case ActionModelLPFTypes::IntegratedActionModelLPF_ALL: {
       double time_step = 1e-3;
@@ -62,10 +63,8 @@ ActionModelLPFFactory::create(ActionModelLPFTypes::Type iam_type,
       int filter = 1;
       // Select LPF joints
       std::shared_ptr<crocoddyl::StateMultibody> stateMultibody =
-          std::static_pointer_cast<crocoddyl::StateMultibody>(
-              dam->get_state());
-      std::shared_ptr<pinocchio::Model> model =
-          stateMultibody->get_pinocchio();
+          std::static_pointer_cast<crocoddyl::StateMultibody>(dam->get_state());
+      std::shared_ptr<pinocchio::Model> model = stateMultibody->get_pinocchio();
       std::vector<std::string> lpf_joint_names =
           LPFJointListFactory().create_names(model, LPFJointMaskType::ALL);
       iam = std::make_shared<force_feedback_mpc::lpf::IntegratedActionModelLPF>(
@@ -92,10 +91,8 @@ ActionModelLPFFactory::create(ActionModelLPFTypes::Type iam_type,
       int filter = 1;
       // Select LPF joints
       std::shared_ptr<crocoddyl::StateMultibody> stateMultibody =
-          std::static_pointer_cast<crocoddyl::StateMultibody>(
-              dam->get_state());
-      std::shared_ptr<pinocchio::Model> model =
-          stateMultibody->get_pinocchio();
+          std::static_pointer_cast<crocoddyl::StateMultibody>(dam->get_state());
+      std::shared_ptr<pinocchio::Model> model = stateMultibody->get_pinocchio();
       std::vector<std::string> lpf_joint_names =
           LPFJointListFactory().create_names(model, LPFJointMaskType::RAND);
       iam = std::make_shared<force_feedback_mpc::lpf::IntegratedActionModelLPF>(
@@ -120,10 +117,8 @@ ActionModelLPFFactory::create(ActionModelLPFTypes::Type iam_type,
       int filter = 1;
       // Select LPF joints
       std::shared_ptr<crocoddyl::StateMultibody> stateMultibody =
-          std::static_pointer_cast<crocoddyl::StateMultibody>(
-              dam->get_state());
-      std::shared_ptr<pinocchio::Model> model =
-          stateMultibody->get_pinocchio();
+          std::static_pointer_cast<crocoddyl::StateMultibody>(dam->get_state());
+      std::shared_ptr<pinocchio::Model> model = stateMultibody->get_pinocchio();
       std::vector<std::string> lpf_joint_names =
           LPFJointListFactory().create_names(model, LPFJointMaskType::NONE);
       iam = std::make_shared<force_feedback_mpc::lpf::IntegratedActionModelLPF>(
@@ -147,10 +142,8 @@ ActionModelLPFFactory::create(ActionModelLPFTypes::Type iam_type,
       int filter = 1;
       // Select LPF joints
       std::shared_ptr<crocoddyl::StateMultibody> stateMultibody =
-          std::static_pointer_cast<crocoddyl::StateMultibody>(
-              dam->get_state());
-      std::shared_ptr<pinocchio::Model> model =
-          stateMultibody->get_pinocchio();
+          std::static_pointer_cast<crocoddyl::StateMultibody>(dam->get_state());
+      std::shared_ptr<pinocchio::Model> model = stateMultibody->get_pinocchio();
       std::vector<std::string> lpf_joint_names =
           LPFJointListFactory().create_names(model, LPFJointMaskType::ALL);
       iam = std::make_shared<force_feedback_mpc::lpf::IntegratedActionModelLPF>(

@@ -35,7 +35,7 @@ struct DAMSoftContactAbstractTypes {
 
 std::ostream& operator<<(std::ostream& os,
                          DAMSoftContactAbstractTypes::Type type);
-                         
+
 }  // namespace unittest
 }  // namespace force_feedback_mpc
 

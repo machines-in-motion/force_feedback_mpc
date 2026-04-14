@@ -15,13 +15,12 @@
 
 #include "crocoddyl/actuation.hpp"
 #include "crocoddyl/contact.hpp"
-#include "crocoddyl/state.hpp"
 #include "crocoddyl/cost.hpp"
+#include "crocoddyl/state.hpp"
 #include "force_feedback_mpc/softcontact/dam3d-augmented.hpp"
 
 namespace force_feedback_mpc {
 namespace unittest {
-
 
 struct DAMSoftContact3DTypes {
   enum Type {
@@ -42,8 +41,7 @@ struct DAMSoftContact3DTypes {
   static const std::vector<Type> all;
 };
 
-std::ostream& operator<<(std::ostream& os,
-                         DAMSoftContact3DTypes::Type type);
+std::ostream& operator<<(std::ostream& os, DAMSoftContact3DTypes::Type type);
 
 class DAMSoftContact3DFactory {
  public:
@@ -52,12 +50,14 @@ class DAMSoftContact3DFactory {
   explicit DAMSoftContact3DFactory();
   ~DAMSoftContact3DFactory();
 
-  std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics> create(
-      DAMSoftContact3DTypes::Type type,
-      pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL) const;
+  std::shared_ptr<
+      force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics>
+  create(DAMSoftContact3DTypes::Type type,
+         pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL) const;
 
   // Soft contact 3D dynamics
-  std::shared_ptr<force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics>
+  std::shared_ptr<
+      force_feedback_mpc::softcontact::DAMSoftContact3DAugmentedFwdDynamics>
   create_augmentedDAMSoft3D(StateModelTypes::Type state_type,
                             ActuationModelTypes::Type actuation_type,
                             pinocchio::ReferenceFrame ref_type) const;

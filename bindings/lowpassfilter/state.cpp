@@ -6,8 +6,9 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "force-feedback-mpc-python.hpp"
 #include "force_feedback_mpc/lowpassfilter/state.hpp"
+
+#include "force-feedback-mpc-python.hpp"
 
 namespace force_feedback_mpc {
 namespace lpf {
@@ -39,8 +40,7 @@ void exposeStateLPF() {
            ":param x0: current state (dim state.nx()).\n"
            ":param x1: next state (dim state.nx()).\n"
            ":return x1 - x0 value (dim state.nx()).")
-      .def("integrate", &StateLPF::integrate_x,
-           bp::args("self", "x", "dx"),
+      .def("integrate", &StateLPF::integrate_x, bp::args("self", "x", "dx"),
            "Operator that integrates the current robot state.\n\n"
            "It returns the value of x [+] dx operation. This operator uses the "
            "Lie\n"

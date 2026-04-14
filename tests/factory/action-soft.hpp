@@ -9,20 +9,17 @@
 #ifndef FORCE_FEEDBACK_MPC_ACTION_IAM3D_AUGMENTED_FACTORY_HPP_
 #define FORCE_FEEDBACK_MPC_ACTION_IAM3D_AUGMENTED_FACTORY_HPP_
 
+#include <crocoddyl/core/numdiff/action.hpp>
 #include <iterator>
 
-#include <crocoddyl/core/numdiff/action.hpp>
-
+#include "diff-action-soft-abstract.hpp"
+#include "diff-action-soft1d.hpp"
+#include "diff-action-soft3d.hpp"
 #include "force_feedback_mpc/softcontact/iam-augmented.hpp"
 #include "state-soft.hpp"
-#include "diff-action-soft-abstract.hpp"
-#include "diff-action-soft3d.hpp"
-#include "diff-action-soft1d.hpp"
-
 
 namespace force_feedback_mpc {
 namespace unittest {
-
 
 struct IAMSoftContactTypes {
   enum Type {
@@ -43,25 +40,35 @@ struct IAMSoftContactTypes {
 
 const std::map<DAMSoftContactAbstractTypes::Type, DAMSoftContact3DTypes::Type>
     mapDAMSoftAbstractTo3D{
-        {DAMSoftContactAbstractTypes::DAMSoftContactAbstractAugmentedFwdDynamics_TalosArm,
-            DAMSoftContact3DTypes::DAMSoftContact3DAugmentedFwdDynamics_TalosArm},
-        {DAMSoftContactAbstractTypes::DAMSoftContactAbstractAugmentedFwdDynamics_HyQ, 
-            DAMSoftContact3DTypes::DAMSoftContact3DAugmentedFwdDynamics_HyQ},
-        {DAMSoftContactAbstractTypes::DAMSoftContactAbstractAugmentedFwdDynamics_RandomHumanoid, 
-            DAMSoftContact3DTypes::DAMSoftContact3DAugmentedFwdDynamics_RandomHumanoid},
-        {DAMSoftContactAbstractTypes::DAMSoftContactAbstractAugmentedFwdDynamics_Talos, 
-            DAMSoftContact3DTypes::DAMSoftContact3DAugmentedFwdDynamics_Talos}};
+        {DAMSoftContactAbstractTypes::
+             DAMSoftContactAbstractAugmentedFwdDynamics_TalosArm,
+         DAMSoftContact3DTypes::DAMSoftContact3DAugmentedFwdDynamics_TalosArm},
+        {DAMSoftContactAbstractTypes::
+             DAMSoftContactAbstractAugmentedFwdDynamics_HyQ,
+         DAMSoftContact3DTypes::DAMSoftContact3DAugmentedFwdDynamics_HyQ},
+        {DAMSoftContactAbstractTypes::
+             DAMSoftContactAbstractAugmentedFwdDynamics_RandomHumanoid,
+         DAMSoftContact3DTypes::
+             DAMSoftContact3DAugmentedFwdDynamics_RandomHumanoid},
+        {DAMSoftContactAbstractTypes::
+             DAMSoftContactAbstractAugmentedFwdDynamics_Talos,
+         DAMSoftContact3DTypes::DAMSoftContact3DAugmentedFwdDynamics_Talos}};
 
 const std::map<DAMSoftContactAbstractTypes::Type, DAMSoftContact1DTypes::Type>
     mapDAMSoftAbstractTo1D{
-        {DAMSoftContactAbstractTypes::DAMSoftContactAbstractAugmentedFwdDynamics_TalosArm,
-            DAMSoftContact1DTypes::DAMSoftContact1DAugmentedFwdDynamics_TalosArm},
-        {DAMSoftContactAbstractTypes::DAMSoftContactAbstractAugmentedFwdDynamics_HyQ, 
-            DAMSoftContact1DTypes::DAMSoftContact1DAugmentedFwdDynamics_HyQ},
-        {DAMSoftContactAbstractTypes::DAMSoftContactAbstractAugmentedFwdDynamics_RandomHumanoid, 
-            DAMSoftContact1DTypes::DAMSoftContact1DAugmentedFwdDynamics_RandomHumanoid},
-        {DAMSoftContactAbstractTypes::DAMSoftContactAbstractAugmentedFwdDynamics_Talos, 
-            DAMSoftContact1DTypes::DAMSoftContact1DAugmentedFwdDynamics_Talos}};
+        {DAMSoftContactAbstractTypes::
+             DAMSoftContactAbstractAugmentedFwdDynamics_TalosArm,
+         DAMSoftContact1DTypes::DAMSoftContact1DAugmentedFwdDynamics_TalosArm},
+        {DAMSoftContactAbstractTypes::
+             DAMSoftContactAbstractAugmentedFwdDynamics_HyQ,
+         DAMSoftContact1DTypes::DAMSoftContact1DAugmentedFwdDynamics_HyQ},
+        {DAMSoftContactAbstractTypes::
+             DAMSoftContactAbstractAugmentedFwdDynamics_RandomHumanoid,
+         DAMSoftContact1DTypes::
+             DAMSoftContact1DAugmentedFwdDynamics_RandomHumanoid},
+        {DAMSoftContactAbstractTypes::
+             DAMSoftContactAbstractAugmentedFwdDynamics_Talos,
+         DAMSoftContact1DTypes::DAMSoftContact1DAugmentedFwdDynamics_Talos}};
 
 std::ostream& operator<<(std::ostream& os, IAMSoftContactTypes::Type type);
 
@@ -69,16 +76,16 @@ class IAMSoftContactFactory {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  typedef typename force_feedback_mpc::softcontact::Vector3MaskType Vector3MaskType;
+  typedef
+      typename force_feedback_mpc::softcontact::Vector3MaskType Vector3MaskType;
 
   explicit IAMSoftContactFactory();
   ~IAMSoftContactFactory();
 
-  std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented> create(
-      IAMSoftContactTypes::Type iam_type,
-      DAMSoftContactAbstractTypes::Type dam_type,
-        pinocchio::ReferenceFrame ref_type,
-        Vector3MaskType mask_type) const;
+  std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>
+  create(IAMSoftContactTypes::Type iam_type,
+         DAMSoftContactAbstractTypes::Type dam_type,
+         pinocchio::ReferenceFrame ref_type, Vector3MaskType mask_type) const;
 };
 
 }  // namespace unittest

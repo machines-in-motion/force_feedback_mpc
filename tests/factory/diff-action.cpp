@@ -9,6 +9,8 @@
 
 #include "diff-action.hpp"
 
+#include <crocoddyl/core/constraints/constraint-manager.hpp>
+
 #include "crocoddyl/core/actions/diff-lqr.hpp"
 #include "crocoddyl/core/activations/quadratic-barrier.hpp"
 #include "crocoddyl/core/activations/quadratic.hpp"
@@ -24,7 +26,6 @@
 #include "crocoddyl/multibody/residuals/frame-placement.hpp"
 #include "crocoddyl/multibody/residuals/frame-translation.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
-#include <crocoddyl/core/constraints/constraint-manager.hpp>
 
 namespace force_feedback_mpc {
 namespace unittest {
@@ -94,11 +95,11 @@ DifferentialActionModelFactory::create(DifferentialActionModelTypes::Type type,
   switch (type) {
     case DifferentialActionModelTypes::DifferentialActionModelLQR:
       action = std::make_shared<crocoddyl::DifferentialActionModelLQR>(40, 40,
-                                                                         false);
+                                                                       false);
       break;
     case DifferentialActionModelTypes::DifferentialActionModelLQRDriftFree:
-      action = std::make_shared<crocoddyl::DifferentialActionModelLQR>(40, 40,
-                                                                         true);
+      action =
+          std::make_shared<crocoddyl::DifferentialActionModelLQR>(40, 40, true);
       break;
     case DifferentialActionModelTypes::
         DifferentialActionModelFreeFwdDynamics_TalosArm:
@@ -113,48 +114,44 @@ DifferentialActionModelFactory::create(DifferentialActionModelTypes::Type type,
     //   break;
     case DifferentialActionModelTypes::
         DifferentialActionModelContactFwdDynamics_TalosArm:
-      action = create_contactFwdDynamics(
-          StateModelTypes::StateMultibody_TalosArm,
-          ActuationModelTypes::ActuationModelFull, 
-          contact_type, false, with_baumgarte);
+      action =
+          create_contactFwdDynamics(StateModelTypes::StateMultibody_TalosArm,
+                                    ActuationModelTypes::ActuationModelFull,
+                                    contact_type, false, with_baumgarte);
       break;
     case DifferentialActionModelTypes::
         DifferentialActionModelContactFwdDynamics_HyQ:
       action = create_contactFwdDynamics(
           StateModelTypes::StateMultibody_HyQ,
-          ActuationModelTypes::ActuationModelFloatingBase, 
-          contact_type, false,
+          ActuationModelTypes::ActuationModelFloatingBase, contact_type, false,
           with_baumgarte);
       break;
     case DifferentialActionModelTypes::
         DifferentialActionModelContactFwdDynamics_Talos:
       action = create_contactFwdDynamics(
           StateModelTypes::StateMultibody_Talos,
-          ActuationModelTypes::ActuationModelFloatingBase,
-          contact_type, false,
+          ActuationModelTypes::ActuationModelFloatingBase, contact_type, false,
           with_baumgarte);
       break;
     case DifferentialActionModelTypes::
         DifferentialActionModelContactFwdDynamicsWithFriction_TalosArm:
-      action = create_contactFwdDynamics(
-          StateModelTypes::StateMultibody_TalosArm,
-          ActuationModelTypes::ActuationModelFull, 
-          contact_type, true, with_baumgarte);
+      action =
+          create_contactFwdDynamics(StateModelTypes::StateMultibody_TalosArm,
+                                    ActuationModelTypes::ActuationModelFull,
+                                    contact_type, true, with_baumgarte);
       break;
     case DifferentialActionModelTypes::
         DifferentialActionModelContactFwdDynamicsWithFriction_HyQ:
       action = create_contactFwdDynamics(
           StateModelTypes::StateMultibody_HyQ,
-          ActuationModelTypes::ActuationModelFloatingBase, 
-          contact_type, true,
+          ActuationModelTypes::ActuationModelFloatingBase, contact_type, true,
           with_baumgarte);
       break;
     case DifferentialActionModelTypes::
         DifferentialActionModelContactFwdDynamicsWithFriction_Talos:
       action = create_contactFwdDynamics(
           StateModelTypes::StateMultibody_Talos,
-          ActuationModelTypes::ActuationModelFloatingBase, 
-          contact_type, true,
+          ActuationModelTypes::ActuationModelFloatingBase, contact_type, true,
           with_baumgarte);
       break;
     default:
@@ -166,7 +163,8 @@ DifferentialActionModelFactory::create(DifferentialActionModelTypes::Type type,
 
 std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics>
 DifferentialActionModelFactory::create_freeFwdDynamics(
-    StateModelTypes::Type state_type, ActuationModelTypes::Type actuation_type) const {
+    StateModelTypes::Type state_type,
+    ActuationModelTypes::Type actuation_type) const {
   std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> action;
   std::shared_ptr<crocoddyl::StateMultibody> state;
   std::shared_ptr<crocoddyl::ActuationModelAbstract> actuation;
@@ -203,25 +201,22 @@ DifferentialActionModelFactory::create_freeFwdDynamics(
                     CostModelTypes::CostModelResidualFramePlacement, state_type,
                     ActivationModelTypes::ActivationModelQuad, nu),
                 1.);
-  std::shared_ptr<crocoddyl::ConstraintModelManager> constraint = std::make_shared<crocoddyl::ConstraintModelManager>(state, nu);
-  action =
-        std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
-            state, actuation, cost, constraint);
-//   std::cout << "[DAM factory] action.ng = " << action->get_ng() << std::endl;
-//   std::cout << "[DAM factory] action.g_lb = " << action->get_g_lb() << std::endl;
+  std::shared_ptr<crocoddyl::ConstraintModelManager> constraint =
+      std::make_shared<crocoddyl::ConstraintModelManager>(state, nu);
+  action = std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
+      state, actuation, cost, constraint);
+  //   std::cout << "[DAM factory] action.ng = " << action->get_ng() <<
+  //   std::endl; std::cout << "[DAM factory] action.g_lb = " <<
+  //   action->get_g_lb() << std::endl;
   return action;
 }
 
-
 std::shared_ptr<crocoddyl::DifferentialActionModelContactFwdDynamics>
 DifferentialActionModelFactory::create_contactFwdDynamics(
-    StateModelTypes::Type state_type, 
-    ActuationModelTypes::Type actuation_type,
-    ContactModelTypes::Type contact_type,
-    bool with_friction, 
+    StateModelTypes::Type state_type, ActuationModelTypes::Type actuation_type,
+    ContactModelTypes::Type contact_type, bool with_friction,
     bool with_baumgarte) const {
-  std::shared_ptr<crocoddyl::DifferentialActionModelContactFwdDynamics>
-      action;
+  std::shared_ptr<crocoddyl::DifferentialActionModelContactFwdDynamics> action;
   std::shared_ptr<crocoddyl::StateMultibody> state;
   std::shared_ptr<crocoddyl::ActuationModelAbstract> actuation;
   std::shared_ptr<crocoddyl::ContactModelMultiple> contact;
@@ -252,194 +247,189 @@ DifferentialActionModelFactory::create_contactFwdDynamics(
   if (!with_baumgarte) {
     gains.setZero();
   }
-  
+
   std::size_t nc;
-  switch (contact_type){
+  switch (contact_type) {
     case ContactModelTypes::ContactModel1D_LOCAL:
-        nc = 1;
-        break;
+      nc = 1;
+      break;
     case ContactModelTypes::ContactModel1D_WORLD:
-        nc = 1;
-        break;
+      nc = 1;
+      break;
     case ContactModelTypes::ContactModel1D_LWA:
-        nc = 1;
-        break;
+      nc = 1;
+      break;
     case ContactModelTypes::ContactModel3D_LOCAL:
-        nc = 3;
-        break;
+      nc = 3;
+      break;
     case ContactModelTypes::ContactModel3D_WORLD:
-        nc = 3;
-        break;
+      nc = 3;
+      break;
     case ContactModelTypes::ContactModel3D_LWA:
-        nc = 3;
-        break;
+      nc = 3;
+      break;
     case ContactModelTypes::ContactModel6D_LOCAL:
-        nc = 6;
-        break;
+      nc = 6;
+      break;
     case ContactModelTypes::ContactModel6D_WORLD:
-        nc = 6;
-        break;
+      nc = 6;
+      break;
     case ContactModelTypes::ContactModel6D_LWA:
-        nc = 6;
-        break;
+      nc = 6;
+      break;
   }
   switch (state_type) {
     case StateModelTypes::StateMultibody_TalosArm:
-      contact->addContact("lf", ContactModelFactory().create(
-                                    contact_type,
-                                    PinocchioModelTypes::TalosArm, gains,
-                                    "gripper_left_fingertip_1_link", nu));
-      // Only test 1D contact force cost (there can be no friction cone in 1D contact)
+      contact->addContact(
+          "lf", ContactModelFactory().create(
+                    contact_type, PinocchioModelTypes::TalosArm, gains,
+                    "gripper_left_fingertip_1_link", nu));
+      // Only test 1D contact force cost (there can be no friction cone in 1D
+      // contact)
       if (with_friction) {
         // force regularization
         cost->addCost(
             "lf_forceReg",
             std::make_shared<crocoddyl::CostModelResidual>(
                 state, std::make_shared<crocoddyl::ResidualModelContactForce>(
-                        state,
-                        state->get_pinocchio()->getFrameId(
-                            "gripper_left_fingertip_1_link"),
-                        force, nc, nu)),
+                           state,
+                           state->get_pinocchio()->getFrameId(
+                               "gripper_left_fingertip_1_link"),
+                           force, nc, nu)),
             0.1);
       }
       break;
     case StateModelTypes::StateMultibody_HyQ:
-      contact->addContact(
-          "lf", ContactModelFactory().create(
-                    contact_type,
-                    PinocchioModelTypes::HyQ, 0. * gains, "lf_foot", nu));
-      contact->addContact(
-          "rf", ContactModelFactory().create(
-                    contact_type,
-                    PinocchioModelTypes::HyQ, 0.25 * gains, "rf_foot", nu));
-      contact->addContact(
-          "lh", ContactModelFactory().create(
-                    contact_type,
-                    PinocchioModelTypes::HyQ, 0.25 * gains, "lh_foot", nu));
-      contact->addContact(
-          "rh", ContactModelFactory().create(
-                    contact_type,
-                    PinocchioModelTypes::HyQ, 0.25 * gains, "rh_foot", nu));
+      contact->addContact("lf", ContactModelFactory().create(
+                                    contact_type, PinocchioModelTypes::HyQ,
+                                    0. * gains, "lf_foot", nu));
+      contact->addContact("rf", ContactModelFactory().create(
+                                    contact_type, PinocchioModelTypes::HyQ,
+                                    0.25 * gains, "rf_foot", nu));
+      contact->addContact("lh", ContactModelFactory().create(
+                                    contact_type, PinocchioModelTypes::HyQ,
+                                    0.25 * gains, "lh_foot", nu));
+      contact->addContact("rh", ContactModelFactory().create(
+                                    contact_type, PinocchioModelTypes::HyQ,
+                                    0.25 * gains, "rh_foot", nu));
       // Only test 3D friction cones
       if (with_friction) {
-            // friction cone
-            cost->addCost(
-                "lf_cone",
-                std::make_shared<crocoddyl::CostModelResidual>(
-                    state, friction_activation,
-                    std::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
-                        state, state->get_pinocchio()->getFrameId("lf_foot"),
-                        friction_cone, nu)),
-                0.1);
-            cost->addCost(
-                "rf_cone",
-                std::make_shared<crocoddyl::CostModelResidual>(
-                    state, friction_activation,
-                    std::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
-                        state, state->get_pinocchio()->getFrameId("rf_foot"),
-                        friction_cone, nu)),
-                0.1);
-            cost->addCost(
-                "lh_cone",
-                std::make_shared<crocoddyl::CostModelResidual>(
-                    state, friction_activation,
-                    std::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
-                        state, state->get_pinocchio()->getFrameId("lh_foot"),
-                        friction_cone, nu)),
-                0.1);
-            cost->addCost(
-                "rh_cone",
-                std::make_shared<crocoddyl::CostModelResidual>(
-                    state, friction_activation,
-                    std::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
-                        state, state->get_pinocchio()->getFrameId("rh_foot"),
-                        friction_cone, nu)),
-                0.1);
-            // force regularization
-            cost->addCost(
-                "lf_forceReg",
-                std::make_shared<crocoddyl::CostModelResidual>(
-                    state, std::make_shared<crocoddyl::ResidualModelContactForce>(
-                            state, state->get_pinocchio()->getFrameId("lf_foot"),
-                            force, nc, nu)),
-                0.1);
-            cost->addCost(
-                "rf_forceReg",
-                std::make_shared<crocoddyl::CostModelResidual>(
-                    state, std::make_shared<crocoddyl::ResidualModelContactForce>(
-                            state, state->get_pinocchio()->getFrameId("rf_foot"),
-                            force, nc, nu)),
-                0.1);
-            cost->addCost(
-                "lh_forceReg",
-                std::make_shared<crocoddyl::CostModelResidual>(
-                    state, std::make_shared<crocoddyl::ResidualModelContactForce>(
-                            state, state->get_pinocchio()->getFrameId("lh_foot"),
-                            force, nc, nu)),
-                0.1);
-            cost->addCost(
-                "rh_forceReg",
-                std::make_shared<crocoddyl::CostModelResidual>(
-                    state, std::make_shared<crocoddyl::ResidualModelContactForce>(
-                            state, state->get_pinocchio()->getFrameId("rh_foot"),
-                            force, nc, nu)),
-                0.1);
+        // friction cone
+        cost->addCost(
+            "lf_cone",
+            std::make_shared<crocoddyl::CostModelResidual>(
+                state, friction_activation,
+                std::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
+                    state, state->get_pinocchio()->getFrameId("lf_foot"),
+                    friction_cone, nu)),
+            0.1);
+        cost->addCost(
+            "rf_cone",
+            std::make_shared<crocoddyl::CostModelResidual>(
+                state, friction_activation,
+                std::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
+                    state, state->get_pinocchio()->getFrameId("rf_foot"),
+                    friction_cone, nu)),
+            0.1);
+        cost->addCost(
+            "lh_cone",
+            std::make_shared<crocoddyl::CostModelResidual>(
+                state, friction_activation,
+                std::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
+                    state, state->get_pinocchio()->getFrameId("lh_foot"),
+                    friction_cone, nu)),
+            0.1);
+        cost->addCost(
+            "rh_cone",
+            std::make_shared<crocoddyl::CostModelResidual>(
+                state, friction_activation,
+                std::make_shared<crocoddyl::ResidualModelContactFrictionCone>(
+                    state, state->get_pinocchio()->getFrameId("rh_foot"),
+                    friction_cone, nu)),
+            0.1);
+        // force regularization
+        cost->addCost(
+            "lf_forceReg",
+            std::make_shared<crocoddyl::CostModelResidual>(
+                state, std::make_shared<crocoddyl::ResidualModelContactForce>(
+                           state, state->get_pinocchio()->getFrameId("lf_foot"),
+                           force, nc, nu)),
+            0.1);
+        cost->addCost(
+            "rf_forceReg",
+            std::make_shared<crocoddyl::CostModelResidual>(
+                state, std::make_shared<crocoddyl::ResidualModelContactForce>(
+                           state, state->get_pinocchio()->getFrameId("rf_foot"),
+                           force, nc, nu)),
+            0.1);
+        cost->addCost(
+            "lh_forceReg",
+            std::make_shared<crocoddyl::CostModelResidual>(
+                state, std::make_shared<crocoddyl::ResidualModelContactForce>(
+                           state, state->get_pinocchio()->getFrameId("lh_foot"),
+                           force, nc, nu)),
+            0.1);
+        cost->addCost(
+            "rh_forceReg",
+            std::make_shared<crocoddyl::CostModelResidual>(
+                state, std::make_shared<crocoddyl::ResidualModelContactForce>(
+                           state, state->get_pinocchio()->getFrameId("rh_foot"),
+                           force, nc, nu)),
+            0.1);
       }
       break;
     case StateModelTypes::StateMultibody_Talos:
-      contact->addContact(
-          "lf", ContactModelFactory().create(
-                    contact_type,
-                    PinocchioModelTypes::Talos, gains, "left_sole_link", nu));
-      contact->addContact(
-          "rf", ContactModelFactory().create(
-                    contact_type,
-                    PinocchioModelTypes::Talos, gains, "right_sole_link", nu));
+      contact->addContact("lf", ContactModelFactory().create(
+                                    contact_type, PinocchioModelTypes::Talos,
+                                    gains, "left_sole_link", nu));
+      contact->addContact("rf", ContactModelFactory().create(
+                                    contact_type, PinocchioModelTypes::Talos,
+                                    gains, "right_sole_link", nu));
       // Only test 6D wrench cone
       if (with_friction) {
-            // wrench cone
-            cost->addCost(
-                "lf_cone",
-                std::make_shared<crocoddyl::CostModelResidual>(
-                    state, wrench_activation,
-                    std::make_shared<crocoddyl::ResidualModelContactWrenchCone>(
-                        state, state->get_pinocchio()->getFrameId("left_sole_link"),
-                        wrench_cone, nu)),
-                0.01);
-            cost->addCost(
-                "rf_cone",
-                std::make_shared<crocoddyl::CostModelResidual>(
-                    state, wrench_activation,
-                    std::make_shared<crocoddyl::ResidualModelContactWrenchCone>(
-                        state,
-                        state->get_pinocchio()->getFrameId("right_sole_link"),
-                        wrench_cone, nu)),
-                0.01);
-            // force regularization
-            cost->addCost(
-                "lf_forceReg",
-                std::make_shared<crocoddyl::CostModelResidual>(
+        // wrench cone
+        cost->addCost(
+            "lf_cone",
+            std::make_shared<crocoddyl::CostModelResidual>(
+                state, wrench_activation,
+                std::make_shared<crocoddyl::ResidualModelContactWrenchCone>(
+                    state, state->get_pinocchio()->getFrameId("left_sole_link"),
+                    wrench_cone, nu)),
+            0.01);
+        cost->addCost(
+            "rf_cone",
+            std::make_shared<crocoddyl::CostModelResidual>(
+                state, wrench_activation,
+                std::make_shared<crocoddyl::ResidualModelContactWrenchCone>(
                     state,
-                    std::make_shared<crocoddyl::ResidualModelContactForce>(
-                        state, state->get_pinocchio()->getFrameId("left_sole_link"),
-                        force, nc, nu)),
-                0.01);
-            cost->addCost(
-                "rf_forceReg",
-                std::make_shared<crocoddyl::CostModelResidual>(
+                    state->get_pinocchio()->getFrameId("right_sole_link"),
+                    wrench_cone, nu)),
+            0.01);
+        // force regularization
+        cost->addCost(
+            "lf_forceReg",
+            std::make_shared<crocoddyl::CostModelResidual>(
+                state,
+                std::make_shared<crocoddyl::ResidualModelContactForce>(
+                    state, state->get_pinocchio()->getFrameId("left_sole_link"),
+                    force, nc, nu)),
+            0.01);
+        cost->addCost(
+            "rf_forceReg",
+            std::make_shared<crocoddyl::CostModelResidual>(
+                state,
+                std::make_shared<crocoddyl::ResidualModelContactForce>(
                     state,
-                    std::make_shared<crocoddyl::ResidualModelContactForce>(
-                        state,
-                        state->get_pinocchio()->getFrameId("right_sole_link"),
-                        force, nc, nu)),
-                0.01);
+                    state->get_pinocchio()->getFrameId("right_sole_link"),
+                    force, nc, nu)),
+            0.01);
       }
       break;
     default:
       throw_pretty(__FILE__ ": Wrong StateModelTypes::Type given");
       break;
   }
-  
+
   cost->addCost("state",
                 CostModelFactory().create(
                     CostModelTypes::CostModelResidualState, state_type,
@@ -456,12 +446,14 @@ DifferentialActionModelFactory::create_contactFwdDynamics(
           state, std::make_shared<crocoddyl::ResidualModelJointEffort>(
                      state, actuation, Eigen::VectorXd::Zero(nu), nu, true)),
       0.1);
-  std::shared_ptr<crocoddyl::ConstraintModelManager> constraint = std::make_shared<crocoddyl::ConstraintModelManager>(state, nu);
+  std::shared_ptr<crocoddyl::ConstraintModelManager> constraint =
+      std::make_shared<crocoddyl::ConstraintModelManager>(state, nu);
   action =
       std::make_shared<crocoddyl::DifferentialActionModelContactFwdDynamics>(
           state, actuation, contact, cost, constraint, 0., true);
-//   std::cout << "[DAM factory] action.ng = " << action->get_ng() << std::endl;
-//   std::cout << "[DAM factory] action.g_lb = " << action->get_g_lb() << std::endl;
+  //   std::cout << "[DAM factory] action.ng = " << action->get_ng() <<
+  //   std::endl; std::cout << "[DAM factory] action.g_lb = " <<
+  //   action->get_g_lb() << std::endl;
   return action;
 }
 

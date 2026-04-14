@@ -12,28 +12,29 @@
 #define BOOST_TEST_ALTERNATIVE_INIT_API
 
 #include <crocoddyl/core/integrator/euler.hpp>
+#include <crocoddyl/multibody/residuals/control-gravity.hpp>
 
 #include "common.hpp"
 #include "factory/action-soft.hpp"
 #include "factory/diff-action-soft1d.hpp"
 #include "factory/diff-action-soft3d.hpp"
-#include <crocoddyl/multibody/residuals/control-gravity.hpp>
 
 using namespace boost::unit_test;
 using namespace force_feedback_mpc::unittest;
 
-typedef typename force_feedback_mpc::softcontact::Vector3MaskType Vector3MaskType;
+typedef
+    typename force_feedback_mpc::softcontact::Vector3MaskType Vector3MaskType;
 
 //----------------------------------------------------------------------------//
 
-void test_check_data(
-    IAMSoftContactTypes::Type iam_type,
-    DAMSoftContactAbstractTypes::Type dam_type,
-    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL, 
-    Vector3MaskType mask_type = Vector3MaskType::z ) {
+void test_check_data(IAMSoftContactTypes::Type iam_type,
+                     DAMSoftContactAbstractTypes::Type dam_type,
+                     pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL,
+                     Vector3MaskType mask_type = Vector3MaskType::z) {
   // create the model
   IAMSoftContactFactory factory_iam;
-  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
+  const std::shared_ptr<
+      force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   // Run the print function
   std::ostringstream tmp;
@@ -44,16 +45,15 @@ void test_check_data(
   BOOST_CHECK(model->checkData(data));
 }
 
-
-
 void test_calc_returns_state(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
-    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL, 
-    Vector3MaskType mask_type = Vector3MaskType::z ) {
+    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL,
+    Vector3MaskType mask_type = Vector3MaskType::z) {
   // create the model
   IAMSoftContactFactory factory_iam;
-  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
+  const std::shared_ptr<
+      force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   // create the corresponding data object
   const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
@@ -70,11 +70,12 @@ void test_calc_returns_state(
 void test_calc_returns_a_cost(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
-    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL, 
-    Vector3MaskType mask_type = Vector3MaskType::z ) {
+    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL,
+    Vector3MaskType mask_type = Vector3MaskType::z) {
   // create the model
   IAMSoftContactFactory factory_iam;
-  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
+  const std::shared_ptr<
+      force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory_iam.create(iam_type, dam_type, ref_type, mask_type);
   // create the corresponding data object and set the cost to nan
   const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
@@ -88,11 +89,9 @@ void test_calc_returns_a_cost(
   BOOST_CHECK(!std::isnan(data->cost));
 }
 
-
-
-
 void test_partial_derivatives_against_numdiff(
-    const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model) {
+    const std::shared_ptr<
+        force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model) {
   // create the corresponding data object and set the cost to nan
   const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
@@ -129,20 +128,19 @@ void test_partial_derivatives_against_numdiff(
 void test_partial_derivatives_action_model(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
-    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL, 
-    Vector3MaskType mask_type = Vector3MaskType::z ) {
+    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL,
+    Vector3MaskType mask_type = Vector3MaskType::z) {
   // create the model
   IAMSoftContactFactory factory;
-  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
+  const std::shared_ptr<
+      force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory.create(iam_type, dam_type, ref_type, mask_type);
   test_partial_derivatives_against_numdiff(model);
 }
 
-
-
-
 void test_partial_derivatives_against_numdiff_terminal(
-    const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model) {
+    const std::shared_ptr<
+        force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model) {
   // create the corresponding data object and set the cost to nan
   const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       model->createData();
@@ -178,50 +176,64 @@ void test_partial_derivatives_against_numdiff_terminal(
 void test_partial_derivatives_action_model_terminal(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
-    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL, 
-    Vector3MaskType mask_type = Vector3MaskType::z ) {
+    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL,
+    Vector3MaskType mask_type = Vector3MaskType::z) {
   // create the model
   IAMSoftContactFactory factory;
-  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
+  const std::shared_ptr<
+      force_feedback_mpc::softcontact::IAMSoftContactAugmented>& model =
       factory.create(iam_type, dam_type, ref_type, mask_type);
   model->set_dt(0.);
   test_partial_derivatives_against_numdiff_terminal(model);
 }
 
-
-
-
 void test_calc_equivalent_euler(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
-    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL, 
-    Vector3MaskType mask_type = Vector3MaskType::z ) {
+    pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL,
+    Vector3MaskType mask_type = Vector3MaskType::z) {
   // Create IAM soft from DAMSoft
   IAMSoftContactFactory factory_iam;
-  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& modelsoft = factory_iam.create(iam_type, dam_type, ref_type, mask_type);
-  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataSoft = modelsoft->createData();
+  const std::shared_ptr<
+      force_feedback_mpc::softcontact::IAMSoftContactAugmented>& modelsoft =
+      factory_iam.create(iam_type, dam_type, ref_type, mask_type);
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataSoft =
+      modelsoft->createData();
   // Set gains to 0
-  modelsoft->get_differential()->set_Kp(Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));
-  modelsoft->get_differential()->set_Kv(Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));
+  modelsoft->get_differential()->set_Kp(
+      Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));
+  modelsoft->get_differential()->set_Kv(
+      Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));
 
   // Create IAM Euler from DAMfree (incompatible with DAMSoft)
-  std::shared_ptr<crocoddyl::StateMultibody> statemb = std::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_differential()->get_state()); 
-  std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree = std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
-          statemb, modelsoft->get_differential()->get_actuation(), std::make_shared<crocoddyl::CostModelSum>(*modelsoft->get_differential()->get_costs()));
+  std::shared_ptr<crocoddyl::StateMultibody> statemb =
+      std::static_pointer_cast<crocoddyl::StateMultibody>(
+          modelsoft->get_differential()->get_state());
+  std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree =
+      std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
+          statemb, modelsoft->get_differential()->get_actuation(),
+          std::make_shared<crocoddyl::CostModelSum>(
+              *modelsoft->get_differential()->get_costs()));
   // Add gravity cost on free model
-  if(modelsoft->get_differential()->get_with_gravity_torque_reg()){
-    std::shared_ptr<crocoddyl::CostModelAbstract> cost = std::make_shared<crocoddyl::CostModelResidual>(
-            statemb, std::make_shared<crocoddyl::ResidualModelControlGrav>( statemb, modelfree->get_actuation()->get_nu() ));
-    modelfree->get_costs()->addCost( "grav_reg", cost, modelsoft->get_differential()->get_tau_grav_weight());
+  if (modelsoft->get_differential()->get_with_gravity_torque_reg()) {
+    std::shared_ptr<crocoddyl::CostModelAbstract> cost =
+        std::make_shared<crocoddyl::CostModelResidual>(
+            statemb, std::make_shared<crocoddyl::ResidualModelControlGrav>(
+                         statemb, modelfree->get_actuation()->get_nu()));
+    modelfree->get_costs()->addCost(
+        "grav_reg", cost, modelsoft->get_differential()->get_tau_grav_weight());
   }
-  std::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler = std::make_shared<crocoddyl::IntegratedActionModelEuler>(modelfree, modelsoft->get_dt(), true);
-  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler = modelEuler->createData();
+  std::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler =
+      std::make_shared<crocoddyl::IntegratedActionModelEuler>(
+          modelfree, modelsoft->get_dt(), true);
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler =
+      modelEuler->createData();
 
   // Generating random state and control vectors
   std::size_t nx = statemb->get_nx();
   std::size_t nc = modelsoft->get_nc();
   Eigen::VectorXd y = modelsoft->get_state()->rand();
-  y.tail(nc) = Eigen::VectorXd::Zero(nc); // set 0 initial force
+  y.tail(nc) = Eigen::VectorXd::Zero(nc);  // set 0 initial force
   Eigen::VectorXd x = y.head(nx);
   Eigen::VectorXd u = Eigen::VectorXd::Random(modelsoft->get_nu());
   // Getting the state dimension from calc() call
@@ -235,27 +247,43 @@ void test_calcDiff_equivalent_euler(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
     pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL,
-    Vector3MaskType mask_type = Vector3MaskType::z ) {
+    Vector3MaskType mask_type = Vector3MaskType::z) {
   // Create IAM soft from DAMSoft
   IAMSoftContactFactory factory_iam;
-  const std::shared_ptr<force_feedback_mpc::softcontact::IAMSoftContactAugmented>& modelsoft = factory_iam.create(iam_type, dam_type, ref_type, mask_type);
-  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataSoft = modelsoft->createData();
+  const std::shared_ptr<
+      force_feedback_mpc::softcontact::IAMSoftContactAugmented>& modelsoft =
+      factory_iam.create(iam_type, dam_type, ref_type, mask_type);
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataSoft =
+      modelsoft->createData();
   // Set gains to 0
-  modelsoft->get_differential()->set_Kp(Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));
-  modelsoft->get_differential()->set_Kv(Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));
+  modelsoft->get_differential()->set_Kp(
+      Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));
+  modelsoft->get_differential()->set_Kv(
+      Eigen::VectorXd::Zero(modelsoft->get_differential()->get_nc()));
 
   // Create IAM Euler from DAMfree (incompatible with DAMSoft)
-  std::shared_ptr<crocoddyl::StateMultibody> statemb = std::static_pointer_cast<crocoddyl::StateMultibody>(modelsoft->get_differential()->get_state()); 
-  std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree = std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
-          statemb, modelsoft->get_differential()->get_actuation(), std::make_shared<crocoddyl::CostModelSum>(*modelsoft->get_differential()->get_costs()));
+  std::shared_ptr<crocoddyl::StateMultibody> statemb =
+      std::static_pointer_cast<crocoddyl::StateMultibody>(
+          modelsoft->get_differential()->get_state());
+  std::shared_ptr<crocoddyl::DifferentialActionModelFreeFwdDynamics> modelfree =
+      std::make_shared<crocoddyl::DifferentialActionModelFreeFwdDynamics>(
+          statemb, modelsoft->get_differential()->get_actuation(),
+          std::make_shared<crocoddyl::CostModelSum>(
+              *modelsoft->get_differential()->get_costs()));
   // Add gravity cost on free model
-  if(modelsoft->get_differential()->get_with_gravity_torque_reg()){
-    std::shared_ptr<crocoddyl::CostModelAbstract> cost = std::make_shared<crocoddyl::CostModelResidual>(
-            statemb, std::make_shared<crocoddyl::ResidualModelControlGrav>( statemb, modelfree->get_actuation()->get_nu() ));
-    modelfree->get_costs()->addCost( "grav_reg", cost, modelsoft->get_differential()->get_tau_grav_weight());
+  if (modelsoft->get_differential()->get_with_gravity_torque_reg()) {
+    std::shared_ptr<crocoddyl::CostModelAbstract> cost =
+        std::make_shared<crocoddyl::CostModelResidual>(
+            statemb, std::make_shared<crocoddyl::ResidualModelControlGrav>(
+                         statemb, modelfree->get_actuation()->get_nu()));
+    modelfree->get_costs()->addCost(
+        "grav_reg", cost, modelsoft->get_differential()->get_tau_grav_weight());
   }
-  std::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler = std::make_shared<crocoddyl::IntegratedActionModelEuler>(modelfree, modelsoft->get_dt(), true);
-  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler = modelEuler->createData();
+  std::shared_ptr<crocoddyl::IntegratedActionModelEuler> modelEuler =
+      std::make_shared<crocoddyl::IntegratedActionModelEuler>(
+          modelfree, modelsoft->get_dt(), true);
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& dataEuler =
+      modelEuler->createData();
 
   // Generating random state and control vectors
   std::size_t nx = statemb->get_nx();
@@ -263,7 +291,7 @@ void test_calcDiff_equivalent_euler(
   std::size_t nc = modelsoft->get_nc();
   std::size_t nu = modelsoft->get_nu();
   Eigen::VectorXd y = modelsoft->get_state()->rand();
-  y.tail(nc) = Eigen::VectorXd::Zero(nc); // set 0 initial force
+  y.tail(nc) = Eigen::VectorXd::Zero(nc);  // set 0 initial force
   Eigen::VectorXd x = y.head(nx);
   Eigen::VectorXd u = Eigen::VectorXd::Random(nu);
   modelsoft->calc(dataSoft, y, u);
@@ -286,9 +314,7 @@ void test_calcDiff_equivalent_euler(
   BOOST_CHECK((Lxx - dataEuler->Lxx).isZero(tol));
   BOOST_CHECK((Lxu - dataEuler->Lxu).isZero(tol));
   BOOST_CHECK((Luu - dataEuler->Luu).isZero(tol));
-
 }
-
 
 //----------------------------------------------------------------------------//
 
@@ -296,69 +322,74 @@ void register_action_model_unit_tests(
     IAMSoftContactTypes::Type iam_type,
     DAMSoftContactAbstractTypes::Type dam_type,
     pinocchio::ReferenceFrame ref_type = pinocchio::LOCAL,
-    Vector3MaskType mask_type = Vector3MaskType::z ) {
+    Vector3MaskType mask_type = Vector3MaskType::z) {
   boost::test_tools::output_test_stream test_name;
   // 3D
-  if(iam_type == IAMSoftContactTypes::Type::IAMSoftContactAugmented){
+  if (iam_type == IAMSoftContactTypes::Type::IAMSoftContactAugmented) {
     test_name << "test_" << iam_type << "_" << dam_type << "_" << ref_type;
-  // 1D
+    // 1D
   } else {
-    test_name << "test_" << iam_type << "_" << dam_type << "_" << ref_type << "_" << mask_type;
+    test_name << "test_" << iam_type << "_" << dam_type << "_" << ref_type
+              << "_" << mask_type;
   }
   std::cout << "Running " << test_name.str() << std::endl;
   test_suite* ts = BOOST_TEST_SUITE(test_name.str());
-//   ts->add(BOOST_TEST_CASE(boost::bind(&test_check_data, iam_type, dam_type, ref_type)));
-  ts->add(BOOST_TEST_CASE(boost::bind(&test_calc_returns_state, iam_type, dam_type, ref_type, mask_type)));
-  ts->add(BOOST_TEST_CASE(boost::bind(&test_calc_returns_a_cost, iam_type, dam_type, ref_type, mask_type)));
-  ts->add(BOOST_TEST_CASE(boost::bind(&test_partial_derivatives_action_model, iam_type, dam_type, ref_type, mask_type)));
-  // Need to test terminal model as well ? Seems to be incompatible with Euler test 
-  // ts->add(BOOST_TEST_CASE(boost::bind(&test_partial_derivatives_action_model_terminal, iam_type, dam_type, ref_type)));
-  // Equivalence with Euler when Kp, Kv=0
-  ts->add(BOOST_TEST_CASE(boost::bind(&test_calc_equivalent_euler, iam_type, dam_type, ref_type, mask_type)));
-  ts->add(BOOST_TEST_CASE(boost::bind(&test_calcDiff_equivalent_euler, iam_type, dam_type, ref_type, mask_type)));
+  //   ts->add(BOOST_TEST_CASE(boost::bind(&test_check_data, iam_type, dam_type,
+  //   ref_type)));
+  ts->add(BOOST_TEST_CASE(boost::bind(&test_calc_returns_state, iam_type,
+                                      dam_type, ref_type, mask_type)));
+  ts->add(BOOST_TEST_CASE(boost::bind(&test_calc_returns_a_cost, iam_type,
+                                      dam_type, ref_type, mask_type)));
+  ts->add(
+      BOOST_TEST_CASE(boost::bind(&test_partial_derivatives_action_model,
+                                  iam_type, dam_type, ref_type, mask_type)));
+  // Need to test terminal model as well ? Seems to be incompatible with Euler
+  // test
+  // ts->add(BOOST_TEST_CASE(boost::bind(&test_partial_derivatives_action_model_terminal,
+  // iam_type, dam_type, ref_type))); Equivalence with Euler when Kp, Kv=0
+  ts->add(BOOST_TEST_CASE(boost::bind(&test_calc_equivalent_euler, iam_type,
+                                      dam_type, ref_type, mask_type)));
+  ts->add(BOOST_TEST_CASE(boost::bind(&test_calcDiff_equivalent_euler, iam_type,
+                                      dam_type, ref_type, mask_type)));
   framework::master_test_suite().add(ts);
 }
 
 bool init_function() {
-
   for (size_t i = 0; i < IAMSoftContactTypes::all.size(); ++i) {
-    
-    // Contact 3D 
-    if(IAMSoftContactTypes::all[i] == IAMSoftContactTypes::Type::IAMSoftContactAugmented){
+    // Contact 3D
+    if (IAMSoftContactTypes::all[i] ==
+        IAMSoftContactTypes::Type::IAMSoftContactAugmented) {
       for (size_t j = 0; j < DAMSoftContactAbstractTypes::all.size(); ++j) {
         register_action_model_unit_tests(IAMSoftContactTypes::all[i],
-                                        DAMSoftContactAbstractTypes::all[j],
-                                        pinocchio::LOCAL);
+                                         DAMSoftContactAbstractTypes::all[j],
+                                         pinocchio::LOCAL);
         register_action_model_unit_tests(IAMSoftContactTypes::all[i],
-                                        DAMSoftContactAbstractTypes::all[j],
-                                        pinocchio::WORLD);
+                                         DAMSoftContactAbstractTypes::all[j],
+                                         pinocchio::WORLD);
         register_action_model_unit_tests(IAMSoftContactTypes::all[i],
-                                        DAMSoftContactAbstractTypes::all[j],
-                                        pinocchio::LOCAL_WORLD_ALIGNED);
+                                         DAMSoftContactAbstractTypes::all[j],
+                                         pinocchio::LOCAL_WORLD_ALIGNED);
       }
     }
 
-    // Contact 1D 
-    if(IAMSoftContactTypes::all[i] == IAMSoftContactTypes::Type::IAMSoftContact1DAugmented){
+    // Contact 1D
+    if (IAMSoftContactTypes::all[i] ==
+        IAMSoftContactTypes::Type::IAMSoftContact1DAugmented) {
       for (size_t j = 0; j < DAMSoftContactAbstractTypes::all.size(); ++j) {
-        for(size_t k = Vector3MaskType::x; k < Vector3MaskType::Last; k++){
-          register_action_model_unit_tests(IAMSoftContactTypes::all[i],
-                                          DAMSoftContactAbstractTypes::all[j],
-                                          pinocchio::LOCAL,
-                                          static_cast<Vector3MaskType>(k));
-          register_action_model_unit_tests(IAMSoftContactTypes::all[i],
-                                          DAMSoftContactAbstractTypes::all[j],
-                                          pinocchio::WORLD,
-                                          static_cast<Vector3MaskType>(k));
-          register_action_model_unit_tests(IAMSoftContactTypes::all[i],
-                                          DAMSoftContactAbstractTypes::all[j],
-                                          pinocchio::LOCAL_WORLD_ALIGNED,
-                                          static_cast<Vector3MaskType>(k));
+        for (size_t k = Vector3MaskType::x; k < Vector3MaskType::Last; k++) {
+          register_action_model_unit_tests(
+              IAMSoftContactTypes::all[i], DAMSoftContactAbstractTypes::all[j],
+              pinocchio::LOCAL, static_cast<Vector3MaskType>(k));
+          register_action_model_unit_tests(
+              IAMSoftContactTypes::all[i], DAMSoftContactAbstractTypes::all[j],
+              pinocchio::WORLD, static_cast<Vector3MaskType>(k));
+          register_action_model_unit_tests(
+              IAMSoftContactTypes::all[i], DAMSoftContactAbstractTypes::all[j],
+              pinocchio::LOCAL_WORLD_ALIGNED, static_cast<Vector3MaskType>(k));
         }
       }
     }
   }
-
 
   return true;
 }
