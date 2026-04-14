@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fix
 
 - Fix compatibility with crocoddyl 3.1.0 from crocoddyl 3.0.1.
+- Fix compatibility with pinocchio 4
+- Drop CMake submodule
+- Nix: update to flakoboros
 
 ### Add
 
