@@ -9,6 +9,8 @@
 #ifndef BINDINGS_PYTHON_FORCE_FEEDBACK_MPC_CORE_DIFF_ACTION_BASE_HPP_
 #define BINDINGS_PYTHON_FORCE_FEEDBACK_MPC_CORE_DIFF_ACTION_BASE_HPP_
 
+#include <boost/python.hpp>
+
 #include "force_feedback_mpc/softcontact/dam-augmented.hpp"
 
 namespace force_feedback_mpc {
