@@ -13,7 +13,7 @@
 #include <crocoddyl/multibody/states/multibody.hpp>
 #include <example-robot-data/path.hpp>
 #include <pinocchio/fwd.hpp>
-#include <pinocchio/parsers/sample-models.hpp>
+#include <pinocchio/multibody/sample-models.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 
 namespace force_feedback_mpc {

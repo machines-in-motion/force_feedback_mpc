@@ -13,7 +13,7 @@
 #include <crocoddyl/multibody/actuations/full.hpp>
 #include <crocoddyl/multibody/states/multibody.hpp>
 #include <pinocchio/fwd.hpp>
-#include <pinocchio/parsers/sample-models.hpp>
+#include <pinocchio/multibody/sample-models.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 
 #include "state-lpf.hpp"

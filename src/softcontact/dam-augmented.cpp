@@ -78,7 +78,7 @@ DAMSoftContactAbstractAugmentedFwdDynamics::DAMSoftContactAbstractAugmentedFwdDy
     active_contact_ = true;
   }
   nc_ = nc;
-  parentId_ = this->get_pinocchio().frames[frameId_].parent;
+  parentId_ = this->get_pinocchio().frames[frameId_].parentJoint;
   jMf_ = this->get_pinocchio().frames[frameId_].placement;
   with_armature_ = false;
   armature_ = VectorXs::Zero(this->get_state()->get_nv());
