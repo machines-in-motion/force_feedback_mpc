@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-04-17
+
 ### Fix
 
 - Fix compatibility with crocoddyl 3.1.0 from crocoddyl 3.0.1.
