@@ -378,8 +378,24 @@ class ForceConstraintManager:
         self.has_force_constraint = False
         if len(constraints) > 0:
             self.has_force_constraint = True
-        self.lb = np.concatenate([cstr.lb for cstr in self.constraints])
-        self.ub = np.concatenate([cstr.ub for cstr in self.constraints])
+        # Bounds must follow the row order used by calc/calcDiff, which iterates over the
+        # contacts (and, for each contact, over the constraints defined at that frame),
+        # not the order in which the constraints were declared. Both orders coincide only
+        # when all the bounds are identical, as in the Go2 setup (lb = 0, ub = inf).
+        self.lb = np.concatenate(
+            [
+                cstr.lb
+                for ct in self.contacts
+                for cstr in self.contact_to_cstr_map[ct.frameId]
+            ]
+        )
+        self.ub = np.concatenate(
+            [
+                cstr.ub
+                for ct in self.contacts
+                for cstr in self.contact_to_cstr_map[ct.frameId]
+            ]
+        )
 
     def calc(self, f):
         """
