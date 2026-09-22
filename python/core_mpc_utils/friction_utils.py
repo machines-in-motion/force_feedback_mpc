@@ -35,27 +35,40 @@ class ResidualFrictionCone(crocoddyl.ResidualModelAbstract):
         self.df_du = np.zeros((3, self.nu))
         self.normal = normal
 
-    def calc(self, data, x, u=None):
-        F = data.shared.contacts.contacts[self.contact_name].f.vector[:3]
+    def _indices(self):
+        """(tangential indices, normal index) of the 3d contact force"""
         if self.normal == "z":
-            data.r[0] = self.mu * np.abs(F[2]) - np.sqrt(F[0] ** 2 + F[1] ** 2)
+            return [0, 1], 2
         elif self.normal == "x":
-            data.r[0] = self.mu * np.abs(F[0]) - np.sqrt(F[1] ** 2 + F[2] ** 2)
-        else:
-            ValueError("Friction with normal=y is not supported.")
+            return [1, 2], 0
+        ValueError("Friction with normal=y is not supported.")
+        return [0, 1], 2
+
+    def calc(self, data, x, u=None):
+        """
+        Friction cone residual mu*F_N - ||F_T|| >= 0 (F_N is the signed normal force).
+        The unilaterality constraint F_N >= 0 is imposed separately, so mu*|F_N| is not
+        needed: it gives the same feasible set but differs away from it (a negative normal
+        force would look feasible to the solver), and adds a kink at F_N = 0.
+        """
+        F = data.shared.contacts.contacts[self.contact_name].f.vector[:3]
+        it, inormal = self._indices()
+        data.r[0] = self.mu * F[inormal] - np.sqrt(F[it[0]] ** 2 + F[it[1]] ** 2)
 
     def calcDiff(self, data, x, u=None):
+        """
+        Jacobian of mu*F_N - ||F_T||: [-F_T/||F_T||, mu] where ||F_T|| > 0.
+        At ||F_T|| = 0 the residual is not differentiable and the subgradient with zero
+        tangential part is used (any tangential part of norm <= 1 is valid).
+        """
         F = data.shared.contacts.contacts[self.contact_name].f.vector[:3]
-        if self.normal == "z":
-            self.dcone_df[0, 0] = -F[0] / np.sqrt(F[0] ** 2 + F[1] ** 2)
-            self.dcone_df[0, 1] = -F[1] / np.sqrt(F[0] ** 2 + F[1] ** 2)
-            self.dcone_df[0, 2] = self.mu
-        elif self.normal == "x":
-            self.dcone_df[0, 0] = -F[1] / np.sqrt(F[1] ** 2 + F[2] ** 2)
-            self.dcone_df[0, 1] = -F[2] / np.sqrt(F[1] ** 2 + F[2] ** 2)
-            self.dcone_df[0, 2] = self.mu
-        else:
-            ValueError("Friction with normal=y is not supported.")
+        it, inormal = self._indices()
+        ft_norm = np.sqrt(F[it[0]] ** 2 + F[it[1]] ** 2)
+        self.dcone_df[:] = 0.0
+        if ft_norm > 0:
+            self.dcone_df[0, it[0]] = -F[it[0]] / ft_norm
+            self.dcone_df[0, it[1]] = -F[it[1]] / ft_norm
+        self.dcone_df[0, inormal] = self.mu
 
         self.df_dx = data.shared.contacts.contacts[self.contact_name].df_dx[:3]
         self.df_du = data.shared.contacts.contacts[self.contact_name].df_du[:3]

@@ -262,35 +262,42 @@ class FrictionConeConstraint:
         self.normal = normal
 
     def calc(self, f):
+        """
+        Friction cone residual mu*F_N - ||F_T|| >= 0 (F_N is the signed normal force).
+        Together with the unilaterality constraint F_N >= 0 (ForceBoxConstraint) this is
+        the standard Lorentz cone. Note: mu*|F_N| was used before, which defines the same
+        feasible set once intersected with F_N >= 0, but adds a kink at F_N = 0 and makes a
+        negative normal force look feasible to the solver while unilaterality pushes it back.
+        """
         if self.normal == "z":
-            self.residual = self.coef * np.abs(f[2]) - np.sqrt(
-                f[0] * f[0] + f[1] * f[1]
-            )
+            self.residual = self.coef * f[2] - np.sqrt(f[0] * f[0] + f[1] * f[1])
         elif self.normal == "x":
-            self.residual = self.coef * np.abs(f[0]) - np.sqrt(
-                f[1] * f[1] + f[2] * f[2]
-            )
+            self.residual = self.coef * f[0] - np.sqrt(f[1] * f[1] + f[2] * f[2])
         else:
             ValueError("Friction with normal=y is not supported.")
         return self.residual
 
     def calcDiff(self, f):
+        """
+        Jacobian of the residual mu*F_N - ||F_T|| w.r.t. the 3d contact force.
+        For ||F_T|| > 0 this is the exact derivative [-F_T/||F_T||, mu].
+        At ||F_T|| = 0 the residual is not differentiable: any tangential part of norm
+        <= 1 is a valid subgradient, and 0 is used (the previous [-1, -1, mu] fallback
+        was not a valid subgradient: its tangential part has norm sqrt(2)).
+        """
         if self.normal == "z":
-            if np.linalg.norm(f) > 1e-3:
-                self.residual_df[:, 0] = -f[0] / np.sqrt(f[0] * f[0] + f[1] * f[1])
-                self.residual_df[:, 1] = -f[1] / np.sqrt(f[0] * f[0] + f[1] * f[1])
-                self.residual_df[:, 2] = self.coef
-            else:
-                self.residual_df = np.array([[-1, -1, self.coef]])
+            it, inormal = [0, 1], 2
         elif self.normal == "x":
-            if np.linalg.norm(f) > 1e-3:
-                self.residual_df[:, 0] = self.coef
-                self.residual_df[:, 1] = -f[1] / np.sqrt(f[1] * f[1] + f[2] * f[2])
-                self.residual_df[:, 2] = -f[2] / np.sqrt(f[1] * f[1] + f[2] * f[2])
-            else:
-                self.residual_df = np.array([[self.coef, -1, -1]])
+            it, inormal = [1, 2], 0
         else:
             ValueError("Friction with normal=y is not supported.")
+            return self.residual_df
+        ft_norm = np.sqrt(f[it[0]] * f[it[0]] + f[it[1]] * f[it[1]])
+        self.residual_df = np.zeros((self.nr, self.nc))
+        if ft_norm > 0:
+            self.residual_df[:, it[0]] = -f[it[0]] / ft_norm
+            self.residual_df[:, it[1]] = -f[it[1]] / ft_norm
+        self.residual_df[:, inormal] = self.coef
         return self.residual_df
 
 
