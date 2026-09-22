@@ -7,7 +7,10 @@ import sys
 sys.path.insert(0, "/home/skleff/force_feedback_ws")
 
 DATA_PREFIX = (
-    "/home/skleff/Desktop/TRO_SQP_VIDEO/resubmission_exp_data/go2+arm/CONSTANT_F=80/"
+    # "/home/skleff/Desktop/TRO_SQP_VIDEO/resubmission_exp_data/go2+arm/CONSTANT_F=80/"
+    # "/home/skleff/Desktop/PUBLICATIONS/TRO-Soft/SECOND_SUBMISSION/EXPERIMENT_DATA/go2+arm/CONSTANT_F=80/"
+    # "/home/skleff/Desktop/PUBLICATIONS/TRO-Soft/AURO/REVISION/GO2_RERUN/A_foot_mu_default/"
+    "/home/skleff/Desktop/PUBLICATIONS/TRO-Soft/AURO/REVISION/GO2_RERUN/B_foot_mu_1.0/"
 )
 
 # F=50
@@ -69,17 +72,22 @@ DATA_PREFIX = (
 # DATA_PATH_2  = DATA_PREFIX + 'TOL=1e-2/go2_classical_INT=True_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005_tol=1e-2.npz'
 # DATA_PATH_3  = DATA_PREFIX + 'TOL=1e-2/go2_soft_Fmax=80_maxit=1000_fweight=0.0005_tol=1e-2.npz'
 
-# NEW DATASET (almost convergence , constant 80N, removed ee friction cone, tol=1e-4
-DATA_PATH_1 = (
-    DATA_PREFIX
-    + "TOL=1e-4/go2_classical_INT=False_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005.npz"
-)
-DATA_PATH_2 = (
-    DATA_PREFIX
-    + "TOL=1e-4/go2_classical_INT=True_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005.npz"
-)
-DATA_PATH_3 = DATA_PREFIX + "TOL=1e-4/go2_soft_Fmax=80_maxit=1000_fweight=0.0005.npz"
+# # NEW DATASET (almost convergence , constant 80N, removed ee friction cone, tol=1e-4
+# DATA_PATH_1 = (
+#     DATA_PREFIX
+#     + "TOL=1e-4/go2_classical_INT=False_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005.npz"
+# )
+# DATA_PATH_2 = (
+#     DATA_PREFIX
+#     + "TOL=1e-4/go2_classical_INT=True_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005.npz"
+# )
+# DATA_PATH_3 = DATA_PREFIX + "TOL=1e-4/go2_soft_Fmax=80_maxit=1000_fweight=0.0005.npz"
 
+# RERUN
+DATA_PATH_1 = DATA_PREFIX + "go2_classical_INT=False_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005.npz"
+DATA_PATH_2 = DATA_PREFIX + "go2_classical_INT=True_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005.npz"
+# DATA_PATH_3 = DATA_PREFIX + "go2_soft_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005_tol=0.0001.npz"
+DATA_PATH_3 = "/home/skleff/Desktop/PUBLICATIONS/TRO-Soft/AURO/REVISION/GO2_RERUN/B_tuning/go2_soft_Fmin=80_Fmax=80_maxit=1000_fweight=0.005_tol=0.0001.npz"
 
 # Load data and extract signals
 print("Loading data from: ", DATA_PATH_1)
@@ -94,7 +102,8 @@ measured_forces_dict3 = data3["measured_forces"].item()
 desired_forces = data1["desired_forces"]
 
 # Load config file
-CONFIG_PATH = "/home/skleff/force_feedback_ws/force_feedback_mpc/demos/go2arm/Go2MPC_demo_classical.yml"
+CONFIG_PATH = "/home/skleff/CODE/force_feedback_mpc/demos/go2arm/Go2MPC_demo_classical.yml"
+# CONFIG_PATH = "/home/skleff/force_feedback_ws/force_feedback_mpc/demos/go2arm/Go2MPC_demo_classical.yml"
 print("Loading config from: ", CONFIG_PATH)
 CONFIG = load_yaml_file(CONFIG_PATH)
 DT_SIMU = CONFIG["DT_SIMU"]

@@ -23,11 +23,16 @@ from Go2MPC_wrapper_classical import (
 
 # LOADING CONFIG parameters
 import os
+import sys
 from force_feedback_mpc.core_mpc_utils.path_utils import load_yaml_file
 
-CONFIG = load_yaml_file(
-    os.path.dirname(os.path.realpath(__file__)) + "/Go2MPC_demo_classical.yml"
+# Optional config path as first argument (default: Go2MPC_demo_classical.yml)
+CONFIG_PATH = (
+    sys.argv[1]
+    if len(sys.argv) > 1
+    else os.path.dirname(os.path.realpath(__file__)) + "/Go2MPC_demo_classical.yml"
 )
+CONFIG = load_yaml_file(CONFIG_PATH)
 USE_MUJOCO = CONFIG["USE_MUJOCO"]
 DT_SIMU = CONFIG["DT_SIMU"]
 FWEIGHT = CONFIG["FWEIGHT"]
@@ -46,6 +51,9 @@ SIM_FREQ = int(1.0 / DT_SIMU)
 USE_INTEGRAL = CONFIG["USE_INTEGRAL"]
 RECORD_VIDEO = CONFIG["RECORD_VIDEO"]
 DATA_SAVE_DIR = CONFIG["DATA_SAVE_DIR"]
+# Optional (None = unchanged): feet lateral friction in PyBullet, SQP termination tolerance
+FOOT_LATERAL_FRICTION = CONFIG.get("FOOT_LATERAL_FRICTION", None)
+SQP_TOL = CONFIG.get("SQP_TOL", None)
 
 # Instantiate the simulator
 if USE_MUJOCO:
@@ -84,6 +92,18 @@ else:
     )
     sim_utils.set_lateral_friction(contact_surface_bulletId, MU)
     sim_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 10000, 500)
+    from contact_logging import (
+        endeff_forces_by_body,
+        set_endeff_lateral_friction,
+        ocp_horizon_forces_classical,
+    )
+
+    if FOOT_LATERAL_FRICTION is not None:
+        set_endeff_lateral_friction(robot, FOOT_LATERAL_FRICTION)
+    foot_lateral_friction = [
+        p.getDynamicsInfo(robot.robot_id, bid)[1] for bid in robot.bullet_endeff_ids
+    ]
+    print("End-effector lateral friction in PyBullet: ", foot_lateral_friction)
     # Meshcat visualization
     import meshcat.geometry as g
     import meshcat.transformations as tf
@@ -131,6 +151,9 @@ else:
 # Instantiate the solver
 mpc = Go2MPCClassical(HORIZON=HORIZON, friction_mu=MU, dt=DT_OCP, USE_MUJOCO=USE_MUJOCO)
 mpc.initialize(FMIN=FMIN, FWEIGHT=FWEIGHT)
+if SQP_TOL is not None:
+    mpc.solver.termination_tolerance = SQP_TOL
+print("SQP termination tolerance: ", mpc.solver.termination_tolerance)
 mpc.max_iterations = MAX_ITER_1
 mpc.solve()
 m = list(mpc.solver.problem.runningModels) + [mpc.solver.problem.terminalModel]
@@ -162,6 +185,9 @@ if USE_MUJOCO:
 constraint_norm = []
 gap_norm = []
 kkt_norm = []
+sqp_iters = []
+ocp_forces = []  # contact forces predicted over the OCP horizon at each MPC cycle
+ocp_datas = None
 measured_forces_dict = {}
 predicted_forces_dict = {}
 for fname in mpc.ee_frame_names:
@@ -244,6 +270,10 @@ else:
     image_array_list = []
     jointPos = []
     jointVel = []
+    # contact forces split by contacting body: ground, wall (contact surface)
+    ground_forces_dict = {fname: [] for fname in mpc.ee_frame_names}
+    wall_forces_dict = {fname: [] for fname in mpc.ee_frame_names}
+    ground_npoints_dict = {fname: [] for fname in mpc.ee_frame_names}
 
     for i in range(N_SIMU):
         print("Step ", i)
@@ -266,10 +296,12 @@ else:
             constraint_norm.append(mpc.solver.constraint_norm)
             gap_norm.append(mpc.solver.gap_norm)
             kkt_norm.append(mpc.solver.KKT)
+            sqp_iters.append(mpc.solver.iter)
+            f_ocp, ocp_datas = ocp_horizon_forces_classical(mpc, ocp_datas)
+            ocp_forces.append(f_ocp)
             # plot_ocp_solution(mpc)
         # Save the solution
         tau = solution["tau"].squeeze()
-        joint_torques.append(tau)
         jointPos.append(q)
         jointVel.append(dq)
         # Measure forces and save predicted force from solution
@@ -281,7 +313,13 @@ else:
             else:
                 f_mea = np.zeros(3)
             measured_forces_dict[fname].append(f_mea)
-            predicted_forces_dict[fname].append(solution[fname + "_contact"])
+            predicted_forces_dict[fname].append(solution[fname + "_contact"].copy())
+        f_ground, n_ground = endeff_forces_by_body(robot, env.objects[0])
+        f_wall, _ = endeff_forces_by_body(robot, contact_surface_bulletId)
+        for k, fname in enumerate(mpc.ee_frame_names):
+            ground_forces_dict[fname].append(f_ground[k])
+            wall_forces_dict[fname].append(f_wall[k])
+            ground_npoints_dict[fname].append(n_ground[k])
 
         # MESHCAT VISUALIZATION
         viz.display(q)
@@ -315,6 +353,7 @@ else:
                 tau_int = J[:3, 6:].T @ err_f3d
                 tau += tau_int
         # Step the physics
+        joint_torques.append(tau.copy())  # applied torque (copy: tau is a view into solver memory)
         robot.send_joint_command(tau)
         env.step()
 
@@ -395,6 +434,10 @@ jointVel = np.array(jointVel)
 for fname in mpc.ee_frame_names:
     measured_forces_dict[fname] = np.array(measured_forces_dict[fname])
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
+    if not USE_MUJOCO:
+        ground_forces_dict[fname] = np.array(ground_forces_dict[fname])
+        wall_forces_dict[fname] = np.array(wall_forces_dict[fname])
+        ground_npoints_dict[fname] = np.array(ground_npoints_dict[fname])
 
 # Save data
 NPZ_NAME = (
@@ -423,5 +466,19 @@ np.savez_compressed(
     desired_forces=desired_forces,
     predicted_forces=predicted_forces_dict,
     ee_frame_names=mpc.ee_frame_names,
+    **(
+        {}
+        if USE_MUJOCO
+        else dict(
+            ground_forces=ground_forces_dict,
+            wall_forces=wall_forces_dict,
+            ground_npoints=ground_npoints_dict,
+            ocp_forces=np.array(ocp_forces),
+            sqp_iters=np.array(sqp_iters),
+            foot_lateral_friction=foot_lateral_friction,
+        )
+    ),
+    sqp_tol=mpc.solver.termination_tolerance,
+    config=CONFIG,
 )
 print("Saved MPC simulation data npz to " + NPZ_NAME)

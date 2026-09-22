@@ -1,0 +1,30 @@
+# AuRo revision rerun of the Go2+arm experiment (paper Fig. 8, dataset CONSTANT_F=80/TOL=1e-4)
+# Set B (corrected foot friction). Same task/MPC parameters as the published run; only FOOT_LATERAL_FRICTION differs between sets A and B.
+# Simu
+USE_MUJOCO: False
+DT_SIMU: 0.001
+N_SIMU: 1000
+
+# MPC
+MPC_FREQ: 100
+HORIZON: 20
+DT_OCP: 0.01
+MAX_ITER_1: 1000
+MAX_ITER_2: 1000
+SQP_TOL: 0.0001   # SQP termination tolerance (published run: 1e-4)
+
+# Task
+FWEIGHT: 0.0005
+FMIN: 80   # desired contact force at end-effector (min)
+FMAX: 80   # desired contact force at end-effector (max)
+MU: 0.75   # environment friction coefficient (ground / wall), used in the OCP
+FOOT_LATERAL_FRICTION: 1.0   # feet lateral friction in PyBullet -> effective ground-foot mu = 0.75*1.0 = 0.75
+
+# CONTROL
+USE_INTEGRAL: True
+INTEGRAL_GAIN: 0.1
+KP: 0.
+KV: 0.
+
+RECORD_VIDEO: False
+DATA_SAVE_DIR: "/home/skleff/Desktop/PUBLICATIONS/TRO-Soft/AURO/REVISION/GO2_RERUN/B_foot_mu_1.0/go2_classical"

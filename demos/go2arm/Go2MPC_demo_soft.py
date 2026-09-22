@@ -24,11 +24,16 @@ from force_feedback_mpc.soft_mpc.utils import LPFButterOrder2
 
 # LOADING CONFIG parameters
 import os
+import sys
 from force_feedback_mpc.core_mpc_utils.path_utils import load_yaml_file
 
-CONFIG = load_yaml_file(
-    os.path.dirname(os.path.realpath(__file__)) + "/Go2MPC_demo_soft.yml"
+# Optional config path as first argument (default: Go2MPC_demo_soft.yml)
+CONFIG_PATH = (
+    sys.argv[1]
+    if len(sys.argv) > 1
+    else os.path.dirname(os.path.realpath(__file__)) + "/Go2MPC_demo_soft.yml"
 )
+CONFIG = load_yaml_file(CONFIG_PATH)
 USE_MUJOCO = CONFIG["USE_MUJOCO"]
 DT_SIMU = CONFIG["DT_SIMU"]
 FWEIGHT = CONFIG["FWEIGHT"]
@@ -47,6 +52,9 @@ KV = CONFIG["KV"]
 SIM_FREQ = int(1.0 / DT_SIMU)
 RECORD_VIDEO = CONFIG["RECORD_VIDEO"]
 DATA_SAVE_DIR = CONFIG["DATA_SAVE_DIR"]
+# Optional (None = unchanged): feet lateral friction in PyBullet, SQP termination tolerance
+FOOT_LATERAL_FRICTION = CONFIG.get("FOOT_LATERAL_FRICTION", None)
+SQP_TOL = CONFIG.get("SQP_TOL", None)
 
 # Instantiate the simulator
 if USE_MUJOCO:
@@ -85,6 +93,18 @@ else:
     )
     sim_utils.set_lateral_friction(contact_surface_bulletId, MU)
     sim_utils.set_contact_stiffness_and_damping(contact_surface_bulletId, 10000, 500)
+    from contact_logging import (
+        endeff_forces_by_body,
+        set_endeff_lateral_friction,
+        ocp_horizon_forces_soft,
+    )
+
+    if FOOT_LATERAL_FRICTION is not None:
+        set_endeff_lateral_friction(robot, FOOT_LATERAL_FRICTION)
+    foot_lateral_friction = [
+        p.getDynamicsInfo(robot.robot_id, bid)[1] for bid in robot.bullet_endeff_ids
+    ]
+    print("End-effector lateral friction in PyBullet: ", foot_lateral_friction)
     # Meshcat visualization
     import meshcat.geometry as g
     import meshcat.transformations as tf
@@ -133,6 +153,9 @@ else:
 # Instantiate the solver
 mpc = Go2MPCSoft(HORIZON=HORIZON, friction_mu=MU, dt=DT_OCP, USE_MUJOCO=USE_MUJOCO)
 mpc.initialize(FMIN=FMIN, FWEIGHT=FWEIGHT, FDOTWEIGHT=FDOTWEIGHT)
+if SQP_TOL is not None:
+    mpc.solver.termination_tolerance = SQP_TOL
+print("SQP termination tolerance: ", mpc.solver.termination_tolerance)
 mpc.max_iterations = MAX_ITER_1
 # mpc.test_derivatives()
 mpc.solve()
@@ -205,6 +228,8 @@ f_des_z = np.linspace(FMIN, FMAX, N_SIMU)  # np.array([FREF]*N_SIMU)
 constraint_norm = []
 gap_norm = []
 kkt_norm = []
+sqp_iters = []
+ocp_forces = []  # contact forces predicted over the OCP horizon at each MPC cycle
 
 # Force filtering
 butter_dict = {}
@@ -290,6 +315,10 @@ else:
     image_array_list = []
     jointPos = []
     jointVel = []
+    # contact forces split by contacting body: ground, wall (contact surface)
+    ground_forces_dict = {fname: [] for fname in mpc.ee_frame_names}
+    wall_forces_dict = {fname: [] for fname in mpc.ee_frame_names}
+    ground_npoints_dict = {fname: [] for fname in mpc.ee_frame_names}
 
     for i in range(N_SIMU):
         print("Step ", i)
@@ -315,17 +344,31 @@ else:
             filtered_forces_dict[fname].append(f_mea)
             f_mea_all[3 * k : 3 * (k + 1)] = f_mea
             f_mea_all_filtered[3 * k : 3 * (k + 1)] = f_mea
+        f_ground, n_ground = endeff_forces_by_body(robot, env.objects[0])
+        f_wall, _ = endeff_forces_by_body(robot, contact_surface_bulletId)
+        for k, fname in enumerate(mpc.ee_frame_names):
+            ground_forces_dict[fname].append(f_ground[k])
+            wall_forces_dict[fname].append(f_wall[k])
+            ground_npoints_dict[fname].append(n_ground[k])
         # Solve OCP
         if i % int(SIM_FREQ / MPC_FREQ) == 0:
-            solution = mpc.updateAndSolve2(q, dq, f_mea_all)
+            # PyBullet base quaternion is only normalized up to ~1e-8, which trips
+            # pinocchio's isNormalized assertion in the (non-NDEBUG) C++ soft state
+            q_mpc = q.copy()
+            q_mpc[3:7] /= np.linalg.norm(q_mpc[3:7])
+            solution = mpc.updateAndSolve2(q_mpc, dq, f_mea_all)
             constraint_norm.append(mpc.solver.constraint_norm)
             gap_norm.append(mpc.solver.gap_norm)
             kkt_norm.append(mpc.solver.KKT)
+            sqp_iters.append(mpc.solver.iter)
+            ocp_forces.append(ocp_horizon_forces_soft(mpc))
             # plot_ocp_solution(mpc)
         # Record predicted forces and visualize forces+cones in meshcat
         for fname in mpc.ee_frame_names:
             # Save predicted forces from OCP solution
-            predicted_forces_dict[fname].append(solution[frame_name_to_sol_map[fname]])
+            predicted_forces_dict[fname].append(
+                solution[frame_name_to_sol_map[fname]].copy()
+            )
 
         # MESHCAT VISUALIZATION (PyBullet only)
         if not USE_MUJOCO:
@@ -344,7 +387,7 @@ else:
 
         # Save the optimal control solution
         tau = solution["tau"].squeeze()
-        joint_torques.append(tau)
+        joint_torques.append(tau.copy())  # copy: tau is a view into solver memory
         # Step the physics (PyBullet only)
         if not USE_MUJOCO:
             robot.send_joint_command(tau)
@@ -408,7 +451,9 @@ filename = (
     + str(MAX_ITER_2)
     + "_fweight="
     + str(FWEIGHT)
-    + "_tol=1e-3.pkl"
+    + "_tol="
+    + (str(SQP_TOL) if SQP_TOL is not None else "1e-3")
+    + ".pkl"
 )  # +'_fdotweight='+str(FDOTWEIGHT)+'.pkl'
 with open(filename, "wb") as file:
     pickle.dump(data, file)
@@ -425,6 +470,10 @@ for fname in mpc.ee_frame_names:
     measured_forces_dict[fname] = np.array(measured_forces_dict[fname])
     filtered_forces_dict[fname] = np.array(filtered_forces_dict[fname])
     predicted_forces_dict[fname] = np.array(predicted_forces_dict[fname])
+    if not USE_MUJOCO:
+        ground_forces_dict[fname] = np.array(ground_forces_dict[fname])
+        wall_forces_dict[fname] = np.array(wall_forces_dict[fname])
+        ground_npoints_dict[fname] = np.array(ground_npoints_dict[fname])
 
 # Save data
 NPZ_NAME = (
@@ -437,7 +486,9 @@ NPZ_NAME = (
     + str(MAX_ITER_2)
     + "_fweight="
     + str(FWEIGHT)
-    + "_tol=1e-3.npz"
+    + "_tol="
+    + (str(SQP_TOL) if SQP_TOL is not None else "1e-3")
+    + ".npz"
 )  # +'_fdotweight='+str(FDOTWEIGHT)+'.npz'
 np.savez_compressed(
     NPZ_NAME,
@@ -452,5 +503,19 @@ np.savez_compressed(
     desired_forces=desired_forces,
     predicted_forces=predicted_forces_dict,
     ee_frame_names=mpc.ee_frame_names,
+    **(
+        {}
+        if USE_MUJOCO
+        else dict(
+            ground_forces=ground_forces_dict,
+            wall_forces=wall_forces_dict,
+            ground_npoints=ground_npoints_dict,
+            ocp_forces=np.array(ocp_forces),
+            sqp_iters=np.array(sqp_iters),
+            foot_lateral_friction=foot_lateral_friction,
+        )
+    ),
+    sqp_tol=mpc.solver.termination_tolerance,
+    config=CONFIG,
 )
 print("Saved MPC simulation data npz to " + NPZ_NAME)

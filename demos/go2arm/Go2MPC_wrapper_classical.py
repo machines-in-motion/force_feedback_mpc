@@ -775,9 +775,11 @@ class Go2MPCClassical:
     def updateAndSolve2(self, q, dq):
         x = np.hstack([q, dq])
         self.solver.problem.x0 = x
-        self.xs = list(self.solver.xs[1:]) + [self.solver.xs[-1]]
+        xs_list = list(self.solver.xs)
+        self.xs = xs_list[1:] + [xs_list[-1]]
         self.xs[0] = x
-        self.us = list(self.us[1:]) + [self.us[-1]]
+        us_list = list(self.us)
+        self.us = us_list[1:] + [us_list[-1]]
         self.solver.solve(self.xs, self.us, self.max_iterations)
         self.xs, self.us = self.solver.xs, self.solver.us
         return self.getSolution()
