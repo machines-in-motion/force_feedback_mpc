@@ -1,4 +1,4 @@
-set(${PROJECT_NAME}_BENCHMARK ur5)
+set(${PROJECT_NAME}_BENCHMARK ur5 soft_derivatives)
 
 set(${PROJECT_NAME}_BENCHMARK_TOOLS timings.hpp timings.cpp)
 
@@ -13,9 +13,15 @@ foreach(BENCHMARK_NAME ${${PROJECT_NAME}_BENCHMARK})
     target_link_libraries(
         ${BENCHMARK_NAME}
         ${PROJECT_NAME}
-        example-robot-data::example-robot-data
         ${PROJECT_NAME}_BENCHMARK_TOOLS
     )
+    # only some benchmarks need example-robot-data (ur5); link it when available
+    if(TARGET example-robot-data::example-robot-data)
+        target_link_libraries(
+            ${BENCHMARK_NAME}
+            example-robot-data::example-robot-data
+        )
+    endif()
     add_custom_target(
         "benchmarks-cpp-${BENCHMARK_NAME}"
         ${BENCHMARK_NAME} \${INPUT}

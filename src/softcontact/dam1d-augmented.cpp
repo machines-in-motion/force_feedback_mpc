@@ -324,8 +324,12 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
       d->tmp_mat_.noalias() =
           d->aba_dtau *
           d->lJ.topRows(3).transpose();  // (nv,3) = (nv,nv) (nv,3)
-      d->aba_df3d.noalias() =
-          d->tmp_mat_ * jMf_.rotation();  //* Matrix3s::Identity();
+      // dABA/df3d in LOCAL: the 3d contact force is already expressed in the
+      // contact frame, so no jMf rotation applies here (same convention as the
+      // 3D model, see dam3d-augmented.cpp). Post-multiplying by jMf_.rotation()
+      // rotates the force axes and, for a contact frame rotated w.r.t. its parent
+      // joint, makes calcDiff differentiate w.r.t. the wrong axis.
+      d->aba_df3d.noalias() = d->tmp_mat_;
       d->aba_df.noalias() = d->aba_df3d.col(this->get_type());
       // Skew term added to RNEA derivatives when force is expressed in LWA
       if (ref_ != pinocchio::LOCAL) {
@@ -353,8 +357,12 @@ void DAMSoftContact1DAugmentedFwdDynamics::calcDiff(
       // Compute derivatives of d->xout (ABA) w.r.t. f in LOCAL
       d->tmp_mat_.noalias() =
           d->Minv * d->lJ.topRows(3).transpose();  // (nv,3) = (nv,nv) (nv,3)
-      d->aba_df3d.noalias() =
-          d->tmp_mat_ * jMf_.rotation();  //* Matrix3s::Identity();
+      // dABA/df3d in LOCAL: the 3d contact force is already expressed in the
+      // contact frame, so no jMf rotation applies here (same convention as the
+      // 3D model, see dam3d-augmented.cpp). Post-multiplying by jMf_.rotation()
+      // rotates the force axes and, for a contact frame rotated w.r.t. its parent
+      // joint, makes calcDiff differentiate w.r.t. the wrong axis.
+      d->aba_df3d.noalias() = d->tmp_mat_;
       d->aba_df = d->aba_df3d.col(this->get_type());
       // Skew term added to RNEA derivatives when force is expressed in LWA
       if (ref_ != pinocchio::LOCAL) {

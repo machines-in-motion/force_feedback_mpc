@@ -25,7 +25,7 @@ else:
     DATA_PATH = PREFIX+"CONSTANT_F=80/TOL=1e-4/go2_soft_Fmax=80_maxit=1000_fweight=0.0005.npz"  # go2_soft_Fmax=80_maxit=1000_fweight=0.001_CONSTANT.npz' #'
     CONFIG_PATH = "/home/skleff/CODE/force_feedback_mpc/demos/go2arm/Go2MPC_demo_soft.yml"
 
-DATA_PATH = "/home/skleff/Desktop/PUBLICATIONS/TRO-Soft/AURO/REVISION/GO2_RERUN/B_tuning/go2_soft_Fmin=80_Fmax=80_maxit=1000_fweight=0.02_tol=0.0001.npz"
+DATA_PATH = "/home/skleff/Desktop/PUBLICATIONS/TRO-Soft/AURO/REVISION/GO2_RERUN/B_tuning/go2_soft_Fmin=80_Fmax=80_maxit=1000_fweight=0.002_tol=0.0001.npz"
 print("Loading data from: ", DATA_PATH)
 print("Loading config from: ", CONFIG_PATH)
 

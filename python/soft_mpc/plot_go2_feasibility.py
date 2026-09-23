@@ -20,8 +20,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ----------------------------------------------------------------------------- knobs
-DATA_DIR = "/home/skleff/Desktop/PUBLICATIONS/TRO-Soft/AURO/REVISION/GO2_RERUN/B_tuning/"
-FF_FWEIGHT = "0.002"  # force-feedback run to show (force-tracking weight of the sweep; set-A/published value 0.0005)
+DATA_DIR = "/home/skleff/Desktop/PUBLICATIONS/TRO-Soft/AURO/REVISION/GO2_RERUN/B_final/"
+FF_FWEIGHT = "0.002"  # force-feedback force-tracking weight (tuned for set B; published value 0.0005)
 CONTROLLERS = {
     "Classical MPC": "go2_classical_INT=False_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005.npz",
     "Classical MPC + Integral": "go2_classical_INT=True_Fmin=80_Fmax=80_maxit=1000_fweight=0.0005.npz",
