@@ -1,4 +1,17 @@
-set(${PROJECT_NAME}_BENCHMARK ur5 soft_derivatives)
+# example-robot-data is otherwise only looked up when BUILD_TESTING is ON, which
+# happens after this directory is added: find it here so that the benchmarks that
+# need it (ur5 uses EXAMPLE_ROBOT_DATA_MODEL_DIR) can be built on their own.
+find_package(example-robot-data 4.0.9 QUIET)
+
+set(${PROJECT_NAME}_BENCHMARK soft_derivatives)
+if(TARGET example-robot-data::example-robot-data)
+    list(APPEND ${PROJECT_NAME}_BENCHMARK ur5)
+else()
+    message(
+        STATUS
+        "example-robot-data not found: skipping the ur5 benchmark"
+    )
+endif()
 
 set(${PROJECT_NAME}_BENCHMARK_TOOLS timings.hpp timings.cpp)
 
