@@ -27,7 +27,7 @@
   <depend condition="$ROS_PYTHON_VERSION == 3">python3</depend>
   <depend>eigenpy</depend>
 
-  <exec_depend>example_robot_data</exec_depend>
+  <exec_depend>example_robot_descriptions</exec_depend>
 
   <buildtool_depend>cmake</buildtool_depend>
   <export>
