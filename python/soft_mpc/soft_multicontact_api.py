@@ -591,7 +591,11 @@ class ForceCostManager:
                 Lf_ct, Lff_ct = cost.calcDiff(dad, f[nc_i : nc_i + ct.nc], pinRefDyn)
                 # print("filling out block ", str(nc_i), " to ", str(nc_i+cost.nc))
                 self.Lf[nc_i : nc_i + cost.nc] += Lf_ct
-                self.Lff[nr_i : nr_i + cost.nr, nc_i : nc_i + cost.nc] += Lff_ct
+                # Lff is the Hessian of the force cost w.r.t. the force stack, so both
+                # indices are force offsets. Using the residual counter nr_i for the rows
+                # placed the block of a contact at the rows of the *first* contact (and
+                # made Lxx asymmetric) whenever the cost was not defined on contact 0.
+                self.Lff[nc_i : nc_i + cost.nc, nc_i : nc_i + cost.nc] += Lff_ct
                 # print("Lf = \n ", self.Lf)
                 nr_i += cost.nr
             nc_i += ct.nc

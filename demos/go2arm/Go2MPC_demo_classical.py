@@ -54,6 +54,7 @@ DATA_SAVE_DIR = CONFIG["DATA_SAVE_DIR"]
 # Optional (None = unchanged): feet lateral friction in PyBullet, SQP termination tolerance
 FOOT_LATERAL_FRICTION = CONFIG.get("FOOT_LATERAL_FRICTION", None)
 SQP_TOL = CONFIG.get("SQP_TOL", None)
+REG_MIN = CONFIG.get("REG_MIN", None)
 
 # Instantiate the simulator
 if USE_MUJOCO:
@@ -154,6 +155,9 @@ mpc.initialize(FMIN=FMIN, FWEIGHT=FWEIGHT)
 if SQP_TOL is not None:
     mpc.solver.termination_tolerance = SQP_TOL
 print("SQP termination tolerance: ", mpc.solver.termination_tolerance)
+if REG_MIN is not None:
+    mpc.solver.reg_min = REG_MIN
+print("SQP regularization floor: ", mpc.solver.reg_min)
 mpc.max_iterations = MAX_ITER_1
 mpc.solve()
 m = list(mpc.solver.problem.runningModels) + [mpc.solver.problem.terminalModel]

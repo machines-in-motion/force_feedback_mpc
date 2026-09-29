@@ -17,6 +17,7 @@
 #include <crocoddyl/core/costs/residual.hpp>
 #include <crocoddyl/core/numdiff/action.hpp>
 #include <crocoddyl/core/optctrl/shooting.hpp>
+#include <crocoddyl/core/solvers/fddp.hpp>
 #include <crocoddyl/core/residuals/control.hpp>
 #include <crocoddyl/multibody/actuations/full.hpp>
 #include <crocoddyl/multibody/residuals/frame-translation.hpp>
@@ -24,6 +25,7 @@
 #include <crocoddyl/multibody/states/multibody.hpp>
 
 #include <algorithm>
+#include <random>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -391,6 +393,89 @@ int main() {
       std::cout << std::fixed << std::setprecision(1)
                 << "  speedup vs forward FD: " << f.median / a.median
                 << "x   vs central FD: " << c.median / a.median << "x" << std::endl;
+    }
+
+    // ---------------- randomized per-node timing (mean +/- std over operating points)
+    {
+      const std::size_t K = 25, R = 400;
+      std::mt19937 gen(0);
+      std::normal_distribution<double> nrm(0., 1.);
+      ActionModelNumDiff nd(iam);
+      auto nd_data = nd.createData();
+      CentralDiff cd(iam, h_ref);
+      CentralDiff fw(iam, 1e-7, false);
+      std::cout << "\n-- randomized per-node timing (" << K << " operating points x " << R
+                << " repetitions each)\nRANDHDR nc point t_ana_us t_fwd_us t_cen_us t_nd_us"
+                << std::endl;
+      for (std::size_t k = 0; k < K; ++k) {
+        VectorXd x = xs0, u = us0;
+        for (Eigen::Index i = 0; i < (Eigen::Index)s.rmodel->nq; ++i) x[i] += 0.05 * nrm(gen);
+        for (Eigen::Index i = 0; i < (Eigen::Index)s.rmodel->nv; ++i)
+          x[(Eigen::Index)s.rmodel->nq + i] += 0.1 * nrm(gen);
+        for (Eigen::Index i = 0; i < (Eigen::Index)nc; ++i)
+          x[(Eigen::Index)nx - (Eigen::Index)nc + i] += 5.0 * nrm(gen);
+        for (Eigen::Index i = 0; i < (Eigen::Index)nu; ++i) u[i] += 0.1 * nrm(gen);
+        for (std::size_t i = 0; i < 30; ++i) {
+          iam->calc(data, x, u); iam->calcDiff(data, x, u);
+          nd.calc(nd_data, x, u); nd.calcDiff(nd_data, x, u);
+          cd.calcDiff(x, u); fw.calcDiff(x, u);
+        }
+        std::vector<double> ta, tf, tc, tn;
+        for (std::size_t i = 0; i < R; ++i) {
+          timer.start(); iam->calc(data, x, u); iam->calcDiff(data, x, u);
+          timer.stop(); ta.push_back(timer.elapsed().user * 1e3);
+        }
+        for (std::size_t i = 0; i < R; ++i) {
+          timer.start(); fw.calcDiff(x, u); timer.stop();
+          tf.push_back(timer.elapsed().user * 1e3);
+        }
+        for (std::size_t i = 0; i < R; ++i) {
+          timer.start(); cd.calcDiff(x, u); timer.stop();
+          tc.push_back(timer.elapsed().user * 1e3);
+        }
+        for (std::size_t i = 0; i < R / 10; ++i) {
+          timer.start(); nd.calc(nd_data, x, u); nd.calcDiff(nd_data, x, u);
+          timer.stop(); tn.push_back(timer.elapsed().user * 1e3);
+        }
+        std::cout << std::fixed << std::setprecision(3) << "RANDTIME " << nc << " " << k
+                  << " " << stats(ta).median << " " << stats(tf).median << " "
+                  << stats(tc).median << " " << stats(tn).median << std::endl;
+      }
+    }
+
+    // ---------------- full OCP solve: analytical models vs NumDiff models
+    {
+      std::vector<std::shared_ptr<ActionModelAbstract>> runs_ana, runs_fd;
+      for (std::size_t i = 0; i < N; ++i) {
+        runs_ana.push_back(iam);
+        runs_fd.push_back(std::make_shared<ActionModelNumDiff>(iam));
+      }
+      auto term = make_iam(s, nc, 0.);
+      auto prob_ana = std::make_shared<ShootingProblem>(xs0, runs_ana, term);
+      auto prob_fd = std::make_shared<ShootingProblem>(
+          xs0, runs_fd, std::make_shared<ActionModelNumDiff>(term));
+      std::vector<VectorXd> xs_i(N + 1, xs0), us_i(N, us0);
+      const std::size_t maxit = 50;
+      SolverFDDP sol_a(prob_ana), sol_f(prob_fd);
+      sol_a.set_th_stop(1e-9); sol_f.set_th_stop(1e-9);
+      sol_a.solve(xs_i, us_i, 2);  // warm-up
+      sol_f.solve(xs_i, us_i, 2);
+      timer.start(); sol_a.solve(xs_i, us_i, maxit); timer.stop();
+      double t_a = timer.elapsed().user;
+      std::size_t it_a = sol_a.get_iter();
+      timer.start(); sol_f.solve(xs_i, us_i, maxit); timer.stop();
+      double t_f = timer.elapsed().user;
+      std::size_t it_f = sol_f.get_iter();
+      std::cout << std::fixed << std::setprecision(2)
+                << "\n-- full OCP solve (SolverFDDP, N=" << N << ", max " << maxit
+                << " iterations, same warm start)\n"
+                << "  analytical models : " << t_a << " ms, " << it_a << " iterations, "
+                << t_a / std::max<std::size_t>(it_a, 1) << " ms/it, cost " << sol_a.get_cost()
+                << "\n  NumDiff models    : " << t_f << " ms, " << it_f << " iterations, "
+                << t_f / std::max<std::size_t>(it_f, 1) << " ms/it, cost " << sol_f.get_cost()
+                << "\n  speedup: " << t_f / t_a << "x on total solve time, "
+                << (t_f / std::max<std::size_t>(it_f, 1)) / (t_a / std::max<std::size_t>(it_a, 1))
+                << "x per iteration" << std::endl;
     }
   }
   return 0;

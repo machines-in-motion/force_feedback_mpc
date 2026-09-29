@@ -15,8 +15,8 @@ import pinocchio as pin
 import time
 
 
+from Go2MPC_wrapper_anchor import Go2MPCAnchor as Go2MPCSoft
 from Go2MPC_wrapper_soft import (
-    Go2MPCSoft,
     getForceSensor,
     setGroundFriction,
 )
@@ -365,7 +365,7 @@ else:
             gap_norm.append(mpc.solver.gap_norm)
             kkt_norm.append(mpc.solver.KKT)
             sqp_iters.append(mpc.solver.iter)
-            ocp_forces.append(ocp_horizon_forces_soft(mpc))
+            ocp_forces.append(mpc.horizon_forces())
             # plot_ocp_solution(mpc)
         # Record predicted forces and visualize forces+cones in meshcat
         for fname in mpc.ee_frame_names:
