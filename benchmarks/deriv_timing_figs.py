@@ -22,8 +22,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else \
     "/home/skleff/Desktop/PUBLICATIONS/TRO-Soft/AURO/REVISION/DERIVATIVES"
-METHODS = ["analytical", "forward FD", "central FD", "crocoddyl NumDiff"]
-COLORS = ["#1b6ca8", "#6c8ebf", "#c1492b", "#7a7a7a"]
+METHODS = ["analytical", "forward FD", "central FD"] #, "crocoddyl NumDiff"]
+COLORS = ["#1b6ca8", "#6c8ebf", "#c1492b"] #, "#7a7a7a"]
 IIWA_NC = 3          # contact dimension of the iiwa model to display
 
 plt.rcParams.update({"font.family": "serif", "font.size": 9, "axes.grid": True,
@@ -68,21 +68,21 @@ def main():
     fig, ax = plt.subplots(1, 2, figsize=(7.0, 2.8))
     for a, (title, means, stds, unit) in zip(ax, [
         ("(a) KUKA iiwa (C++), per node",
-         [iiwa[IIWA_NC][:, j].mean() for j in range(4)],
-         [iiwa[IIWA_NC][:, j].std() for j in range(4)], r"time [$\mu$s]"),
+         [iiwa[IIWA_NC][:, j].mean() for j in range(3)],
+         [iiwa[IIWA_NC][:, j].std() for j in range(3)], r"time [$\mu$s]"),
         ("(b) Go2 + arm (Python), per node",
          [np.mean(gper[m]) for m in METHODS],
          [np.std(gper[m]) for m in METHODS], "time [ms]"),
     ]):
         x = np.arange(len(METHODS))
-        a.bar(x, means, 0.62, yerr=stds, color=COLORS, edgecolor="white", linewidth=0.5,
+        a.bar(x, means[0:3], 0.62, yerr=stds[0:3], color=COLORS, edgecolor="white", linewidth=0.5,
               error_kw=dict(ecolor="0.25", capsize=2.5, lw=0.9))
         for i, (m, s_) in enumerate(zip(means, stds)):
             a.text(i, m * 1.6, f"{m / means[0]:.0f}x" if i else "1x",
                    ha="center", fontsize=7.5, color="0.25")
         a.set_yscale("log")
         a.set_xticks(x)
-        a.set_xticklabels(["analytical", "forward\nFD", "central\nFD", "crocoddyl\nNumDiff"],
+        a.set_xticklabels(["analytical", "forward\nFD", "central\nFD"],# "crocoddyl\nNumDiff"],
                           fontsize=7.5)
         a.set_ylabel(unit)
         a.set_title(title, fontsize=9, loc="left")

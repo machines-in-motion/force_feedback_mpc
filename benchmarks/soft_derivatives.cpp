@@ -456,16 +456,40 @@ int main() {
           xs0, runs_fd, std::make_shared<ActionModelNumDiff>(term));
       std::vector<VectorXd> xs_i(N + 1, xs0), us_i(N, us0);
       const std::size_t maxit = 50;
-      SolverFDDP sol_a(prob_ana), sol_f(prob_fd);
-      sol_a.set_th_stop(1e-9); sol_f.set_th_stop(1e-9);
+      // Gauss-approximation variant: Hessians from the residual Jacobians, i.e. at
+      // first-order cost, which is the cheapest numerical baseline that still supplies
+      // the second-order terms the solver needs.
+      std::vector<std::shared_ptr<ActionModelAbstract>> runs_ga;
+      for (std::size_t i = 0; i < N; ++i)
+        runs_ga.push_back(std::make_shared<ActionModelNumDiff>(iam, true));
+      auto prob_ga = std::make_shared<ShootingProblem>(
+          xs0, runs_ga, std::make_shared<ActionModelNumDiff>(term, true));
+      SolverFDDP sol_a(prob_ana), sol_f(prob_fd), sol_g(prob_ga);
+      sol_a.set_th_stop(1e-9); sol_f.set_th_stop(1e-9); sol_g.set_th_stop(1e-9);
       sol_a.solve(xs_i, us_i, 2);  // warm-up
       sol_f.solve(xs_i, us_i, 2);
+      sol_g.solve(xs_i, us_i, 2);
       timer.start(); sol_a.solve(xs_i, us_i, maxit); timer.stop();
       double t_a = timer.elapsed().user;
       std::size_t it_a = sol_a.get_iter();
       timer.start(); sol_f.solve(xs_i, us_i, maxit); timer.stop();
       double t_f = timer.elapsed().user;
       std::size_t it_f = sol_f.get_iter();
+      timer.start(); sol_g.solve(xs_i, us_i, maxit); timer.stop();
+      double t_g = timer.elapsed().user;
+      std::size_t it_g = sol_g.get_iter();
+      {  // per-node cost of the Gauss-approximation variant
+        ActionModelNumDiff ndg(iam, true);
+        auto ndg_d = ndg.createData();
+        for (std::size_t i = 0; i < 30; ++i) { ndg.calc(ndg_d, xs0, us0); ndg.calcDiff(ndg_d, xs0, us0); }
+        std::vector<double> tg;
+        for (std::size_t i = 0; i < 400; ++i) {
+          timer.start(); ndg.calc(ndg_d, xs0, us0); ndg.calcDiff(ndg_d, xs0, us0);
+          timer.stop(); tg.push_back(timer.elapsed().user * 1e3);
+        }
+        std::cout << "\n-- per node, NumDiff with Gauss approximation: "
+                  << stats(tg).median << " us (median)" << std::endl;
+      }
       std::cout << std::fixed << std::setprecision(2)
                 << "\n-- full OCP solve (SolverFDDP, N=" << N << ", max " << maxit
                 << " iterations, same warm start)\n"
@@ -473,8 +497,12 @@ int main() {
                 << t_a / std::max<std::size_t>(it_a, 1) << " ms/it, cost " << sol_a.get_cost()
                 << "\n  NumDiff models    : " << t_f << " ms, " << it_f << " iterations, "
                 << t_f / std::max<std::size_t>(it_f, 1) << " ms/it, cost " << sol_f.get_cost()
+                << "\n  NumDiff + Gauss approx : " << t_g << " ms, " << it_g << " iterations, "
+                << t_g / std::max<std::size_t>(it_g, 1) << " ms/it, cost " << sol_g.get_cost()
                 << "\n  speedup: " << t_f / t_a << "x on total solve time, "
                 << (t_f / std::max<std::size_t>(it_f, 1)) / (t_a / std::max<std::size_t>(it_a, 1))
+                << "x per iteration;  vs Gauss approx: " << t_g / t_a << "x total, "
+                << (t_g / std::max<std::size_t>(it_g, 1)) / (t_a / std::max<std::size_t>(it_a, 1))
                 << "x per iteration" << std::endl;
     }
   }
